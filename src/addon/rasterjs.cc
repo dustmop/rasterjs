@@ -2,6 +2,8 @@
 #include <napi.h>
 #include <uv.h>
 
+#include <SDL.h>
+
 using namespace Napi;
 
 Napi::FunctionReference RasterJS::constructor;
@@ -35,9 +37,18 @@ Napi::Object RasterJS::NewInstance(Napi::Env env, Napi::Value arg) {
   return scope.Escape(napi_value(obj)).ToObject();
 }
 
+int sdl_initialized = 0;
+SDL_Window* window = NULL;
+SDL_Surface* screenSurface = NULL;
+
 Napi::Value RasterJS::CallOne(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  printf("one\n");
+  if( SDL_Init( SDL_INIT_VIDEO ) < 0 ) {
+    printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
+  } else {
+    sdl_initialized = 1;
+    printf("SDL_Init success\n");
+  }
   return Napi::Number::New(env, 0);
 }
 

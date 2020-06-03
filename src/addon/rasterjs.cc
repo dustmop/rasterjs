@@ -14,9 +14,11 @@ Napi::Object RasterJS::Init(Napi::Env env, Napi::Object exports) {
   Napi::HandleScope scope(env);
 
   Napi::Function func = DefineClass(
-      env, "RasterJS", {InstanceMethod("callOne", &RasterJS::CallOne),
-                             InstanceMethod("callTwo", &RasterJS::CallTwo),
-                             InstanceMethod("callThree", &RasterJS::CallThree),
+      env,
+      "RasterJS",
+      {InstanceMethod("sdlInit", &RasterJS::SDLInit),
+       InstanceMethod("createWindow", &RasterJS::CreateWindow),
+       InstanceMethod("renderLoop", &RasterJS::RenderLoop),
   });
   constructor = Napi::Persistent(func);
   constructor.SuppressDestruct();
@@ -43,13 +45,12 @@ int sdl_initialized = 0;
 SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
 
-Napi::Value RasterJS::CallOne(const Napi::CallbackInfo& info) {
+Napi::Value RasterJS::SDLInit(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if( SDL_Init( SDL_INIT_VIDEO ) < 0 ) {
     printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
   } else {
     sdl_initialized = 1;
-    printf("SDL_Init success\n");
   }
   return Napi::Number::New(env, 0);
 }
@@ -57,7 +58,7 @@ Napi::Value RasterJS::CallOne(const Napi::CallbackInfo& info) {
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
 
-Napi::Value RasterJS::CallTwo(const Napi::CallbackInfo& info) {
+Napi::Value RasterJS::CreateWindow(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   if (!sdl_initialized) {
@@ -74,7 +75,7 @@ Napi::Value RasterJS::CallTwo(const Napi::CallbackInfo& info) {
 
 void on_render(SDL_Window* window, SDL_Renderer* renderer);
 
-Napi::Value RasterJS::CallThree(const Napi::CallbackInfo& info) {
+Napi::Value RasterJS::RenderLoop(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   if (!sdl_initialized || !window) {

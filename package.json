@@ -2,7 +2,6 @@
   "name": "raster.js",
   "version": "0.0.1",
   "description": "raster.js is a graphics library",
-  "main": "index.js",
   "author": "Dustin Long <me@dustmop.io> (dustmop.io)",
   "gypfile": true,
   "license": "MIT",

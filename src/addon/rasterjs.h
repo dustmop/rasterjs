@@ -11,9 +11,9 @@ class RasterJS : public Napi::ObjectWrap<RasterJS> {
 
  private:
   static Napi::FunctionReference constructor;
-  Napi::Value CallOne(const Napi::CallbackInfo& info);
-  Napi::Value CallTwo(const Napi::CallbackInfo& info);
-  Napi::Value CallThree(const Napi::CallbackInfo& info);
+  Napi::Value SDLInit(const Napi::CallbackInfo& info);
+  Napi::Value CreateWindow(const Napi::CallbackInfo& info);
+  Napi::Value RenderLoop(const Napi::CallbackInfo& info);
   double counter_;
 };
 

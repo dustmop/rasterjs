@@ -14,7 +14,8 @@ class RasterJS : public Napi::ObjectWrap<RasterJS> {
   Napi::Value SDLInit(const Napi::CallbackInfo& info);
   Napi::Value CreateWindow(const Napi::CallbackInfo& info);
   Napi::Value RenderLoop(const Napi::CallbackInfo& info);
-  double counter_;
+  Napi::Value DrawRect(const Napi::CallbackInfo& info);
+  Napi::Value DrawSquare(const Napi::CallbackInfo& info);
 };
 
 #endif

@@ -19,6 +19,8 @@ Napi::Object RasterJS::Init(Napi::Env env, Napi::Object exports) {
       {InstanceMethod("sdlInit", &RasterJS::SDLInit),
        InstanceMethod("createWindow", &RasterJS::CreateWindow),
        InstanceMethod("renderLoop", &RasterJS::RenderLoop),
+       InstanceMethod("drawRect", &RasterJS::DrawRect),
+       InstanceMethod("drawSquare", &RasterJS::DrawSquare),
   });
   constructor = Napi::Persistent(func);
   constructor.SuppressDestruct();
@@ -31,8 +33,6 @@ RasterJS::RasterJS(const Napi::CallbackInfo& info)
     : Napi::ObjectWrap<RasterJS>(info) {
   Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
-
-  this->counter_ = info[0].As<Napi::Number>().DoubleValue();
 };
 
 Napi::Object RasterJS::NewInstance(Napi::Env env, Napi::Value arg) {
@@ -55,8 +55,6 @@ Napi::Value RasterJS::SDLInit(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, 0);
 }
 
-const int SCREEN_WIDTH = 640;
-const int SCREEN_HEIGHT = 480;
 
 Napi::Value RasterJS::CreateWindow(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
@@ -65,10 +63,19 @@ Napi::Value RasterJS::CreateWindow(const Napi::CallbackInfo& info) {
     return Napi::Number::New(env, -1);
   }
 
+  if (info.Length() < 2) {
+    printf("CreateWindow needs two parameters\n");
+    exit(1);
+  }
+
+  int width = info[0].As<Napi::Number>().Int32Value();
+  int height = info[1].As<Napi::Number>().Int32Value();
+
   // Create window
-  window = SDL_CreateWindow( "SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN );
+  window = SDL_CreateWindow( "SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN );
   if (window == NULL) {
     printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
+    exit(1);
   }
   return Napi::Number::New(env, 0);
 }
@@ -82,7 +89,14 @@ Napi::Value RasterJS::RenderLoop(const Napi::CallbackInfo& info) {
     return Napi::Number::New(env, -1);
   }
 
-  //Get window renderer
+  if ((info.Length() < 1) || (!info[0].IsFunction())) {
+    printf("RenderLoop requires an argument: function\n");
+    exit(1);
+  }
+
+  Napi::Function renderFunc = info[0].As<Napi::Function>();
+
+  // Get window renderer
   renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
   if (!renderer) {
     printf("SDL_CreateRenderer() failed with \"%s.\"", SDL_GetError());
@@ -114,7 +128,7 @@ Napi::Value RasterJS::RenderLoop(const Napi::CallbackInfo& info) {
       }
     }
 
-    on_render(window, renderer);
+    renderFunc.Call(0, NULL);
 
     // Swap buffers to display
     SDL_RenderPresent(renderer);
@@ -136,17 +150,18 @@ Napi::Value RasterJS::RenderLoop(const Napi::CallbackInfo& info) {
 
 #define OPAQUE 255
 
-int timeClick = 0;
+Napi::Value RasterJS::DrawRect(const Napi::CallbackInfo& info) {
+  // TODO: Validate length of parameters, all should be numbers
 
-// returns a value between 0 and 1
-float oscillate(int click, int period) {
-  return (1.0 + sin(click * TAU / period)) / 2.0;
-}
+  Napi::Value xval = info[0];
+  Napi::Value yval = info[1];
+  Napi::Value wval = info[2];
+  Napi::Value hval = info[3];
 
-void on_render(SDL_Window* window, SDL_Renderer* renderer) {
-
-  timeClick++;
-  int size = 32 + 32 * oscillate(timeClick, 60);
+  int x = xval.As<Napi::Number>().Int32Value();
+  int y = yval.As<Napi::Number>().Int32Value();
+  int w = wval.As<Napi::Number>().Int32Value();
+  int h = hval.As<Napi::Number>().Int32Value();
 
   // Fill the surface white
   SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, OPAQUE);
@@ -154,12 +169,45 @@ void on_render(SDL_Window* window, SDL_Renderer* renderer) {
 
   // Draw rectangle;
   SDL_Rect drawTarget;
-  drawTarget.x = 64;
-  drawTarget.y = 64;
+  drawTarget.x = x;
+  drawTarget.y = y;
+  drawTarget.w = w;
+  drawTarget.h = h;
+
+  // Rectangle color is pink
+  SDL_SetRenderDrawColor(renderer, 0xff, 0, 0xff, OPAQUE);
+  SDL_RenderFillRect(renderer, &drawTarget);
+
+  Napi::Env env = info.Env();
+  return Napi::Number::New(env, 0);
+}
+
+Napi::Value RasterJS::DrawSquare(const Napi::CallbackInfo& info) {
+  // TODO: Validate the parameters.
+  Napi::Object arg = info[0].As<Napi::Object>();
+  Napi::Value xval = arg.Get("x");
+  Napi::Value yval = arg.Get("y");
+  Napi::Value sizeval = arg.Get("size");
+
+  int x = xval.As<Napi::Number>().Int32Value();
+  int y = yval.As<Napi::Number>().Int32Value();
+  float size = sizeval.As<Napi::Number>().FloatValue();
+
+  // Fill the surface white
+  SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, OPAQUE);
+  SDL_RenderClear(renderer);
+
+  // Draw rectangle;
+  SDL_Rect drawTarget;
+  drawTarget.x = x;
+  drawTarget.y = y;
   drawTarget.w = size;
   drawTarget.h = size;
 
   // Rectangle color is pink
   SDL_SetRenderDrawColor(renderer, 0xff, 0, 0xff, OPAQUE);
   SDL_RenderFillRect(renderer, &drawTarget);
+
+  Napi::Env env = info.Env();
+  return Napi::Number::New(env, 0);
 }

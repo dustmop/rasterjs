@@ -5,8 +5,10 @@
       "cflags!": [ "-fno-exceptions" ],
       "cflags_cc!": [ "-fno-exceptions" ],
       "sources": [
+        "src/addon/draw_polygon.cc",
         "src/addon/native.cc",
-        "src/addon/rasterjs.cc"
+        "src/addon/rasterjs.cc",
+        "src/addon/rgb_mapping.cc",
       ],
       "include_dirs": [
         "<!@(node -p \"require('node-addon-api').include\")",

@@ -105,6 +105,12 @@ Raster.prototype.constructRenderHandle = function() {
       }
       return (1.0 - Math.cos(click * TAU / period)) / 2.0;
     },
+    fillBackground: function(color) {
+      self.sdlWrapper.fillBackground(color);
+    },
+    setColor: function(color) {
+      self.sdlWrapper.setColor(color);
+    },
     drawSquare: function(params) {
       let [x, y, size] = destructure(params, arguments, ['x', 'y', 'size']);
       self.sdlWrapper.drawRect(x, y, size, size);
@@ -112,6 +118,9 @@ Raster.prototype.constructRenderHandle = function() {
     drawRect: function(params) {
       let [x, y, w, h] = destructure(params, arguments, ['x', 'y', 'w', 'h']);
       self.sdlWrapper.drawRect(x, y, w, h);
+    },
+    drawPolygon: function(params) {
+      self.sdlWrapper.drawPolygon(params);
     }
   };
   return handle;

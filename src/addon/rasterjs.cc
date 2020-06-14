@@ -1,8 +1,12 @@
 #include "rasterjs.h"
+#include "rgb_mapping.h"
+#include "draw_polygon.h"
+
 #include <napi.h>
 #include <uv.h>
 #include <cmath>
 #include <chrono>
+#include <cmath>
 
 #include <SDL.h>
 
@@ -20,7 +24,9 @@ Napi::Object RasterJS::Init(Napi::Env env, Napi::Object exports) {
        InstanceMethod("createWindow", &RasterJS::CreateWindow),
        InstanceMethod("renderLoop", &RasterJS::RenderLoop),
        InstanceMethod("drawRect", &RasterJS::DrawRect),
-       InstanceMethod("drawSquare", &RasterJS::DrawSquare),
+       InstanceMethod("drawPolygon", &RasterJS::DrawPolygon),
+       InstanceMethod("setColor", &RasterJS::SetColor),
+       InstanceMethod("fillBackground", &RasterJS::FillBackground),
   });
   constructor = Napi::Persistent(func);
   constructor.SuppressDestruct();
@@ -128,7 +134,13 @@ Napi::Value RasterJS::RenderLoop(const Napi::CallbackInfo& info) {
       }
     }
 
+    StartFrame();
+
+    // If an error happened, break the loop
     renderFunc.Call(0, NULL);
+    if (env.IsExceptionPending()) {
+      break;
+    }
 
     // Swap buffers to display
     SDL_RenderPresent(renderer);
@@ -150,6 +162,20 @@ Napi::Value RasterJS::RenderLoop(const Napi::CallbackInfo& info) {
 
 #define OPAQUE 255
 
+void RasterJS::StartFrame() {
+  // Fill the surface white
+  SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, OPAQUE);
+  SDL_RenderClear(renderer);
+}
+
+Napi::Value RasterJS::SetColor(const Napi::CallbackInfo& info) {
+  Napi::Value val = info[0];
+  int color = val.As<Napi::Number>().Int32Value();
+  this->drawColor = color;
+
+  return info.Env().Null();
+}
+
 Napi::Value RasterJS::DrawRect(const Napi::CallbackInfo& info) {
   // TODO: Validate length of parameters, all should be numbers
 
@@ -158,14 +184,10 @@ Napi::Value RasterJS::DrawRect(const Napi::CallbackInfo& info) {
   Napi::Value wval = info[2];
   Napi::Value hval = info[3];
 
-  int x = xval.As<Napi::Number>().Int32Value();
-  int y = yval.As<Napi::Number>().Int32Value();
-  int w = wval.As<Napi::Number>().Int32Value();
-  int h = hval.As<Napi::Number>().Int32Value();
-
-  // Fill the surface white
-  SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, OPAQUE);
-  SDL_RenderClear(renderer);
+  int x = round(xval.As<Napi::Number>().FloatValue());
+  int y = round(yval.As<Napi::Number>().FloatValue());
+  int w = round(wval.As<Napi::Number>().FloatValue());
+  int h = round(hval.As<Napi::Number>().FloatValue());
 
   // Draw rectangle;
   SDL_Rect drawTarget;
@@ -174,40 +196,66 @@ Napi::Value RasterJS::DrawRect(const Napi::CallbackInfo& info) {
   drawTarget.w = w;
   drawTarget.h = h;
 
+  int rgb = rgb_mapping[this->drawColor & 0x3f];
+
   // Rectangle color is pink
-  SDL_SetRenderDrawColor(renderer, 0xff, 0, 0xff, OPAQUE);
+  SDL_SetRenderDrawColor(renderer, rgb / 0x10000, (rgb / 0x100) % 0x100, rgb % 0x100, OPAQUE);
   SDL_RenderFillRect(renderer, &drawTarget);
 
   Napi::Env env = info.Env();
   return Napi::Number::New(env, 0);
 }
 
-Napi::Value RasterJS::DrawSquare(const Napi::CallbackInfo& info) {
-  // TODO: Validate the parameters.
-  Napi::Object arg = info[0].As<Napi::Object>();
-  Napi::Value xval = arg.Get("x");
-  Napi::Value yval = arg.Get("y");
-  Napi::Value sizeval = arg.Get("size");
+int point_x[16];
+int point_y[16];
 
-  int x = xval.As<Napi::Number>().Int32Value();
-  int y = yval.As<Napi::Number>().Int32Value();
-  float size = sizeval.As<Napi::Number>().FloatValue();
+Napi::Value RasterJS::DrawPolygon(const Napi::CallbackInfo& info) {
+  if (info.Length() != 1) {
+    printf("expected only 1 argument to this function\n");
+    return info.Env().Null();
+  }
 
-  // Fill the surface white
-  SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, OPAQUE);
+  Napi::Value val = info[0];
+  if (val.IsObject()) {
+    if (!val.IsArray()) {
+      printf("expected Val to be Array\n");
+      return info.Env().Null();
+    }
+    Napi::Object parameter_list = val.ToObject();
+    Napi::Value parameter_length = parameter_list.Get("length");
+    int num_points = parameter_length.As<Napi::Number>().Int32Value();
+
+    for (int i = 0; i < num_points; i++) {
+      Napi::Value elem = parameter_list[uint32_t(i)];
+      // TODO: Validate this is an object
+      Napi::Object pair = elem.ToObject();
+      // TODO: validate length is 2
+      // TODO: handle x,y object, instead of just array
+      Napi::Value first = pair[uint32_t(0)];
+      Napi::Value second = pair[uint32_t(1)];
+      int first_num = first.As<Napi::Number>().Int32Value();
+      int second_num = second.As<Napi::Number>().Int32Value();
+      point_x[i] = first_num;
+      point_y[i] = second_num;
+    }
+
+    int rgb = rgb_mapping[this->drawColor & 0x3f];
+    SDL_SetRenderDrawColor(renderer, rgb / 0x10000, (rgb / 0x100) % 0x100, rgb % 0x100, OPAQUE);
+
+    drawPolygon(renderer, point_x, point_y, num_points);
+  }
+
+  return info.Env().Null();
+}
+
+Napi::Value RasterJS::FillBackground(const Napi::CallbackInfo& info) {
+  Napi::Value val = info[0];
+  int color = round(val.As<Napi::Number>().FloatValue());
+
+  int rgb = rgb_mapping[color & 0x3f];
+
+  SDL_SetRenderDrawColor(renderer, rgb / 0x10000, (rgb / 0x100) % 0x100, rgb % 0x100, OPAQUE);
   SDL_RenderClear(renderer);
 
-  // Draw rectangle;
-  SDL_Rect drawTarget;
-  drawTarget.x = x;
-  drawTarget.y = y;
-  drawTarget.w = size;
-  drawTarget.h = size;
-
-  // Rectangle color is pink
-  SDL_SetRenderDrawColor(renderer, 0xff, 0, 0xff, OPAQUE);
-  SDL_RenderFillRect(renderer, &drawTarget);
-
-  Napi::Env env = info.Env();
-  return Napi::Number::New(env, 0);
+  return info.Env().Null();
 }

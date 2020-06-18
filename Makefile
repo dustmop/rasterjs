@@ -1,0 +1,2 @@
+buildcc:
+	npm install

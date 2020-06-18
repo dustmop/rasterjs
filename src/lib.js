@@ -59,6 +59,46 @@ function destructure(first_param, args, fields) {
   return result;
 }
 
+function rotatePolygon(polygon, angle) {
+  var axis = centerOf(polygon);
+
+  for (var i = 0; i < polygon.length; i++) {
+    var x = polygon[i][0];
+    var y = polygon[i][1];
+    x = x - axis[0];
+    y = y - axis[1];
+
+    var rot_x = x * Math.cos(angle) - y * Math.sin(angle);
+    var rot_y = x * Math.sin(angle) + y * Math.cos(angle);
+
+    polygon[i][0] = rot_x + axis[0];
+    polygon[i][1] = rot_y + axis[1];
+  }
+}
+
+function centerOf(polygon) {
+  var left  = polygon[0][0];
+  var top   = polygon[0][1];
+  var right = polygon[0][0];
+  var bot   = polygon[0][1];
+  for (var i = 1; i < polygon.length; i++) {
+    var p = polygon[i];
+    if (p[0] < left) {
+      left = p[0];
+    }
+    if (p[0] > right) {
+      right = p[0];
+    }
+    if (p[1] < top) {
+      top = p[1];
+    }
+    if (p[1] > bot) {
+      bot = p[1];
+    }
+  }
+  return [(left+right)/2, (top+bot)/2];
+}
+
 Raster.prototype.run = function(app) {
   let keys = Object.keys(app);
   keys = keys.sort();
@@ -75,6 +115,12 @@ Raster.prototype.run = function(app) {
 
   let ctorHandle = this.constructInitHandle();
   this.initFunc(ctorHandle);
+  this.config.translateX = 0;
+  this.config.translateY = 0;
+  if (this.config.translateCenter) {
+    this.config.translateX = this.config.screenWidth / 2;
+    this.config.translateY = this.config.screenHeight / 2;
+  }
   this.renderLoop();
 }
 
@@ -88,7 +134,10 @@ Raster.prototype.constructInitHandle = function() {
     },
     setPixelScale: function(s) {
       self.config.scale = s;
-    }
+    },
+    originAtCenter: function() {
+      self.config.translateCenter = true;
+    },
   };
 }
 
@@ -113,15 +162,29 @@ Raster.prototype.constructRenderHandle = function() {
     },
     drawSquare: function(params) {
       let [x, y, size] = destructure(params, arguments, ['x', 'y', 'size']);
+      x += self.config.translateX;
+      y += self.config.translateY;
       self.sdlWrapper.drawRect(x, y, size, size);
     },
     drawRect: function(params) {
       let [x, y, w, h] = destructure(params, arguments, ['x', 'y', 'w', 'h']);
+      x += self.config.translateX;
+      y += self.config.translateY;
       self.sdlWrapper.drawRect(x, y, w, h);
     },
     drawPolygon: function(params) {
-      self.sdlWrapper.drawPolygon(params);
-    }
+      self.sdlWrapper.drawPolygon(self.config.translateX,
+                                  self.config.translateY, params);
+    },
+    drawLine: function(params) {
+      let [x, y, x1, y1] = destructure(params, arguments, ['x','y','x1','y1']);
+      x  += self.config.translateX;
+      y  += self.config.translateY;
+      x1 += self.config.translateX;
+      y1 += self.config.translateY;
+      self.sdlWrapper.drawLine(x, y, x1, y1);
+    },
+    rotatePolygon: rotatePolygon,
   };
   return handle;
 }

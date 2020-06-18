@@ -1,6 +1,7 @@
 #include "rasterjs.h"
 #include "rgb_mapping.h"
 #include "draw_polygon.h"
+#include "time_keeper.h"
 
 #include <napi.h>
 #include <uv.h>
@@ -25,6 +26,7 @@ Napi::Object RasterJS::Init(Napi::Env env, Napi::Object exports) {
        InstanceMethod("renderLoop", &RasterJS::RenderLoop),
        InstanceMethod("drawRect", &RasterJS::DrawRect),
        InstanceMethod("drawPolygon", &RasterJS::DrawPolygon),
+       InstanceMethod("drawLine", &RasterJS::DrawLine),
        InstanceMethod("setColor", &RasterJS::SetColor),
        InstanceMethod("fillBackground", &RasterJS::FillBackground),
   });
@@ -109,13 +111,13 @@ Napi::Value RasterJS::RenderLoop(const Napi::CallbackInfo& info) {
     return Napi::Number::New(env, -1);
   }
 
+  TimeKeeper keeper;
+  keeper.Init();
+
   // A basic main loop to handle events
   bool is_running = true;
   SDL_Event event;
   while (is_running) {
-
-    auto start = std::chrono::high_resolution_clock::now();
-
     if (SDL_PollEvent(&event)) {
       switch (event.type) {
       case SDL_QUIT:
@@ -145,14 +147,7 @@ Napi::Value RasterJS::RenderLoop(const Napi::CallbackInfo& info) {
     // Swap buffers to display
     SDL_RenderPresent(renderer);
 
-    // Sleep for the remainder of the frame
-    auto elapsed = std::chrono::high_resolution_clock::now() - start;
-    long long microseconds = std::chrono::duration_cast<std::chrono::microseconds>(elapsed).count();
-    long milliseconds = microseconds / 1000;
-    if (milliseconds < 16) {
-      SDL_Delay(16 - milliseconds);
-    }
-
+    keeper.WaitNextFrame();
   }
 
   return Napi::Number::New(env, 0);
@@ -206,16 +201,39 @@ Napi::Value RasterJS::DrawRect(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, 0);
 }
 
+Napi::Value RasterJS::DrawLine(const Napi::CallbackInfo& info) {
+  Napi::Value xval  = info[0];
+  Napi::Value yval  = info[1];
+  Napi::Value x1val = info[2];
+  Napi::Value y1val = info[3];
+
+  int x  = round(xval.As<Napi::Number>().FloatValue());
+  int y  = round(yval.As<Napi::Number>().FloatValue());
+  int x1 = round(x1val.As<Napi::Number>().FloatValue());
+  int y1 = round(y1val.As<Napi::Number>().FloatValue());
+
+  int rgb = rgb_mapping[this->drawColor & 0x3f];
+  SDL_SetRenderDrawColor(renderer, rgb / 0x10000, (rgb / 0x100) % 0x100, rgb % 0x100, OPAQUE);
+
+  SDL_RenderDrawLine(renderer, x, y, x1, y1);
+
+  Napi::Env env = info.Env();
+  return Napi::Number::New(env, 0);
+}
+
 int point_x[16];
 int point_y[16];
 
 Napi::Value RasterJS::DrawPolygon(const Napi::CallbackInfo& info) {
-  if (info.Length() != 1) {
-    printf("expected only 1 argument to this function\n");
+  if (info.Length() != 3) {
+    printf("expected 3 arguments to this function\n");
     return info.Env().Null();
   }
 
-  Napi::Value val = info[0];
+  int baseX = info[0].ToNumber().Int32Value();
+  int baseY = info[1].ToNumber().Int32Value();
+
+  Napi::Value val = info[2];
   if (val.IsObject()) {
     if (!val.IsArray()) {
       printf("expected Val to be Array\n");
@@ -235,8 +253,8 @@ Napi::Value RasterJS::DrawPolygon(const Napi::CallbackInfo& info) {
       Napi::Value second = pair[uint32_t(1)];
       int first_num = first.As<Napi::Number>().Int32Value();
       int second_num = second.As<Napi::Number>().Int32Value();
-      point_x[i] = first_num;
-      point_y[i] = second_num;
+      point_x[i] = first_num + baseX;
+      point_y[i] = second_num + baseY;
     }
 
     int rgb = rgb_mapping[this->drawColor & 0x3f];

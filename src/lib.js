@@ -1,11 +1,152 @@
 
-const createSdlWrapper = require('../build/Release/native');
+var createBackendRenderer;
+var isRunningNodejs;
+if (typeof window === 'undefined') {
+  // Running in node.js
+  isRunningNodejs = true;
+  if (process.argv.length > 2 && process.argv[2] == '--gif') {
+    createBackendRenderer = function() {
+      const {createCanvas} = require('canvas');
+      const fs = require('fs');
+      const os = require('os');
+      const path = require('path');
+      const util = require('util');
+      const randstr = require('randomstring');
+      var gifWidth;
+      var gifHeight;
+      var gifTmpdir;
+      var canvas;
+      var ctx;
+      var r = {
+        sdlInit: function() {},
+        createWindow: function(width, height) {
+          gifWidth = parseInt(width, 10);
+          gifHeight = parseInt(height, 10);
+          gifTmpdir = path.join(os.tmpdir(), 'raster-' + randstr.generate(8));
+          try {
+            fs.mkdirSync(gifTmpdir);
+          } catch (e) {
+          }
+          console.log('tmp = "' + gifTmpdir + '"');
+        },
+        renderLoop: function(f) {
+          var numFrames = 64;
+          for (var count = 0; count < numFrames; count++) {
+            canvas = createCanvas(gifWidth, gifHeight);
+            ctx = canvas.getContext('2d');
+            ctx.antialias = 'none';
+            f();
+            ctx = null;
+            var n = count.toString();
+            while (n.length < 3) {
+              n = '0' + n;
+            }
+            const buffer = canvas.toBuffer();
+            var filename = util.format('%s/%s.png', gifTmpdir, n);
+            fs.writeFileSync(filename, buffer)
+          }
+          const gifOpt = {repeat: 0, delay: 16, quality: 10};
+          const GIFEncoder = require('gifencoder');
+          const encoder = new GIFEncoder(gifWidth, gifHeight);
+          const pngFileStream = require('png-file-stream');
+          const stream = pngFileStream(gifTmpdir + '/*.png')
+                .pipe(encoder.createWriteStream(gifOpt))
+                .pipe(fs.createWriteStream('myanimated.gif'));
+          stream.on('finish', function () {
+            console.log('created!');
+          });
+        },
+        fillBackground: function(color) {
+          ctx.fillStyle = 'grey';
+          ctx.fillRect(0, 0, 256, 256);
+        },
+        setColor: function(color) {
+          drawColor = color;
+        },
+        drawPolygon: function(x, y, params) {
+          ctx.fillStyle = 'white';
+          ctx.beginPath();
+          var p = params[0];
+          ctx.moveTo(x + p[0], y + p[1]);
+          for (var i = 1; i < params.length; i++) {
+            var p = params[i];
+            ctx.lineTo(x + p[0], y + p[1]);
+          }
+          ctx.fill();
+        },
+      };
+      return r;
+    }
+  } else {
+    createBackendRenderer = require('../build/Release/native');
+  }
+} else {
+  // Running in browser
+  isRunningNodejs = false;
+  createBackendRenderer = function() {
+    var canvas;
+    var ctx;
+    var drawColor;
+    var r = {
+      sdlInit:      function() {},
+      createWindow: function(width, height) {
+        canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        document.body.appendChild(canvas);
+        var c = document.getElementsByTagName('canvas')[0];
+        c.style.width = width * 3;
+        c.style.height = height * 3;
+      },
+      renderLoop: function(f) {
+        requestAnimationFrame(function() {
+          ctx = null;
+          f();
+          r.renderLoop(f);
+        });
+      },
+      fillBackground: function(color) {
+        if (!ctx) {
+          ctx = canvas.getContext('2d');
+          ctx.imageSmoothingEnabled = false;
+          ctx.mozImageSmoothingEnabled = false;
+          ctx.imageSmoothingQuality = 'low';
+        }
+        ctx.fillStyle = 'grey';
+        ctx.fillRect(0, 0, 256, 256);
+      },
+      setColor: function(color) {
+        drawColor = color;
+      },
+      drawPolygon: function(x, y, params) {
+        if (!ctx) {
+          ctx = canvas.getContext('2d');
+          ctx.imageSmoothingEnabled = false;
+          ctx.mozImageSmoothingEnabled = false;
+          ctx.imageSmoothingQuality = 'low';
+        }
+        ctx.fillStyle = 'white';
+        ctx.beginPath();
+        var p = params[0];
+        ctx.moveTo(x + p[0], y + p[1]);
+        for (var i = 1; i < params.length; i++) {
+          var p = params[i];
+          ctx.lineTo(x + p[0], y + p[1]);
+        }
+        ctx.fill();
+      },
+    };
+    return r;
+  };
+}
 
 function Raster() {
-  this.initFunc = null;
-  this.frameFunc = null;
-  this.sdlWrapper = null;
-  this.timeClick = null;
+  this._config = {};
+  this._isRunning = false;
+  this._frameFunc = null;
+  this._renderSystem = null;
+  this._backendRenderer = null;
+  this._timeClick = null;
   return this;
 }
 
@@ -99,117 +240,124 @@ function centerOf(polygon) {
   return [(left+right)/2, (top+bot)/2];
 }
 
-Raster.prototype.run = function(app) {
-  let keys = Object.keys(app);
-  keys = keys.sort();
-  if (!arrayEquals(keys, ['frame', 'init'])) {
-    console.log("App's key must be exactly 'init', 'frame'");
-    throw 'Run failed';
+Raster.prototype.setViewportSize = function(params) {
+  if (this._isRunning) {
+    throw 'Cannot setViewportSize when app is running';
   }
+  let [w, h] = destructure(params, arguments, ['w', 'h']);
+  this._config.screenWidth = w;
+  this._config.screenHeight = h;
+}
 
-  this.initFunc = app.init;
-  this.frameFunc = app.frame;
+Raster.prototype.setPixelScale = function(s) {
+  if (this._isRunning) {
+    throw 'Cannot setPixelScale when app is running';
+  }
+  this._config.scale = s;
+}
 
-  this.config = {};
-  this.timeClick = 0;
+Raster.prototype.originAtCenter = function() {
+  if (this._isRunning) {
+    throw 'Cannot originAtCenter when app is running';
+  }
+  this._config.translateCenter = true;
+}
 
-  let ctorHandle = this.constructInitHandle();
-  this.initFunc(ctorHandle);
-  this.config.translateX = 0;
-  this.config.translateY = 0;
-  if (this.config.translateCenter) {
-    this.config.translateX = this.config.screenWidth / 2;
-    this.config.translateY = this.config.screenHeight / 2;
+Raster.prototype.run = function(renderFunc) {
+  this._renderFunc = renderFunc;
+  this._timeClick = 0;
+  this._config.translateX = 0;
+  this._config.translateY = 0;
+  if (this._config.translateCenter) {
+    this._config.translateX = this._config.screenWidth / 2;
+    this._config.translateY = this._config.screenHeight / 2;
   }
   this.renderLoop();
 }
 
-Raster.prototype.constructInitHandle = function() {
-  let self = this;
-  return {
-    setViewportSize: function(params) {
-      let [w, h] = destructure(params, arguments, ['w', 'h']);
-      self.config.screenWidth = w;
-      self.config.screenHeight = h;
-    },
-    setPixelScale: function(s) {
-      self.config.scale = s;
-    },
-    originAtCenter: function() {
-      self.config.translateCenter = true;
-    },
-  };
-}
-
 let TAU = 6.283185307179586;
 
-Raster.prototype.constructRenderHandle = function() {
+Raster.prototype.addRenderCalls = function() {
   let self = this;
-  let handle = {
-    TAU: TAU,
-    timeClick: 0,
-    oscillate: function(period, click) {
-      if (click === undefined) {
-        click = handle.timeClick;
-      }
-      return (1.0 - Math.cos(click * TAU / period)) / 2.0;
-    },
-    fillBackground: function(color) {
-      self.sdlWrapper.fillBackground(color);
-    },
-    setColor: function(color) {
-      self.sdlWrapper.setColor(color);
-    },
-    drawSquare: function(params) {
-      let [x, y, size] = destructure(params, arguments, ['x', 'y', 'size']);
-      x += self.config.translateX;
-      y += self.config.translateY;
-      self.sdlWrapper.drawRect(x, y, size, size);
-    },
-    drawRect: function(params) {
-      let [x, y, w, h] = destructure(params, arguments, ['x', 'y', 'w', 'h']);
-      x += self.config.translateX;
-      y += self.config.translateY;
-      self.sdlWrapper.drawRect(x, y, w, h);
-    },
-    drawPolygon: function(params) {
-      self.sdlWrapper.drawPolygon(self.config.translateX,
-                                  self.config.translateY, params);
-    },
-    drawLine: function(params) {
-      let [x, y, x1, y1] = destructure(params, arguments, ['x','y','x1','y1']);
-      x  += self.config.translateX;
-      y  += self.config.translateY;
-      x1 += self.config.translateX;
-      y1 += self.config.translateY;
-      self.sdlWrapper.drawLine(x, y, x1, y1);
-    },
-    rotatePolygon: rotatePolygon,
+
+  self.TAU = TAU;
+
+  self.oscillate = function(period, click) {
+    if (click === undefined) {
+      click = self.timeClick;
+    }
+    return (1.0 - Math.cos(click * TAU / period)) / 2.0;
   };
-  return handle;
+
+  self.fillBackground = function(color) {
+    self._backendRenderer.fillBackground(color);
+  };
+
+  self.setColor = function(color) {
+    self._backendRenderer.setColor(color);
+  };
+
+  self.drawSquare = function(params) {
+    let [x, y, size] = destructure(params, arguments, ['x', 'y', 'size']);
+    x += self._config.translateX;
+    y += self._config.translateY;
+    self._backendRenderer.drawRect(x, y, size, size);
+  };
+
+  self.drawRect = function(params) {
+    let [x, y, w, h] = destructure(params, arguments, ['x', 'y', 'w', 'h']);
+    x += self._config.translateX;
+    y += self._config.translateY;
+    self._backendRenderer.drawRect(x, y, w, h);
+  };
+
+  self.drawPolygon = function(params) {
+    self._backendRenderer.drawPolygon(self._config.translateX,
+                                 self._config.translateY, params);
+  };
+
+  self.drawLine = function(params) {
+    let [x, y, x1, y1] = destructure(params, arguments, ['x','y','x1','y1']);
+    x  += self._config.translateX;
+    y  += self._config.translateY;
+    x1 += self._config.translateX;
+    y1 += self._config.translateY;
+    self._backendRenderer.drawLine(x, y, x1, y1);
+  };
+
+  self.rotatePolygon = rotatePolygon;
 }
 
 Raster.prototype.renderLoop = function() {
-  let config = this.config;
-  this.renderHandle = this.constructRenderHandle();
-  this.sdlWrapper = createSdlWrapper();
-  this.sdlWrapper.sdlInit();
-  this.sdlWrapper.createWindow(config.screenWidth, config.screenHeight);
+  let config = this._config;
   let self = this;
-  this.sdlWrapper.renderLoop(function() {
-    self.renderOnce();
-  });
+  this.addRenderCalls();
+  this._backendRenderer = createBackendRenderer();
+  this._backendRenderer.sdlInit();
+  setTimeout(function() {
+    self._backendRenderer.createWindow(config.screenWidth, config.screenHeight);
+    self._backendRenderer.renderLoop(function() {
+      self.renderOnce();
+    });
+  }, 0);
 }
 
 Raster.prototype.renderOnce = function() {
   // Called once per render operation. Set the click, then call app's frame
-  this.renderHandle.timeClick = this.timeClick;
-  this.timeClick++;
-  this.frameFunc(this.renderHandle);
+  this.timeClick = this._timeClick;
+  this._timeClick++;
+  this._renderFunc();
 }
 
 var _priv_raster = new Raster();
 
-module.exports.run = function(param) {
-  _priv_raster.run(param);
-};
+if (isRunningNodejs) {
+  module.exports = _priv_raster;
+} else {
+  function require(moduleName) {
+    if (moduleName === 'raster.js' || moduleName === './raster.js') {
+      return _priv_raster;
+    }
+    throw 'Could not require module named "' + moduleName + '"';
+  }
+}

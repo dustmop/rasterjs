@@ -1,4 +1,46 @@
 
+var canvas;
+var ctx;
+var opt = {drawColor: null};
+
+function fillBackground(color) {
+  ctx.fillStyle = 'grey';
+  ctx.fillRect(0, 0, 256, 256);
+}
+
+function setColor(color) {
+  opt.drawColor = color;
+}
+
+function round(f) {
+  return Math.round(f);
+}
+
+function drawPolygon(x, y, params) {
+  ctx.fillStyle = 'white';
+  ctx.beginPath();
+  var p = params[0];
+  ctx.moveTo(round(x + p[0]), round(y + p[1]));
+  for (var i = 1; i < params.length; i++) {
+    var p = params[i];
+    ctx.lineTo(round(x + p[0]), round(y + p[1]));
+  }
+  ctx.fill();
+}
+
+function drawLine(x, y, x1, y1) {
+  ctx.fillStyle = 'red';
+  ctx.beginPath();
+  ctx.moveTo(x, y);
+  ctx.lineTo(x1, y1);
+  ctx.stroke();
+}
+
+function drawRect(x, y, w, h) {
+  ctx.fillStyle = 'red';
+  ctx.fillRect(x, y, w, h);
+}
+
 var createBackendRenderer;
 var isRunningNodejs;
 if (typeof window === 'undefined') {
@@ -15,8 +57,6 @@ if (typeof window === 'undefined') {
       var gifWidth;
       var gifHeight;
       var gifTmpdir;
-      var canvas;
-      var ctx;
       var r = {
         sdlInit: function() {},
         createWindow: function(width, height) {
@@ -56,24 +96,11 @@ if (typeof window === 'undefined') {
             console.log('created!');
           });
         },
-        fillBackground: function(color) {
-          ctx.fillStyle = 'grey';
-          ctx.fillRect(0, 0, 256, 256);
-        },
-        setColor: function(color) {
-          drawColor = color;
-        },
-        drawPolygon: function(x, y, params) {
-          ctx.fillStyle = 'white';
-          ctx.beginPath();
-          var p = params[0];
-          ctx.moveTo(x + p[0], y + p[1]);
-          for (var i = 1; i < params.length; i++) {
-            var p = params[i];
-            ctx.lineTo(x + p[0], y + p[1]);
-          }
-          ctx.fill();
-        },
+        fillBackground: fillBackground,
+        setColor: setColor,
+        drawPolygon: drawPolygon,
+        drawLine: drawLine,
+        drawRect: drawRect,
       };
       return r;
     }
@@ -84,8 +111,6 @@ if (typeof window === 'undefined') {
   // Running in browser
   isRunningNodejs = false;
   createBackendRenderer = function() {
-    var canvas;
-    var ctx;
     var drawColor;
     var r = {
       sdlInit:      function() {},
@@ -100,41 +125,16 @@ if (typeof window === 'undefined') {
       },
       renderLoop: function(f) {
         requestAnimationFrame(function() {
-          ctx = null;
+          ctx = canvas.getContext('2d');
           f();
           r.renderLoop(f);
         });
       },
-      fillBackground: function(color) {
-        if (!ctx) {
-          ctx = canvas.getContext('2d');
-          ctx.imageSmoothingEnabled = false;
-          ctx.mozImageSmoothingEnabled = false;
-          ctx.imageSmoothingQuality = 'low';
-        }
-        ctx.fillStyle = 'grey';
-        ctx.fillRect(0, 0, 256, 256);
-      },
-      setColor: function(color) {
-        drawColor = color;
-      },
-      drawPolygon: function(x, y, params) {
-        if (!ctx) {
-          ctx = canvas.getContext('2d');
-          ctx.imageSmoothingEnabled = false;
-          ctx.mozImageSmoothingEnabled = false;
-          ctx.imageSmoothingQuality = 'low';
-        }
-        ctx.fillStyle = 'white';
-        ctx.beginPath();
-        var p = params[0];
-        ctx.moveTo(x + p[0], y + p[1]);
-        for (var i = 1; i < params.length; i++) {
-          var p = params[i];
-          ctx.lineTo(x + p[0], y + p[1]);
-        }
-        ctx.fill();
-      },
+      fillBackground: fillBackground,
+      setColor: setColor,
+      drawPolygon: drawPolygon,
+      drawLine: drawLine,
+      drawRect: drawRect,
     };
     return r;
   };

@@ -1,154 +1,59 @@
 
-var canvas;
-var ctx;
-var opt = {drawColor: null};
-
-function fillBackground(color) {
-  ctx.fillStyle = 'grey';
-  ctx.fillRect(0, 0, 256, 256);
-}
-
-function setColor(color) {
-  opt.drawColor = color;
-}
-
-function round(f) {
-  return Math.round(f);
-}
-
-function drawPolygon(x, y, params) {
-  ctx.fillStyle = 'white';
-  ctx.beginPath();
-  var p = params[0];
-  ctx.moveTo(round(x + p[0]), round(y + p[1]));
-  for (var i = 1; i < params.length; i++) {
-    var p = params[i];
-    ctx.lineTo(round(x + p[0]), round(y + p[1]));
-  }
-  ctx.fill();
-}
-
-function drawLine(x, y, x1, y1) {
-  ctx.fillStyle = 'red';
-  ctx.beginPath();
-  ctx.moveTo(x, y);
-  ctx.lineTo(x1, y1);
-  ctx.stroke();
-}
-
-function drawRect(x, y, w, h) {
-  ctx.fillStyle = 'red';
-  ctx.fillRect(x, y, w, h);
-}
-
+// Detect whether running in browser or node.js
 var createBackendRenderer;
 var isRunningNodejs;
 if (typeof window === 'undefined') {
-  // Running in node.js
   isRunningNodejs = true;
+} else {
+  isRunningNodejs = false;
+}
+
+////////////////////////////////////////
+// Pick which backend renderer to use
+
+if (isRunningNodejs) {
   if (process.argv.length > 2 && process.argv[2] == '--gif') {
-    createBackendRenderer = function() {
-      const {createCanvas} = require('canvas');
-      const fs = require('fs');
-      const os = require('os');
-      const path = require('path');
-      const util = require('util');
-      const randstr = require('randomstring');
-      var gifWidth;
-      var gifHeight;
-      var gifTmpdir;
-      var r = {
-        sdlInit: function() {},
-        createWindow: function(width, height) {
-          gifWidth = parseInt(width, 10);
-          gifHeight = parseInt(height, 10);
-          gifTmpdir = path.join(os.tmpdir(), 'raster-' + randstr.generate(8));
-          try {
-            fs.mkdirSync(gifTmpdir);
-          } catch (e) {
-          }
-          console.log('tmp = "' + gifTmpdir + '"');
-        },
-        renderLoop: function(f) {
-          var numFrames = 64;
-          for (var count = 0; count < numFrames; count++) {
-            canvas = createCanvas(gifWidth, gifHeight);
-            ctx = canvas.getContext('2d');
-            ctx.antialias = 'none';
-            f();
-            ctx = null;
-            var n = count.toString();
-            while (n.length < 3) {
-              n = '0' + n;
-            }
-            const buffer = canvas.toBuffer();
-            var filename = util.format('%s/%s.png', gifTmpdir, n);
-            fs.writeFileSync(filename, buffer)
-          }
-          const gifOpt = {repeat: 0, delay: 16, quality: 10};
-          const GIFEncoder = require('gifencoder');
-          const encoder = new GIFEncoder(gifWidth, gifHeight);
-          const pngFileStream = require('png-file-stream');
-          const stream = pngFileStream(gifTmpdir + '/*.png')
-                .pipe(encoder.createWriteStream(gifOpt))
-                .pipe(fs.createWriteStream('myanimated.gif'));
-          stream.on('finish', function () {
-            console.log('created!');
-          });
-        },
-        fillBackground: fillBackground,
-        setColor: setColor,
-        drawPolygon: drawPolygon,
-        drawLine: drawLine,
-        drawRect: drawRect,
-      };
-      return r;
+    createBackendRenderer = function(callback) {
+      const gifRenderer = require('./gif_renderer.js');
+      var r = gifRenderer.make();
+      setTimeout(function() {
+        callback(r);
+      }, 0);
     }
   } else {
-    createBackendRenderer = require('../build/Release/native');
+    createBackendRenderer = function(callback) {
+      const cppmodule = require('../build/Release/native');
+      callback(cppmodule());
+    }
   }
 } else {
   // Running in browser
-  isRunningNodejs = false;
-  createBackendRenderer = function() {
-    var drawColor;
-    var r = {
-      sdlInit:      function() {},
-      createWindow: function(width, height) {
-        canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        document.body.appendChild(canvas);
-        var c = document.getElementsByTagName('canvas')[0];
-        c.style.width = width * 3;
-        c.style.height = height * 3;
-      },
-      renderLoop: function(f) {
-        requestAnimationFrame(function() {
-          ctx = canvas.getContext('2d');
-          f();
-          r.renderLoop(f);
-        });
-      },
-      fillBackground: fillBackground,
-      setColor: setColor,
-      drawPolygon: drawPolygon,
-      drawLine: drawLine,
-      drawRect: drawRect,
+  var loadScript;
+  createBackendRenderer = function(callback) {
+    loadScript = function(filename, whenLoadedCallback) {
+      if (whenLoadedCallback === undefined) {
+        throw 'loadScript needs to be given a callback'
+      }
+      var js = document.createElement('script');
+      js.type = 'text/javascript';
+      js.src = filename;
+      js.onload = function() {
+        whenLoadedCallback();
+      }
+      document.body.appendChild(js);
     };
-    return r;
+    setTimeout(function() {
+      loadScript('html_renderer.js', function() {
+        setTimeout(function() {
+          callback(htmlRendererMake());
+        }, 16);
+      });
+    }, 0);
   };
 }
 
-function Raster() {
-  this._config = {};
-  this._isRunning = false;
-  this._frameFunc = null;
-  this._renderSystem = null;
-  this._backendRenderer = null;
-  this._timeClick = null;
-  return this;
-}
+////////////////////////////////////////
+// Utiliies
 
 function arrayEquals(left, rite) {
   if (left.length !== rite.length) {
@@ -160,44 +65,6 @@ function arrayEquals(left, rite) {
     }
   }
   return true;
-}
-
-function isObject(thing) {
-  if (thing === null) {
-    return false;
-  }
-  return (typeof thing === 'object' && !Array.isArray(thing));
-}
-
-function destructure(first_param, args, fields) {
-  let caller = destructure.caller;
-  if (args.length != 1 || !isObject(first_param)) {
-    // Normal list of unnamed parameters passed to the function.
-    if (args.length != fields.length) {
-      throw 'destructure: function "' + caller.name + '" expected ' + fields.length + ' arguments, got ' + args.length;
-    }
-    return args;
-  }
-  // Object containing named parameters passed to the function.
-  let result = [];
-  let haveKeys = Object.keys(first_param);
-  for (let i = 0; i < fields.length; i++) {
-    let f = fields[i];
-    let pos = haveKeys.indexOf(f);
-    if (pos == -1) {
-      throw 'destructure: function "' + caller.name + '" needs parameter "' + f + '"';
-    }
-    haveKeys.splice(pos, 1);
-    result.push(first_param[f]);
-  }
-  // Validate there's no unknown parameters passed to the function.
-  if (haveKeys.length == 1) {
-    let f = haveKeys[0];
-    throw 'destructure: function "' + caller.name + '" unknown parameter "' + f + '"';
-  } else if (haveKeys.length > 1) {
-    throw 'destructure: function "' + caller.name + '" unknown parameters "' + haveKeys + '"';
-  }
-  return result;
 }
 
 function rotatePolygon(polygon, angle) {
@@ -240,114 +107,331 @@ function centerOf(polygon) {
   return [(left+right)/2, (top+bot)/2];
 }
 
+function isObject(thing) {
+  if (thing === null) {
+    return false;
+  }
+  return (typeof thing === 'object' && !Array.isArray(thing));
+}
+
+function destructure(first_param, args, fields) {
+  let caller = destructure.caller;
+  if (args.length != 1 || !isObject(first_param)) {
+    // Normal list of unnamed parameters passed to the function.
+    if (args.length != fields.length) {
+      throw 'destructure: function "' + caller.name + '" expected ' + fields.length + ' arguments, got ' + args.length;
+    }
+    return args;
+  }
+  // Object containing named parameters passed to the function.
+  let result = [];
+  let haveKeys = Object.keys(first_param);
+  for (let i = 0; i < fields.length; i++) {
+    let f = fields[i];
+    let pos = haveKeys.indexOf(f);
+    if (pos == -1) {
+      throw 'destructure: function "' + caller.name + '" needs parameter "' + f + '"';
+    }
+    haveKeys.splice(pos, 1);
+    result.push(first_param[f]);
+  }
+  // Validate there's no unknown parameters passed to the function.
+  if (haveKeys.length == 1) {
+    let f = haveKeys[0];
+    throw 'destructure: function "' + caller.name + '" unknown parameter "' + f + '"';
+  } else if (haveKeys.length > 1) {
+    throw 'destructure: function "' + caller.name + '" unknown parameters "' + haveKeys + '"';
+  }
+  return result;
+}
+
+function concatArray(first, remain) {
+  let make = new Array();
+  make.push(first);
+  for (let i = 0; i < remain.length; i++) {
+    make.push(remain[i]);
+  }
+  return make;
+}
+
+const TAU = 6.283185307179586;
+
+////////////////////////////////////////
+// private state
+
+var _state = {
+  config: {},
+  images: [],
+  isExec: false,
+  frameFunc: null,
+  backendRenderer: null,
+  timeClick: null,
+};
+
+////////////////////////////////////////
+// queue renderer
+
+function QueueRenderer() {
+  this._queue = [];
+  return this;
+}
+
+QueueRenderer.prototype.queue = function() {
+  return this._queue;
+}
+
+QueueRenderer.prototype.fillBackground = function() {
+  this._queue.push(concatArray('fillBackground', arguments));
+}
+
+QueueRenderer.prototype.drawLine = function() {
+  this._queue.push(concatArray('drawLine', arguments));
+}
+
+QueueRenderer.prototype.drawCircleFromArc = function() {
+  this._queue.push(concatArray('drawCircleFromArc', arguments));
+}
+
+////////////////////////////////////////
+// QImage
+
+function QImage(filename) {
+  this.filename = filename;
+  this.isOpen = false;
+  this.img = null;
+  this.id = null;
+  return this;
+}
+
+////////////////////////////////////////
+// primary object
+
+function Raster() {
+  _state.backendRenderer = new QueueRenderer();
+  return this;
+}
+
+Raster.prototype.TAU = TAU;
+
 Raster.prototype.setViewportSize = function(params) {
-  if (this._isRunning) {
+  if (_state.isExec) {
     throw 'Cannot setViewportSize when app is running';
   }
   let [w, h] = destructure(params, arguments, ['w', 'h']);
-  this._config.screenWidth = w;
-  this._config.screenHeight = h;
+  _state.config.screenWidth = w;
+  _state.config.screenHeight = h;
 }
 
 Raster.prototype.setPixelScale = function(s) {
-  if (this._isRunning) {
+  if (_state.isExec) {
     throw 'Cannot setPixelScale when app is running';
   }
-  this._config.scale = s;
+  _state.config.scale = s;
 }
 
 Raster.prototype.originAtCenter = function() {
-  if (this._isRunning) {
+  if (_state.isExec) {
     throw 'Cannot originAtCenter when app is running';
   }
-  this._config.translateCenter = true;
+  _state.config.translateCenter = true;
 }
+
+Raster.prototype.loadImage = function(path) {
+  var i = new QImage(path);
+  i.id = _state.images.length;
+  _state.images.push(i);
+  return i;
+};
 
 Raster.prototype.run = function(renderFunc) {
-  this._renderFunc = renderFunc;
-  this._timeClick = 0;
-  this._config.translateX = 0;
-  this._config.translateY = 0;
-  if (this._config.translateCenter) {
-    this._config.translateX = this._config.screenWidth / 2;
-    this._config.translateY = this._config.screenHeight / 2;
+  _state.renderFunc = renderFunc;
+  _state.timeClick = 0;
+  _state.config.translateX = 0;
+  _state.config.translateY = 0;
+  if (_state.config.translateCenter) {
+    _state.config.translateX = _state.config.screenWidth / 2;
+    _state.config.translateY = _state.config.screenHeight / 2;
   }
-  this.renderLoop();
+  _state.isExec = true;
+  var self = this;
+  createBackendRenderer(function(r) {
+    _state.backendRenderer = r;
+    self._allImagesOpen();
+    self.renderLoop();
+  });
 }
 
-let TAU = 6.283185307179586;
-
-Raster.prototype.addRenderCalls = function() {
-  let self = this;
-
-  self.TAU = TAU;
-
-  self.oscillate = function(period, click) {
-    if (click === undefined) {
-      click = self.timeClick;
+Raster.prototype.show = function() {
+  let q = _state.backendRenderer.queue();
+  _state.timeClick = 0;
+  _state.config.translateX = 0;
+  _state.config.translateY = 0;
+  if (_state.config.translateCenter) {
+    _state.config.translateX = _state.config.screenWidth / 2;
+    _state.config.translateY = _state.config.screenHeight / 2;
+  }
+  _state.isExec = true;
+  var self = this;
+  createBackendRenderer(function(r) {
+    _state.backendRenderer = r;
+    self._allImagesOpen();
+    _state.renderFunc = function() {
+      for (let i = 0; i < q.length; i++) {
+        let row = q[i];
+        let fname = row[0];
+        let args = row.slice(1);
+        let func = r[fname];
+        if (func) {
+          func.apply(r, args);
+        } else {
+          throw 'Function ' + fname + ' not found';
+        }
+      }
     }
-    return (1.0 - Math.cos(click * TAU / period)) / 2.0;
-  };
+    self.renderLoop();
+  });
+}
 
-  self.fillBackground = function(color) {
-    self._backendRenderer.fillBackground(color);
-  };
+Raster.prototype._allImagesOpen = function() {
+  for (var i = 0; i < _state.images.length; i++) {
+    var img = _state.images[i];
+    if (!img.isOpen) {
+      _state.backendRenderer.loadImage(img.filename);
+    }
+  }
+}
 
-  self.setColor = function(color) {
-    self._backendRenderer.setColor(color);
-  };
+Raster.prototype.oscillate = function(period, fracOffset) {
+  if (fracOffset === undefined) {
+    fracOffset = 0.0;
+  }
+  let click = _state.timeClick + Math.round(period * fracOffset);
+  return (1.0 - Math.cos(click * TAU / period)) / 2.0;
+}
 
-  self.drawSquare = function(params) {
-    let [x, y, size] = destructure(params, arguments, ['x', 'y', 'size']);
-    x += self._config.translateX;
-    y += self._config.translateY;
-    self._backendRenderer.drawRect(x, y, size, size);
-  };
+Raster.prototype.fillBackground = function(color) {
+  _state.backendRenderer.fillBackground(color);
+}
 
-  self.drawRect = function(params) {
-    let [x, y, w, h] = destructure(params, arguments, ['x', 'y', 'w', 'h']);
-    x += self._config.translateX;
-    y += self._config.translateY;
-    self._backendRenderer.drawRect(x, y, w, h);
-  };
+Raster.prototype.setColor = function(color) {
+  _state.backendRenderer.setColor(color);
+}
 
-  self.drawPolygon = function(params) {
-    self._backendRenderer.drawPolygon(self._config.translateX,
-                                 self._config.translateY, params);
-  };
+Raster.prototype.drawSquare = function(params) {
+  let [x, y, size] = destructure(params, arguments, ['x', 'y', 'size']);
+  if (_state.isExec) {
+    x += _state.config.translateX;
+    y += _state.config.translateY;
+  }
+  _state.backendRenderer.drawRect(x, y, size, size);
+}
 
-  self.drawLine = function(params) {
-    let [x, y, x1, y1] = destructure(params, arguments, ['x','y','x1','y1']);
-    x  += self._config.translateX;
-    y  += self._config.translateY;
-    x1 += self._config.translateX;
-    y1 += self._config.translateY;
-    self._backendRenderer.drawLine(x, y, x1, y1);
-  };
+Raster.prototype.drawRect = function(params) {
+  let [x, y, w, h] = destructure(params, arguments, ['x', 'y', 'w', 'h']);
+  if (_state.isExec) {
+    x += _state.config.translateX;
+    y += _state.config.translateY;
+  }
+  _state.backendRenderer.drawRect(x, y, w, h);
+}
 
-  self.rotatePolygon = rotatePolygon;
+Raster.prototype.drawPolygon = function(params) {
+  _state.backendRenderer.drawPolygon(_state.config.translateX,
+                                     _state.config.translateY, params);
+}
+
+Raster.prototype.drawLine = function(params) {
+  let [x, y, x1, y1] = destructure(params, arguments, ['x','y','x1','y1']);
+  if (_state.isExec) {
+    x  += _state.config.translateX;
+    y  += _state.config.translateY;
+    x1 += _state.config.translateX;
+    y1 += _state.config.translateY;
+  }
+  _state.backendRenderer.drawLine(x, y, x1, y1);
+}
+
+Raster.prototype.drawImage = function(params) {
+  let [img, x, y] = destructure(params, arguments, ['img', 'x', 'y']);
+  if (_state.isExec) {
+    x += _state.config.translateX;
+    y += _state.config.translateY;
+  }
+  _state.backendRenderer.drawImage(img, x, y);
+}
+
+//let once = false;
+
+Raster.prototype.drawCircle = function(params) {
+  let width = null;
+  if (params.width) {
+    width = params.width;
+    delete params.width;
+  }
+  let [x, y, r] = destructure(params, arguments, ['x','y','r']);
+  let centerX = x + r;
+  let centerY = y + r;
+  if (_state.isExec) {
+    centerX += _state.config.translateX;
+    centerY += _state.config.translateY;
+  }
+  let arc = midpointCircleRasterize(r);
+  let inner = null;
+  if (width) {
+    inner = midpointCircleRasterize(r - width - 1);
+  }
+  _state.backendRenderer.drawCircleFromArc(centerX, centerY, arc, inner);
+}
+
+function midpointCircleRasterize(r) {
+  let arc = new Array();
+  let y = 0;
+  let x = r;
+  let rSquared = r * r;
+  let xSquared = rSquared;
+  let ySquared = 0 * 0;
+  // Loop increments Y each step, and decrements X occasionally, based upon
+  // error accumulation. Eventually X==Y, which breaks the loop.
+  while (true) {
+    // Invariant: x * x == xSquared && y * y == ySquared
+    let answer = rSquared - ySquared;
+    let err = xSquared - answer;
+    if (err >= x) {
+      xSquared = xSquared - 2 * x + 1;
+      x -= 1;
+    }
+    if (x < y) {
+      break;
+    }
+    arc.push([x, y])
+    ySquared = ySquared + 2 * y + 1;
+    y += 1;
+  }
+  return arc;
 }
 
 Raster.prototype.renderLoop = function() {
   let config = this._config;
   let self = this;
-  this.addRenderCalls();
-  this._backendRenderer = createBackendRenderer();
-  this._backendRenderer.sdlInit();
-  setTimeout(function() {
-    self._backendRenderer.createWindow(config.screenWidth, config.screenHeight);
-    self._backendRenderer.renderLoop(function() {
-      self.renderOnce();
-    });
-  }, 0);
+  _state.backendRenderer.initialize();
+  _state.backendRenderer.createWindow(_state.config.screenWidth,
+                                      _state.config.screenHeight);
+  _state.backendRenderer.renderLoop(function() {
+    self.renderOnce();
+  });
 }
 
 Raster.prototype.renderOnce = function() {
   // Called once per render operation. Set the click, then call app's frame
-  this.timeClick = this._timeClick;
-  this._timeClick++;
-  this._renderFunc();
+  this.timeClick = _state.timeClick;
+  _state.timeClick++;
+  _state.renderFunc();
 }
+
+Raster.prototype.rotatePolygon = rotatePolygon;
+
+////////////////////////////////////////
+// Export
 
 var _priv_raster = new Raster();
 

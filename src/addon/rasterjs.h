@@ -11,7 +11,7 @@ class RasterJS : public Napi::ObjectWrap<RasterJS> {
 
  private:
   static Napi::FunctionReference constructor;
-  Napi::Value SDLInit(const Napi::CallbackInfo& info);
+  Napi::Value Initialize(const Napi::CallbackInfo& info);
   Napi::Value CreateWindow(const Napi::CallbackInfo& info);
   Napi::Value RenderLoop(const Napi::CallbackInfo& info);
   void StartFrame();
@@ -20,6 +20,9 @@ class RasterJS : public Napi::ObjectWrap<RasterJS> {
   Napi::Value DrawPolygon(const Napi::CallbackInfo& info);
   Napi::Value DrawLine(const Napi::CallbackInfo& info);
   Napi::Value FillBackground(const Napi::CallbackInfo& info);
+  Napi::Value LoadImage(const Napi::CallbackInfo& info);
+  Napi::Value DrawImage(const Napi::CallbackInfo& info);
+  Napi::Value DrawCircleFromArc(const Napi::CallbackInfo& info);
 
   int drawColor;
 };

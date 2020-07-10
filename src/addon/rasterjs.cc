@@ -1,7 +1,9 @@
+#include "type.h"
 #include "rasterjs.h"
 #include "rgb_mapping.h"
 #include "draw_polygon.h"
 #include "time_keeper.h"
+#include "load_image.h"
 
 #include <napi.h>
 #include <uv.h>
@@ -21,7 +23,7 @@ Napi::Object RasterJS::Init(Napi::Env env, Napi::Object exports) {
   Napi::Function func = DefineClass(
       env,
       "RasterJS",
-      {InstanceMethod("sdlInit", &RasterJS::SDLInit),
+      {InstanceMethod("initialize", &RasterJS::Initialize),
        InstanceMethod("createWindow", &RasterJS::CreateWindow),
        InstanceMethod("renderLoop", &RasterJS::RenderLoop),
        InstanceMethod("drawRect", &RasterJS::DrawRect),
@@ -29,6 +31,9 @@ Napi::Object RasterJS::Init(Napi::Env env, Napi::Object exports) {
        InstanceMethod("drawLine", &RasterJS::DrawLine),
        InstanceMethod("setColor", &RasterJS::SetColor),
        InstanceMethod("fillBackground", &RasterJS::FillBackground),
+       InstanceMethod("loadImage", &RasterJS::LoadImage),
+       InstanceMethod("drawImage", &RasterJS::DrawImage),
+       InstanceMethod("drawCircleFromArc", &RasterJS::DrawCircleFromArc),
   });
   constructor = Napi::Persistent(func);
   constructor.SuppressDestruct();
@@ -53,7 +58,7 @@ int sdl_initialized = 0;
 SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
 
-Napi::Value RasterJS::SDLInit(const Napi::CallbackInfo& info) {
+Napi::Value RasterJS::Initialize(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if( SDL_Init( SDL_INIT_VIDEO ) < 0 ) {
     printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
@@ -274,6 +279,126 @@ Napi::Value RasterJS::FillBackground(const Napi::CallbackInfo& info) {
 
   SDL_SetRenderDrawColor(renderer, rgb / 0x10000, (rgb / 0x100) % 0x100, rgb % 0x100, OPAQUE);
   SDL_RenderClear(renderer);
+
+  return info.Env().Null();
+}
+
+Image* g_img = NULL;
+
+Napi::Value RasterJS::LoadImage(const Napi::CallbackInfo& info) {
+  Napi::Value val = info[0];
+  Napi::String str = val.ToString();
+  std::string s = str.Utf8Value();
+  // TODO: Other formats
+  g_img = LoadPng(s.c_str());
+  Napi::Env env = info.Env();
+  return Napi::Number::New(env, 2);
+}
+
+Napi::Value RasterJS::DrawImage(const Napi::CallbackInfo& info) {
+  int imgId = info[0].ToNumber().Int32Value();
+  int baseX = info[1].ToNumber().Int32Value();
+  int baseY = info[2].ToNumber().Int32Value();
+  // TODO
+  int width, height;
+  uint8* data = NULL;
+  GetPng(g_img, &width, &height, &data);
+  for (int y = 0; y < height; y++) {
+    for (int x = 0; x < width; x++) {
+      uint8 r = data[(y*width+x)*4+0];
+      uint8 g = data[(y*width+x)*4+1];
+      uint8 b = data[(y*width+x)*4+2];
+      uint8 a = data[(y*width+x)*4+3];
+      if (a > 0x80) {
+        SDL_SetRenderDrawColor(renderer, r, g, b, a);
+        SDL_RenderDrawPoint(renderer, baseX + x, baseY + y);
+      }
+    }
+  }
+
+  return info.Env().Null();
+}
+
+Napi::Value RasterJS::DrawCircleFromArc(const Napi::CallbackInfo& info) {
+  int baseX = info[0].ToNumber().Int32Value();
+  int baseY = info[1].ToNumber().Int32Value();
+
+  // Num points will always be assigned, but num inner is optional.
+  int num_points = -1;
+  int num_inner = -1;
+
+  // Validate that first parameter is an array of pairs.
+  Napi::Value val = info[2];
+  if (!val.IsObject()) {
+    printf("expected Val to be Object\n");
+    return info.Env().Null();
+  }
+  if (!val.IsArray()) {
+    printf("expected Val to be Array\n");
+    return info.Env().Null();
+  }
+
+  // Get list of pairs and its length.
+  Napi::Object parameter_list = val.ToObject();
+  Napi::Value parameter_length = parameter_list.Get("length");
+  num_points = parameter_length.As<Napi::Number>().Int32Value();
+
+  // Optionally get the second list of pairs, and if so, assign num inner.
+  Napi::Value inner = info[3];
+  Napi::Object inner_list;
+  if (inner.IsObject()) {
+    if (inner.IsArray()) {
+      inner_list = inner.ToObject();
+      Napi::Value inner_length = inner_list.Get("length");
+      num_inner = inner_length.As<Napi::Number>().Int32Value();
+    }
+  }
+
+  for (int i = 0; i < num_points; i++) {
+    Napi::Value elem = parameter_list[uint32_t(i)];
+    // TODO: Validate this is an object
+    Napi::Object pair = elem.ToObject();
+    // TODO: validate length is 2
+    Napi::Value first = pair[uint32_t(0)];
+    Napi::Value second = pair[uint32_t(1)];
+    int a = first.As<Napi::Number>().Int32Value();
+    int b = second.As<Napi::Number>().Int32Value();
+
+    int L = -1;
+    if (i < num_inner) {
+      // If inner list exists, and we're inside it, get the Left value.
+      Napi::Value elem = inner_list[uint32_t(i)];
+      Napi::Object pair = elem.ToObject();
+      Napi::Value left = pair[uint32_t(0)];
+      L = left.As<Napi::Number>().Int32Value();
+    } else if (num_inner != -1) {
+      // If inner list exists, and we're past it, Left is the diagonal border.
+      L = b - 1;
+    }
+
+    SDL_SetRenderDrawColor(renderer, 255, 0, 255, 255);
+    if (L == -1) {
+      // Draw circle's points.
+      SDL_RenderDrawPoint(renderer, baseX + a, baseY + b);
+      SDL_RenderDrawPoint(renderer, baseX - a, baseY + b);
+      SDL_RenderDrawPoint(renderer, baseX + a, baseY - b);
+      SDL_RenderDrawPoint(renderer, baseX - a, baseY - b);
+      SDL_RenderDrawPoint(renderer, baseX + b, baseY + a);
+      SDL_RenderDrawPoint(renderer, baseX - b, baseY + a);
+      SDL_RenderDrawPoint(renderer, baseX + b, baseY - a);
+      SDL_RenderDrawPoint(renderer, baseX - b, baseY - a);
+    } else {
+      // Fill circle by drawing lines.
+      SDL_RenderDrawLine(renderer, baseX + a, baseY + b, baseX + L, baseY + b);
+      SDL_RenderDrawLine(renderer, baseX - a, baseY + b, baseX - L, baseY + b);
+      SDL_RenderDrawLine(renderer, baseX + a, baseY - b, baseX + L, baseY - b);
+      SDL_RenderDrawLine(renderer, baseX - a, baseY - b, baseX - L, baseY - b);
+      SDL_RenderDrawLine(renderer, baseX + b, baseY + a, baseX + b, baseY + L);
+      SDL_RenderDrawLine(renderer, baseX + b, baseY - a, baseX + b, baseY - L);
+      SDL_RenderDrawLine(renderer, baseX - b, baseY + a, baseX - b, baseY + L);
+      SDL_RenderDrawLine(renderer, baseX - b, baseY - a, baseX - b, baseY - L);
+    }
+  }
 
   return info.Env().Null();
 }

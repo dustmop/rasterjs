@@ -6,6 +6,7 @@
       "cflags_cc!": [ "-fno-exceptions" ],
       "sources": [
         "src/addon/draw_polygon.cc",
+        "src/addon/load_image.cc",
         "src/addon/native.cc",
         "src/addon/rasterjs.cc",
         "src/addon/rgb_mapping.cc",
@@ -16,7 +17,8 @@
         "/usr/local/include/SDL2",
       ],
       "libraries": [
-        "/usr/local/lib/libSDL2.dylib"
+        "/usr/local/lib/libSDL2.dylib",
+        "/usr/local/lib/libpng16.dylib"
       ],
       "defines": [
         '_THREAD_SAFE',

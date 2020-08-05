@@ -24,6 +24,7 @@ loadScript('canvas_methods.js', function() {
         });
       },
       fillBackground: fillBackground,
+      assignRgbMapping: assignRgbMapping,
       setColor: setColor,
       drawPolygon: drawPolygon,
       drawLine: drawLine,

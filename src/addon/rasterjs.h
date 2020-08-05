@@ -24,8 +24,9 @@ class RasterJS : public Napi::ObjectWrap<RasterJS> {
   Napi::Value LoadImage(const Napi::CallbackInfo& info);
   Napi::Value DrawImage(const Napi::CallbackInfo& info);
   Napi::Value DrawCircleFromArc(const Napi::CallbackInfo& info);
+  Napi::Value AssignRgbMapping(const Napi::CallbackInfo& info);
 
-  int drawColor;
+  void* priv;
 };
 
 #endif

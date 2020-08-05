@@ -9,7 +9,6 @@
         "src/addon/load_image.cc",
         "src/addon/native.cc",
         "src/addon/rasterjs.cc",
-        "src/addon/rgb_mapping.cc",
         "src/addon/time_keeper.cc",
       ],
       "include_dirs": [

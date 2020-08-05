@@ -1,5 +1,5 @@
 var ctx;
-var opt = {drawColor: null};
+var opt = {rgbList: null};
 
 function canvasInit(canvas) {
   ctx = canvas.getContext('2d');
@@ -15,8 +15,16 @@ function fillBackground(color) {
   ctx.fillRect(0, 0, 256, 256);
 }
 
+function assignRgbMapping(rgbList) {
+  opt.rgbList = rgbList;
+}
+
 function setColor(color) {
-  opt.drawColor = color;
+  let rgb = opt.rgbList[color];
+  let r = (rgb / 0x10000) % 0x100;
+  let g = (rgb / 0x100) % 0x100;
+  let b = (rgb / 0x1) % 0x100;
+  opt.drawColor = 'rgba(' + r + ',' + g + ',' + b + ',1.0)';
 }
 
 function round(f) {
@@ -24,7 +32,8 @@ function round(f) {
 }
 
 function drawPolygon(x, y, params) {
-  ctx.fillStyle = 'white';
+  ctx.fillStyle = opt.drawColor;
+  ctx.strokeStyle = opt.drawColor;
   ctx.beginPath();
   var p = params[0];
   ctx.moveTo(round(x + p[0]), round(y + p[1]));
@@ -36,7 +45,8 @@ function drawPolygon(x, y, params) {
 }
 
 function drawLine(x, y, x1, y1) {
-  ctx.fillStyle = 'red';
+  ctx.fillStyle = opt.drawColor;
+  ctx.strokeStyle = opt.drawColor;
   ctx.beginPath();
   ctx.moveTo(x, y);
   ctx.lineTo(x1, y1);
@@ -44,13 +54,14 @@ function drawLine(x, y, x1, y1) {
 }
 
 function drawRect(x, y, w, h) {
-  ctx.fillStyle = 'red';
+  ctx.fillStyle = opt.drawColor;
+  ctx.strokeStyle = opt.drawColor;
   ctx.fillRect(x, y, w, h);
 }
 
 function drawCircleFromArc(x, y, arc, inner) {
-  ctx.fillStyle = 'red';
-  ctx.strokeStyle = 'rgba(255,0,0,1.0)';
+  ctx.fillStyle = opt.drawColor;
+  ctx.strokeStyle = opt.drawColor;
   for (var i = 0; i < arc.length; i++) {
     var a = arc[i][0];
     var b = arc[i][1];

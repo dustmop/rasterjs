@@ -12,6 +12,7 @@ if (typeof window === 'undefined') {
 // Pick which backend renderer to use
 
 if (isRunningNodejs) {
+  // TODO: Parse command-line arguments
   if (process.argv.length > 2 && process.argv[2] == '--gif') {
     let numFrames = 64;
     if (process.argv.length > 4 && process.argv[3] == '--num-frames') {
@@ -19,16 +20,18 @@ if (isRunningNodejs) {
     }
     createBackendRenderer = function(callback) {
       const gifRenderer = require('./gif_renderer.js');
+      const rgbMapNES = require('./rgb_map_nes.js');
       let thisFilename = process.argv[1];
       var r = gifRenderer.make(thisFilename, {numFrames: numFrames});
       setTimeout(function() {
-        callback(r);
+        callback(r, rgbMapNES.rgb_mapping);
       }, 0);
     }
   } else {
     createBackendRenderer = function(callback) {
       const cppmodule = require('../build/Release/native');
-      callback(cppmodule());
+      const rgbMapNES = require('./rgb_map_nes.js');
+      callback(cppmodule(), rgbMapNES.rgb_mapping);
     }
   }
 } else {
@@ -49,9 +52,11 @@ if (isRunningNodejs) {
     };
     setTimeout(function() {
       loadScript('html_renderer.js', function() {
-        setTimeout(function() {
-          callback(htmlRendererMake());
-        }, 16);
+        loadScript('rgb_map_nes.js', function() {
+          setTimeout(function() {
+            callback(htmlRendererMake(), rgb_mapping);
+          }, 16);
+        });
       });
     }, 0);
   };
@@ -189,6 +194,10 @@ QueueRenderer.prototype.fillBackground = function() {
   this._queue.push(concatArray('fillBackground', arguments));
 }
 
+QueueRenderer.prototype.setColor = function() {
+  this._queue.push(concatArray('setColor', arguments));
+}
+
 QueueRenderer.prototype.drawLine = function() {
   this._queue.push(concatArray('drawLine', arguments));
 }
@@ -263,8 +272,9 @@ Raster.prototype.run = function(renderFunc) {
   }
   _state.isExec = true;
   var self = this;
-  createBackendRenderer(function(r) {
+  createBackendRenderer(function(r, map) {
     _state.backendRenderer = r;
+    _state.backendRenderer.assignRgbMapping(map);
     self._allImagesOpen();
     self.renderLoop();
   });
@@ -281,8 +291,9 @@ Raster.prototype.show = function() {
   }
   _state.isExec = true;
   var self = this;
-  createBackendRenderer(function(r) {
+  createBackendRenderer(function(r, map) {
     _state.backendRenderer = r;
+    _state.backendRenderer.assignRgbMapping(map);
     self._allImagesOpen();
     _state.renderFunc = function() {
       for (let i = 0; i < q.length; i++) {
@@ -455,7 +466,7 @@ if (isRunningNodejs) {
   module.exports = _priv_raster;
 } else {
   function require(moduleName) {
-    if (moduleName === 'raster.js' || moduleName === './raster.js') {
+    if (moduleName === 'qgfx' || moduleName === './qgfx') {
       return _priv_raster;
     }
     throw 'Could not require module named "' + moduleName + '"';

@@ -1,4 +1,4 @@
-int rgb_mapping[] = {
+const rgb_mapping = [
 //-------------------------------------------------------------------------
 //  grey 00  blue 01  blue 02 purple03 purple04   red 05   red 06   red 07
    0x7c7c7c,0x0000fc,0x0000bc,0x4428bc,0x940084,0xa80020,0xa81000,0x881400,
@@ -19,4 +19,8 @@ int rgb_mapping[] = {
    0xfcfcfc,0xa4e4fc,0xb8b8f8,0xd8b8f8,0xf8b8f8,0xf8a4c0,0xf0d0b0,0xfce0a8,
 // peach 38 yellow39 green 3a green 3b  cyan 3c  grey 3d black 3e black 3f
    0xf8d878,0xd8f878,0xb8f8b8,0xb8f8d8,0x00fcfc,0xf8d8f8,0x080808,0x080808
-};
+];
+
+if (typeof module !== 'undefined') {
+  module.exports.rgb_mapping = rgb_mapping;
+}

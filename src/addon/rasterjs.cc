@@ -1,6 +1,5 @@
 #include "type.h"
 #include "rasterjs.h"
-#include "rgb_mapping.h"
 #include "draw_polygon.h"
 #include "time_keeper.h"
 #include "load_image.h"
@@ -33,6 +32,7 @@ Napi::Object RasterJS::Init(Napi::Env env, Napi::Object exports) {
        InstanceMethod("setColor", &RasterJS::SetColor),
        InstanceMethod("fillBackground", &RasterJS::FillBackground),
        InstanceMethod("loadImage", &RasterJS::LoadImage),
+       InstanceMethod("assignRgbMapping", &RasterJS::AssignRgbMapping),
        InstanceMethod("drawImage", &RasterJS::DrawImage),
        InstanceMethod("drawCircleFromArc", &RasterJS::DrawCircleFromArc),
   });
@@ -43,10 +43,28 @@ Napi::Object RasterJS::Init(Napi::Env env, Napi::Object exports) {
   return exports;
 }
 
+class PrivateState {
+ public:
+  PrivateState();
+  int r;
+  int g;
+  int b;
+  int rgb_map_length;
+  int rgb_map[256];
+};
+
+PrivateState::PrivateState() {
+  this->r = 0;
+  this->g = 0;
+  this->b = 0;
+  this->rgb_map_length = 0;
+}
+
 RasterJS::RasterJS(const Napi::CallbackInfo& info)
     : Napi::ObjectWrap<RasterJS>(info) {
   Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
+  this->priv = new PrivateState();
 };
 
 Napi::Object RasterJS::NewInstance(Napi::Env env, Napi::Value arg) {
@@ -87,8 +105,6 @@ Napi::Value RasterJS::CreateWindow(const Napi::CallbackInfo& info) {
 
   viewWidth = info[0].As<Napi::Number>().Int32Value();
   viewHeight = info[1].As<Napi::Number>().Int32Value();
-
-  printf("CreateWindow width=%d height=%d\n", viewWidth, viewHeight);
 
   // Create window
   window = SDL_CreateWindow( "SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, viewWidth, viewHeight, SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI );
@@ -180,10 +196,37 @@ void RasterJS::StartFrame() {
   SDL_RenderClear(renderer);
 }
 
+Napi::Value RasterJS::AssignRgbMapping(const Napi::CallbackInfo& info) {
+  PrivateState* priv = (PrivateState*)this->priv;
+
+  Napi::Value elem = info[0];
+  Napi::Object list = elem.ToObject();
+  Napi::Value list_length = list.Get("length");
+
+  int num = list_length.As<Napi::Number>().Int32Value();
+  priv->rgb_map_length = num;
+
+  for (int i = 0; i < num; i++) {
+    elem = list[uint32_t(i)];
+    int v = elem.As<Napi::Number>().Int32Value();
+    priv->rgb_map[i] = v;
+  }
+
+  return info.Env().Null();
+}
+
 Napi::Value RasterJS::SetColor(const Napi::CallbackInfo& info) {
+  PrivateState* priv = (PrivateState*)this->priv;
+
   Napi::Value val = info[0];
   int color = val.As<Napi::Number>().Int32Value();
-  this->drawColor = color;
+
+  int rgb = priv->rgb_map[color % priv->rgb_map_length];
+  priv->r = (rgb / 0x10000) % 0x100;
+  priv->g = (rgb / 0x100) % 0x100;
+  priv->b = (rgb / 0x1) % 0x100;
+
+  SDL_SetRenderDrawColor(renderer, priv->r, priv->g, priv->b, OPAQUE);
 
   return info.Env().Null();
 }
@@ -208,10 +251,9 @@ Napi::Value RasterJS::DrawRect(const Napi::CallbackInfo& info) {
   drawTarget.w = w;
   drawTarget.h = h;
 
-  int rgb = rgb_mapping[this->drawColor & 0x3f];
+  //PrivateState* priv = (PrivateState*)this->priv;
+  //SDL_SetRenderDrawColor(renderer, priv->r, priv->g, priv->b, OPAQUE);
 
-  // Rectangle color is pink
-  SDL_SetRenderDrawColor(renderer, rgb / 0x10000, (rgb / 0x100) % 0x100, rgb % 0x100, OPAQUE);
   SDL_RenderFillRect(renderer, &drawTarget);
 
   Napi::Env env = info.Env();
@@ -225,8 +267,6 @@ Napi::Value RasterJS::DrawPoint(const Napi::CallbackInfo& info) {
   int x = round(xval.As<Napi::Number>().FloatValue());
   int y = round(yval.As<Napi::Number>().FloatValue());
 
-  int rgb = rgb_mapping[this->drawColor & 0x3f];
-  SDL_SetRenderDrawColor(renderer, rgb / 0x10000, (rgb / 0x100) % 0x100, rgb % 0x100, OPAQUE);
   SDL_RenderDrawPoint(renderer, x, y);
   return info.Env().Null();
 }
@@ -241,9 +281,6 @@ Napi::Value RasterJS::DrawLine(const Napi::CallbackInfo& info) {
   int y  = round(yval.As<Napi::Number>().FloatValue());
   int x1 = round(x1val.As<Napi::Number>().FloatValue());
   int y1 = round(y1val.As<Napi::Number>().FloatValue());
-
-  int rgb = rgb_mapping[this->drawColor & 0x3f];
-  SDL_SetRenderDrawColor(renderer, rgb / 0x10000, (rgb / 0x100) % 0x100, rgb % 0x100, OPAQUE);
 
   SDL_RenderDrawLine(renderer, x, y, x1, y1);
 
@@ -287,9 +324,6 @@ Napi::Value RasterJS::DrawPolygon(const Napi::CallbackInfo& info) {
       point_y[i] = second_num + baseY;
     }
 
-    int rgb = rgb_mapping[this->drawColor & 0x3f];
-    SDL_SetRenderDrawColor(renderer, rgb / 0x10000, (rgb / 0x100) % 0x100, rgb % 0x100, OPAQUE);
-
     drawPolygon(renderer, point_x, point_y, num_points);
   }
 
@@ -297,12 +331,17 @@ Napi::Value RasterJS::DrawPolygon(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value RasterJS::FillBackground(const Napi::CallbackInfo& info) {
+  PrivateState* priv = (PrivateState*)this->priv;
+
   Napi::Value val = info[0];
   int color = round(val.As<Napi::Number>().FloatValue());
 
-  int rgb = rgb_mapping[color & 0x3f];
+  int rgb = priv->rgb_map[color % priv->rgb_map_length];
+  int r = (rgb / 0x10000) % 0x100;
+  int g = (rgb / 0x100) % 0x100;
+  int b = (rgb / 0x1) % 0x100;
 
-  SDL_SetRenderDrawColor(renderer, rgb / 0x10000, (rgb / 0x100) % 0x100, rgb % 0x100, OPAQUE);
+  SDL_SetRenderDrawColor(renderer, r, g, b, OPAQUE);
   SDL_RenderClear(renderer);
 
   return info.Env().Null();

@@ -13,9 +13,14 @@ if (typeof window === 'undefined') {
 
 if (isRunningNodejs) {
   if (process.argv.length > 2 && process.argv[2] == '--gif') {
+    let numFrames = 64;
+    if (process.argv.length > 4 && process.argv[3] == '--num-frames') {
+      numFrames = parseInt(process.argv[4], 10);
+    }
     createBackendRenderer = function(callback) {
       const gifRenderer = require('./gif_renderer.js');
-      var r = gifRenderer.make();
+      let thisFilename = process.argv[1];
+      var r = gifRenderer.make(thisFilename, {numFrames: numFrames});
       setTimeout(function() {
         callback(r);
       }, 0);
@@ -188,6 +193,10 @@ QueueRenderer.prototype.drawLine = function() {
   this._queue.push(concatArray('drawLine', arguments));
 }
 
+QueueRenderer.prototype.drawPoint = function() {
+  this._queue.push(concatArray('drawPoint', arguments));
+}
+
 QueueRenderer.prototype.drawCircleFromArc = function() {
   this._queue.push(concatArray('drawCircleFromArc', arguments));
 }
@@ -335,6 +344,15 @@ Raster.prototype.drawRect = function(params) {
   _state.backendRenderer.drawRect(x, y, w, h);
 }
 
+Raster.prototype.drawPoint = function(params) {
+  let [x, y] = destructure(params, arguments, ['x', 'y']);
+  if (_state.isExec) {
+    x += _state.config.translateX;
+    y += _state.config.translateY;
+  }
+  _state.backendRenderer.drawPoint(x, y);
+}
+
 Raster.prototype.drawPolygon = function(params) {
   _state.backendRenderer.drawPolygon(_state.config.translateX,
                                      _state.config.translateY, params);
@@ -359,8 +377,6 @@ Raster.prototype.drawImage = function(params) {
   }
   _state.backendRenderer.drawImage(img, x, y);
 }
-
-//let once = false;
 
 Raster.prototype.drawCircle = function(params) {
   let width = null;

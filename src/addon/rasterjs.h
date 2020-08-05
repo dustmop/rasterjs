@@ -17,6 +17,7 @@ class RasterJS : public Napi::ObjectWrap<RasterJS> {
   void StartFrame();
   Napi::Value SetColor(const Napi::CallbackInfo& info);
   Napi::Value DrawRect(const Napi::CallbackInfo& info);
+  Napi::Value DrawPoint(const Napi::CallbackInfo& info);
   Napi::Value DrawPolygon(const Napi::CallbackInfo& info);
   Napi::Value DrawLine(const Napi::CallbackInfo& info);
   Napi::Value FillBackground(const Napi::CallbackInfo& info);

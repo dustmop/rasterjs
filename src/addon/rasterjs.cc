@@ -27,6 +27,7 @@ Napi::Object RasterJS::Init(Napi::Env env, Napi::Object exports) {
        InstanceMethod("createWindow", &RasterJS::CreateWindow),
        InstanceMethod("renderLoop", &RasterJS::RenderLoop),
        InstanceMethod("drawRect", &RasterJS::DrawRect),
+       InstanceMethod("drawPoint", &RasterJS::DrawPoint),
        InstanceMethod("drawPolygon", &RasterJS::DrawPolygon),
        InstanceMethod("drawLine", &RasterJS::DrawLine),
        InstanceMethod("setColor", &RasterJS::SetColor),
@@ -57,6 +58,9 @@ Napi::Object RasterJS::NewInstance(Napi::Env env, Napi::Value arg) {
 int sdl_initialized = 0;
 SDL_Window* window = NULL;
 SDL_Renderer* renderer = NULL;
+SDL_Texture* texture = NULL;
+int viewWidth = 0;
+int viewHeight = 0;
 
 Napi::Value RasterJS::Initialize(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
@@ -81,11 +85,13 @@ Napi::Value RasterJS::CreateWindow(const Napi::CallbackInfo& info) {
     exit(1);
   }
 
-  int width = info[0].As<Napi::Number>().Int32Value();
-  int height = info[1].As<Napi::Number>().Int32Value();
+  viewWidth = info[0].As<Napi::Number>().Int32Value();
+  viewHeight = info[1].As<Napi::Number>().Int32Value();
+
+  printf("CreateWindow width=%d height=%d\n", viewWidth, viewHeight);
 
   // Create window
-  window = SDL_CreateWindow( "SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width, height, SDL_WINDOW_SHOWN );
+  window = SDL_CreateWindow( "SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, viewWidth, viewHeight, SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI );
   if (window == NULL) {
     printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
     exit(1);
@@ -115,6 +121,9 @@ Napi::Value RasterJS::RenderLoop(const Napi::CallbackInfo& info) {
     printf("SDL_CreateRenderer() failed with \"%s.\"", SDL_GetError());
     return Napi::Number::New(env, -1);
   }
+
+  texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888,
+      SDL_TEXTUREACCESS_TARGET, viewWidth, viewHeight);
 
   TimeKeeper keeper;
   keeper.Init();
@@ -149,6 +158,8 @@ Napi::Value RasterJS::RenderLoop(const Napi::CallbackInfo& info) {
       break;
     }
 
+    SDL_SetRenderTarget(renderer, NULL);
+    SDL_RenderCopy(renderer, texture, NULL, NULL);
     // Swap buffers to display
     SDL_RenderPresent(renderer);
 
@@ -163,6 +174,7 @@ Napi::Value RasterJS::RenderLoop(const Napi::CallbackInfo& info) {
 #define OPAQUE 255
 
 void RasterJS::StartFrame() {
+  SDL_SetRenderTarget(renderer, texture);
   // Fill the surface white
   SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, OPAQUE);
   SDL_RenderClear(renderer);
@@ -204,6 +216,19 @@ Napi::Value RasterJS::DrawRect(const Napi::CallbackInfo& info) {
 
   Napi::Env env = info.Env();
   return Napi::Number::New(env, 0);
+}
+
+Napi::Value RasterJS::DrawPoint(const Napi::CallbackInfo& info) {
+  Napi::Value xval = info[0];
+  Napi::Value yval = info[1];
+
+  int x = round(xval.As<Napi::Number>().FloatValue());
+  int y = round(yval.As<Napi::Number>().FloatValue());
+
+  int rgb = rgb_mapping[this->drawColor & 0x3f];
+  SDL_SetRenderDrawColor(renderer, rgb / 0x10000, (rgb / 0x100) % 0x100, rgb % 0x100, OPAQUE);
+  SDL_RenderDrawPoint(renderer, x, y);
+  return info.Env().Null();
 }
 
 Napi::Value RasterJS::DrawLine(const Napi::CallbackInfo& info) {

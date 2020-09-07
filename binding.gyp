@@ -13,11 +13,11 @@
       ],
       "include_dirs": [
         "<!@(node -p \"require('node-addon-api').include\")",
-        "/usr/local/include/SDL2",
+        "<!(node ./tools/locate_sdl include)",
       ],
       "libraries": [
-        "/usr/local/lib/libSDL2.dylib",
-        "/usr/local/lib/libpng16.dylib"
+        "<!@(node ./tools/locate_sdl lib)",
+        "<!(pkg-config libpng --libs)",
       ],
       "defines": [
         '_THREAD_SAFE',

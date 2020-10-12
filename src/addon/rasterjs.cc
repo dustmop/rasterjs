@@ -24,7 +24,7 @@ Napi::Object RasterJS::Init(Napi::Env env, Napi::Object exports) {
       "RasterJS",
       {InstanceMethod("initialize", &RasterJS::Initialize),
        InstanceMethod("createWindow", &RasterJS::CreateWindow),
-       InstanceMethod("renderLoop", &RasterJS::RenderLoop),
+       InstanceMethod("appRenderAndLoop", &RasterJS::AppRenderAndLoop),
        InstanceMethod("drawRect", &RasterJS::DrawRect),
        InstanceMethod("drawPoint", &RasterJS::DrawPoint),
        InstanceMethod("drawPolygon", &RasterJS::DrawPolygon),
@@ -117,19 +117,20 @@ Napi::Value RasterJS::CreateWindow(const Napi::CallbackInfo& info) {
 
 void on_render(SDL_Window* window, SDL_Renderer* renderer);
 
-Napi::Value RasterJS::RenderLoop(const Napi::CallbackInfo& info) {
+Napi::Value RasterJS::AppRenderAndLoop(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   if (!sdl_initialized || !window) {
     return Napi::Number::New(env, -1);
   }
 
-  if ((info.Length() < 1) || (!info[0].IsFunction())) {
-    printf("RenderLoop requires an argument: function\n");
+  if ((info.Length() < 2) || (!info[0].IsFunction()) || (!info[1].IsNumber())) {
+    printf("AppRenderAndLoop requires an argument: function\n");
     exit(1);
   }
 
   Napi::Function renderFunc = info[0].As<Napi::Function>();
+  int num_render = info[1].ToNumber().Int32Value();
 
   // Get window renderer
   renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
@@ -166,6 +167,11 @@ Napi::Value RasterJS::RenderLoop(const Napi::CallbackInfo& info) {
       }
     }
 
+    if (num_render == 0) {
+      SDL_Delay(16);
+      continue;
+    }
+
     StartFrame();
 
     // If an error happened, break the loop
@@ -180,6 +186,10 @@ Napi::Value RasterJS::RenderLoop(const Napi::CallbackInfo& info) {
     SDL_RenderPresent(renderer);
 
     keeper.WaitNextFrame();
+
+    if (num_render > 0) {
+      num_render--;
+    }
   }
 
   return Napi::Number::New(env, 0);

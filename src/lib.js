@@ -308,7 +308,7 @@ Raster.prototype.show = function() {
         }
       }
     }
-    self.renderLoop();
+    self.renderShow();
   });
 }
 
@@ -443,10 +443,22 @@ Raster.prototype.renderLoop = function() {
   _state.backendRenderer.initialize();
   _state.backendRenderer.createWindow(_state.config.screenWidth,
                                       _state.config.screenHeight);
-  _state.backendRenderer.renderLoop(function() {
+  _state.backendRenderer.appRenderAndLoop(function() {
     self.renderOnce();
-  });
+  }, -1);
 }
+
+Raster.prototype.renderShow = function() {
+  let config = this._config;
+  let self = this;
+  _state.backendRenderer.initialize();
+  _state.backendRenderer.createWindow(_state.config.screenWidth,
+                                      _state.config.screenHeight);
+  self.renderOnce();
+  _state.backendRenderer.appRenderAndLoop(function() {
+    self.renderOnce();
+  }, 1);
+ }
 
 Raster.prototype.renderOnce = function() {
   // Called once per render operation. Set the click, then call app's frame

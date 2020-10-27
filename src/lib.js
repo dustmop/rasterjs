@@ -458,7 +458,7 @@ Raster.prototype.renderShow = function() {
   _state.backendRenderer.appRenderAndLoop(function() {
     self.renderOnce();
   }, 1);
- }
+}
 
 Raster.prototype.renderOnce = function() {
   // Called once per render operation. Set the click, then call app's frame

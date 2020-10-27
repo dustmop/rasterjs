@@ -1,8 +1,12 @@
 #include <SDL.h>
 
+#include "gfx_types.h"
+
 #define MAX_POLY_CORNERS 16
 
-void drawPolygon(SDL_Renderer* renderer, int* point_x, int* point_y, int num_points) {
+int first = 1;
+
+void drawPolygon(GfxTarget* target, PointList* points, uint32_t color) {
   int numEdges, edgeX[MAX_POLY_CORNERS];
   int pixelX, pixelY;
   int i, j, swap;
@@ -11,24 +15,25 @@ void drawPolygon(SDL_Renderer* renderer, int* point_x, int* point_y, int num_poi
 
   int imageTop, imageBottom;
   int imageLeft, imageRight;
-  imageTop = 9999;
-  imageBottom = 0;
-  imageLeft = 9999;
-  imageRight = 0;
+  imageTop = points->ys[0];
+  imageBottom = points->ys[0];
+  imageLeft = points->xs[0];
+  imageRight = points->xs[0];
+  numCorners++;
 
   // Count number of corners, and find polygon's top and bottom.
-  for (i = 0; i < num_points; i++) {
-    if (point_x[i] < imageLeft) {
-      imageLeft = point_x[i];
+  for (i = 1; i < points->num; i++) {
+    if (points->xs[i] < imageLeft) {
+      imageLeft = points->xs[i];
     }
-    if (point_x[i] > imageRight) {
-      imageRight = point_x[i];
+    if (points->xs[i] > imageRight) {
+      imageRight = points->xs[i];
     }
-    if (point_y[i] < imageTop) {
-      imageTop = point_y[i];
+    if (points->ys[i] < imageTop) {
+      imageTop = points->ys[i];
     }
-    if (point_y[i] > imageBottom) {
-      imageBottom = point_y[i];
+    if (points->ys[i] > imageBottom) {
+      imageBottom = points->ys[i];
     }
     numCorners++;
   }
@@ -40,10 +45,10 @@ void drawPolygon(SDL_Renderer* renderer, int* point_x, int* point_y, int num_poi
     numEdges = 0;
     j = numCorners-1;
     for (i = 0; i < numCorners; i++) {
-      polyXi = point_x[i];
-      polyXj = point_x[j];
-      polyYi = point_y[i];
-      polyYj = point_y[j];
+      polyXi = points->xs[i];
+      polyXj = points->xs[j];
+      polyYi = points->ys[i];
+      polyYj = points->ys[j];
       if ((polyYi <  (double) pixelY &&
            polyYj >= (double) pixelY) ||
           (polyYj <  (double) pixelY &&
@@ -80,8 +85,15 @@ void drawPolygon(SDL_Renderer* renderer, int* point_x, int* point_y, int num_poi
           edgeX[i+1] = imageRight;
         }
         for (pixelX=edgeX[i]; pixelX<edgeX[i+1]; pixelX++) {
-          //fillPixel(pixelX,pixelY); }}}
-          SDL_RenderDrawPoint(renderer, pixelX, pixelY);
+          if (first) {
+            first = 0;
+            printf("pixelX = %d\n", pixelX);
+            printf("pixelY = %d\n", pixelY);
+            printf("pitch = %d\n", target->pitch);
+            int index = pixelX + pixelY*target->pitch/4;
+            printf("index = %d\n", index);
+          }
+          target->buffer[pixelX + pixelY*target->pitch/4] = color;
         }
       }
     }

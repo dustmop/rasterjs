@@ -337,13 +337,31 @@ Raster.prototype.setColor = function(color) {
   _state.backendRenderer.setColor(color);
 }
 
+Raster.prototype.fillSquare = function(params) {
+  let [x, y, size] = destructure(params, arguments, ['x', 'y', 'size']);
+  if (_state.isExec) {
+    x += _state.config.translateX;
+    y += _state.config.translateY;
+  }
+  _state.backendRenderer.drawRect(x, y, size, size, true);
+}
+
 Raster.prototype.drawSquare = function(params) {
   let [x, y, size] = destructure(params, arguments, ['x', 'y', 'size']);
   if (_state.isExec) {
     x += _state.config.translateX;
     y += _state.config.translateY;
   }
-  _state.backendRenderer.drawRect(x, y, size, size);
+  _state.backendRenderer.drawRect(x, y, size, size, false);
+}
+
+Raster.prototype.fillRect = function(params) {
+  let [x, y, w, h] = destructure(params, arguments, ['x', 'y', 'w', 'h']);
+  if (_state.isExec) {
+    x += _state.config.translateX;
+    y += _state.config.translateY;
+  }
+  _state.backendRenderer.drawRect(x, y, w, h, true);
 }
 
 Raster.prototype.drawRect = function(params) {
@@ -352,7 +370,7 @@ Raster.prototype.drawRect = function(params) {
     x += _state.config.translateX;
     y += _state.config.translateY;
   }
-  _state.backendRenderer.drawRect(x, y, w, h);
+  _state.backendRenderer.drawRect(x, y, w, h, false);
 }
 
 Raster.prototype.drawPoint = function(params) {
@@ -389,13 +407,23 @@ Raster.prototype.drawImage = function(params) {
   _state.backendRenderer.drawImage(img, x, y);
 }
 
+Raster.prototype.fillCircle = function(params) {
+  let args = arguments;
+  this._drawCircleHelper(params, args, null, true);
+}
+
 Raster.prototype.drawCircle = function(params) {
   let width = null;
   if (params.width) {
     width = params.width;
     delete params.width;
   }
-  let [x, y, r] = destructure(params, arguments, ['x','y','r']);
+  let args = arguments;
+  this._drawCircleHelper(params, args, width, false);
+}
+
+Raster.prototype._drawCircleHelper = function(params, args, width, fill) {
+  let [x, y, r] = destructure(params, args, ['x','y','r']);
   let centerX = x + r;
   let centerY = y + r;
   if (_state.isExec) {
@@ -407,7 +435,7 @@ Raster.prototype.drawCircle = function(params) {
   if (width) {
     inner = midpointCircleRasterize(r - width - 1);
   }
-  _state.backendRenderer.drawCircleFromArc(centerX, centerY, arc, inner);
+  _state.backendRenderer.drawCircleFromArc(centerX, centerY, arc, inner, fill);
 }
 
 function midpointCircleRasterize(r) {

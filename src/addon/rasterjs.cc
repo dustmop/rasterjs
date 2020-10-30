@@ -1,6 +1,7 @@
 #include "type.h"
 #include "rasterjs.h"
 #include "draw_polygon.h"
+#include "line.h"
 #include "time_keeper.h"
 #include "load_image.h"
 #include "rect.h"
@@ -105,6 +106,8 @@ uint32_t makeColor(PrivateState* priv) {
   return priv->frontColor;
 }
 
+void putRange(GfxTarget* target, int x0, int y0, int x1, int y1, uint32_t color);
+
 Napi::Value RasterJS::Initialize(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if( SDL_Init( SDL_INIT_VIDEO ) < 0 ) {
@@ -165,7 +168,6 @@ Napi::Value RasterJS::AppRenderAndLoop(const Napi::CallbackInfo& info) {
   }
 
   texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888,
-                              //SDL_TEXTUREACCESS_TARGET,
                               SDL_TEXTUREACCESS_STREAMING,
                               viewWidth, viewHeight);
 
@@ -214,7 +216,6 @@ Napi::Value RasterJS::AppRenderAndLoop(const Napi::CallbackInfo& info) {
                         priv->drawTarget->pitch);
     }
 
-    //SDL_SetRenderTarget(renderer, NULL);
     SDL_RenderCopy(renderer, texture, NULL, NULL);
     // Swap buffers to display
     SDL_RenderPresent(renderer);
@@ -234,9 +235,6 @@ Napi::Value RasterJS::AppRenderAndLoop(const Napi::CallbackInfo& info) {
 #define OPAQUE 255
 
 void RasterJS::StartFrame() {
-  SDL_SetRenderTarget(renderer, texture);
-  // Fill the surface white
-  SDL_SetRenderDrawColor(renderer, 0xff, 0xff, 0xff, OPAQUE);
   SDL_RenderClear(renderer);
 
   PrivateState* priv = (PrivateState*)this->priv;
@@ -281,6 +279,7 @@ Napi::Value RasterJS::DrawRect(const Napi::CallbackInfo& info) {
   Napi::Value yval = info[1];
   Napi::Value wval = info[2];
   Napi::Value hval = info[3];
+  bool fill = info[4].ToBoolean().Value();
 
   int x = round(xval.As<Napi::Number>().FloatValue());
   int y = round(yval.As<Napi::Number>().FloatValue());
@@ -293,7 +292,7 @@ Napi::Value RasterJS::DrawRect(const Napi::CallbackInfo& info) {
   }
 
   uint32_t color = makeColor(priv);
-  drawRect(priv->drawTarget, x, y, x+w, y+h, color);
+  drawRect(priv->drawTarget, x, y, x+w, y+h, fill, color);
 
   Napi::Env env = info.Env();
   return Napi::Number::New(env, 0);
@@ -306,7 +305,13 @@ Napi::Value RasterJS::DrawPoint(const Napi::CallbackInfo& info) {
   int x = round(xval.As<Napi::Number>().FloatValue());
   int y = round(yval.As<Napi::Number>().FloatValue());
 
-  SDL_RenderDrawPoint(renderer, x, y);
+  PrivateState* priv = (PrivateState*)this->priv;
+  uint32_t color = makeColor(priv);
+  if (!priv->drawTarget) {
+    priv->drawTarget = instantiateDrawTarget(priv);
+  }
+  priv->drawTarget->buffer[x + y*priv->drawTarget->pitch/4] = color;
+
   return info.Env().Null();
 }
 
@@ -316,12 +321,28 @@ Napi::Value RasterJS::DrawLine(const Napi::CallbackInfo& info) {
   Napi::Value x1val = info[2];
   Napi::Value y1val = info[3];
 
-  int x  = round(xval.As<Napi::Number>().FloatValue());
-  int y  = round(yval.As<Napi::Number>().FloatValue());
+  PrivateState* priv = (PrivateState*)this->priv;
+  if (!priv->drawTarget) {
+    priv->drawTarget = instantiateDrawTarget(priv);
+  }
+
+  int x0 = round(xval.As<Napi::Number>().FloatValue());
+  int y0 = round(yval.As<Napi::Number>().FloatValue());
   int x1 = round(x1val.As<Napi::Number>().FloatValue());
   int y1 = round(y1val.As<Napi::Number>().FloatValue());
 
-  SDL_RenderDrawLine(renderer, x, y, x1, y1);
+  uint32_t color = makeColor(priv);
+
+  PointList point_list;
+  point_list.num = 2;
+  point_list.xs = point_x;
+  point_list.ys = point_y;
+  point_list.xs[0] = x0;
+  point_list.xs[1] = x1;
+  point_list.ys[0] = y0;
+  point_list.ys[1] = y1;
+
+  drawLine(priv->drawTarget, &point_list, color);
 
   Napi::Env env = info.Env();
   return Napi::Number::New(env, 0);
@@ -385,6 +406,10 @@ Napi::Value RasterJS::FillBackground(const Napi::CallbackInfo& info) {
 
   uint32_t rgb = priv->rgb_map[color % priv->rgb_map_length];
   priv->backColor = rgb * 0x100 + 0xff;
+
+  if (!priv->drawTarget) {
+    priv->drawTarget = instantiateDrawTarget(priv);
+  }
 
   return info.Env().Null();
 }
@@ -475,6 +500,15 @@ Napi::Value RasterJS::DrawCircleFromArc(const Napi::CallbackInfo& info) {
     }
   }
 
+  bool fill = info[4].ToBoolean().Value();
+
+  PrivateState* priv = (PrivateState*)this->priv;
+  if (!priv->drawTarget) {
+    priv->drawTarget = instantiateDrawTarget(priv);
+  }
+  GfxTarget* target = priv->drawTarget;
+  uint32_t color = makeColor(priv);
+
   for (int i = 0; i < num_points; i++) {
     Napi::Value elem = parameter_list[uint32_t(i)];
     // TODO: Validate this is an object
@@ -494,32 +528,72 @@ Napi::Value RasterJS::DrawCircleFromArc(const Napi::CallbackInfo& info) {
       L = left.As<Napi::Number>().Int32Value();
     } else if (num_inner != -1) {
       // If inner list exists, and we're past it, Left is the diagonal border.
-      L = b - 1;
+      L = b - 2;
     }
 
-    SDL_SetRenderDrawColor(renderer, 255, 0, 255, 255);
-    if (L == -1) {
-      // Draw circle's points.
-      SDL_RenderDrawPoint(renderer, baseX + a, baseY + b);
-      SDL_RenderDrawPoint(renderer, baseX - a, baseY + b);
-      SDL_RenderDrawPoint(renderer, baseX + a, baseY - b);
-      SDL_RenderDrawPoint(renderer, baseX - a, baseY - b);
-      SDL_RenderDrawPoint(renderer, baseX + b, baseY + a);
-      SDL_RenderDrawPoint(renderer, baseX - b, baseY + a);
-      SDL_RenderDrawPoint(renderer, baseX + b, baseY - a);
-      SDL_RenderDrawPoint(renderer, baseX - b, baseY - a);
+    if (fill) {
+      L = 0;
+    } else if (L == -1) {
+      // If no width given, set a width of 1
+      L = a;
     } else {
-      // Fill circle by drawing lines.
-      SDL_RenderDrawLine(renderer, baseX + a, baseY + b, baseX + L, baseY + b);
-      SDL_RenderDrawLine(renderer, baseX - a, baseY + b, baseX - L, baseY + b);
-      SDL_RenderDrawLine(renderer, baseX + a, baseY - b, baseX + L, baseY - b);
-      SDL_RenderDrawLine(renderer, baseX - a, baseY - b, baseX - L, baseY - b);
-      SDL_RenderDrawLine(renderer, baseX + b, baseY + a, baseX + b, baseY + L);
-      SDL_RenderDrawLine(renderer, baseX + b, baseY - a, baseX + b, baseY - L);
-      SDL_RenderDrawLine(renderer, baseX - b, baseY + a, baseX - b, baseY + L);
-      SDL_RenderDrawLine(renderer, baseX - b, baseY - a, baseX - b, baseY - L);
+      L = L + 2;
     }
+    putRange(target, baseX + a, baseY + b, baseX + L, baseY + b, color);
+    putRange(target, baseX - a, baseY + b, baseX - L, baseY + b, color);
+    putRange(target, baseX + a, baseY - b, baseX + L, baseY - b, color);
+    putRange(target, baseX - a, baseY - b, baseX - L, baseY - b, color);
+    putRange(target, baseX + b, baseY + a, baseX + b, baseY + L, color);
+    putRange(target, baseX - b, baseY + a, baseX - b, baseY + L, color);
+    putRange(target, baseX + b, baseY - a, baseX + b, baseY - L, color);
+    putRange(target, baseX - b, baseY - a, baseX - b, baseY - L, color);
   }
 
-  return info.Env().Null();
+  Napi::Env env = info.Env();
+  return Napi::Number::New(env, 0);
+}
+
+void swap(int* a, int* b) {
+  static int tmp;
+  tmp = *a;
+  *a = *b;
+  *b = tmp;
+}
+
+void putRange(GfxTarget* target, int x0, int y0, int x1, int y1, uint32_t color) {
+  if (x0 > x1) {
+    swap(&x0, &x1);
+  }
+  if (y0 > y1) {
+    swap(&y0, &y1);
+  }
+  if (x0 == x1) {
+    if (x0 < 0 || x1 >= target->x_size) {
+      return;
+    }
+    if (y0 < 0) {
+      y0 = 0;
+    }
+    if (y1 >= target->y_size) {
+      y1 = target->y_size - 1;
+    }
+    int x = x0;
+    for (int y = y0; y <= y1; y++) {
+      target->buffer[x + y*target->pitch/4] = color;
+    }
+  } else {
+    if (y0 < 0 || y1 >= target->y_size) {
+      return;
+    }
+    if (x0 < 0) {
+      x0 = 0;
+    }
+    if (x1 >= target->x_size) {
+      x1 = target->x_size - 1;
+    }
+    int y = y0;
+    for (int x = x0; x <= x1; x++) {
+      target->buffer[x + y*target->pitch/4] = color;
+    }
+  }
 }

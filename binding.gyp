@@ -6,6 +6,7 @@
       "cflags_cc!": [ "-fno-exceptions" ],
       "sources": [
         "src/addon/draw_polygon.cc",
+        "src/addon/line.cc",
         "src/addon/load_image.cc",
         "src/addon/native.cc",
         "src/addon/rasterjs.cc",

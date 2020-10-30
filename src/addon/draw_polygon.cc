@@ -1,10 +1,8 @@
-#include <SDL.h>
+#include <stdio.h>
 
 #include "gfx_types.h"
 
 #define MAX_POLY_CORNERS 16
-
-int first = 1;
 
 void drawPolygon(GfxTarget* target, PointList* points, uint32_t color) {
   int numEdges, edgeX[MAX_POLY_CORNERS];
@@ -85,14 +83,6 @@ void drawPolygon(GfxTarget* target, PointList* points, uint32_t color) {
           edgeX[i+1] = imageRight;
         }
         for (pixelX=edgeX[i]; pixelX<edgeX[i+1]; pixelX++) {
-          if (first) {
-            first = 0;
-            printf("pixelX = %d\n", pixelX);
-            printf("pixelY = %d\n", pixelY);
-            printf("pitch = %d\n", target->pitch);
-            int index = pixelX + pixelY*target->pitch/4;
-            printf("index = %d\n", index);
-          }
           target->buffer[pixelX + pixelY*target->pitch/4] = color;
         }
       }

@@ -382,9 +382,14 @@ Raster.prototype.drawPoint = function(params) {
   _state.backendRenderer.drawPoint(x, y);
 }
 
+Raster.prototype.fillPolygon = function(params) {
+  _state.backendRenderer.drawPolygon(_state.config.translateX,
+                                     _state.config.translateY, params, true);
+}
+
 Raster.prototype.drawPolygon = function(params) {
   _state.backendRenderer.drawPolygon(_state.config.translateX,
-                                     _state.config.translateY, params);
+                                     _state.config.translateY, params, false);
 }
 
 Raster.prototype.drawLine = function(params) {

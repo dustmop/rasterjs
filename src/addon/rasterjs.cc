@@ -349,8 +349,8 @@ Napi::Value RasterJS::DrawLine(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value RasterJS::DrawPolygon(const Napi::CallbackInfo& info) {
-  if (info.Length() != 3) {
-    printf("expected 3 arguments to this function\n");
+  if (info.Length() != 4) {
+    printf("expected 4 arguments to this function\n");
     return info.Env().Null();
   }
 
@@ -391,8 +391,13 @@ Napi::Value RasterJS::DrawPolygon(const Napi::CallbackInfo& info) {
       point_list.ys[i] = second_num + baseY;
     }
 
+    bool fill = info[3].ToBoolean().Value();
     uint32_t color = makeColor(priv);
-    drawPolygon(priv->drawTarget, &point_list, color);
+    if (fill) {
+      drawPolygon(priv->drawTarget, &point_list, color);
+    } else {
+      drawPolygonOutline(priv->drawTarget, &point_list, color);
+    }
   }
 
   return info.Env().Null();

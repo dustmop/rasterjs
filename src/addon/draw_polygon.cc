@@ -1,6 +1,7 @@
 #include <stdio.h>
 
 #include "gfx_types.h"
+#include "line.h"
 
 #define MAX_POLY_CORNERS 16
 
@@ -87,5 +88,31 @@ void drawPolygon(GfxTarget* target, PointList* points, uint32_t color) {
         }
       }
     }
+  }
+}
+
+
+int segment_x[2];
+int segment_y[2];
+
+void drawPolygonOutline(GfxTarget* target, PointList* points, uint32_t color) {
+  PointList line_segment;
+  line_segment.num = 2;
+  line_segment.xs = segment_x;
+  line_segment.ys = segment_y;
+
+  for (int k = 0; k < points->num; k++) {
+    if (k < points->num - 1) {
+      line_segment.xs[0] = points->xs[k+0];
+      line_segment.xs[1] = points->xs[k+1];
+      line_segment.ys[0] = points->ys[k+0];
+      line_segment.ys[1] = points->ys[k+1];
+    } else {
+      line_segment.xs[0] = points->xs[k];
+      line_segment.xs[1] = points->xs[0];
+      line_segment.ys[0] = points->ys[k];
+      line_segment.ys[1] = points->ys[0];
+    }
+    drawLine(target, &line_segment, color);
   }
 }

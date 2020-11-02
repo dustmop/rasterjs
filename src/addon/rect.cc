@@ -38,14 +38,14 @@ void drawRect(GfxTarget* target, int x0, int y0, int x1, int y1, bool fill, uint
     for (x = x0; x < x1; x++) {
       y = y0;
       target->buffer[x + y*target->pitch/4] = color;
-      y = y1;
+      y = y1 - 1;
       target->buffer[x + y*target->pitch/4] = color;
     }
     // Vertical lines
     for (y = y0; y < y1; y++) {
       x = x0;
       target->buffer[x + y*target->pitch/4] = color;
-      x = x1;
+      x = x1 - 1;
       target->buffer[x + y*target->pitch/4] = color;
     }
   }

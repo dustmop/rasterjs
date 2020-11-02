@@ -27,16 +27,16 @@ Napi::Object RasterJS::Init(Napi::Env env, Napi::Object exports) {
       {InstanceMethod("initialize", &RasterJS::Initialize),
        InstanceMethod("createWindow", &RasterJS::CreateWindow),
        InstanceMethod("appRenderAndLoop", &RasterJS::AppRenderAndLoop),
-       InstanceMethod("drawRect", &RasterJS::DrawRect),
-       InstanceMethod("drawPoint", &RasterJS::DrawPoint),
-       InstanceMethod("drawPolygon", &RasterJS::DrawPolygon),
-       InstanceMethod("drawLine", &RasterJS::DrawLine),
        InstanceMethod("setColor", &RasterJS::SetColor),
        InstanceMethod("fillBackground", &RasterJS::FillBackground),
        InstanceMethod("loadImage", &RasterJS::LoadImage),
        InstanceMethod("assignRgbMapping", &RasterJS::AssignRgbMapping),
-       InstanceMethod("drawImage", &RasterJS::DrawImage),
-       InstanceMethod("drawCircleFromArc", &RasterJS::DrawCircleFromArc),
+       InstanceMethod("putRect", &RasterJS::PutRect),
+       InstanceMethod("putPoint", &RasterJS::PutPoint),
+       InstanceMethod("putPolygon", &RasterJS::PutPolygon),
+       InstanceMethod("putLine", &RasterJS::PutLine),
+       InstanceMethod("putImage", &RasterJS::PutImage),
+       InstanceMethod("putCircleFromArc", &RasterJS::PutCircleFromArc),
   });
   constructor = Napi::Persistent(func);
   constructor.SuppressDestruct();
@@ -80,6 +80,8 @@ SDL_Renderer* renderer = NULL;
 SDL_Texture* texture = NULL;
 int viewWidth = 0;
 int viewHeight = 0;
+int windowWidth = 0;
+int windowHeight = 0;
 
 int point_x[16];
 int point_y[16];
@@ -89,11 +91,19 @@ GfxTarget* allocTarget = NULL;
 GfxTarget* instantiateDrawTarget(PrivateState* priv) {
   if (!allocTarget) {
     allocTarget = (GfxTarget*)malloc(sizeof(GfxTarget));
+    if (allocTarget == NULL) {
+      printf("allocTarget failed to malloc\n");
+      exit(1);
+    }
     allocTarget->x_size = viewWidth;
     allocTarget->y_size = viewHeight;
     allocTarget->pitch = viewWidth * 4;
     allocTarget->capacity = allocTarget->pitch * viewHeight;
     allocTarget->buffer = (uint32_t*)malloc(allocTarget->capacity);
+    if (allocTarget->buffer == NULL) {
+      printf("allocTarget.buffer failed to malloc\n");
+      exit(1);
+    }
   }
   uint32_t* colors = (uint32_t*)allocTarget->buffer;
   for (int n = 0; n < allocTarget->capacity / 4; n++) {
@@ -133,9 +143,17 @@ Napi::Value RasterJS::CreateWindow(const Napi::CallbackInfo& info) {
 
   viewWidth = info[0].As<Napi::Number>().Int32Value();
   viewHeight = info[1].As<Napi::Number>().Int32Value();
+  int zoomLevel = info[2].As<Napi::Number>().Int32Value();
+  windowWidth = viewWidth * zoomLevel;
+  windowHeight = viewHeight * zoomLevel;
 
   // Create window
-  window = SDL_CreateWindow( "SDL Tutorial", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, viewWidth, viewHeight, SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI );
+  window = SDL_CreateWindow(
+      "RasterJS",
+      SDL_WINDOWPOS_UNDEFINED,
+      SDL_WINDOWPOS_UNDEFINED,
+      windowWidth, windowHeight,
+      SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
   if (window == NULL) {
     printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
     exit(1);
@@ -272,7 +290,7 @@ Napi::Value RasterJS::SetColor(const Napi::CallbackInfo& info) {
   return info.Env().Null();
 }
 
-Napi::Value RasterJS::DrawRect(const Napi::CallbackInfo& info) {
+Napi::Value RasterJS::PutRect(const Napi::CallbackInfo& info) {
   // TODO: Validate length of parameters, all should be numbers
 
   Napi::Value xval = info[0];
@@ -298,7 +316,7 @@ Napi::Value RasterJS::DrawRect(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, 0);
 }
 
-Napi::Value RasterJS::DrawPoint(const Napi::CallbackInfo& info) {
+Napi::Value RasterJS::PutPoint(const Napi::CallbackInfo& info) {
   Napi::Value xval = info[0];
   Napi::Value yval = info[1];
 
@@ -315,7 +333,7 @@ Napi::Value RasterJS::DrawPoint(const Napi::CallbackInfo& info) {
   return info.Env().Null();
 }
 
-Napi::Value RasterJS::DrawLine(const Napi::CallbackInfo& info) {
+Napi::Value RasterJS::PutLine(const Napi::CallbackInfo& info) {
   Napi::Value xval  = info[0];
   Napi::Value yval  = info[1];
   Napi::Value x1val = info[2];
@@ -348,7 +366,7 @@ Napi::Value RasterJS::DrawLine(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, 0);
 }
 
-Napi::Value RasterJS::DrawPolygon(const Napi::CallbackInfo& info) {
+Napi::Value RasterJS::PutPolygon(const Napi::CallbackInfo& info) {
   if (info.Length() != 4) {
     printf("expected 4 arguments to this function\n");
     return info.Env().Null();
@@ -431,7 +449,7 @@ Napi::Value RasterJS::LoadImage(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, 2);
 }
 
-Napi::Value RasterJS::DrawImage(const Napi::CallbackInfo& info) {
+Napi::Value RasterJS::PutImage(const Napi::CallbackInfo& info) {
   PrivateState* priv = (PrivateState*)this->priv;
   if (!priv->drawTarget) {
     priv->drawTarget = instantiateDrawTarget(priv);
@@ -470,7 +488,7 @@ Napi::Value RasterJS::DrawImage(const Napi::CallbackInfo& info) {
   return info.Env().Null();
 }
 
-Napi::Value RasterJS::DrawCircleFromArc(const Napi::CallbackInfo& info) {
+Napi::Value RasterJS::PutCircleFromArc(const Napi::CallbackInfo& info) {
   int baseX = info[0].ToNumber().Int32Value();
   int baseY = info[1].ToNumber().Int32Value();
 

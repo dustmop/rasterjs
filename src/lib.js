@@ -198,16 +198,24 @@ QueueRenderer.prototype.setColor = function() {
   this._queue.push(concatArray('setColor', arguments));
 }
 
-QueueRenderer.prototype.drawLine = function() {
-  this._queue.push(concatArray('drawLine', arguments));
+QueueRenderer.prototype.putLine = function() {
+  this._queue.push(concatArray('putLine', arguments));
 }
 
-QueueRenderer.prototype.drawPoint = function() {
-  this._queue.push(concatArray('drawPoint', arguments));
+QueueRenderer.prototype.putPoint = function() {
+  this._queue.push(concatArray('putPoint', arguments));
 }
 
-QueueRenderer.prototype.drawCircleFromArc = function() {
-  this._queue.push(concatArray('drawCircleFromArc', arguments));
+QueueRenderer.prototype.putCircleFromArc = function() {
+  this._queue.push(concatArray('putCircleFromArc', arguments));
+}
+
+QueueRenderer.prototype.putPolygon = function() {
+  this._queue.push(concatArray('putPolygon', arguments));
+}
+
+QueueRenderer.prototype.putRect = function() {
+  this._queue.push(concatArray('putRect', arguments));
 }
 
 ////////////////////////////////////////
@@ -226,12 +234,21 @@ function QImage(filename) {
 
 function Raster() {
   _state.backendRenderer = new QueueRenderer();
+  _state.config.scale = 1;
+  _state.config.screenWidth = 100;
+  _state.config.screenHeight = 100;
+  _state.config.translateX = 0;
+  _state.config.translateY = 0;
   return this;
 }
 
 Raster.prototype.TAU = TAU;
 
 Raster.prototype.setViewportSize = function(params) {
+  this.setSize(params);
+}
+
+Raster.prototype.setSize = function(params) {
   if (_state.isExec) {
     throw 'Cannot setViewportSize when app is running';
   }
@@ -241,6 +258,10 @@ Raster.prototype.setViewportSize = function(params) {
 }
 
 Raster.prototype.setPixelScale = function(s) {
+  this.setZoom(s);
+}
+
+Raster.prototype.setZoom = function(s) {
   if (_state.isExec) {
     throw 'Cannot setPixelScale when app is running';
   }
@@ -252,6 +273,8 @@ Raster.prototype.originAtCenter = function() {
     throw 'Cannot originAtCenter when app is running';
   }
   _state.config.translateCenter = true;
+  _state.config.translateX = _state.config.screenWidth / 2;
+  _state.config.translateY = _state.config.screenHeight / 2;
 }
 
 Raster.prototype.loadImage = function(path) {
@@ -270,7 +293,6 @@ Raster.prototype.run = function(renderFunc) {
     _state.config.translateX = _state.config.screenWidth / 2;
     _state.config.translateY = _state.config.screenHeight / 2;
   }
-  _state.isExec = true;
   var self = this;
   createBackendRenderer(function(r, map) {
     _state.backendRenderer = r;
@@ -283,13 +305,6 @@ Raster.prototype.run = function(renderFunc) {
 Raster.prototype.show = function() {
   let q = _state.backendRenderer.queue();
   _state.timeClick = 0;
-  _state.config.translateX = 0;
-  _state.config.translateY = 0;
-  if (_state.config.translateCenter) {
-    _state.config.translateX = _state.config.screenWidth / 2;
-    _state.config.translateY = _state.config.screenHeight / 2;
-  }
-  _state.isExec = true;
   var self = this;
   createBackendRenderer(function(r, map) {
     _state.backendRenderer = r;
@@ -339,77 +354,63 @@ Raster.prototype.setColor = function(color) {
 
 Raster.prototype.fillSquare = function(params) {
   let [x, y, size] = destructure(params, arguments, ['x', 'y', 'size']);
-  if (_state.isExec) {
-    x += _state.config.translateX;
-    y += _state.config.translateY;
-  }
-  _state.backendRenderer.drawRect(x, y, size, size, true);
+  x += _state.config.translateX;
+  y += _state.config.translateY;
+  _state.backendRenderer.putRect(x, y, size, size, true);
 }
 
 Raster.prototype.drawSquare = function(params) {
   let [x, y, size] = destructure(params, arguments, ['x', 'y', 'size']);
-  if (_state.isExec) {
-    x += _state.config.translateX;
-    y += _state.config.translateY;
-  }
-  _state.backendRenderer.drawRect(x, y, size, size, false);
+  x += _state.config.translateX;
+  y += _state.config.translateY;
+  _state.backendRenderer.putRect(x, y, size, size, false);
 }
 
 Raster.prototype.fillRect = function(params) {
   let [x, y, w, h] = destructure(params, arguments, ['x', 'y', 'w', 'h']);
-  if (_state.isExec) {
-    x += _state.config.translateX;
-    y += _state.config.translateY;
-  }
-  _state.backendRenderer.drawRect(x, y, w, h, true);
+  x += _state.config.translateX;
+  y += _state.config.translateY;
+  _state.backendRenderer.putRect(x, y, w, h, true);
 }
 
 Raster.prototype.drawRect = function(params) {
   let [x, y, w, h] = destructure(params, arguments, ['x', 'y', 'w', 'h']);
-  if (_state.isExec) {
-    x += _state.config.translateX;
-    y += _state.config.translateY;
-  }
-  _state.backendRenderer.drawRect(x, y, w, h, false);
+  x += _state.config.translateX;
+  y += _state.config.translateY;
+  _state.backendRenderer.putRect(x, y, w, h, false);
 }
 
 Raster.prototype.drawPoint = function(params) {
   let [x, y] = destructure(params, arguments, ['x', 'y']);
-  if (_state.isExec) {
-    x += _state.config.translateX;
-    y += _state.config.translateY;
-  }
-  _state.backendRenderer.drawPoint(x, y);
+  x += _state.config.translateX;
+  y += _state.config.translateY;
+  _state.backendRenderer.putPoint(x, y);
 }
 
 Raster.prototype.fillPolygon = function(params) {
-  _state.backendRenderer.drawPolygon(_state.config.translateX,
-                                     _state.config.translateY, params, true);
+  _state.backendRenderer.putPolygon(_state.config.translateX,
+                                    _state.config.translateY, params, true);
 }
 
 Raster.prototype.drawPolygon = function(params) {
-  _state.backendRenderer.drawPolygon(_state.config.translateX,
-                                     _state.config.translateY, params, false);
+  _state.backendRenderer.putPolygon(_state.config.translateX,
+                                    _state.config.translateY, params, false);
 }
 
 Raster.prototype.drawLine = function(params) {
   let [x, y, x1, y1] = destructure(params, arguments, ['x','y','x1','y1']);
-  if (_state.isExec) {
-    x  += _state.config.translateX;
-    y  += _state.config.translateY;
-    x1 += _state.config.translateX;
-    y1 += _state.config.translateY;
-  }
-  _state.backendRenderer.drawLine(x, y, x1, y1);
+  x  += _state.config.translateX;
+  y  += _state.config.translateY;
+  x1 += _state.config.translateX;
+  y1 += _state.config.translateY;
+  _state.backendRenderer.putLine(x, y, x1, y1);
 }
 
 Raster.prototype.drawImage = function(params) {
   let [img, x, y] = destructure(params, arguments, ['img', 'x', 'y']);
-  if (_state.isExec) {
-    x += _state.config.translateX;
-    y += _state.config.translateY;
-  }
-  _state.backendRenderer.drawImage(img, x, y);
+  x += _state.config.translateX;
+  y += _state.config.translateY;
+  _state.backendRenderer.putImage(img, x, y);
 }
 
 Raster.prototype.fillCircle = function(params) {
@@ -431,16 +432,14 @@ Raster.prototype._drawCircleHelper = function(params, args, width, fill) {
   let [x, y, r] = destructure(params, args, ['x','y','r']);
   let centerX = x + r;
   let centerY = y + r;
-  if (_state.isExec) {
-    centerX += _state.config.translateX;
-    centerY += _state.config.translateY;
-  }
+  centerX += _state.config.translateX;
+  centerY += _state.config.translateY;
   let arc = midpointCircleRasterize(r);
   let inner = null;
   if (width) {
     inner = midpointCircleRasterize(r - width - 1);
   }
-  _state.backendRenderer.drawCircleFromArc(centerX, centerY, arc, inner, fill);
+  _state.backendRenderer.putCircleFromArc(centerX, centerY, arc, inner, fill);
 }
 
 function midpointCircleRasterize(r) {
@@ -475,7 +474,8 @@ Raster.prototype.renderLoop = function() {
   let self = this;
   _state.backendRenderer.initialize();
   _state.backendRenderer.createWindow(_state.config.screenWidth,
-                                      _state.config.screenHeight);
+                                      _state.config.screenHeight,
+                                      _state.config.scale);
   _state.backendRenderer.appRenderAndLoop(function() {
     self.renderOnce();
   }, -1);
@@ -486,7 +486,8 @@ Raster.prototype.renderShow = function() {
   let self = this;
   _state.backendRenderer.initialize();
   _state.backendRenderer.createWindow(_state.config.screenWidth,
-                                      _state.config.screenHeight);
+                                      _state.config.screenHeight,
+                                      _state.config.scale);
   self.renderOnce();
   _state.backendRenderer.appRenderAndLoop(function() {
     self.renderOnce();

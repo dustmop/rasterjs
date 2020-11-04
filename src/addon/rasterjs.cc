@@ -37,6 +37,7 @@ Napi::Object RasterJS::Init(Napi::Env env, Napi::Object exports) {
        InstanceMethod("putLine", &RasterJS::PutLine),
        InstanceMethod("putImage", &RasterJS::PutImage),
        InstanceMethod("putCircleFromArc", &RasterJS::PutCircleFromArc),
+       InstanceMethod("putDirect", &RasterJS::PutDirect),
   });
   constructor = Napi::Persistent(func);
   constructor.SuppressDestruct();
@@ -59,6 +60,7 @@ PrivateState::PrivateState() {
   this->rgb_map_length = 0;
   this->frontColor = 0xffffffff;
   this->backColor = 0;
+  this->drawTarget = NULL;
 }
 
 RasterJS::RasterJS(const Napi::CallbackInfo& info)
@@ -570,6 +572,39 @@ Napi::Value RasterJS::PutCircleFromArc(const Napi::CallbackInfo& info) {
     putRange(target, baseX - b, baseY + a, baseX - b, baseY + L, color);
     putRange(target, baseX + b, baseY - a, baseX + b, baseY - L, color);
     putRange(target, baseX - b, baseY - a, baseX - b, baseY - L, color);
+  }
+
+  Napi::Env env = info.Env();
+  return Napi::Number::New(env, 0);
+}
+
+Napi::Value RasterJS::PutDirect(const Napi::CallbackInfo& info) {
+  PrivateState* priv = (PrivateState*)this->priv;
+  if (!priv->drawTarget) {
+    priv->drawTarget = instantiateDrawTarget(priv);
+  }
+  GfxTarget* target = priv->drawTarget;
+
+  //printf("TODO: putDirect");
+
+  if (info.Length() < 1) {
+    printf("PutDirect needs 1 param");
+    exit(1);
+  }
+  if (!info[0].IsTypedArray()) {
+    printf("PutDirect needs TypedArray");
+    exit(1);
+  }
+
+  Napi::ArrayBuffer buffer = info[0].As<Napi::TypedArray>().ArrayBuffer();
+  unsigned char* data = (unsigned char*)buffer.Data();
+
+  for (int y = 0; y < target->y_size; y++) {
+    for (int x = 0; x < target->x_size; x++) {
+      unsigned char color = data[x + y*target->pitch/4];
+      uint32_t rgb = priv->rgb_map[color % priv->rgb_map_length];
+      target->buffer[x + y*target->pitch/4] = rgb * 0x100 + 0xff;
+    }
   }
 
   Napi::Env env = info.Env();

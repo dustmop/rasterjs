@@ -172,6 +172,7 @@ const TAU = 6.283185307179586;
 var _state = {
   config: {},
   images: [],
+  color: null,
   isExec: false,
   frameFunc: null,
   backendRenderer: null,
@@ -218,6 +219,10 @@ QueueRenderer.prototype.putRect = function() {
   this._queue.push(concatArray('putRect', arguments));
 }
 
+QueueRenderer.prototype.putDirect = function() {
+  this._queue.push(concatArray('putDirect', arguments));
+}
+
 ////////////////////////////////////////
 // QImage
 
@@ -239,6 +244,7 @@ function Raster() {
   _state.config.screenHeight = 100;
   _state.config.translateX = 0;
   _state.config.translateY = 0;
+  _state.initMem = new Array();
   return this;
 }
 
@@ -349,6 +355,7 @@ Raster.prototype.fillBackground = function(color) {
 }
 
 Raster.prototype.setColor = function(color) {
+  _state.color = color;
   _state.backendRenderer.setColor(color);
 }
 
@@ -384,6 +391,7 @@ Raster.prototype.drawPoint = function(params) {
   let [x, y] = destructure(params, arguments, ['x', 'y']);
   x += _state.config.translateX;
   y += _state.config.translateY;
+  _state.initMem.push([x, y, _state.color]);
   _state.backendRenderer.putPoint(x, y);
 }
 
@@ -467,6 +475,66 @@ function midpointCircleRasterize(r) {
     y += 1;
   }
   return arc;
+}
+
+function NewDirectMemory() {
+  var w = _state.config.screenWidth;
+  var h = _state.config.screenHeight;
+  var make = new Uint8Array(w * h);
+  make.y_dim = h;
+  make.x_dim = w;
+  make.pitch = w;
+  make.put = function(x, y, v) {
+    if (x < 0 || x >= this.x_dim || y < 0 || y >= this.y_dim) {
+      return;
+    }
+    this[x + y*this.pitch] = v;
+  };
+  make.get = function(x, y) {
+    if (x < 0 || x >= this.x_dim || y < 0 || y >= this.y_dim) {
+      return 0;
+    }
+    return this[x + y*this.pitch];
+  };
+  return make;
+}
+
+Raster.prototype.fillDirect = function(callback) {
+  this.fillFrame(callback);
+}
+
+Raster.prototype.fillFrame = function(callback) {
+  var mem = NewDirectMemory();
+  for (let i = 0; i < _state.initMem.length; i++) {
+    let row = _state.initMem[i];
+    let x = row[0];
+    let y = row[1];
+    mem[x + y*mem.pitch] = row[2];
+  }
+  if (callback.length == 1) {
+    callback(mem);
+  } else if (callback.length == 3) {
+    for (let y = 0; y < mem.y_dim; y++) {
+      for (let x = 0; x < mem.x_dim; x++) {
+        let ret = callback(mem, x, y);
+        if (ret !== null && ret !== undefined) {
+          mem[x + y*mem.pitch] = ret;
+        }
+      }
+    }
+  } else {
+    throw 'Invalid arguments for fillDirect: length = ' + callback.length;
+  }
+  _state.backendRenderer.putDirect(mem);
+}
+
+Raster.prototype.showDirect = function(callback) {
+  this.showFrame(callback);
+}
+
+Raster.prototype.showFrame = function(callback) {
+  this.fillDirect(callback);
+  this.show();
 }
 
 Raster.prototype.renderLoop = function() {

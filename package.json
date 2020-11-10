@@ -5,11 +5,17 @@
   "author": "Dustin Long <me@dustmop.io> (dustmop.io)",
   "gypfile": true,
   "license": "MIT",
+  "scripts": {
+    "test": "mocha"
+  },
   "dependencies": {
     "node-addon-api": "^3.1.0",
     "canvas": "^2.6.1",
     "gifencoder": "^2.0.1",
     "png-file-stream": "^1.2.1",
     "randomstring": "^1.1.5"
+  },
+  "devDependencies": {
+    "mocha": "^8.2.1"
   }
 }

@@ -9,6 +9,7 @@
         "src/addon/line.cc",
         "src/addon/load_image.cc",
         "src/addon/native.cc",
+        "src/addon/png_read_write.cc",
         "src/addon/rasterjs.cc",
         "src/addon/rect.cc",
         "src/addon/time_keeper.cc",

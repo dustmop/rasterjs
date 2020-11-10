@@ -173,6 +173,7 @@ var _state = {
   config: {},
   images: [],
   color: null,
+  bgColor: null,
   isExec: false,
   frameFunc: null,
   backendRenderer: null,
@@ -333,6 +334,31 @@ Raster.prototype.show = function() {
   });
 }
 
+Raster.prototype.save = function(savepath) {
+  let q = _state.backendRenderer.queue();
+  _state.timeClick = 0;
+  var self = this;
+  createBackendRenderer(function(r, map) {
+    _state.backendRenderer = r;
+    _state.backendRenderer.assignRgbMapping(map);
+    self._allImagesOpen();
+    _state.renderFunc = function() {
+      for (let i = 0; i < q.length; i++) {
+        let row = q[i];
+        let fname = row[0];
+        let args = row.slice(1);
+        let func = r[fname];
+        if (func) {
+          func.apply(r, args);
+        } else {
+          throw 'Function ' + fname + ' not found';
+        }
+      }
+    }
+    self.renderAndSave(savepath);
+  });
+}
+
 Raster.prototype._allImagesOpen = function() {
   for (var i = 0; i < _state.images.length; i++) {
     var img = _state.images[i];
@@ -342,7 +368,7 @@ Raster.prototype._allImagesOpen = function() {
   }
 }
 
-Raster.prototype.oscillate = function(period, fracOffset) {
+Raster.prototype.oscil = function(period, fracOffset) {
   if (fracOffset === undefined) {
     fracOffset = 0.0;
   }
@@ -350,7 +376,10 @@ Raster.prototype.oscillate = function(period, fracOffset) {
   return (1.0 - Math.cos(click * TAU / period)) / 2.0;
 }
 
+Raster.prototype.oscillate = Raster.prototype.oscil;
+
 Raster.prototype.fillBackground = function(color) {
+  _state.bgColor = color;
   _state.backendRenderer.fillBackground(color);
 }
 
@@ -418,7 +447,7 @@ Raster.prototype.drawImage = function(params) {
   let [img, x, y] = destructure(params, arguments, ['img', 'x', 'y']);
   x += _state.config.translateX;
   y += _state.config.translateY;
-  _state.backendRenderer.putImage(img, x, y);
+  _state.backendRenderer.putImage(img.id, x, y);
 }
 
 Raster.prototype.fillCircle = function(params) {
@@ -499,12 +528,9 @@ function NewDirectMemory() {
   return make;
 }
 
-Raster.prototype.fillDirect = function(callback) {
-  this.fillFrame(callback);
-}
-
 Raster.prototype.fillFrame = function(callback) {
   var mem = NewDirectMemory();
+  mem.fill(_state.bgColor);
   for (let i = 0; i < _state.initMem.length; i++) {
     let row = _state.initMem[i];
     let x = row[0];
@@ -528,6 +554,8 @@ Raster.prototype.fillFrame = function(callback) {
   _state.backendRenderer.putDirect(mem);
 }
 
+Raster.prototype.fillDirect = Raster.prototype.fillFrame;
+
 Raster.prototype.showDirect = function(callback) {
   this.showFrame(callback);
 }
@@ -536,6 +564,8 @@ Raster.prototype.showFrame = function(callback) {
   this.fillDirect(callback);
   this.show();
 }
+
+// TODO: Combine these two functions
 
 Raster.prototype.renderLoop = function() {
   let config = this._config;
@@ -560,6 +590,17 @@ Raster.prototype.renderShow = function() {
   _state.backendRenderer.appRenderAndLoop(function() {
     self.renderOnce();
   }, 1);
+}
+
+Raster.prototype.renderAndSave = function(savepath) {
+  let config = this._config;
+  let self = this;
+  _state.backendRenderer.initialize();
+  _state.backendRenderer.createDisplay(_state.config.screenWidth,
+                                       _state.config.screenHeight,
+                                       _state.config.scale);
+  self.renderOnce();
+  _state.backendRenderer.saveTo(savepath);
 }
 
 Raster.prototype.renderOnce = function() {

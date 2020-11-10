@@ -5,6 +5,7 @@
 #include "time_keeper.h"
 #include "load_image.h"
 #include "rect.h"
+#include "png_read_write.h"
 
 #include <napi.h>
 #include <uv.h>
@@ -26,9 +27,11 @@ Napi::Object RasterJS::Init(Napi::Env env, Napi::Object exports) {
       "RasterJS",
       {InstanceMethod("initialize", &RasterJS::Initialize),
        InstanceMethod("createWindow", &RasterJS::CreateWindow),
+       InstanceMethod("createDisplay", &RasterJS::CreateDisplay),
        InstanceMethod("appRenderAndLoop", &RasterJS::AppRenderAndLoop),
        InstanceMethod("setColor", &RasterJS::SetColor),
        InstanceMethod("fillBackground", &RasterJS::FillBackground),
+       InstanceMethod("saveTo", &RasterJS::SaveTo),
        InstanceMethod("loadImage", &RasterJS::LoadImage),
        InstanceMethod("assignRgbMapping", &RasterJS::AssignRgbMapping),
        InstanceMethod("putRect", &RasterJS::PutRect),
@@ -160,6 +163,25 @@ Napi::Value RasterJS::CreateWindow(const Napi::CallbackInfo& info) {
     printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
     exit(1);
   }
+  return Napi::Number::New(env, 0);
+}
+
+Napi::Value RasterJS::CreateDisplay(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  viewWidth = info[0].As<Napi::Number>().Int32Value();
+  viewHeight = info[1].As<Napi::Number>().Int32Value();
+  return Napi::Number::New(env, 0);
+}
+
+Napi::Value RasterJS::SaveTo(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  PrivateState* priv = (PrivateState*)this->priv;
+  Napi::String savepath = info[0].ToString();
+  write_png(savepath.Utf8Value().c_str(),
+            (unsigned char*)priv->drawTarget->buffer,
+            viewWidth,
+            viewHeight,
+            priv->drawTarget->pitch);
   return Napi::Number::New(env, 0);
 }
 
@@ -439,16 +461,26 @@ Napi::Value RasterJS::FillBackground(const Napi::CallbackInfo& info) {
   return info.Env().Null();
 }
 
-Image* g_img = NULL;
+Image** g_img_list = NULL;
+int num_img = 0;
 
 Napi::Value RasterJS::LoadImage(const Napi::CallbackInfo& info) {
   Napi::Value val = info[0];
   Napi::String str = val.ToString();
   std::string s = str.Utf8Value();
   // TODO: Other formats
-  g_img = LoadPng(s.c_str());
+  Image* img = LoadPng(s.c_str());
+  if (g_img_list == NULL) {
+    int capacity = sizeof(Image*) * 20;
+    g_img_list = (Image**)malloc(capacity);
+    memset(g_img_list, 0, capacity);
+  }
+  int id = num_img;
+  g_img_list[num_img] = img;
+  num_img++;
+
   Napi::Env env = info.Env();
-  return Napi::Number::New(env, 2);
+  return Napi::Number::New(env, id);
 }
 
 Napi::Value RasterJS::PutImage(const Napi::CallbackInfo& info) {
@@ -462,10 +494,16 @@ Napi::Value RasterJS::PutImage(const Napi::CallbackInfo& info) {
   int baseX = info[1].ToNumber().Int32Value();
   int baseY = info[2].ToNumber().Int32Value();
 
-  // TODO
+  if (imgId >= num_img) {
+    printf("invalid image id: %d\n", imgId);
+    return info.Env().Null();
+  }
+  Image* img_struct = g_img_list[imgId];
+
   int width, height;
   uint8* data = NULL;
-  GetPng(g_img, &width, &height, &data);
+  GetPng(img_struct, &width, &height, &data);
+
   for (int y = 0; y < height; y++) {
     for (int x = 0; x < width; x++) {
       uint8 r = data[(y*width+x)*4+0];

@@ -91,7 +91,6 @@ void drawPolygon(GfxTarget* target, PointList* points, uint32_t color) {
   }
 }
 
-
 int segment_x[2];
 int segment_y[2];
 

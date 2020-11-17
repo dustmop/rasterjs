@@ -1,12 +1,15 @@
 #include <png.h>
+#include <stdlib.h>
 
 int write_png(const char* savepath, unsigned char* buffer, int width, int height, int pitch) {
 	int code = 0;
+	int y = 0;
+	int transform = PNG_TRANSFORM_IDENTITY;
 	FILE *fp = NULL;
 	png_structp png_ptr = NULL;
 	png_infop info_ptr = NULL;
-	png_bytep row = NULL;
-	
+	png_bytep* rows = NULL;
+
 	// Open file for writing (binary mode)
 	fp = fopen(savepath, "wb");
 	if (fp == NULL) {
@@ -47,26 +50,18 @@ int write_png(const char* savepath, unsigned char* buffer, int width, int height
 
 	png_write_info(png_ptr, info_ptr);
 
-	int x, y;
-
-	for (y = 0; y < height; y++) {
-		for (x = 0; x < width; x++) {
-			buffer[(y*width+x)*4 + 3] = 0xff;
-		}
+	// Quick graphics has the buffer as little-endian RGBA. Fix that up for png.
+	transform = PNG_TRANSFORM_BGR | PNG_TRANSFORM_SWAP_ALPHA;
+	rows = (png_bytep*)malloc(sizeof(png_bytep)*height);
+	for (y=0 ; y<height; y++) {
+		rows[y] = buffer+(y*pitch);
 	}
-
-	// Write image data
-
-	for (y=0 ; y<height ; y++) {
-		row = &buffer[y*width*4];
-		png_write_row(png_ptr, row);
-	}
-
-	// End write
-	png_write_end(png_ptr, NULL);
+	png_set_rows(png_ptr, info_ptr, rows);
+	png_write_png(png_ptr, info_ptr, transform, NULL);
 
 	finalise:
 	if (fp != NULL) fclose(fp);
+	if (rows != NULL) free(rows);
 	if (info_ptr != NULL) png_free_data(png_ptr, info_ptr, PNG_FREE_ALL, -1);
 	if (png_ptr != NULL) png_destroy_write_struct(&png_ptr, (png_infopp)NULL);
 

@@ -295,8 +295,9 @@ Napi::Value RasterJS::AssignRgbMapping(const Napi::CallbackInfo& info) {
 
   for (int i = 0; i < num; i++) {
     elem = list[uint32_t(i)];
-    int v = elem.As<Napi::Number>().Int32Value();
-    priv->rgb_map[i] = v;
+    int val = elem.As<Napi::Number>().Int32Value();
+    // Store values as little-endian RGBA.
+    priv->rgb_map[i] = val * 0x100 + 0xff;
   }
 
   return info.Env().Null();
@@ -309,7 +310,7 @@ Napi::Value RasterJS::SetColor(const Napi::CallbackInfo& info) {
   int color = val.As<Napi::Number>().Int32Value();
 
   uint32_t rgb = priv->rgb_map[color % priv->rgb_map_length];
-  priv->frontColor = rgb * 0x100 + 0xff;
+  priv->frontColor = rgb;
 
   return info.Env().Null();
 }
@@ -452,7 +453,7 @@ Napi::Value RasterJS::FillBackground(const Napi::CallbackInfo& info) {
   int color = round(val.As<Napi::Number>().FloatValue());
 
   uint32_t rgb = priv->rgb_map[color % priv->rgb_map_length];
-  priv->backColor = rgb * 0x100 + 0xff;
+  priv->backColor = rgb;
 
   if (!priv->drawTarget) {
     priv->drawTarget = instantiateDrawTarget(priv);
@@ -623,8 +624,6 @@ Napi::Value RasterJS::PutDirect(const Napi::CallbackInfo& info) {
   }
   GfxTarget* target = priv->drawTarget;
 
-  //printf("TODO: putDirect");
-
   if (info.Length() < 1) {
     printf("PutDirect needs 1 param");
     exit(1);
@@ -641,7 +640,7 @@ Napi::Value RasterJS::PutDirect(const Napi::CallbackInfo& info) {
     for (int x = 0; x < target->x_size; x++) {
       unsigned char color = data[x + y*target->pitch/4];
       uint32_t rgb = priv->rgb_map[color % priv->rgb_map_length];
-      target->buffer[x + y*target->pitch/4] = rgb * 0x100 + 0xff;
+      target->buffer[x + y*target->pitch/4] = rgb;
     }
   }
 

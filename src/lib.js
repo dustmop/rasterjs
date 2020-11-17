@@ -20,18 +20,18 @@ if (isRunningNodejs) {
     }
     createBackendRenderer = function(callback) {
       const gifRenderer = require('./gif_renderer.js');
-      const rgbMapNES = require('./rgb_map_nes.js');
+      const rgbMapQuick = require('./rgb_map_quick.js');
       let thisFilename = process.argv[1];
       var r = gifRenderer.make(thisFilename, {numFrames: numFrames});
       setTimeout(function() {
-        callback(r, rgbMapNES.rgb_mapping);
+        callback(r, rgbMapQuick.rgb_mapping);
       }, 0);
     }
   } else {
     createBackendRenderer = function(callback) {
       const cppmodule = require('../build/Release/native');
-      const rgbMapNES = require('./rgb_map_nes.js');
-      callback(cppmodule(), rgbMapNES.rgb_mapping);
+      const rgbMapQuick = require('./rgb_map_quick.js');
+      callback(cppmodule(), rgbMapQuick.rgb_mapping);
     }
   }
 } else {
@@ -52,7 +52,7 @@ if (isRunningNodejs) {
     };
     setTimeout(function() {
       loadScript('html_renderer.js', function() {
-        loadScript('rgb_map_nes.js', function() {
+        loadScript('rgb_map_quick.js', function() {
           setTimeout(function() {
             callback(htmlRendererMake(), rgb_mapping);
           }, 16);

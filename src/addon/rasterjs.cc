@@ -41,6 +41,7 @@ Napi::Object RasterJS::Init(Napi::Env env, Napi::Object exports) {
        InstanceMethod("putImage", &RasterJS::PutImage),
        InstanceMethod("putCircleFromArc", &RasterJS::PutCircleFromArc),
        InstanceMethod("putDirect", &RasterJS::PutDirect),
+       InstanceMethod("saveImage", &RasterJS::SaveImage),
   });
   constructor = Napi::Persistent(func);
   constructor.SuppressDestruct();
@@ -54,6 +55,7 @@ class PrivateState {
   PrivateState();
   int rgb_map_length;
   int rgb_map[256];
+  GfxTarget* allocTarget;
   GfxTarget* drawTarget;
   uint32_t frontColor;
   uint32_t backColor;
@@ -64,6 +66,7 @@ PrivateState::PrivateState() {
   this->frontColor = 0xffffffff;
   this->backColor = 0;
   this->drawTarget = NULL;
+  this->allocTarget = NULL;
 }
 
 RasterJS::RasterJS(const Napi::CallbackInfo& info)
@@ -91,30 +94,28 @@ int windowHeight = 0;
 int point_x[16];
 int point_y[16];
 
-GfxTarget* allocTarget = NULL;
-
 GfxTarget* instantiateDrawTarget(PrivateState* priv) {
-  if (!allocTarget) {
-    allocTarget = (GfxTarget*)malloc(sizeof(GfxTarget));
-    if (allocTarget == NULL) {
+  if (!priv->allocTarget) {
+    priv->allocTarget = (GfxTarget*)malloc(sizeof(GfxTarget));
+    if (priv->allocTarget == NULL) {
       printf("allocTarget failed to malloc\n");
       exit(1);
     }
-    allocTarget->x_size = viewWidth;
-    allocTarget->y_size = viewHeight;
-    allocTarget->pitch = viewWidth * 4;
-    allocTarget->capacity = allocTarget->pitch * viewHeight;
-    allocTarget->buffer = (uint32_t*)malloc(allocTarget->capacity);
-    if (allocTarget->buffer == NULL) {
+    priv->allocTarget->x_size = viewWidth;
+    priv->allocTarget->y_size = viewHeight;
+    priv->allocTarget->pitch = viewWidth * 4;
+    priv->allocTarget->capacity = priv->allocTarget->pitch * viewHeight;
+    priv->allocTarget->buffer = (uint32_t*)malloc(priv->allocTarget->capacity);
+    if (priv->allocTarget->buffer == NULL) {
       printf("allocTarget.buffer failed to malloc\n");
       exit(1);
     }
   }
-  uint32_t* colors = (uint32_t*)allocTarget->buffer;
-  for (int n = 0; n < allocTarget->capacity / 4; n++) {
+  uint32_t* colors = (uint32_t*)priv->allocTarget->buffer;
+  for (int n = 0; n < priv->allocTarget->capacity / 4; n++) {
     colors[n] = priv->backColor;
   }
-  return allocTarget;
+  return priv->allocTarget;
 }
 
 uint32_t makeColor(PrivateState* priv) {
@@ -472,7 +473,7 @@ Napi::Value RasterJS::LoadImage(const Napi::CallbackInfo& info) {
   // TODO: Other formats
   Image* img = LoadPng(s.c_str());
   if (g_img_list == NULL) {
-    int capacity = sizeof(Image*) * 20;
+    int capacity = sizeof(Image*) * 100;
     g_img_list = (Image**)malloc(capacity);
     memset(g_img_list, 0, capacity);
   }
@@ -643,6 +644,69 @@ Napi::Value RasterJS::PutDirect(const Napi::CallbackInfo& info) {
       target->buffer[x + y*target->pitch/4] = rgb;
     }
   }
+
+  Napi::Env env = info.Env();
+  return Napi::Number::New(env, 0);
+}
+
+Napi::Value RasterJS::SaveImage(const Napi::CallbackInfo& info) {
+  PrivateState* priv = (PrivateState*)this->priv;
+  if (!priv->drawTarget) {
+    priv->drawTarget = instantiateDrawTarget(priv);
+  }
+  GfxTarget* target = priv->drawTarget;
+
+  if (info.Length() < 2) {
+    printf("PutDirect needs 2 params");
+    exit(1);
+  }
+
+  std::string outFilename = info[0].ToString().Utf8Value();
+  Napi::Object obj = info[1].ToObject();
+
+  Napi::Value valImg   = obj["img"];
+  Napi::Value valId    = obj["id"];
+  Napi::Value valSlice = obj["slice"];
+  Napi::Object objSlice = valSlice.ToObject();
+
+  int imgId = valImg.ToNumber().Int32Value();
+  if (imgId >= num_img) {
+    printf("invalid image id: %d\n", imgId);
+    return info.Env().Null();
+  }
+  Image* img_struct = g_img_list[imgId];
+
+  int width, height;
+  uint8* data = NULL;
+  GetPng(img_struct, &width, &height, &data);
+
+  Napi::Value valX = objSlice["x"];
+  Napi::Value valY = objSlice["y"];
+  Napi::Value valW = objSlice["w"];
+  Napi::Value valH = objSlice["h"];
+
+  int x = valX.ToNumber().Int32Value();
+  int y = valY.ToNumber().Int32Value();
+  int w = valW.ToNumber().Int32Value();
+  int h = valH.ToNumber().Int32Value();
+
+  unsigned char* segment = (unsigned char*)malloc(4 * w * h);
+  for (int i = 0; i < h; i++) {
+    for (int j = 0; j < w; j++) {
+      int m = (i*w + j) * 4;
+      int n = (((y+i)*width) + (x+j)) * 4;
+      segment[m + 0] = data[n + 3];
+      segment[m + 1] = data[n + 2];
+      segment[m + 2] = data[n + 1];
+      segment[m + 3] = data[n + 0];
+    }
+  }
+
+  write_png(outFilename.c_str(), segment, w, h, w*4);
+
+  free(segment);
+
+  //printf("x = %d, y = %d, w = %d, h = %d\n", x, y, w, h);
 
   Napi::Env env = info.Env();
   return Napi::Number::New(env, 0);

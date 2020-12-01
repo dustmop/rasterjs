@@ -5,31 +5,33 @@ var htmlRendererMake;
 loadScript('canvas_methods.js', function() {
   var drawColor;
   htmlRendererMake = function() {
+    var canvas = null;
+    var m = createCanvasMethods();
     var r = {
       initialize:   function() {},
-      createWindow: function(width, height) {
+      createWindow: function(width, height, zoom) {
         canvas = document.createElement('canvas');
         canvas.width = width;
         canvas.height = height;
         document.body.appendChild(canvas);
         var c = document.getElementsByTagName('canvas')[0];
-        c.style.width = width * 3;
-        c.style.height = height * 3;
+        c.style.width = width * zoom;
+        c.style.height = height * zoom;
+        m.canvasInit(canvas);
       },
-      renderLoop: function(f) {
+      appRenderAndLoop: function(f) {
         requestAnimationFrame(function() {
-          ctx = canvas.getContext('2d');
           f();
-          r.renderLoop(f);
+          r.appRenderAndLoop(f);
         });
       },
-      fillBackground: fillBackground,
-      assignRgbMapping: assignRgbMapping,
-      setColor: setColor,
-      drawPolygon: drawPolygon,
-      drawLine: drawLine,
-      drawRect: drawRect,
-      drawCircleFromArc: drawCircleFromArc,
+      fillBackground: m.fillBackground,
+      assignRgbMapping: m.assignRgbMapping,
+      setColor: m.setColor,
+      putPolygon: m.putPolygon,
+      putLine: m.putLine,
+      putRect: m.putRect,
+      putCircleFromArc: m.putCircleFromArc,
     };
     return r;
   }

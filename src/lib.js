@@ -12,27 +12,11 @@ if (typeof window === 'undefined') {
 // Pick which backend renderer to use
 
 if (isRunningNodejs) {
-  // TODO: Parse command-line arguments
-  if (process.argv.length > 2 && process.argv[2] == '--gif') {
-    let numFrames = 64;
-    if (process.argv.length > 4 && process.argv[3] == '--num-frames') {
-      numFrames = parseInt(process.argv[4], 10);
-    }
-    createBackendRenderer = function(callback) {
-      const gifRenderer = require('./gif_renderer.js');
-      const rgbMapQuick = require('./rgb_map_quick.js');
-      let thisFilename = process.argv[1];
-      var r = gifRenderer.make(thisFilename, {numFrames: numFrames});
-      setTimeout(function() {
-        callback(r, rgbMapQuick.rgb_mapping);
-      }, 0);
-    }
-  } else {
-    createBackendRenderer = function(callback) {
-      const cppmodule = require('../build/Release/native');
-      const rgbMapQuick = require('./rgb_map_quick.js');
-      callback(cppmodule(), rgbMapQuick.rgb_mapping);
-    }
+  // Running in node.js
+  createBackendRenderer = function(callback) {
+    const cppmodule = require('../build/Release/native');
+    const rgbMapQuick = require('./rgb_map_quick.js');
+    callback(cppmodule(), rgbMapQuick.rgb_mapping);
   }
 } else {
   // Running in browser
@@ -232,13 +216,45 @@ function QImage(filename) {
   this.isOpen = false;
   this.img = null;
   this.id = null;
+  this.slice = null;
   return this;
+}
+
+QImage.prototype.copy = function(x, y, w, h) {
+  let make = new QImage(this.filename);
+  make.isOpen = this.isOpen;
+  make.img = this.img;
+  make.id = this.id;
+  make.slice = {x:x, y:y, w:w, h:h};
+  return make;
+}
+
+QImage.prototype.save = function(outfile) {
+  if (_state.backendRenderer.constructor.name == 'QueueRenderer') {
+    createBackendRenderer(function(r, map) {
+      _state.backendRenderer = r;
+      for (var i = 0; i < _state.images.length; i++) {
+        var img = _state.images[i];
+        if (img.slice) {
+          continue;
+        }
+        if (!img.isOpen) {
+          _state.backendRenderer.loadImage(img.filename);
+        }
+      }
+    });
+  }
+  _state.backendRenderer.saveImage(outfile, this);
 }
 
 ////////////////////////////////////////
 // primary object
 
 function Raster() {
+  return this;
+}
+
+Raster.prototype.resetState = function() {
   _state.backendRenderer = new QueueRenderer();
   _state.config.scale = 1;
   _state.config.screenWidth = 100;
@@ -246,7 +262,6 @@ function Raster() {
   _state.config.translateX = 0;
   _state.config.translateY = 0;
   _state.initMem = new Array();
-  return this;
 }
 
 Raster.prototype.TAU = TAU;
@@ -368,11 +383,14 @@ Raster.prototype._allImagesOpen = function() {
   }
 }
 
-Raster.prototype.oscil = function(period, fracOffset) {
+Raster.prototype.oscil = function(period, fracOffset, click) {
   if (fracOffset === undefined) {
     fracOffset = 0.0;
   }
-  let click = _state.timeClick + Math.round(period * fracOffset);
+  if (click === undefined) {
+    click = _state.timeClick;
+  }
+  click = click + Math.round(period * fracOffset);
   return (1.0 - Math.cos(click * TAU / period)) / 2.0;
 }
 
@@ -616,6 +634,7 @@ Raster.prototype.rotatePolygon = rotatePolygon;
 // Export
 
 var _priv_raster = new Raster();
+_priv_raster.resetState();
 
 if (isRunningNodejs) {
   module.exports = _priv_raster;

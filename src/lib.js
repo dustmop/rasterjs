@@ -8,6 +8,7 @@ if (typeof window === 'undefined') {
 }
 
 ////////////////////////////////////////
+// Private global data used by Raster object
 
 var _priv = {
   cmd: null,
@@ -33,6 +34,7 @@ if (isRunningNodejs) {
   _priv.cmd = new Array();
   _priv.methods = {
     makeImage: function() { return ['QImage', _priv.cmd.length]; },
+    resetState: function() {},
   };
   _priv.then = function(callback) {
     loadScript = function(filename, whenLoadedCallback) {
@@ -50,20 +52,12 @@ if (isRunningNodejs) {
     setTimeout(function() {
       loadScript('web_runner.js', function() {
         // TODO: Global namespace pollution.
-        WebRunner.start(function(r) {
-          _priv.cmd = r.cmd;
-          _priv.methods = r.methods;
-          _priv.then = r.then;
-        }, callback);
+        var runner = _webRunnerMake();
+        runner.start(_priv, callback);
       });
     }, 10);
   };
 }
-
-////////////////////////////////////////
-// Utiliies
-
-const TAU = 6.283185307179586;
 
 ////////////////////////////////////////
 // primary object
@@ -76,12 +70,12 @@ Raster.prototype.resetState = function() {
   _priv.methods.resetState();
 }
 
-Raster.prototype.TAU = TAU;
+Raster.prototype.TAU = 6.283185307179586;
 
 Raster.prototype.timeClick = 0;
 
 ////////////////////////////////////////
-// Setup the display
+// Setup the draw target
 
 Raster.prototype.setSize = function() {
   _priv.cmd.push(['setSize', arguments]);
@@ -98,17 +92,12 @@ Raster.prototype.originAtCenter = function() {
 ////////////////////////////////////////
 // Methods with interesting return values
 
-Raster.prototype.loadImage = function() {
-  var img = _priv.methods.makeImage();
-  _priv.cmd.push(['originAtCenter']);
-  return img;
+Raster.prototype.loadImage = function(filepath) {
+  return _priv.methods.makeShape('load', [filepath]);
 }
 
 Raster.prototype.rotatePolygon = function(shape, angle) {
-  //var img = _priv.methods.makeShape();
-  //_priv.cmd.push(['rotatePolygon', arguments]);
-  //return img;
-  return _priv.methods.makeShape('rotate', shape, angle);
+  return _priv.methods.makeShape('rotate', [shape, angle]);
 }
 
 Raster.prototype.oscil = function(period, fracOffset, click) {
@@ -119,11 +108,11 @@ Raster.prototype.oscil = function(period, fracOffset, click) {
     click = this.timeClick;
   }
   click = click + Math.round(period * fracOffset);
-  return (1.0 - Math.cos(click * TAU / period)) / 2.0;
+  return (1.0 - Math.cos(click * this.TAU / period)) / 2.0;
 }
 
 ////////////////////////////////////////
-//
+// Rendering functionality
 
 Raster.prototype.fillBackground = function() {
   _priv.cmd.push(['fillBackground', arguments]);
@@ -184,7 +173,7 @@ Raster.prototype.fillFrame = function(callback) {
 }
 
 ////////////////////////////////////////
-//
+// Display endpoints
 
 Raster.prototype.run = function(renderFunc) {
   var self = this;

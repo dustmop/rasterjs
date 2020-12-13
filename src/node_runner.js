@@ -3,6 +3,7 @@ const rgbMapDefault = require('./rgb_map_default.js');
 const algorithm = require('./algorithm.js');
 const directMemory = require('./direct_memory.js');
 const geometry = require('./geometry.js');
+const image_loader = require('./image_loader.js');
 
 ////////////////////////////////////////
 
@@ -167,7 +168,18 @@ Runner.prototype.fillFrame = function(fillerFunc) {
   this.renderer.putDirect(mem);
 }
 
+Runner.prototype.loadImage = function(filepath) {
+  return image_loader.NewImage(filepath);
+}
+
+Runner.prototype.drawImage_params = ['img:a', 'x:i', 'y:i'];
+Runner.prototype.drawImage = function(img, x, y) {
+  let [tx, ty] = this._getTranslation();
+  this.renderer.putImage(img.id, tx + x, ty + y);
+}
+
 Runner.prototype.doRender = function(num, renderFunc, postFunc) {
+  image_loader.loadAll(this.renderer);
   this.renderer.createWindow(0, 0, this._config.zoomScale);
   this.renderer.appRenderAndLoop(function() {
     if (renderFunc) {
@@ -238,9 +250,15 @@ MethodSet.prototype.showFrame = function(fillerFunc) {
   this.owner.doRender(1, null, null);
 }
 
-MethodSet.prototype.makeShape = function(method, shape, angle) {
-  geometry.rotatePolygon(shape, angle);
-  return shape;
+MethodSet.prototype.makeShape = function(method, params) {
+  if (method == 'rotate') {
+    let [shape, angle] = params;
+    geometry.rotatePolygon(shape, angle);
+    return shape;
+  } else if (method == 'load') {
+    let [filepath] = params;
+    return this.owner.loadImage(filepath);
+  }
 }
 
 ////////////////////////////////////////

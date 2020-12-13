@@ -1,6 +1,5 @@
 
 // Detect whether running in browser or node.js
-var createBackendRenderer;
 var isRunningNodejs;
 if (typeof window === 'undefined') {
   isRunningNodejs = true;
@@ -9,19 +8,33 @@ if (typeof window === 'undefined') {
 }
 
 ////////////////////////////////////////
+
+var _priv = {
+  cmd: null,
+  methods: null,
+  then: null,
+};
+
+////////////////////////////////////////
 // Pick which backend renderer to use
 
 if (isRunningNodejs) {
   // Running in node.js
-  createBackendRenderer = function(callback) {
-    const cppmodule = require('../build/Release/native');
-    const rgbMapQuick = require('./rgb_map_quick.js');
-    callback(cppmodule(), rgbMapQuick.rgb_mapping);
-  }
+  const runner = require('./node_runner.js');
+  runner.start(function(r) {
+    _priv.cmd = r.cmd;
+    _priv.methods = r.methods;
+    _priv.then = r.then;
+  });
 } else {
   // Running in browser
+  // TODO: Global namespace pollution.
   var loadScript;
-  createBackendRenderer = function(callback) {
+  _priv.cmd = new Array();
+  _priv.methods = {
+    makeImage: function() { return ['QImage', _priv.cmd.length]; },
+  };
+  _priv.then = function(callback) {
     loadScript = function(filename, whenLoadedCallback) {
       if (whenLoadedCallback === undefined) {
         throw 'loadScript needs to be given a callback'
@@ -35,217 +48,22 @@ if (isRunningNodejs) {
       document.body.appendChild(js);
     };
     setTimeout(function() {
-      loadScript('html_renderer.js', function() {
-        loadScript('rgb_map_quick.js', function() {
-          setTimeout(function() {
-            callback(htmlRendererMake(), rgb_mapping);
-          }, 16);
-        });
+      loadScript('web_runner.js', function() {
+        // TODO: Global namespace pollution.
+        WebRunner.start(function(r) {
+          _priv.cmd = r.cmd;
+          _priv.methods = r.methods;
+          _priv.then = r.then;
+        }, callback);
       });
-    }, 0);
+    }, 10);
   };
 }
 
 ////////////////////////////////////////
 // Utiliies
 
-function arrayEquals(left, rite) {
-  if (left.length !== rite.length) {
-    return false;
-  }
-  for (let i = 0; i < left.length; i++) {
-    if (left[i] !== rite[i]) {
-      return false;
-    }
-  }
-  return true;
-}
-
-function rotatePolygon(polygon, angle) {
-  var axis = centerOf(polygon);
-
-  for (var i = 0; i < polygon.length; i++) {
-    var x = polygon[i][0];
-    var y = polygon[i][1];
-    x = x - axis[0];
-    y = y - axis[1];
-
-    var rot_x = x * Math.cos(angle) - y * Math.sin(angle);
-    var rot_y = x * Math.sin(angle) + y * Math.cos(angle);
-
-    polygon[i][0] = rot_x + axis[0];
-    polygon[i][1] = rot_y + axis[1];
-  }
-}
-
-function centerOf(polygon) {
-  var left  = polygon[0][0];
-  var top   = polygon[0][1];
-  var right = polygon[0][0];
-  var bot   = polygon[0][1];
-  for (var i = 1; i < polygon.length; i++) {
-    var p = polygon[i];
-    if (p[0] < left) {
-      left = p[0];
-    }
-    if (p[0] > right) {
-      right = p[0];
-    }
-    if (p[1] < top) {
-      top = p[1];
-    }
-    if (p[1] > bot) {
-      bot = p[1];
-    }
-  }
-  return [(left+right)/2, (top+bot)/2];
-}
-
-function isObject(thing) {
-  if (thing === null) {
-    return false;
-  }
-  return (typeof thing === 'object' && !Array.isArray(thing));
-}
-
-function destructure(first_param, args, fields) {
-  let caller = destructure.caller;
-  if (args.length != 1 || !isObject(first_param)) {
-    // Normal list of unnamed parameters passed to the function.
-    if (args.length != fields.length) {
-      throw 'destructure: function "' + caller.name + '" expected ' + fields.length + ' arguments, got ' + args.length;
-    }
-    return args;
-  }
-  // Object containing named parameters passed to the function.
-  let result = [];
-  let haveKeys = Object.keys(first_param);
-  for (let i = 0; i < fields.length; i++) {
-    let f = fields[i];
-    let pos = haveKeys.indexOf(f);
-    if (pos == -1) {
-      throw 'destructure: function "' + caller.name + '" needs parameter "' + f + '"';
-    }
-    haveKeys.splice(pos, 1);
-    result.push(first_param[f]);
-  }
-  // Validate there's no unknown parameters passed to the function.
-  if (haveKeys.length == 1) {
-    let f = haveKeys[0];
-    throw 'destructure: function "' + caller.name + '" unknown parameter "' + f + '"';
-  } else if (haveKeys.length > 1) {
-    throw 'destructure: function "' + caller.name + '" unknown parameters "' + haveKeys + '"';
-  }
-  return result;
-}
-
-function concatArray(first, remain) {
-  let make = new Array();
-  make.push(first);
-  for (let i = 0; i < remain.length; i++) {
-    make.push(remain[i]);
-  }
-  return make;
-}
-
 const TAU = 6.283185307179586;
-
-////////////////////////////////////////
-// private state
-
-var _state = {
-  config: {},
-  images: [],
-  color: null,
-  bgColor: null,
-  isExec: false,
-  frameFunc: null,
-  backendRenderer: null,
-  timeClick: null,
-};
-
-////////////////////////////////////////
-// queue renderer
-
-function QueueRenderer() {
-  this._queue = [];
-  return this;
-}
-
-QueueRenderer.prototype.queue = function() {
-  return this._queue;
-}
-
-QueueRenderer.prototype.fillBackground = function() {
-  this._queue.push(concatArray('fillBackground', arguments));
-}
-
-QueueRenderer.prototype.setColor = function() {
-  this._queue.push(concatArray('setColor', arguments));
-}
-
-QueueRenderer.prototype.putLine = function() {
-  this._queue.push(concatArray('putLine', arguments));
-}
-
-QueueRenderer.prototype.putPoint = function() {
-  this._queue.push(concatArray('putPoint', arguments));
-}
-
-QueueRenderer.prototype.putCircleFromArc = function() {
-  this._queue.push(concatArray('putCircleFromArc', arguments));
-}
-
-QueueRenderer.prototype.putPolygon = function() {
-  this._queue.push(concatArray('putPolygon', arguments));
-}
-
-QueueRenderer.prototype.putRect = function() {
-  this._queue.push(concatArray('putRect', arguments));
-}
-
-QueueRenderer.prototype.putDirect = function() {
-  this._queue.push(concatArray('putDirect', arguments));
-}
-
-////////////////////////////////////////
-// QImage
-
-function QImage(filename) {
-  this.filename = filename;
-  this.isOpen = false;
-  this.img = null;
-  this.id = null;
-  this.slice = null;
-  return this;
-}
-
-QImage.prototype.copy = function(x, y, w, h) {
-  let make = new QImage(this.filename);
-  make.isOpen = this.isOpen;
-  make.img = this.img;
-  make.id = this.id;
-  make.slice = {x:x, y:y, w:w, h:h};
-  return make;
-}
-
-QImage.prototype.save = function(outfile) {
-  if (_state.backendRenderer.constructor.name == 'QueueRenderer') {
-    createBackendRenderer(function(r, map) {
-      _state.backendRenderer = r;
-      for (var i = 0; i < _state.images.length; i++) {
-        var img = _state.images[i];
-        if (img.slice) {
-          continue;
-        }
-        if (!img.isOpen) {
-          _state.backendRenderer.loadImage(img.filename);
-        }
-      }
-    });
-  }
-  _state.backendRenderer.saveImage(outfile, this);
-}
 
 ////////////////////////////////////////
 // primary object
@@ -255,132 +73,42 @@ function Raster() {
 }
 
 Raster.prototype.resetState = function() {
-  _state.backendRenderer = new QueueRenderer();
-  _state.config.scale = 1;
-  _state.config.screenWidth = 100;
-  _state.config.screenHeight = 100;
-  _state.config.translateX = 0;
-  _state.config.translateY = 0;
-  _state.initMem = new Array();
+  _priv.methods.resetState();
 }
 
 Raster.prototype.TAU = TAU;
 
-Raster.prototype.setViewportSize = function(params) {
-  this.setSize(params);
+Raster.prototype.timeClick = 0;
+
+////////////////////////////////////////
+// Setup the display
+
+Raster.prototype.setSize = function() {
+  _priv.cmd.push(['setSize', arguments]);
 }
 
-Raster.prototype.setSize = function(params) {
-  if (_state.isExec) {
-    throw 'Cannot setViewportSize when app is running';
-  }
-  let [w, h] = destructure(params, arguments, ['w', 'h']);
-  _state.config.screenWidth = w;
-  _state.config.screenHeight = h;
-}
-
-Raster.prototype.setPixelScale = function(s) {
-  this.setZoom(s);
-}
-
-Raster.prototype.setZoom = function(s) {
-  if (_state.isExec) {
-    throw 'Cannot setPixelScale when app is running';
-  }
-  _state.config.scale = s;
+Raster.prototype.setZoom = function() {
+  _priv.cmd.push(['setZoom', arguments]);
 }
 
 Raster.prototype.originAtCenter = function() {
-  if (_state.isExec) {
-    throw 'Cannot originAtCenter when app is running';
-  }
-  _state.config.translateCenter = true;
-  _state.config.translateX = _state.config.screenWidth / 2;
-  _state.config.translateY = _state.config.screenHeight / 2;
+  _priv.cmd.push(['originAtCenter', []]);
 }
 
-Raster.prototype.loadImage = function(path) {
-  var i = new QImage(path);
-  i.id = _state.images.length;
-  _state.images.push(i);
-  return i;
-};
+////////////////////////////////////////
+// Methods with interesting return values
 
-Raster.prototype.run = function(renderFunc) {
-  _state.renderFunc = renderFunc;
-  _state.timeClick = 0;
-  _state.config.translateX = 0;
-  _state.config.translateY = 0;
-  if (_state.config.translateCenter) {
-    _state.config.translateX = _state.config.screenWidth / 2;
-    _state.config.translateY = _state.config.screenHeight / 2;
-  }
-  var self = this;
-  createBackendRenderer(function(r, map) {
-    _state.backendRenderer = r;
-    _state.backendRenderer.assignRgbMapping(map);
-    self._allImagesOpen();
-    self.renderLoop();
-  });
+Raster.prototype.loadImage = function() {
+  var img = _priv.methods.makeImage();
+  _priv.cmd.push(['originAtCenter']);
+  return img;
 }
 
-Raster.prototype.show = function() {
-  let q = _state.backendRenderer.queue();
-  _state.timeClick = 0;
-  var self = this;
-  createBackendRenderer(function(r, map) {
-    _state.backendRenderer = r;
-    _state.backendRenderer.assignRgbMapping(map);
-    self._allImagesOpen();
-    _state.renderFunc = function() {
-      for (let i = 0; i < q.length; i++) {
-        let row = q[i];
-        let fname = row[0];
-        let args = row.slice(1);
-        let func = r[fname];
-        if (func) {
-          func.apply(r, args);
-        } else {
-          throw 'Function ' + fname + ' not found';
-        }
-      }
-    }
-    self.renderShow();
-  });
-}
-
-Raster.prototype.save = function(savepath) {
-  let q = _state.backendRenderer.queue();
-  _state.timeClick = 0;
-  var self = this;
-  createBackendRenderer(function(r, map) {
-    _state.backendRenderer = r;
-    _state.backendRenderer.assignRgbMapping(map);
-    self._allImagesOpen();
-    _state.renderFunc = function() {
-      for (let i = 0; i < q.length; i++) {
-        let row = q[i];
-        let fname = row[0];
-        let args = row.slice(1);
-        let func = r[fname];
-        if (func) {
-          func.apply(r, args);
-        } else {
-          throw 'Function ' + fname + ' not found';
-        }
-      }
-    }
-    self.renderAndSave(savepath);
-  });
-}
-
-Raster.prototype._allImagesOpen = function() {
-  for (var i = 0; i < _state.images.length; i++) {
-    var img = _state.images[i];
-    if (!img.isOpen) {
-      _state.backendRenderer.loadImage(img.filename);
-    }
-  }
+Raster.prototype.rotatePolygon = function(shape, angle) {
+  //var img = _priv.methods.makeShape();
+  //_priv.cmd.push(['rotatePolygon', arguments]);
+  //return img;
+  return _priv.methods.makeShape('rotate', shape, angle);
 }
 
 Raster.prototype.oscil = function(period, fracOffset, click) {
@@ -388,247 +116,104 @@ Raster.prototype.oscil = function(period, fracOffset, click) {
     fracOffset = 0.0;
   }
   if (click === undefined) {
-    click = _state.timeClick;
+    click = this.timeClick;
   }
   click = click + Math.round(period * fracOffset);
   return (1.0 - Math.cos(click * TAU / period)) / 2.0;
 }
 
-Raster.prototype.oscillate = Raster.prototype.oscil;
+////////////////////////////////////////
+//
 
-Raster.prototype.fillBackground = function(color) {
-  _state.bgColor = color;
-  _state.backendRenderer.fillBackground(color);
+Raster.prototype.fillBackground = function() {
+  _priv.cmd.push(['fillBackground', arguments]);
 }
 
-Raster.prototype.setColor = function(color) {
-  _state.color = color;
-  _state.backendRenderer.setColor(color);
+Raster.prototype.setColor = function() {
+  _priv.cmd.push(['setColor', arguments]);
 }
 
-Raster.prototype.fillSquare = function(params) {
-  let [x, y, size] = destructure(params, arguments, ['x', 'y', 'size']);
-  x += _state.config.translateX;
-  y += _state.config.translateY;
-  _state.backendRenderer.putRect(x, y, size, size, true);
+Raster.prototype.fillSquare = function() {
+  _priv.cmd.push(['fillSquare', arguments]);
 }
 
-Raster.prototype.drawSquare = function(params) {
-  let [x, y, size] = destructure(params, arguments, ['x', 'y', 'size']);
-  x += _state.config.translateX;
-  y += _state.config.translateY;
-  _state.backendRenderer.putRect(x, y, size, size, false);
+Raster.prototype.drawSquare = function() {
+  _priv.cmd.push(['drawSquare', arguments]);
 }
 
-Raster.prototype.fillRect = function(params) {
-  let [x, y, w, h] = destructure(params, arguments, ['x', 'y', 'w', 'h']);
-  x += _state.config.translateX;
-  y += _state.config.translateY;
-  _state.backendRenderer.putRect(x, y, w, h, true);
+Raster.prototype.fillRect = function() {
+  _priv.cmd.push(['fillRect', arguments]);
 }
 
-Raster.prototype.drawRect = function(params) {
-  let [x, y, w, h] = destructure(params, arguments, ['x', 'y', 'w', 'h']);
-  x += _state.config.translateX;
-  y += _state.config.translateY;
-  _state.backendRenderer.putRect(x, y, w, h, false);
+Raster.prototype.drawRect = function() {
+  _priv.cmd.push(['drawRect', arguments]);
 }
 
-Raster.prototype.drawPoint = function(params) {
-  let [x, y] = destructure(params, arguments, ['x', 'y']);
-  x += _state.config.translateX;
-  y += _state.config.translateY;
-  _state.initMem.push([x, y, _state.color]);
-  _state.backendRenderer.putPoint(x, y);
+Raster.prototype.drawPoint = function() {
+  _priv.cmd.push(['drawPoint', arguments]);
 }
 
-Raster.prototype.fillPolygon = function(params) {
-  _state.backendRenderer.putPolygon(_state.config.translateX,
-                                    _state.config.translateY, params, true);
+Raster.prototype.fillPolygon = function() {
+  _priv.cmd.push(['fillPolygon', arguments]);
 }
 
-Raster.prototype.drawPolygon = function(params) {
-  _state.backendRenderer.putPolygon(_state.config.translateX,
-                                    _state.config.translateY, params, false);
+Raster.prototype.drawPolygon = function() {
+  _priv.cmd.push(['drawPolygon', arguments]);
 }
 
-Raster.prototype.drawLine = function(params) {
-  let [x, y, x1, y1] = destructure(params, arguments, ['x','y','x1','y1']);
-  x  += _state.config.translateX;
-  y  += _state.config.translateY;
-  x1 += _state.config.translateX;
-  y1 += _state.config.translateY;
-  _state.backendRenderer.putLine(x, y, x1, y1);
+Raster.prototype.drawLine = function() {
+  _priv.cmd.push(['drawLine', arguments]);
 }
 
-Raster.prototype.drawImage = function(params) {
-  let [img, x, y] = destructure(params, arguments, ['img', 'x', 'y']);
-  x += _state.config.translateX;
-  y += _state.config.translateY;
-  _state.backendRenderer.putImage(img.id, x, y);
+Raster.prototype.drawImage = function() {
+  _priv.cmd.push(['drawImage', arguments]);
 }
 
-Raster.prototype.fillCircle = function(params) {
-  let args = arguments;
-  this._drawCircleHelper(params, args, null, true);
+Raster.prototype.fillCircle = function() {
+  _priv.cmd.push(['fillCircle', arguments]);
 }
 
-Raster.prototype.drawCircle = function(params) {
-  let width = null;
-  if (params.width) {
-    width = params.width;
-    delete params.width;
-  }
-  let args = arguments;
-  this._drawCircleHelper(params, args, width, false);
-}
-
-Raster.prototype._drawCircleHelper = function(params, args, width, fill) {
-  let [x, y, r] = destructure(params, args, ['x','y','r']);
-  let centerX = x + r;
-  let centerY = y + r;
-  centerX += _state.config.translateX;
-  centerY += _state.config.translateY;
-  let arc = midpointCircleRasterize(r);
-  let inner = null;
-  if (width) {
-    inner = midpointCircleRasterize(r - width - 1);
-  }
-  _state.backendRenderer.putCircleFromArc(centerX, centerY, arc, inner, fill);
-}
-
-function midpointCircleRasterize(r) {
-  let arc = new Array();
-  let y = 0;
-  let x = r;
-  let rSquared = r * r;
-  let xSquared = rSquared;
-  let ySquared = 0 * 0;
-  // Loop increments Y each step, and decrements X occasionally, based upon
-  // error accumulation. Eventually X==Y, which breaks the loop.
-  while (true) {
-    // Invariant: x * x == xSquared && y * y == ySquared
-    let answer = rSquared - ySquared;
-    let err = xSquared - answer;
-    if (err >= x) {
-      xSquared = xSquared - 2 * x + 1;
-      x -= 1;
-    }
-    if (x < y) {
-      break;
-    }
-    arc.push([x, y])
-    ySquared = ySquared + 2 * y + 1;
-    y += 1;
-  }
-  return arc;
-}
-
-function NewDirectMemory() {
-  var w = _state.config.screenWidth;
-  var h = _state.config.screenHeight;
-  var make = new Uint8Array(w * h);
-  make.y_dim = h;
-  make.x_dim = w;
-  make.pitch = w;
-  make.put = function(x, y, v) {
-    if (x < 0 || x >= this.x_dim || y < 0 || y >= this.y_dim) {
-      return;
-    }
-    this[x + y*this.pitch] = v;
-  };
-  make.get = function(x, y) {
-    if (x < 0 || x >= this.x_dim || y < 0 || y >= this.y_dim) {
-      return 0;
-    }
-    return this[x + y*this.pitch];
-  };
-  return make;
+Raster.prototype.drawCircle = function() {
+  _priv.cmd.push(['drawCircle', arguments]);
 }
 
 Raster.prototype.fillFrame = function(callback) {
-  var mem = NewDirectMemory();
-  mem.fill(_state.bgColor);
-  for (let i = 0; i < _state.initMem.length; i++) {
-    let row = _state.initMem[i];
-    let x = row[0];
-    let y = row[1];
-    mem[x + y*mem.pitch] = row[2];
-  }
-  if (callback.length == 1) {
-    callback(mem);
-  } else if (callback.length == 3) {
-    for (let y = 0; y < mem.y_dim; y++) {
-      for (let x = 0; x < mem.x_dim; x++) {
-        let ret = callback(mem, x, y);
-        if (ret !== null && ret !== undefined) {
-          mem[x + y*mem.pitch] = ret;
-        }
-      }
-    }
-  } else {
-    throw 'Invalid arguments for fillDirect: length = ' + callback.length;
-  }
-  _state.backendRenderer.putDirect(mem);
+  _priv.then(function() {
+    _priv.methods.fillFrame(callback);
+  });
 }
 
-Raster.prototype.fillDirect = Raster.prototype.fillFrame;
+////////////////////////////////////////
+//
 
-Raster.prototype.showDirect = function(callback) {
-  this.showFrame(callback);
+Raster.prototype.run = function(renderFunc) {
+  var self = this;
+  _priv.then(function() {
+    _priv.methods.run(renderFunc, function() {
+      self.timeClick++;
+    });
+  });
+}
+
+Raster.prototype.show = function() {
+  _priv.then(function() {
+    _priv.methods.show();
+  });
+}
+
+Raster.prototype.save = function(savepath) {
+  _priv.then(function() {
+    _priv.methods.save(savepath);
+  });
 }
 
 Raster.prototype.showFrame = function(callback) {
-  this.fillDirect(callback);
-  this.show();
+  _priv.then(function() {
+    // TODO: Figure out if web_runner can call this syncronously.
+    // If so, replace with fillFrame -> show
+    _priv.methods.showFrame(callback);
+  });
 }
-
-// TODO: Combine these two functions
-
-Raster.prototype.renderLoop = function() {
-  let config = this._config;
-  let self = this;
-  _state.backendRenderer.initialize();
-  _state.backendRenderer.createWindow(_state.config.screenWidth,
-                                      _state.config.screenHeight,
-                                      _state.config.scale);
-  _state.backendRenderer.appRenderAndLoop(function() {
-    self.renderOnce();
-  }, -1);
-}
-
-Raster.prototype.renderShow = function() {
-  let config = this._config;
-  let self = this;
-  _state.backendRenderer.initialize();
-  _state.backendRenderer.createWindow(_state.config.screenWidth,
-                                      _state.config.screenHeight,
-                                      _state.config.scale);
-  self.renderOnce();
-  _state.backendRenderer.appRenderAndLoop(function() {
-    self.renderOnce();
-  }, 1);
-}
-
-Raster.prototype.renderAndSave = function(savepath) {
-  let config = this._config;
-  let self = this;
-  _state.backendRenderer.initialize();
-  _state.backendRenderer.createDisplay(_state.config.screenWidth,
-                                       _state.config.screenHeight,
-                                       _state.config.scale);
-  self.renderOnce();
-  _state.backendRenderer.saveTo(savepath);
-}
-
-Raster.prototype.renderOnce = function() {
-  // Called once per render operation. Set the click, then call app's frame
-  this.timeClick = _state.timeClick;
-  _state.timeClick++;
-  _state.renderFunc();
-}
-
-Raster.prototype.rotatePolygon = rotatePolygon;
 
 ////////////////////////////////////////
 // Export

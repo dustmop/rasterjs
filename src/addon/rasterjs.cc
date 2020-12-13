@@ -26,9 +26,11 @@ Napi::Object RasterJS::Init(Napi::Env env, Napi::Object exports) {
       env,
       "RasterJS",
       {InstanceMethod("initialize", &RasterJS::Initialize),
+       InstanceMethod("resetState", &RasterJS::ResetState),
        InstanceMethod("createWindow", &RasterJS::CreateWindow),
        InstanceMethod("createDisplay", &RasterJS::CreateDisplay),
        InstanceMethod("appRenderAndLoop", &RasterJS::AppRenderAndLoop),
+       InstanceMethod("setSize", &RasterJS::SetSize),
        InstanceMethod("setColor", &RasterJS::SetColor),
        InstanceMethod("fillBackground", &RasterJS::FillBackground),
        InstanceMethod("saveTo", &RasterJS::SaveTo),
@@ -94,11 +96,22 @@ int windowHeight = 0;
 int point_x[16];
 int point_y[16];
 
+Napi::Value RasterJS::SetSize(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  viewWidth = info[0].As<Napi::Number>().Int32Value();
+  viewHeight = info[1].As<Napi::Number>().Int32Value();
+  return Napi::Number::New(env, 0);
+}
+
 GfxTarget* instantiateDrawTarget(PrivateState* priv) {
   if (!priv->allocTarget) {
     priv->allocTarget = (GfxTarget*)malloc(sizeof(GfxTarget));
     if (priv->allocTarget == NULL) {
       printf("allocTarget failed to malloc\n");
+      exit(1);
+    }
+    if (!viewWidth || !viewHeight) {
+      printf("cannot allocate a target with zero size\n");
       exit(1);
     }
     priv->allocTarget->x_size = viewWidth;
@@ -134,6 +147,18 @@ Napi::Value RasterJS::Initialize(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, 0);
 }
 
+Napi::Value RasterJS::ResetState(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  viewWidth = 0;
+  viewHeight = 0;
+  PrivateState* priv = (PrivateState*)this->priv;
+  if (priv->allocTarget) {
+    free(priv->allocTarget);
+    priv->allocTarget = NULL;
+    priv->drawTarget = NULL;
+  }
+  return Napi::Number::New(env, 0);
+}
 
 Napi::Value RasterJS::CreateWindow(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
@@ -147,9 +172,8 @@ Napi::Value RasterJS::CreateWindow(const Napi::CallbackInfo& info) {
     exit(1);
   }
 
-  viewWidth = info[0].As<Napi::Number>().Int32Value();
-  viewHeight = info[1].As<Napi::Number>().Int32Value();
   int zoomLevel = info[2].As<Napi::Number>().Int32Value();
+  // TODO: Remove global variables.
   windowWidth = viewWidth * zoomLevel;
   windowHeight = viewHeight * zoomLevel;
 
@@ -176,6 +200,11 @@ Napi::Value RasterJS::CreateDisplay(const Napi::CallbackInfo& info) {
 
 Napi::Value RasterJS::SaveTo(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
+  if (!viewWidth || !viewHeight) {
+    printf("cannot save file with zero size\n");
+    exit(1);
+  }
+
   PrivateState* priv = (PrivateState*)this->priv;
   Napi::String savepath = info[0].ToString();
   write_png(savepath.Utf8Value().c_str(),
@@ -268,6 +297,8 @@ Napi::Value RasterJS::AppRenderAndLoop(const Napi::CallbackInfo& info) {
     if (num_render > 0) {
       num_render--;
     }
+
+    EndFrame();
   }
 
   return Napi::Number::New(env, 0);
@@ -279,7 +310,9 @@ Napi::Value RasterJS::AppRenderAndLoop(const Napi::CallbackInfo& info) {
 
 void RasterJS::StartFrame() {
   SDL_RenderClear(renderer);
+}
 
+void RasterJS::EndFrame() {
   PrivateState* priv = (PrivateState*)this->priv;
   priv->drawTarget = NULL;
 }
@@ -457,7 +490,9 @@ Napi::Value RasterJS::FillBackground(const Napi::CallbackInfo& info) {
   priv->backColor = rgb;
 
   if (!priv->drawTarget) {
-    priv->drawTarget = instantiateDrawTarget(priv);
+    if (viewWidth && viewHeight) {
+      priv->drawTarget = instantiateDrawTarget(priv);
+    }
   }
 
   return info.Env().Null();
@@ -705,8 +740,6 @@ Napi::Value RasterJS::SaveImage(const Napi::CallbackInfo& info) {
   write_png(outFilename.c_str(), segment, w, h, w*4);
 
   free(segment);
-
-  //printf("x = %d, y = %d, w = %d, h = %d\n", x, y, w, h);
 
   Napi::Env env = info.Env();
   return Napi::Number::New(env, 0);

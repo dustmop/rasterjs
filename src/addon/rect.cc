@@ -1,4 +1,5 @@
 #include "gfx_types.h"
+#include <stdio.h>
 
 void drawRect(GfxTarget* target, int x0, int y0, int x1, int y1, bool fill, uint32_t color) {
   int tmp;
@@ -13,17 +14,24 @@ void drawRect(GfxTarget* target, int x0, int y0, int x1, int y1, bool fill, uint
     y1 = tmp;
   }
 
+  if (x0 >= target->x_size) {
+    return;
+  }
+  if (y0 >= target->y_size) {
+    return;
+  }
+
   if (x0 < 0) {
     x0 = 0;
   }
   if (x1 >= target->x_size) {
-    x1 = target->x_size - 1;
+    x1 = target->x_size;
   }
   if (y0 < 0) {
     y0 = 0;
   }
   if (y1 >= target->y_size) {
-    y1 = target->y_size - 1;
+    y1 = target->y_size;
   }
 
   if (fill) {

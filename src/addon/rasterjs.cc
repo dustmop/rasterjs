@@ -1,6 +1,6 @@
 #include "type.h"
 #include "rasterjs.h"
-#include "draw_polygon.h"
+#include "polygon.h"
 #include "line.h"
 #include "time_keeper.h"
 #include "load_image.h"
@@ -462,8 +462,8 @@ Napi::Value RasterJS::PutPolygon(const Napi::CallbackInfo& info) {
       // TODO: handle x,y object, instead of just array
       Napi::Value first = pair[uint32_t(0)];
       Napi::Value second = pair[uint32_t(1)];
-      int first_num = first.As<Napi::Number>().Int32Value();
-      int second_num = second.As<Napi::Number>().Int32Value();
+      int first_num = round(first.As<Napi::Number>().FloatValue());
+      int second_num = round(second.As<Napi::Number>().FloatValue());
       point_list.xs[i] = first_num + baseX;
       point_list.ys[i] = second_num + baseY;
     }
@@ -471,7 +471,7 @@ Napi::Value RasterJS::PutPolygon(const Napi::CallbackInfo& info) {
     bool fill = info[3].ToBoolean().Value();
     uint32_t color = makeColor(priv);
     if (fill) {
-      drawPolygon(priv->drawTarget, &point_list, color);
+      fillPolygon(priv->drawTarget, &point_list, color);
     } else {
       drawPolygonOutline(priv->drawTarget, &point_list, color);
     }

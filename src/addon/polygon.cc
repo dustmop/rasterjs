@@ -5,10 +5,10 @@
 
 #define MAX_POLY_CORNERS 16
 
-void drawPolygon(GfxTarget* target, PointList* points, uint32_t color) {
-  int numEdges, edgeX[MAX_POLY_CORNERS];
+void fillPolygon(GfxTarget* target, PointList* points, uint32_t color) {
+  int numEdges, edgeX[MAX_POLY_CORNERS], edgeDir[MAX_POLY_CORNERS];
   int pixelX, pixelY;
-  int i, j, swap;
+  int i, j, swap, prev;
   int numCorners = 0;
   double polyYi, polyYj, polyXi, polyXj;
 
@@ -37,24 +37,62 @@ void drawPolygon(GfxTarget* target, PointList* points, uint32_t color) {
     numCorners++;
   }
 
-  //  Loop through the rows of the image.
-  for (pixelY = imageTop; pixelY < imageBottom; pixelY++) {
+  int y0 = imageTop;
+  int y1 = imageBottom;
+  if (y0 < 0) {
+    y0 = 0;
+  }
+  if (y1 >= target->y_size) {
+    y1 = target->y_size - 1;
+  }
 
+  //  Loop through the rows of the image.
+  for (pixelY = imageTop; pixelY <= imageBottom; pixelY++) {
     //  Build a list of edges.
     numEdges = 0;
-    j = numCorners-1;
+    prev = numCorners-1;
     for (i = 0; i < numCorners; i++) {
+      j = prev;
+      prev = i;
+
       polyXi = points->xs[i];
       polyXj = points->xs[j];
       polyYi = points->ys[i];
       polyYj = points->ys[j];
-      if ((polyYi <  (double) pixelY &&
-           polyYj >= (double) pixelY) ||
-          (polyYj <  (double) pixelY &&
-           polyYi >= (double) pixelY)) {
-        edgeX[numEdges++]=(int) (polyXi+(pixelY-polyYi)/(polyYj-polyYi)*(polyXj-polyXi));
+
+      double scanlineY = pixelY;
+      // If the current scanline's Y position overlaps the line segment.
+      if ((polyYi <= scanlineY && polyYj >= scanlineY) ||
+          (polyYj <= scanlineY && polyYi >= scanlineY)) {
+
+        if (polyYi == polyYj) {
+          continue;
+        }
+
+        // Calculate where the edge intersects the scanline.
+        double deltaX = polyXj - polyXi;
+        double deltaY = polyYj - polyYi;
+        double slope = (pixelY-polyYi)/deltaY*deltaX;
+        int intersect = polyXi + (int)(slope);
+        int lineDirY = deltaY >= 0 ? 1 : -1;
+
+        // If edge is already intersecting this pixel, and this edge
+        // is going in the same direction, skip adding it.
+        if (numEdges > 0) {
+          int last = numEdges-1;
+          if (edgeX[last] == intersect && edgeDir[last] == lineDirY) {
+            continue;
+          }
+          if (edgeX[0] == intersect && edgeDir[0] == lineDirY) {
+            continue;
+          }
+        }
+
+        // Add the edge intersection.
+        edgeX[numEdges] = intersect;
+        edgeDir[numEdges] = lineDirY;
+        numEdges++;
       }
-      j = i;
     }
 
     //  Sort the numEdges, via a simple “Bubble” sort.
@@ -73,19 +111,18 @@ void drawPolygon(GfxTarget* target, PointList* points, uint32_t color) {
       }
     }
 
-    //  Fill the pixels between node pairs.
+    // Fill the pixels between the edges.
     for (i=0; i < numEdges; i+=2) {
-      if   (edgeX[i  ] >= imageRight) break;
-      if   (edgeX[i+1] > imageLeft) {
-        if (edgeX[i  ] < imageLeft ) {
-          edgeX[i  ] = imageLeft;
-        }
-        if (edgeX[i+1]> imageRight) {
-          edgeX[i+1] = imageRight;
-        }
-        for (pixelX=edgeX[i]; pixelX<edgeX[i+1]; pixelX++) {
-          target->buffer[pixelX + pixelY*target->pitch/4] = color;
-        }
+      int x0 = edgeX[i];
+      int x1 = edgeX[i+1];
+      if (x0 < 0) {
+        x0 = 0;
+      }
+      if (x1 >= target->x_size) {
+        x1 = target->x_size - 1;
+      }
+      for (pixelX=x0; pixelX<=x1; pixelX++) {
+        target->buffer[pixelX + pixelY*target->pitch/4] = color;
       }
     }
   }

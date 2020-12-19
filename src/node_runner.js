@@ -126,16 +126,20 @@ Runner.prototype.drawCircle = function(x, y, r, width) {
   this.renderer.putCircleFromArc(centerX, centerY, arc, inner, false);
 }
 
-Runner.prototype.fillPolygon_params = ['points:ps'];
-Runner.prototype.fillPolygon = function(points) {
+Runner.prototype.fillPolygon_params = ['points:ps', 'x?i', 'y?i'];
+Runner.prototype.fillPolygon = function(points, x, y) {
+  x = x || 0;
+  y = y || 0;
   let [tx, ty] = this._getTranslation();
-  this.renderer.putPolygon(tx, ty, points, true);
+  this.renderer.putPolygon(tx + x, ty + y, points, true);
 }
 
-Runner.prototype.drawPolygon_params = ['points:ps'];
-Runner.prototype.drawPolygon = function(points) {
+Runner.prototype.drawPolygon_params = ['points:ps', 'x?i', 'y?i'];
+Runner.prototype.drawPolygon = function(points, x, y) {
+  x = x || 0;
+  y = y || 0;
   let [tx, ty] = this._getTranslation();
-  this.renderer.putPolygon(tx, ty, points, false);
+  this.renderer.putPolygon(tx + x, ty + y, points, false);
 }
 
 Runner.prototype.fillFrame_params = ['fillerFunc:f'];

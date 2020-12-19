@@ -37,7 +37,15 @@ function destructure(param_spec, row) {
   }
 
   // Normal list of unnamed parameters passed to the function.
-  if (want == got) {
+  let need = 0;
+  for (let i = 0; i < param_spec.length; i++) {
+    let [n, t, required] = splitParam(param_spec[i]);
+    if (required) {
+      need++;
+    }
+  }
+  // TODO: Improve this check.
+  if ((got >= need) && (got <= want)) {
     // TODO: Handle type conversions.
     return values;
   }

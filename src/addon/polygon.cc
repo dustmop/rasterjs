@@ -149,6 +149,6 @@ void drawPolygonOutline(GfxTarget* target, PointList* points, uint32_t color) {
       line_segment.ys[0] = points->ys[k];
       line_segment.ys[1] = points->ys[0];
     }
-    drawLine(target, &line_segment, color);
+    drawLine(target, &line_segment, color, 1);
   }
 }

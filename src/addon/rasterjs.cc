@@ -397,6 +397,7 @@ Napi::Value RasterJS::PutLine(const Napi::CallbackInfo& info) {
   Napi::Value yval  = info[1];
   Napi::Value x1val = info[2];
   Napi::Value y1val = info[3];
+  Napi::Value ccval = info[4];
 
   PrivateState* priv = (PrivateState*)this->priv;
   if (!priv->drawTarget) {
@@ -407,6 +408,7 @@ Napi::Value RasterJS::PutLine(const Napi::CallbackInfo& info) {
   int y0 = round(yval.As<Napi::Number>().FloatValue());
   int x1 = round(x1val.As<Napi::Number>().FloatValue());
   int y1 = round(y1val.As<Napi::Number>().FloatValue());
+  int connectCorners = ccval.As<Napi::Number>().Int32Value();
 
   uint32_t color = makeColor(priv);
 
@@ -419,7 +421,7 @@ Napi::Value RasterJS::PutLine(const Napi::CallbackInfo& info) {
   point_list.ys[0] = y0;
   point_list.ys[1] = y1;
 
-  drawLine(priv->drawTarget, &point_list, color);
+  drawLine(priv->drawTarget, &point_list, color, connectCorners);
 
   Napi::Env env = info.Env();
   return Napi::Number::New(env, 0);
@@ -527,9 +529,12 @@ Napi::Value RasterJS::PutImage(const Napi::CallbackInfo& info) {
   }
   GfxTarget* target = priv->drawTarget;
 
-  int imgId = info[0].ToNumber().Int32Value();
+  Napi::Object imgObj = info[0].ToObject();
   int baseX = info[1].ToNumber().Int32Value();
   int baseY = info[2].ToNumber().Int32Value();
+
+  Napi::Value imgIdval = imgObj["id"];
+  int imgId = imgIdval.ToNumber().Int32Value();
 
   if (imgId >= num_img) {
     printf("invalid image id: %d\n", imgId);
@@ -537,16 +542,39 @@ Napi::Value RasterJS::PutImage(const Napi::CallbackInfo& info) {
   }
   Image* img_struct = g_img_list[imgId];
 
-  int width, height;
+  int imgLeft, imgTop;
+  int imgWidth, imgHeight, imgPitch;
   uint8* data = NULL;
-  GetPng(img_struct, &width, &height, &data);
+  imgLeft = imgTop = 0;
+  GetPng(img_struct, &imgWidth, &imgHeight, &data);
+  imgPitch = imgWidth;
 
-  for (int y = 0; y < height; y++) {
-    for (int x = 0; x < width; x++) {
-      uint8 r = data[(y*width+x)*4+0];
-      uint8 g = data[(y*width+x)*4+1];
-      uint8 b = data[(y*width+x)*4+2];
-      uint8 a = data[(y*width+x)*4+3];
+  Napi::Value sliceval = imgObj["slice"];
+  if (sliceval.IsObject()) {
+    if (sliceval.IsArray()) {
+      Napi::Object slice = sliceval.ToObject();
+      Napi::Value val;
+      val = slice[uint32_t(0)];
+      int slicex = val.ToNumber().Int32Value();
+      val = slice[uint32_t(1)];
+      int slicey = val.ToNumber().Int32Value();
+      val = slice[uint32_t(2)];
+      int slicew = val.ToNumber().Int32Value();
+      val = slice[uint32_t(3)];
+      int sliceh = val.ToNumber().Int32Value();
+      imgLeft = slicex;
+      imgTop = slicey;
+      imgWidth = slicew;
+      imgHeight = sliceh;
+    }
+  }
+
+  for (int y = imgTop; y < imgHeight; y++) {
+    for (int x = imgLeft; x < imgWidth; x++) {
+      uint8 r = data[(y*imgPitch+x)*4+0];
+      uint8 g = data[(y*imgPitch+x)*4+1];
+      uint8 b = data[(y*imgPitch+x)*4+2];
+      uint8 a = data[(y*imgPitch+x)*4+3];
       if (a > 0x80) {
         uint32_t color = (r * 0x1000000 +
                           g * 0x10000 +

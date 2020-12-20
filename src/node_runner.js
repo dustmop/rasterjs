@@ -67,10 +67,11 @@ Runner.prototype._getTranslation = function() {
   return [this._config.translateX, this._config.translateY];
 }
 
-Runner.prototype.drawLine_params = ['x0:i', 'y0:i', 'x1:i', 'y1:i'];
-Runner.prototype.drawLine = function(x0, y0, x1, y1) {
+Runner.prototype.drawLine_params = ['x0:i', 'y0:i', 'x1:i', 'y1:i', 'cc?b'];
+Runner.prototype.drawLine = function(x0, y0, x1, y1, cc) {
+  cc = cc ? 1 : 0;
   let [tx, ty] = this._getTranslation();
-  this.renderer.putLine(tx + x0, ty + y0, tx + x1, ty + y1);
+  this.renderer.putLine(tx + x0, ty + y0, tx + x1, ty + y1, cc);
 }
 
 Runner.prototype.drawPoint_params = ['x:i', 'y:i'];
@@ -178,12 +179,12 @@ Runner.prototype.loadImage = function(filepath) {
 
 Runner.prototype.drawImage_params = ['img:a', 'x:i', 'y:i'];
 Runner.prototype.drawImage = function(img, x, y) {
+  image_loader.loadAll(this.renderer);
   let [tx, ty] = this._getTranslation();
-  this.renderer.putImage(img.id, tx + x, ty + y);
+  this.renderer.putImage(img, tx + x, ty + y);
 }
 
 Runner.prototype.doRender = function(num, renderFunc, postFunc) {
-  image_loader.loadAll(this.renderer);
   this.renderer.createWindow(0, 0, this._config.zoomScale);
   this.renderer.appRenderAndLoop(function() {
     if (renderFunc) {

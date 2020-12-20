@@ -22,6 +22,9 @@ describe('Simple', function() {
     // Orange diagonal line
     ra.setColor(0x21);
     ra.drawLine(1, 8, 12, 10);
+    // Yellow diagonal line
+    ra.setColor(0x22);
+    ra.drawLine(1, 12, 12, 14, true);
 
     ra.save(tmpout);
     assert.ok(util.compareFiles('test/testdata/simple.png', tmpout));

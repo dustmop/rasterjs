@@ -2,7 +2,7 @@ var _webRunnerMake = function() {
   var runner = {
     start: function(privData, startCallback) {
       //loadScript('destructure.js', function() {
-        loadScript('canvas_methods.js', function() {
+        loadScript('/canvas_methods.js', function() {
           // Get rendering operations that were executed already
           let queuedCommands = privData.cmd;
 
@@ -55,7 +55,12 @@ function _dispatchCommand(row) {
     let canvas = document.createElement('canvas');
     canvas.width = width;
     canvas.height = height;
-    document.body.appendChild(canvas);
+    let divList = document.getElementsByTagName('div');
+    if (divList.length > 0) {
+      divList[0].appendChild(canvas);
+    } else {
+      document.body.appendChild(canvas);
+    }
     var c = document.getElementsByTagName('canvas')[0];
     c.style.width = width * zoom;
     c.style.height = height * zoom;
@@ -68,6 +73,11 @@ function _dispatchCommand(row) {
   }
 
   if (method == 'setZoom') {
+    // TODO
+    return;
+  }
+
+  if (method == 'setTitle') {
     // TODO
     return;
   }

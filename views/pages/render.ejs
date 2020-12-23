@@ -1,0 +1,19 @@
+<html>
+ <head>
+  <title>Quick Graphics</title>
+  <script src="/qgfx.js"/></script>
+  <script>
+setTimeout(function() {
+<%- script_code %>
+}, 0);
+  </script>
+ </head>
+ <body>
+  <div></div>
+  <textarea style="width:500;height:900;"><%=
+
+script_code
+
+%></textarea>
+ </body>
+</html>

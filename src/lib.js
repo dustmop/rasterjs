@@ -50,7 +50,7 @@ if (isRunningNodejs) {
       document.body.appendChild(js);
     };
     setTimeout(function() {
-      loadScript('web_runner.js', function() {
+      loadScript('/web_runner.js', function() {
         // TODO: Global namespace pollution.
         var runner = _webRunnerMake();
         runner.start(_priv, callback);
@@ -83,6 +83,10 @@ Raster.prototype.setSize = function() {
 
 Raster.prototype.setZoom = function() {
   _priv.cmd.push(['setZoom', arguments]);
+}
+
+Raster.prototype.setTitle = function() {
+  _priv.cmd.push(['setTitle', arguments]);
 }
 
 Raster.prototype.originAtCenter = function() {

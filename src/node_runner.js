@@ -20,6 +20,7 @@ Runner.prototype.initialize = function () {
   this._config.screenWidth = 100;
   this._config.screenHeight = 100;
   this._config.zoomScale = 1;
+  this._config.titleText = '';
   this._config.translateX = 0;
   this._config.translateY = 0;
   this.initMem = new Array();
@@ -50,6 +51,12 @@ Runner.prototype.setZoom_params = ['scale:i'];
 Runner.prototype.setZoom = function(scale) {
   this._config.zoomScale = scale;
 }
+
+Runner.prototype.setTitle_params = ['title:i'];
+Runner.prototype.setTitle = function(title) {
+  this._config.titleText = title;
+}
+
 
 Runner.prototype.originAtCenter_params = [];
 Runner.prototype.originAtCenter = function() {

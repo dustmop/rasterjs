@@ -15,6 +15,7 @@ class RasterJS : public Napi::ObjectWrap<RasterJS> {
   Napi::Value ResetState(const Napi::CallbackInfo& info);
   Napi::Value CreateWindow(const Napi::CallbackInfo& info);
   Napi::Value CreateDisplay(const Napi::CallbackInfo& info);
+  Napi::Value HandleEvent(const Napi::CallbackInfo& info);
   Napi::Value AppRenderAndLoop(const Napi::CallbackInfo& info);
   void StartFrame();
   void EndFrame();

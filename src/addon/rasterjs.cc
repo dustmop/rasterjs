@@ -29,6 +29,7 @@ Napi::Object RasterJS::Init(Napi::Env env, Napi::Object exports) {
        InstanceMethod("resetState", &RasterJS::ResetState),
        InstanceMethod("createWindow", &RasterJS::CreateWindow),
        InstanceMethod("createDisplay", &RasterJS::CreateDisplay),
+       InstanceMethod("handleEvent", &RasterJS::HandleEvent),
        InstanceMethod("appRenderAndLoop", &RasterJS::AppRenderAndLoop),
        InstanceMethod("setSize", &RasterJS::SetSize),
        InstanceMethod("setColor", &RasterJS::SetColor),
@@ -61,6 +62,7 @@ class PrivateState {
   GfxTarget* drawTarget;
   uint32_t frontColor;
   uint32_t backColor;
+  Napi::FunctionReference keyHandleFunc;
 };
 
 PrivateState::PrivateState() {
@@ -198,6 +200,17 @@ Napi::Value RasterJS::CreateDisplay(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, 0);
 }
 
+Napi::Value RasterJS::HandleEvent(const Napi::CallbackInfo& info) {
+  PrivateState* priv = (PrivateState*)this->priv;
+  Napi::Env env = info.Env();
+  Napi::String eventName = info[0].ToString();
+  if (eventName.Utf8Value() == std::string("keypress")) {
+    Napi::Function handleFunc = info[1].As<Napi::Function>();
+    priv->keyHandleFunc = Napi::Persistent(handleFunc);
+  }
+  return Napi::Number::New(env, 0);
+}
+
 Napi::Value RasterJS::SaveTo(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if (!viewWidth || !viewHeight) {
@@ -229,6 +242,8 @@ Napi::Value RasterJS::AppRenderAndLoop(const Napi::CallbackInfo& info) {
     exit(1);
   }
 
+  PrivateState* priv = (PrivateState*)this->priv;
+
   Napi::Function renderFunc = info[0].As<Napi::Function>();
   int num_render = info[1].ToNumber().Int32Value();
 
@@ -246,8 +261,6 @@ Napi::Value RasterJS::AppRenderAndLoop(const Napi::CallbackInfo& info) {
   TimeKeeper keeper;
   keeper.Init();
 
-  PrivateState* priv = (PrivateState*)this->priv;
-
   // A basic main loop to handle events
   bool is_running = true;
   SDL_Event event;
@@ -260,6 +273,14 @@ Napi::Value RasterJS::AppRenderAndLoop(const Napi::CallbackInfo& info) {
       case SDL_KEYDOWN:
         if (event.key.keysym.sym == SDLK_ESCAPE) {
           is_running = false;
+        } else if (!priv->keyHandleFunc.IsEmpty()) {
+          int code = event.key.keysym.sym;
+          std::string s(1, char(code));
+          Napi::String str = Napi::String::New(env, s);
+          Napi::Object obj = Napi::Object::New(env);
+          obj["key"] = str;
+          napi_value val = obj;
+          priv->keyHandleFunc.Call({val});
         }
         break;
       case SDL_WINDOWEVENT_CLOSE:

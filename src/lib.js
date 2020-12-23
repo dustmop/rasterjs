@@ -208,6 +208,10 @@ Raster.prototype.showFrame = function(callback) {
   });
 }
 
+Raster.prototype.on = function(eventName, callback) {
+  _priv.methods.handleEvent(eventName, callback);
+}
+
 ////////////////////////////////////////
 // Export
 

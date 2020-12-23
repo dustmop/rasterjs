@@ -266,6 +266,10 @@ MethodSet.prototype.makeShape = function(method, params) {
   }
 }
 
+MethodSet.prototype.handleEvent = function(eventName, callback) {
+  this.owner.renderer.handleEvent(eventName, callback);
+}
+
 ////////////////////////////////////////
 
 function justDo(cb) {

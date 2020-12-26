@@ -1,7 +1,7 @@
 const destructure = require('./destructure.js');
 const rgbMapDefault = require('./rgb_map_default.js');
 const algorithm = require('./algorithm.js');
-const directMemory = require('./direct_memory.js');
+const frameMemory = require('./frame_memory.js');
 const geometry = require('./geometry.js');
 const image_loader = require('./image_loader.js');
 
@@ -24,6 +24,7 @@ Runner.prototype.initialize = function () {
   this._config.translateX = 0;
   this._config.translateY = 0;
   this.initMem = new Array();
+  this.initBackBuffer = null;
   const cppmodule = require('../build/Release/native');
   this.renderer = cppmodule();
   this.renderer.initialize();
@@ -152,10 +153,16 @@ Runner.prototype.drawPolygon = function(points, x, y) {
 
 Runner.prototype.fillFrame_params = ['fillerFunc:f'];
 Runner.prototype.fillFrame = function(fillerFunc) {
-  var mem = directMemory.NewDirectMemory(this._config.screenWidth,
-                                         this._config.screenHeight);
+  var mem = frameMemory.NewFrameMemory(this._config.screenWidth,
+                                       this._config.screenHeight);
   // TODO: Move to another sourcefile?
   mem.fill(this._config.bgColor);
+  // If there was a buffer last frame, and it had a back-buffer, use the
+  // previous front-buffer as the back-buffer for this next frame.
+  if (this.initBackBuffer) {
+    mem._back_buffer = this.initBackBuffer;
+    this.initBackBuffer = null;
+  }
   // TODO: A hack to have drawPoint affect the initial mem state
   for (let i = 0; i < this.initMem.length; i++) {
     let row = this.initMem[i];
@@ -163,6 +170,8 @@ Runner.prototype.fillFrame = function(fillerFunc) {
     let y = row[1];
     mem[x + y*mem.pitch] = row[2];
   }
+  this.initMem = new Array();
+
   if (fillerFunc.length == 1) {
     fillerFunc(mem);
   } else if (fillerFunc.length == 3) {
@@ -177,7 +186,13 @@ Runner.prototype.fillFrame = function(fillerFunc) {
   } else {
     throw 'Invalid arguments for fillFrame: length = ' + fillerFunc.length;
   }
-  this.renderer.putDirect(mem);
+  this.renderer.putFrameMemory(mem);
+
+  // If this frame had a back-buffer, save the front-buffer.
+  if (mem._back_buffer) {
+    mem._back_buffer = null;
+    this.initBackBuffer = mem;
+  }
 }
 
 Runner.prototype.loadImage = function(filepath) {

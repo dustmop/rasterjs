@@ -31,7 +31,7 @@ class RasterJS : public Napi::ObjectWrap<RasterJS> {
   Napi::Value PutLine(const Napi::CallbackInfo& info);
   Napi::Value PutImage(const Napi::CallbackInfo& info);
   Napi::Value PutCircleFromArc(const Napi::CallbackInfo& info);
-  Napi::Value PutDirect(const Napi::CallbackInfo& info);
+  Napi::Value PutFrameMemory(const Napi::CallbackInfo& info);
   Napi::Value SaveImage(const Napi::CallbackInfo& info);
 
   void* priv;

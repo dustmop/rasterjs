@@ -43,7 +43,7 @@ Napi::Object RasterJS::Init(Napi::Env env, Napi::Object exports) {
        InstanceMethod("putLine", &RasterJS::PutLine),
        InstanceMethod("putImage", &RasterJS::PutImage),
        InstanceMethod("putCircleFromArc", &RasterJS::PutCircleFromArc),
-       InstanceMethod("putDirect", &RasterJS::PutDirect),
+       InstanceMethod("putFrameMemory", &RasterJS::PutFrameMemory),
        InstanceMethod("saveImage", &RasterJS::SaveImage),
   });
   constructor = Napi::Persistent(func);
@@ -702,7 +702,7 @@ Napi::Value RasterJS::PutCircleFromArc(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, 0);
 }
 
-Napi::Value RasterJS::PutDirect(const Napi::CallbackInfo& info) {
+Napi::Value RasterJS::PutFrameMemory(const Napi::CallbackInfo& info) {
   PrivateState* priv = (PrivateState*)this->priv;
   if (!priv->drawTarget) {
     priv->drawTarget = instantiateDrawTarget(priv);
@@ -710,11 +710,11 @@ Napi::Value RasterJS::PutDirect(const Napi::CallbackInfo& info) {
   GfxTarget* target = priv->drawTarget;
 
   if (info.Length() < 1) {
-    printf("PutDirect needs 1 param");
+    printf("PutFrameMemory needs 1 param");
     exit(1);
   }
   if (!info[0].IsTypedArray()) {
-    printf("PutDirect needs TypedArray");
+    printf("PutFrameMemory needs TypedArray");
     exit(1);
   }
 
@@ -741,7 +741,7 @@ Napi::Value RasterJS::SaveImage(const Napi::CallbackInfo& info) {
   GfxTarget* target = priv->drawTarget;
 
   if (info.Length() < 2) {
-    printf("PutDirect needs 2 params");
+    printf("SaveImage needs 2 params");
     exit(1);
   }
 

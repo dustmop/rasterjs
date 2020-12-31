@@ -188,6 +188,7 @@ Runner.prototype.fillFrame = function(fillerFunc) {
   }
   this.renderer.putFrameMemory(mem);
 
+  // TODO: Figure out semantics of calling fillFrame twice in one frame.
   // If this frame had a back-buffer, save the front-buffer.
   if (mem._back_buffer) {
     mem._back_buffer = null;

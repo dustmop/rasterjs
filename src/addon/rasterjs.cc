@@ -11,7 +11,7 @@
 #include <uv.h>
 #include <cmath>
 #include <chrono>
-#include <cmath>
+#include <map>
 
 #include <SDL.h>
 
@@ -38,6 +38,7 @@ Napi::Object RasterJS::Init(Napi::Env env, Napi::Object exports) {
        InstanceMethod("saveTo", &RasterJS::SaveTo),
        InstanceMethod("loadImage", &RasterJS::LoadImage),
        InstanceMethod("assignRgbMapping", &RasterJS::AssignRgbMapping),
+       InstanceMethod("fillColorizedImage", &RasterJS::FillColorizedImage),
        InstanceMethod("putRect", &RasterJS::PutRect),
        InstanceMethod("putPoint", &RasterJS::PutPoint),
        InstanceMethod("putPolygon", &RasterJS::PutPolygon),
@@ -53,6 +54,8 @@ Napi::Object RasterJS::Init(Napi::Env env, Napi::Object exports) {
 
   return exports;
 }
+
+typedef unsigned char u8_t;
 
 class PrivateState {
  public:
@@ -330,6 +333,7 @@ Napi::Value RasterJS::AppRenderAndLoop(const Napi::CallbackInfo& info) {
 Napi::Value RasterJS::AppQuit(const Napi::CallbackInfo& info) {
   PrivateState* priv = (PrivateState*)this->priv;
   priv->is_running = false;
+  return info.Env().Null();
 }
 
 #define TAU 6.283
@@ -360,6 +364,59 @@ Napi::Value RasterJS::AssignRgbMapping(const Napi::CallbackInfo& info) {
     int val = elem.As<Napi::Number>().Int32Value();
     // Store values as little-endian RGBA.
     priv->rgb_map[i] = val * 0x100 + 0xff;
+  }
+
+  return info.Env().Null();
+}
+
+Napi::Value RasterJS::FillColorizedImage(const Napi::CallbackInfo& info) {
+  PrivateState* priv = (PrivateState*)this->priv;
+
+  GfxTarget* target = priv->drawTarget;
+  int x_size = target->x_size;
+  int y_size = target->y_size;
+  int pitch = target->pitch;
+  uint32_t color;
+
+  std::vector<u8_t> pixel_data;
+  std::map<uint32_t, u8_t> color_lookup;
+  u8_t index_value = 0;
+  pixel_data.resize(y_size * pitch/4);
+
+  for (int y = 0; y < y_size; y++) {
+    for (int x = 0; x < x_size; x++) {
+      color = priv->drawTarget->buffer[x + y*pitch/4];
+      auto it = color_lookup.find(color);
+      if (it == color_lookup.end()) {
+        color_lookup[color] = index_value;
+        pixel_data[x + y*pitch/4] = index_value;
+        index_value++;
+      } else {
+        pixel_data[x + y*pitch/4] = it->second;
+      }
+    }
+  }
+
+  std::vector<uint32_t> color_palette;
+  color_palette.resize(index_value);
+  for (auto it = color_lookup.begin(); it != color_lookup.end(); it++) {
+    color_palette[it->second] = it->first;
+  }
+
+  Napi::Value elem = info[0];
+  Napi::Object container = elem.ToObject();
+  Napi::Value paletteval = container.Get("palette");
+  Napi::Value bufferval = container.Get("buffer");
+
+  // TODO: Type check IsArray() for these
+  Napi::Object palette = paletteval.ToObject();
+  Napi::Object buffer = bufferval.ToObject();
+
+  for (size_t i = 0; i < pixel_data.size(); i++) {
+    buffer[i] = pixel_data[i];
+  }
+  for (size_t i = 0; i < color_palette.size(); i++) {
+    palette[i] = color_palette[i];
   }
 
   return info.Env().Null();

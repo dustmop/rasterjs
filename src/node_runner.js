@@ -2,6 +2,7 @@ const destructure = require('./destructure.js');
 const rgbMapDefault = require('./rgb_map_default.js');
 const algorithm = require('./algorithm.js');
 const frameMemory = require('./frame_memory.js');
+const paletteEntry = require('./palette_entry.js');
 const geometry = require('./geometry.js');
 const image_loader = require('./image_loader.js');
 
@@ -299,6 +300,29 @@ MethodSet.prototype.makeShape = function(method, params) {
 
 MethodSet.prototype.handleEvent = function(eventName, callback) {
   this.owner.renderer.handleEvent(eventName, callback);
+}
+
+MethodSet.prototype.getPaletteEntry = function(x, y) {
+  let image = {
+    palette: [],
+    buffer: [],
+  };
+  this.owner.renderer.fillColorizedImage(image);
+
+  let index = {};
+  for (let k = 0; k < image.buffer.length; k++) {
+    let color = image.buffer[k];
+    if (index[color] === undefined) {
+      index[color] = [];
+    }
+    index[color].push(k);
+  }
+
+  // TODO: Fix this.
+  let pitch = this.owner._config.screenWidth;
+  let val = image.buffer[x + y*pitch];
+  return paletteEntry.NewPaletteEntry(this.owner.renderer, image.palette,
+                                      image.buffer, pitch, index, val);
 }
 
 ////////////////////////////////////////

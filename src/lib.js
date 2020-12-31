@@ -115,6 +115,10 @@ Raster.prototype.oscil = function(period, fracOffset, click) {
   return (1.0 - Math.cos(click * this.TAU / period)) / 2.0;
 }
 
+Raster.prototype.getPaletteEntry = function(x, y) {
+  return _priv.methods.getPaletteEntry(x, y);
+}
+
 ////////////////////////////////////////
 // Rendering functionality
 

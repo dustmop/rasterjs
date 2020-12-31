@@ -26,6 +26,7 @@ class RasterJS : public Napi::ObjectWrap<RasterJS> {
   Napi::Value SaveTo(const Napi::CallbackInfo& info);
   Napi::Value LoadImage(const Napi::CallbackInfo& info);
   Napi::Value AssignRgbMapping(const Napi::CallbackInfo& info);
+  Napi::Value FillColorizedImage(const Napi::CallbackInfo& info);
   Napi::Value PutRect(const Napi::CallbackInfo& info);
   Napi::Value PutPoint(const Napi::CallbackInfo& info);
   Napi::Value PutPolygon(const Napi::CallbackInfo& info);

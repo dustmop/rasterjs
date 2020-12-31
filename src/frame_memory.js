@@ -16,7 +16,7 @@ function NewFrameMemory(w, h) {
     return this[x + y*this.pitch];
   };
   make._back_buffer = null;
-  make.get_previous = function(x, y) {
+  make.getPrevious = function(x, y) {
     var self = this;
     if (!self._back_buffer) {
       var copy_size = self.y_dim * self.pitch;

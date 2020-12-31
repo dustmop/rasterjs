@@ -208,6 +208,12 @@ Raster.prototype.showFrame = function(callback) {
   });
 }
 
+Raster.prototype.quit = function() {
+  _priv.then(function() {
+    _priv.methods.quit();
+  });
+}
+
 Raster.prototype.on = function(eventName, callback) {
   _priv.methods.handleEvent(eventName, callback);
 }

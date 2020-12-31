@@ -31,6 +31,7 @@ Napi::Object RasterJS::Init(Napi::Env env, Napi::Object exports) {
        InstanceMethod("createDisplay", &RasterJS::CreateDisplay),
        InstanceMethod("handleEvent", &RasterJS::HandleEvent),
        InstanceMethod("appRenderAndLoop", &RasterJS::AppRenderAndLoop),
+       InstanceMethod("appQuit", &RasterJS::AppQuit),
        InstanceMethod("setSize", &RasterJS::SetSize),
        InstanceMethod("setColor", &RasterJS::SetColor),
        InstanceMethod("fillBackground", &RasterJS::FillBackground),
@@ -63,6 +64,7 @@ class PrivateState {
   uint32_t frontColor;
   uint32_t backColor;
   Napi::FunctionReference keyHandleFunc;
+  bool is_running;
 };
 
 PrivateState::PrivateState() {
@@ -262,17 +264,17 @@ Napi::Value RasterJS::AppRenderAndLoop(const Napi::CallbackInfo& info) {
   keeper.Init();
 
   // A basic main loop to handle events
-  bool is_running = true;
+  priv->is_running = true;
   SDL_Event event;
-  while (is_running) {
+  while (priv->is_running) {
     if (SDL_PollEvent(&event)) {
       switch (event.type) {
       case SDL_QUIT:
-        is_running = false;
+        priv->is_running = false;
         break;
       case SDL_KEYDOWN:
         if (event.key.keysym.sym == SDLK_ESCAPE) {
-          is_running = false;
+          priv->is_running = false;
         } else if (!priv->keyHandleFunc.IsEmpty()) {
           int code = event.key.keysym.sym;
           std::string s(1, char(code));
@@ -284,7 +286,7 @@ Napi::Value RasterJS::AppRenderAndLoop(const Napi::CallbackInfo& info) {
         }
         break;
       case SDL_WINDOWEVENT_CLOSE:
-        is_running = false;
+        priv->is_running = false;
         break;
       default:
         break;
@@ -323,6 +325,11 @@ Napi::Value RasterJS::AppRenderAndLoop(const Napi::CallbackInfo& info) {
   }
 
   return Napi::Number::New(env, 0);
+}
+
+Napi::Value RasterJS::AppQuit(const Napi::CallbackInfo& info) {
+  PrivateState* priv = (PrivateState*)this->priv;
+  priv->is_running = false;
 }
 
 #define TAU 6.283

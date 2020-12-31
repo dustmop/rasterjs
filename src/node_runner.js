@@ -222,6 +222,10 @@ Runner.prototype.doRenderFile = function(savepath) {
   this.renderer.saveTo(savepath);
 }
 
+Runner.prototype.doQuit = function() {
+  this.renderer.appQuit();
+}
+
 ////////////////////////////////////////
 
 function Commander(owner) {
@@ -266,6 +270,10 @@ MethodSet.prototype.run = function(renderFunc, postFunc) {
 
 MethodSet.prototype.save = function(savepath) {
   this.owner.doRenderFile(savepath);
+}
+
+MethodSet.prototype.quit = function() {
+  this.owner.doQuit();
 }
 
 MethodSet.prototype.fillFrame = function(fillerFunc) {

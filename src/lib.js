@@ -10,11 +10,14 @@ if (typeof window === 'undefined') {
 ////////////////////////////////////////
 // Private global data used by Raster object
 
-var _priv = {
-  cmd: null,
-  methods: null,
-  then: null,
-};
+function Raster() {
+  this.cmd = null;
+  this.methods = null;
+  this.then = null;
+  return this;
+}
+
+var _priv_quick = new Raster();
 
 ////////////////////////////////////////
 // Pick which backend renderer to use
@@ -23,51 +26,51 @@ if (isRunningNodejs) {
   // Running in node.js
   const runner = require('./node_runner.js');
   runner.start(function(r) {
-    _priv.cmd = r.cmd;
-    _priv.methods = r.methods;
-    _priv.then = r.then;
+    var self = _priv_quick;
+    self.cmd = r.cmd;
+    self.methods = r.methods;
+    self.then = r.then;
   });
 } else {
   // Running in browser
   // TODO: Global namespace pollution.
   var loadScript;
-  _priv.cmd = new Array();
-  _priv.methods = {
-    makeImage: function() { return ['QImage', _priv.cmd.length]; },
-    resetState: function() {},
-  };
-  _priv.then = function(callback) {
-    loadScript = function(filename, whenLoadedCallback) {
-      if (whenLoadedCallback === undefined) {
-        throw 'loadScript needs to be given a callback'
-      }
-      var js = document.createElement('script');
-      js.type = 'text/javascript';
-      js.src = filename;
-      js.onload = function() {
-        whenLoadedCallback();
-      }
-      document.body.appendChild(js);
+  (function() {
+    var self = _priv_quick;
+    self.cmd = new Array();
+    self.methods = {
+      makeImage: function() { return ['QImage', self.cmd.length]; },
+      resetState: function() {},
     };
-    setTimeout(function() {
-      loadScript('/web_runner.js', function() {
-        // TODO: Global namespace pollution.
-        var runner = _webRunnerMake();
-        runner.start(_priv, callback);
-      });
-    }, 10);
-  };
+    self.then = function(callback) {
+      loadScript = function(filename, whenLoadedCallback) {
+        if (whenLoadedCallback === undefined) {
+          throw 'loadScript needs to be given a callback'
+        }
+        var js = document.createElement('script');
+        js.type = 'text/javascript';
+        js.src = filename;
+        js.onload = function() {
+          whenLoadedCallback();
+        }
+        document.body.appendChild(js);
+      };
+      setTimeout(function() {
+        loadScript('/web_runner.js', function() {
+          // TODO: Global namespace pollution.
+          var runner = _webRunnerMake();
+          runner.start(self, callback);
+        });
+      }, 10);
+    }
+  })();
 }
 
 ////////////////////////////////////////
 // primary object
 
-function Raster() {
-  return this;
-}
-
 Raster.prototype.resetState = function() {
-  _priv.methods.resetState();
+  this.methods.resetState();
 }
 
 Raster.prototype.TAU = 6.283185307179586;
@@ -78,30 +81,30 @@ Raster.prototype.timeClick = 0;
 // Setup the draw target
 
 Raster.prototype.setSize = function() {
-  _priv.cmd.push(['setSize', arguments]);
+  this.cmd.push(['setSize', arguments]);
 }
 
 Raster.prototype.setZoom = function() {
-  _priv.cmd.push(['setZoom', arguments]);
+  this.cmd.push(['setZoom', arguments]);
 }
 
 Raster.prototype.setTitle = function() {
-  _priv.cmd.push(['setTitle', arguments]);
+  this.cmd.push(['setTitle', arguments]);
 }
 
 Raster.prototype.originAtCenter = function() {
-  _priv.cmd.push(['originAtCenter', []]);
+  this.cmd.push(['originAtCenter', []]);
 }
 
 ////////////////////////////////////////
 // Methods with interesting return values
 
 Raster.prototype.loadImage = function(filepath) {
-  return _priv.methods.makeShape('load', [filepath]);
+  return this.methods.makeShape('load', [filepath]);
 }
 
 Raster.prototype.rotatePolygon = function(shape, angle) {
-  return _priv.methods.makeShape('rotate', [shape, angle]);
+  return this.methods.makeShape('rotate', [shape, angle]);
 }
 
 Raster.prototype.oscil = function(period, fracOffset, click) {
@@ -116,67 +119,68 @@ Raster.prototype.oscil = function(period, fracOffset, click) {
 }
 
 Raster.prototype.getPaletteEntry = function(x, y) {
-  return _priv.methods.getPaletteEntry(x, y);
+  return this.methods.getPaletteEntry(x, y);
 }
 
 ////////////////////////////////////////
 // Rendering functionality
 
 Raster.prototype.fillBackground = function() {
-  _priv.cmd.push(['fillBackground', arguments]);
+  this.cmd.push(['fillBackground', arguments]);
 }
 
 Raster.prototype.setColor = function() {
-  _priv.cmd.push(['setColor', arguments]);
+  this.cmd.push(['setColor', arguments]);
 }
 
 Raster.prototype.fillSquare = function() {
-  _priv.cmd.push(['fillSquare', arguments]);
+  this.cmd.push(['fillSquare', arguments]);
 }
 
 Raster.prototype.drawSquare = function() {
-  _priv.cmd.push(['drawSquare', arguments]);
+  this.cmd.push(['drawSquare', arguments]);
 }
 
 Raster.prototype.fillRect = function() {
-  _priv.cmd.push(['fillRect', arguments]);
+  this.cmd.push(['fillRect', arguments]);
 }
 
 Raster.prototype.drawRect = function() {
-  _priv.cmd.push(['drawRect', arguments]);
+  this.cmd.push(['drawRect', arguments]);
 }
 
 Raster.prototype.drawPoint = function() {
-  _priv.cmd.push(['drawPoint', arguments]);
+  this.cmd.push(['drawPoint', arguments]);
 }
 
 Raster.prototype.fillPolygon = function() {
-  _priv.cmd.push(['fillPolygon', arguments]);
+  this.cmd.push(['fillPolygon', arguments]);
 }
 
 Raster.prototype.drawPolygon = function() {
-  _priv.cmd.push(['drawPolygon', arguments]);
+  this.cmd.push(['drawPolygon', arguments]);
 }
 
 Raster.prototype.drawLine = function() {
-  _priv.cmd.push(['drawLine', arguments]);
+  this.cmd.push(['drawLine', arguments]);
 }
 
 Raster.prototype.drawImage = function() {
-  _priv.cmd.push(['drawImage', arguments]);
+  this.cmd.push(['drawImage', arguments]);
 }
 
 Raster.prototype.fillCircle = function() {
-  _priv.cmd.push(['fillCircle', arguments]);
+  this.cmd.push(['fillCircle', arguments]);
 }
 
 Raster.prototype.drawCircle = function() {
-  _priv.cmd.push(['drawCircle', arguments]);
+  this.cmd.push(['drawCircle', arguments]);
 }
 
 Raster.prototype.fillFrame = function(callback) {
-  _priv.then(function() {
-    _priv.methods.fillFrame(callback);
+  var self = this;
+  self.then(function() {
+    self.methods.fillFrame(callback);
   });
 }
 
@@ -185,55 +189,58 @@ Raster.prototype.fillFrame = function(callback) {
 
 Raster.prototype.run = function(renderFunc) {
   var self = this;
-  _priv.then(function() {
-    _priv.methods.run(renderFunc, function() {
+  self.then(function() {
+    self.methods.run(renderFunc, function() {
       self.timeClick++;
     });
   });
 }
 
 Raster.prototype.show = function() {
-  _priv.then(function() {
-    _priv.methods.show();
+  var self = this;
+  self.then(function() {
+    self.methods.show();
   });
 }
 
 Raster.prototype.save = function(savepath) {
-  _priv.then(function() {
-    _priv.methods.save(savepath);
+  var self = this;
+  self.then(function() {
+    self.methods.save(savepath);
   });
 }
 
 Raster.prototype.showFrame = function(callback) {
-  _priv.then(function() {
+  var self = this;
+  self.then(function() {
     // TODO: Figure out if web_runner can call this syncronously.
     // If so, replace with fillFrame -> show
-    _priv.methods.showFrame(callback);
+    self.methods.showFrame(callback);
   });
 }
 
 Raster.prototype.quit = function() {
-  _priv.then(function() {
-    _priv.methods.quit();
+  var self = this;
+  self.then(function() {
+    self.methods.quit();
   });
 }
 
 Raster.prototype.on = function(eventName, callback) {
-  _priv.methods.handleEvent(eventName, callback);
+  this.methods.handleEvent(eventName, callback);
 }
 
 ////////////////////////////////////////
 // Export
 
-var _priv_raster = new Raster();
-_priv_raster.resetState();
+_priv_quick.resetState();
 
 if (isRunningNodejs) {
-  module.exports = _priv_raster;
+  module.exports = _priv_quick;
 } else {
   function require(moduleName) {
     if (moduleName === 'qgfx' || moduleName === './qgfx') {
-      return _priv_raster;
+      return _priv_quick;
     }
     throw 'Could not require module named "' + moduleName + '"';
   }

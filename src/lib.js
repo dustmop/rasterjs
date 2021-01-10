@@ -96,6 +96,10 @@ Raster.prototype.originAtCenter = function() {
   this.cmd.push(['originAtCenter', []]);
 }
 
+Raster.prototype.useSystemColors = function() {
+  this.cmd.push(['useSystemColors', arguments]);
+}
+
 ////////////////////////////////////////
 // Methods with interesting return values
 
@@ -129,8 +133,16 @@ Raster.prototype.fillBackground = function() {
   this.cmd.push(['fillBackground', arguments]);
 }
 
+Raster.prototype.fillRealBackground = function() {
+  this.cmd.push(['fillRealBackground', arguments]);
+}
+
 Raster.prototype.setColor = function() {
   this.cmd.push(['setColor', arguments]);
+}
+
+Raster.prototype.setRealColor = function() {
+  this.cmd.push(['setRealColor', arguments]);
 }
 
 Raster.prototype.fillSquare = function() {

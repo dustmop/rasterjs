@@ -22,11 +22,15 @@ void Plane::InitClass(Napi::Env env, Napi::Object exports) {
       {InstanceMethod("resetState", &Plane::ResetState),
        InstanceMethod("setSize", &Plane::SetSize),
        InstanceMethod("setColor", &Plane::SetColor),
+       //InstanceMethod("setRealColor", &Plane::SetRealColor),
        InstanceMethod("fillBackground", &Plane::FillBackground),
+       //InstanceMethod("fillRealBackground", &Plane::FillRealBackground),
        InstanceMethod("fillColorizedImage", &Plane::FillColorizedImage),
        InstanceMethod("saveTo", &Plane::SaveTo),
        InstanceMethod("saveImage", &Plane::SaveImage),
-       InstanceMethod("assignRgbMapping", &Plane::AssignRgbMapping),
+       InstanceMethod("assignRgbMap", &Plane::AssignRgbMap),
+       InstanceMethod("clearRgbMap", &Plane::ClearRgbMap),
+       InstanceMethod("addRgbMapEntry", &Plane::AddRgbMapEntry),
        InstanceMethod("putRect", &Plane::PutRect),
        InstanceMethod("putPoint", &Plane::PutPoint),
        InstanceMethod("putPolygon", &Plane::PutPolygon),
@@ -129,7 +133,7 @@ Napi::Value Plane::SaveTo(const Napi::CallbackInfo& info) {
 
 #define OPAQUE 255
 
-Napi::Value Plane::AssignRgbMapping(const Napi::CallbackInfo& info) {
+Napi::Value Plane::AssignRgbMap(const Napi::CallbackInfo& info) {
   Napi::Value elem = info[0];
   Napi::Object list = elem.ToObject();
   Napi::Value list_length = list.Get("length");
@@ -145,6 +149,26 @@ Napi::Value Plane::AssignRgbMapping(const Napi::CallbackInfo& info) {
   }
 
   return info.Env().Null();
+}
+
+Napi::Value Plane::ClearRgbMap(const Napi::CallbackInfo& info) {
+  this->rgb_map_length = 0;
+}
+
+Napi::Value Plane::AddRgbMapEntry(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  Napi::Value val = info[0];
+  int num = val.As<Napi::Number>().Int32Value();
+  int size = this->rgb_map_length;
+  int color = num * 0x100 + 0xff;
+  for (int i = 0; i < size; i++) {
+    if (this->rgb_map[i] == color) {
+      return Napi::Number::New(env, i);
+    }
+  }
+  this->rgb_map[size] = color;
+  this->rgb_map_length++;
+  return Napi::Number::New(env, size);
 }
 
 Napi::Value Plane::FillColorizedImage(const Napi::CallbackInfo& info) {

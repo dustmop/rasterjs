@@ -1,5 +1,5 @@
 const destructure = require('./destructure.js');
-const rgbMapDefault = require('./rgb_map_default.js');
+const rgbMap = require('./rgb_map.js');
 const algorithm = require('./algorithm.js');
 const frameMemory = require('./frame_memory.js');
 const paletteEntry = require('./palette_entry.js');
@@ -31,13 +31,13 @@ Runner.prototype.initialize = function () {
   this.display = cppmodule.display();
   this.display.initialize();
   this.normalPlane = cppmodule.plane();
-  this.normalPlane.assignRgbMapping(rgbMapDefault.rgb_mapping);
+  this.normalPlane.assignRgbMap(rgbMap.rgb_map_default);
 }
 
 Runner.prototype.resetState = function() {
   const cppmodule = require('../build/Release/native');
   this.normalPlane = cppmodule.plane();
-  this.normalPlane.assignRgbMapping(rgbMapDefault.rgb_mapping);
+  this.normalPlane.assignRgbMap(rgbMap.rgb_map_default);
 }
 
 Runner.prototype.setSize_params = ['w:i', 'h:i'];
@@ -51,6 +51,12 @@ Runner.prototype.setColor_params = ['color:i'];
 Runner.prototype.setColor = function(color) {
   this._config.color = color;
   this.normalPlane.setColor(color);
+}
+
+Runner.prototype.setRealColor_params = ['rgb:i'];
+Runner.prototype.setRealColor = function(rgb) {
+  let color = this.normalPlane.addRgbMapEntry(rgb);
+  this.setColor(color);
 }
 
 Runner.prototype.setZoom_params = ['scale:i'];
@@ -70,10 +76,37 @@ Runner.prototype.originAtCenter = function() {
   this._config.translateY = this._config.screenHeight / 2;
 }
 
+Runner.prototype.useSystemColors_params = ['obj:any'];
+Runner.prototype.useSystemColors = function(obj) {
+  if (typeof obj == 'string') {
+    let text = obj;
+    if (text == 'quick') {
+      this.normalPlane.assignRgbMap(rgbMap.rgb_map_default);
+    } else if (text == 'dos') {
+      this.normalPlane.assignRgbMap(rgbMap.rgb_map_dos);
+    } else if (text == 'nes') {
+      this.normalPlane.assignRgbMap(rgbMap.rgb_map_nes);
+    } else {
+      throw 'Unknown system: ' + text;
+    }
+  } else if (Array.isArray(obj)) {
+    let list = obj;
+    this.normalPlane.assignRgbMap(list);
+  } else if (!obj) {
+    this.normalPlane.clearRgbMap();
+  }
+}
+
 Runner.prototype.fillBackground_params = ['color:i'];
 Runner.prototype.fillBackground = function(color) {
   this._config.bgColor = color;
   this.normalPlane.fillBackground(color);
+}
+
+Runner.prototype.fillRealBackground_params = ['rgb:i'];
+Runner.prototype.fillRealBackground = function(rgb) {
+  let color = this.normalPlane.addRgbMapEntry(rgb);
+  this.fillBackground(color);
 }
 
 Runner.prototype._getTranslation = function() {

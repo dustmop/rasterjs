@@ -12,7 +12,8 @@ function Runner() {
   this.cmd = null;
   this.methods = null;
   this.then = null;
-  this.renderer = null;
+  this.display = null;
+  this.normalPlane = null;
   this._config = {};
   return this;
 }
@@ -27,26 +28,29 @@ Runner.prototype.initialize = function () {
   this.initMem = new Array();
   this.initBackBuffer = null;
   const cppmodule = require('../build/Release/native');
-  this.renderer = cppmodule();
-  this.renderer.initialize();
-  this.renderer.assignRgbMapping(rgbMapDefault.rgb_mapping);
+  this.display = cppmodule.display();
+  this.display.initialize();
+  this.normalPlane = cppmodule.plane();
+  this.normalPlane.assignRgbMapping(rgbMapDefault.rgb_mapping);
 }
 
 Runner.prototype.resetState = function() {
-  this.renderer.resetState();
+  const cppmodule = require('../build/Release/native');
+  this.normalPlane = cppmodule.plane();
+  this.normalPlane.assignRgbMapping(rgbMapDefault.rgb_mapping);
 }
 
 Runner.prototype.setSize_params = ['w:i', 'h:i'];
 Runner.prototype.setSize = function(w, h) {
   this._config.screenWidth = w;
   this._config.screenHeight = h;
-  this.renderer.setSize(w, h);
+  this.normalPlane.setSize(w, h);
 }
 
 Runner.prototype.setColor_params = ['color:i'];
 Runner.prototype.setColor = function(color) {
   this._config.color = color;
-  this.renderer.setColor(color);
+  this.normalPlane.setColor(color);
 }
 
 Runner.prototype.setZoom_params = ['scale:i'];
@@ -69,7 +73,7 @@ Runner.prototype.originAtCenter = function() {
 Runner.prototype.fillBackground_params = ['color:i'];
 Runner.prototype.fillBackground = function(color) {
   this._config.bgColor = color;
-  this.renderer.fillBackground(color);
+  this.normalPlane.fillBackground(color);
 }
 
 Runner.prototype._getTranslation = function() {
@@ -80,38 +84,38 @@ Runner.prototype.drawLine_params = ['x0:i', 'y0:i', 'x1:i', 'y1:i', 'cc?b'];
 Runner.prototype.drawLine = function(x0, y0, x1, y1, cc) {
   cc = cc ? 1 : 0;
   let [tx, ty] = this._getTranslation();
-  this.renderer.putLine(tx + x0, ty + y0, tx + x1, ty + y1, cc);
+  this.normalPlane.putLine(tx + x0, ty + y0, tx + x1, ty + y1, cc);
 }
 
 Runner.prototype.drawPoint_params = ['x:i', 'y:i'];
 Runner.prototype.drawPoint = function(x, y) {
   let [tx, ty] = this._getTranslation();
   this.initMem.push([tx + x, ty + y, this._config.color]);
-  this.renderer.putPoint(tx + x, ty + y);
+  this.normalPlane.putPoint(tx + x, ty + y);
 }
 
 Runner.prototype.fillSquare_params = ['x:i', 'y:i', 'size:i'];
 Runner.prototype.fillSquare = function(x, y, size) {
   let [tx, ty] = this._getTranslation();
-  this.renderer.putRect(tx + x, ty + y, size, size, true);
+  this.normalPlane.putRect(tx + x, ty + y, size, size, true);
 }
 
 Runner.prototype.drawSquare_params = ['x:i', 'y:i', 'size:i'];
 Runner.prototype.drawSquare = function(x, y, size) {
   let [tx, ty] = this._getTranslation();
-  this.renderer.putRect(tx + x, ty + y, size, size, false);
+  this.normalPlane.putRect(tx + x, ty + y, size, size, false);
 }
 
 Runner.prototype.fillRect_params = ['x:i', 'y:i', 'w:i', 'h:i'];
 Runner.prototype.fillRect = function(x, y, w, h) {
   let [tx, ty] = this._getTranslation();
-  this.renderer.putRect(tx + x, ty + y, w, h, true);
+  this.normalPlane.putRect(tx + x, ty + y, w, h, true);
 }
 
 Runner.prototype.drawRect_params = ['x:i', 'y:i', 'w:i', 'h:i'];
 Runner.prototype.drawRect = function(x, y, w, h) {
   let [tx, ty] = this._getTranslation();
-  this.renderer.putRect(tx + x, ty + y, w, h, false);
+  this.normalPlane.putRect(tx + x, ty + y, w, h, false);
 }
 
 Runner.prototype.fillCircle_params = ['x:i', 'y:i', 'r:i'];
@@ -120,7 +124,7 @@ Runner.prototype.fillCircle = function(x, y, r) {
   let centerX = tx + x + r;
   let centerY = ty + y + r;
   let arc = algorithm.midpointCircleRasterize(r);
-  this.renderer.putCircleFromArc(centerX, centerY, arc, null, true);
+  this.normalPlane.putCircleFromArc(centerX, centerY, arc, null, true);
 }
 
 Runner.prototype.drawCircle_params = ['x:i', 'y:i', 'r:i', 'width?i'];
@@ -133,7 +137,7 @@ Runner.prototype.drawCircle = function(x, y, r, width) {
   if (width) {
     inner = algorithm.midpointCircleRasterize(r - width - 1);
   }
-  this.renderer.putCircleFromArc(centerX, centerY, arc, inner, false);
+  this.normalPlane.putCircleFromArc(centerX, centerY, arc, inner, false);
 }
 
 Runner.prototype.fillPolygon_params = ['points:ps', 'x?i', 'y?i'];
@@ -141,7 +145,7 @@ Runner.prototype.fillPolygon = function(points, x, y) {
   x = x || 0;
   y = y || 0;
   let [tx, ty] = this._getTranslation();
-  this.renderer.putPolygon(tx + x, ty + y, points, true);
+  this.normalPlane.putPolygon(tx + x, ty + y, points, true);
 }
 
 Runner.prototype.drawPolygon_params = ['points:ps', 'x?i', 'y?i'];
@@ -149,7 +153,7 @@ Runner.prototype.drawPolygon = function(points, x, y) {
   x = x || 0;
   y = y || 0;
   let [tx, ty] = this._getTranslation();
-  this.renderer.putPolygon(tx + x, ty + y, points, false);
+  this.normalPlane.putPolygon(tx + x, ty + y, points, false);
 }
 
 Runner.prototype.fillFrame_params = ['fillerFunc:f'];
@@ -187,7 +191,7 @@ Runner.prototype.fillFrame = function(fillerFunc) {
   } else {
     throw 'Invalid arguments for fillFrame: length = ' + fillerFunc.length;
   }
-  this.renderer.putFrameMemory(mem);
+  this.normalPlane.putFrameMemory(mem);
 
   // TODO: Figure out semantics of calling fillFrame twice in one frame.
   // If this frame had a back-buffer, save the front-buffer.
@@ -203,14 +207,14 @@ Runner.prototype.loadImage = function(filepath) {
 
 Runner.prototype.drawImage_params = ['img:a', 'x:i', 'y:i'];
 Runner.prototype.drawImage = function(img, x, y) {
-  image_loader.loadAll(this.renderer);
+  image_loader.loadAll(this.display);
   let [tx, ty] = this._getTranslation();
-  this.renderer.putImage(img, tx + x, ty + y);
+  this.normalPlane.putImage(img, tx + x, ty + y);
 }
 
 Runner.prototype.doRender = function(num, renderFunc, postFunc) {
-  this.renderer.createWindow(0, 0, this._config.zoomScale);
-  this.renderer.appRenderAndLoop(function() {
+  this.display.createWindow(this.normalPlane, this._config.zoomScale);
+  this.display.appRenderAndLoop(function() {
     if (renderFunc) {
       renderFunc();
     }
@@ -221,11 +225,11 @@ Runner.prototype.doRender = function(num, renderFunc, postFunc) {
 }
 
 Runner.prototype.doRenderFile = function(savepath) {
-  this.renderer.saveTo(savepath);
+  this.normalPlane.saveTo(savepath);
 }
 
 Runner.prototype.doQuit = function() {
-  this.renderer.appQuit();
+  this.display.appQuit();
 }
 
 ////////////////////////////////////////
@@ -307,7 +311,7 @@ MethodSet.prototype.getPaletteEntry = function(x, y) {
     palette: [],
     buffer: [],
   };
-  this.owner.renderer.fillColorizedImage(image);
+  this.owner.normalPlane.fillColorizedImage(image);
 
   let index = {};
   for (let k = 0; k < image.buffer.length; k++) {
@@ -321,7 +325,7 @@ MethodSet.prototype.getPaletteEntry = function(x, y) {
   // TODO: Fix this.
   let pitch = this.owner._config.screenWidth;
   let val = image.buffer[x + y*pitch];
-  return paletteEntry.NewPaletteEntry(this.owner.renderer, image.palette,
+  return paletteEntry.NewPaletteEntry(this.owner.normalPlane, image.palette,
                                       image.buffer, pitch, index, val);
 }
 

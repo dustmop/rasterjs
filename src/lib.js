@@ -17,7 +17,7 @@ function Raster() {
   return this;
 }
 
-var _priv_quick = new Raster();
+var _priv_raster = new Raster();
 
 ////////////////////////////////////////
 // Pick which backend renderer to use
@@ -26,7 +26,7 @@ if (isRunningNodejs) {
   // Running in node.js
   const runner = require('./node_runner.js');
   runner.start(function(r) {
-    var self = _priv_quick;
+    var self = _priv_raster;
     self.cmd = r.cmd;
     self.methods = r.methods;
     self.then = r.then;
@@ -36,7 +36,7 @@ if (isRunningNodejs) {
   // TODO: Global namespace pollution.
   var loadScript;
   (function() {
-    var self = _priv_quick;
+    var self = _priv_raster;
     self.cmd = new Array();
     self.methods = {
       makeImage: function() { return ['QImage', self.cmd.length]; },
@@ -233,14 +233,14 @@ Raster.prototype.on = function(eventName, callback) {
 ////////////////////////////////////////
 // Export
 
-_priv_quick.resetState();
+_priv_raster.resetState();
 
 if (isRunningNodejs) {
-  module.exports = _priv_quick;
+  module.exports = _priv_raster;
 } else {
   function require(moduleName) {
-    if (moduleName === 'qgfx' || moduleName === './qgfx') {
-      return _priv_quick;
+    if (moduleName === 'raster.js' || moduleName === './raster.js') {
+      return _priv_raster;
     }
     throw 'Could not require module named "' + moduleName + '"';
   }

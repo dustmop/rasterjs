@@ -1,6 +1,6 @@
-function NewPaletteEntry(renderer, palette, buffer, pitch, index, val) {
+function NewPaletteEntry(plane, palette, buffer, pitch, index, val) {
   let pal = new PaletteEntry();
-  pal.renderer = renderer;
+  pal.plane = plane;
   pal.palette = palette;
   pal.buffer = buffer;
   pal.pitch = pitch;
@@ -10,7 +10,7 @@ function NewPaletteEntry(renderer, palette, buffer, pitch, index, val) {
 }
 
 function PaletteEntry() {
-  this.renderer = null;
+  this.plane = null;
   this.palette = null;
   this.buffer = null;
   this.pitch = null;
@@ -20,13 +20,13 @@ function PaletteEntry() {
 }
 
 PaletteEntry.prototype.setColor = function(color) {
-  this.renderer.setColor(color);
+  this.plane.setColor(color);
   let elems = this.index[this.val];
   for (let i = 0; i < elems.length; i++) {
     let e = elems[i];
     let x = e % this.pitch;
     let y = Math.floor(e / this.pitch);
-    this.renderer.putPoint(x, y);
+    this.plane.putPoint(x, y);
   }
 }
 

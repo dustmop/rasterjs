@@ -4,7 +4,6 @@ var ra = require('../src/lib.js');
 describe('Image', function() {
   it('load and draw', function() {
     ra.resetState();
-
     // Black background
     ra.fillBackground(0);
     ra.setSize({w: 22, h: 22});

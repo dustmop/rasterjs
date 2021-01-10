@@ -21,7 +21,7 @@ Image.prototype.copy = function(x, y, w, h) {
 }
 
 function NewImage(filepath) {
-  let img = new Image;
+  let img = new Image();
   img.filepath = filepath;
   img.id = _state.images.length;
   _state.images.push(img);

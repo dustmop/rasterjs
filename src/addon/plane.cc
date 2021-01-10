@@ -1,378 +1,154 @@
 #include "type.h"
-#include "rasterjs.h"
-#include "polygon.h"
-#include "line.h"
-#include "time_keeper.h"
-#include "load_image.h"
-#include "rect.h"
+#include "gfx_types.h"
+#include "plane.h"
 #include "png_read_write.h"
 
-#include <napi.h>
-#include <uv.h>
-#include <cmath>
-#include <chrono>
-#include <map>
+#include "polygon.h"
+#include "line.h"
+#include "rect.h"
+#include "load_image.h"
 
-#include <SDL.h>
+#include <cmath> // round
+#include <map> // std::map
 
 using namespace Napi;
 
-Napi::FunctionReference RasterJS::constructor;
+Napi::FunctionReference g_planeConstructor;
 
-Napi::Object RasterJS::Init(Napi::Env env, Napi::Object exports) {
-  Napi::HandleScope scope(env);
-
+void Plane::InitClass(Napi::Env env, Napi::Object exports) {
   Napi::Function func = DefineClass(
       env,
-      "RasterJS",
-      {InstanceMethod("initialize", &RasterJS::Initialize),
-       InstanceMethod("resetState", &RasterJS::ResetState),
-       InstanceMethod("createWindow", &RasterJS::CreateWindow),
-       InstanceMethod("createDisplay", &RasterJS::CreateDisplay),
-       InstanceMethod("handleEvent", &RasterJS::HandleEvent),
-       InstanceMethod("appRenderAndLoop", &RasterJS::AppRenderAndLoop),
-       InstanceMethod("appQuit", &RasterJS::AppQuit),
-       InstanceMethod("setSize", &RasterJS::SetSize),
-       InstanceMethod("setColor", &RasterJS::SetColor),
-       InstanceMethod("fillBackground", &RasterJS::FillBackground),
-       InstanceMethod("saveTo", &RasterJS::SaveTo),
-       InstanceMethod("loadImage", &RasterJS::LoadImage),
-       InstanceMethod("assignRgbMapping", &RasterJS::AssignRgbMapping),
-       InstanceMethod("fillColorizedImage", &RasterJS::FillColorizedImage),
-       InstanceMethod("putRect", &RasterJS::PutRect),
-       InstanceMethod("putPoint", &RasterJS::PutPoint),
-       InstanceMethod("putPolygon", &RasterJS::PutPolygon),
-       InstanceMethod("putLine", &RasterJS::PutLine),
-       InstanceMethod("putImage", &RasterJS::PutImage),
-       InstanceMethod("putCircleFromArc", &RasterJS::PutCircleFromArc),
-       InstanceMethod("putFrameMemory", &RasterJS::PutFrameMemory),
-       InstanceMethod("saveImage", &RasterJS::SaveImage),
+      "Plane",
+      {InstanceMethod("resetState", &Plane::ResetState),
+       InstanceMethod("setSize", &Plane::SetSize),
+       InstanceMethod("setColor", &Plane::SetColor),
+       InstanceMethod("fillBackground", &Plane::FillBackground),
+       InstanceMethod("fillColorizedImage", &Plane::FillColorizedImage),
+       InstanceMethod("saveTo", &Plane::SaveTo),
+       InstanceMethod("saveImage", &Plane::SaveImage),
+       InstanceMethod("assignRgbMapping", &Plane::AssignRgbMapping),
+       InstanceMethod("putRect", &Plane::PutRect),
+       InstanceMethod("putPoint", &Plane::PutPoint),
+       InstanceMethod("putPolygon", &Plane::PutPolygon),
+       InstanceMethod("putLine", &Plane::PutLine),
+       InstanceMethod("putImage", &Plane::PutImage),
+       InstanceMethod("putCircleFromArc", &Plane::PutCircleFromArc),
+       InstanceMethod("putFrameMemory", &Plane::PutFrameMemory),
   });
-  constructor = Napi::Persistent(func);
-  constructor.SuppressDestruct();
-  exports.Set("RasterJS", func);
-
-  return exports;
+  g_planeConstructor = Napi::Persistent(func);
+  g_planeConstructor.SuppressDestruct();
 }
 
-typedef unsigned char u8_t;
+Plane::Plane(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Plane>(info) {
+  Napi::Env env = info.Env();
+  Napi::HandleScope scope(env);
 
-class PrivateState {
- public:
-  PrivateState();
-  int rgb_map_length;
-  int rgb_map[256];
-  GfxTarget* allocTarget;
-  GfxTarget* drawTarget;
-  uint32_t frontColor;
-  uint32_t backColor;
-  Napi::FunctionReference keyHandleFunc;
-  bool is_running;
-};
-
-PrivateState::PrivateState() {
   this->rgb_map_length = 0;
   this->frontColor = 0xffffffff;
   this->backColor = 0;
   this->drawTarget = NULL;
   this->allocTarget = NULL;
-}
-
-RasterJS::RasterJS(const Napi::CallbackInfo& info)
-    : Napi::ObjectWrap<RasterJS>(info) {
-  Napi::Env env = info.Env();
-  Napi::HandleScope scope(env);
-  this->priv = new PrivateState();
+  this->viewWidth = 0;
+  this->viewHeight = 0;
 };
 
-Napi::Object RasterJS::NewInstance(Napi::Env env, Napi::Value arg) {
+Napi::Object Plane::NewInstance(Napi::Env env, Napi::Value arg) {
   Napi::EscapableHandleScope scope(env);
-  Napi::Object obj = constructor.New({arg});
+  Napi::Object obj = g_planeConstructor.New({arg});
   return scope.Escape(napi_value(obj)).ToObject();
 }
 
-int sdl_initialized = 0;
-SDL_Window* window = NULL;
-SDL_Renderer* renderer = NULL;
-SDL_Texture* texture = NULL;
-int viewWidth = 0;
-int viewHeight = 0;
-int windowWidth = 0;
-int windowHeight = 0;
-
+// Drawing globals, used for putLine and putPolygon
 int point_x[16];
 int point_y[16];
 
-Napi::Value RasterJS::SetSize(const Napi::CallbackInfo& info) {
+Napi::Value Plane::SetSize(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  viewWidth = info[0].As<Napi::Number>().Int32Value();
-  viewHeight = info[1].As<Napi::Number>().Int32Value();
+  this->viewWidth = info[0].As<Napi::Number>().Int32Value();
+  this->viewHeight = info[1].As<Napi::Number>().Int32Value();
   return Napi::Number::New(env, 0);
 }
 
-GfxTarget* instantiateDrawTarget(PrivateState* priv) {
-  if (!priv->allocTarget) {
-    priv->allocTarget = (GfxTarget*)malloc(sizeof(GfxTarget));
-    if (priv->allocTarget == NULL) {
+GfxTarget* Plane::instantiateDrawTarget() {
+  if (!this->allocTarget) {
+    this->allocTarget = (GfxTarget*)malloc(sizeof(GfxTarget));
+    if (this->allocTarget == NULL) {
       printf("allocTarget failed to malloc\n");
       exit(1);
     }
-    if (!viewWidth || !viewHeight) {
+    if (!this->viewWidth || !this->viewHeight) {
       printf("cannot allocate a target with zero size\n");
       exit(1);
     }
-    priv->allocTarget->x_size = viewWidth;
-    priv->allocTarget->y_size = viewHeight;
-    priv->allocTarget->pitch = viewWidth * 4;
-    priv->allocTarget->capacity = priv->allocTarget->pitch * viewHeight;
-    priv->allocTarget->buffer = (uint32_t*)malloc(priv->allocTarget->capacity);
-    if (priv->allocTarget->buffer == NULL) {
+    this->allocTarget->x_size = this->viewWidth;
+    this->allocTarget->y_size = this->viewHeight;
+    this->allocTarget->pitch = this->viewWidth * 4;
+    this->allocTarget->capacity = this->allocTarget->pitch * this->viewHeight;
+    this->allocTarget->buffer = (uint32_t*)malloc(this->allocTarget->capacity);
+    if (this->allocTarget->buffer == NULL) {
       printf("allocTarget.buffer failed to malloc\n");
       exit(1);
     }
   }
-  uint32_t* colors = (uint32_t*)priv->allocTarget->buffer;
-  for (int n = 0; n < priv->allocTarget->capacity / 4; n++) {
-    colors[n] = priv->backColor;
+  uint32_t* colors = (uint32_t*)this->allocTarget->buffer;
+  for (int n = 0; n < this->allocTarget->capacity / 4; n++) {
+    colors[n] = this->backColor;
   }
-  return priv->allocTarget;
-}
-
-uint32_t makeColor(PrivateState* priv) {
-  return priv->frontColor;
+  return this->allocTarget;
 }
 
 void putRange(GfxTarget* target, int x0, int y0, int x1, int y1, uint32_t color);
 
-Napi::Value RasterJS::Initialize(const Napi::CallbackInfo& info) {
+Napi::Value Plane::ResetState(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  if( SDL_Init( SDL_INIT_VIDEO ) < 0 ) {
-    printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
-  } else {
-    sdl_initialized = 1;
+  if (this->allocTarget) {
+    free(this->allocTarget);
+    this->allocTarget = NULL;
+    this->drawTarget = NULL;
   }
   return Napi::Number::New(env, 0);
 }
 
-Napi::Value RasterJS::ResetState(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  viewWidth = 0;
-  viewHeight = 0;
-  PrivateState* priv = (PrivateState*)this->priv;
-  if (priv->allocTarget) {
-    free(priv->allocTarget);
-    priv->allocTarget = NULL;
-    priv->drawTarget = NULL;
-  }
-  return Napi::Number::New(env, 0);
-}
-
-Napi::Value RasterJS::CreateWindow(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-
-  if (!sdl_initialized) {
-    return Napi::Number::New(env, -1);
-  }
-
-  if (info.Length() < 2) {
-    printf("CreateWindow needs two parameters\n");
-    exit(1);
-  }
-
-  int zoomLevel = info[2].As<Napi::Number>().Int32Value();
-  // TODO: Remove global variables.
-  windowWidth = viewWidth * zoomLevel;
-  windowHeight = viewHeight * zoomLevel;
-
-  // Create window
-  window = SDL_CreateWindow(
-      "RasterJS",
-      SDL_WINDOWPOS_UNDEFINED,
-      SDL_WINDOWPOS_UNDEFINED,
-      windowWidth, windowHeight,
-      SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
-  if (window == NULL) {
-    printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
-    exit(1);
-  }
-  return Napi::Number::New(env, 0);
-}
-
-Napi::Value RasterJS::CreateDisplay(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  viewWidth = info[0].As<Napi::Number>().Int32Value();
-  viewHeight = info[1].As<Napi::Number>().Int32Value();
-  return Napi::Number::New(env, 0);
-}
-
-Napi::Value RasterJS::HandleEvent(const Napi::CallbackInfo& info) {
-  PrivateState* priv = (PrivateState*)this->priv;
-  Napi::Env env = info.Env();
-  Napi::String eventName = info[0].ToString();
-  if (eventName.Utf8Value() == std::string("keypress")) {
-    Napi::Function handleFunc = info[1].As<Napi::Function>();
-    priv->keyHandleFunc = Napi::Persistent(handleFunc);
-  }
-  return Napi::Number::New(env, 0);
-}
-
-Napi::Value RasterJS::SaveTo(const Napi::CallbackInfo& info) {
+Napi::Value Plane::SaveTo(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if (!viewWidth || !viewHeight) {
     printf("cannot save file with zero size\n");
     exit(1);
   }
 
-  PrivateState* priv = (PrivateState*)this->priv;
   Napi::String savepath = info[0].ToString();
   write_png(savepath.Utf8Value().c_str(),
-            (unsigned char*)priv->drawTarget->buffer,
-            viewWidth,
-            viewHeight,
-            priv->drawTarget->pitch);
+            (unsigned char*)this->drawTarget->buffer,
+            this->viewWidth,
+            this->viewHeight,
+            this->drawTarget->pitch);
   return Napi::Number::New(env, 0);
-}
-
-void on_render(SDL_Window* window, SDL_Renderer* renderer);
-
-Napi::Value RasterJS::AppRenderAndLoop(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-
-  if (!sdl_initialized || !window) {
-    return Napi::Number::New(env, -1);
-  }
-
-  if ((info.Length() < 2) || (!info[0].IsFunction()) || (!info[1].IsNumber())) {
-    printf("AppRenderAndLoop arguments: function, bool\n");
-    exit(1);
-  }
-
-  PrivateState* priv = (PrivateState*)this->priv;
-
-  Napi::Function renderFunc = info[0].As<Napi::Function>();
-  int num_render = info[1].ToNumber().Int32Value();
-
-  // Get window renderer
-  renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-  if (!renderer) {
-    printf("SDL_CreateRenderer() failed with \"%s.\"", SDL_GetError());
-    return Napi::Number::New(env, -1);
-  }
-
-  texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888,
-                              SDL_TEXTUREACCESS_STREAMING,
-                              viewWidth, viewHeight);
-
-  TimeKeeper keeper;
-  keeper.Init();
-
-  // A basic main loop to handle events
-  priv->is_running = true;
-  SDL_Event event;
-  while (priv->is_running) {
-    if (SDL_PollEvent(&event)) {
-      switch (event.type) {
-      case SDL_QUIT:
-        priv->is_running = false;
-        break;
-      case SDL_KEYDOWN:
-        if (event.key.keysym.sym == SDLK_ESCAPE) {
-          priv->is_running = false;
-        } else if (!priv->keyHandleFunc.IsEmpty()) {
-          int code = event.key.keysym.sym;
-          std::string s(1, char(code));
-          Napi::String str = Napi::String::New(env, s);
-          Napi::Object obj = Napi::Object::New(env);
-          obj["key"] = str;
-          napi_value val = obj;
-          priv->keyHandleFunc.Call({val});
-        }
-        break;
-      case SDL_WINDOWEVENT_CLOSE:
-        priv->is_running = false;
-        break;
-      default:
-        break;
-      }
-    }
-
-    if (num_render == 0) {
-      SDL_Delay(16);
-      continue;
-    }
-
-    StartFrame();
-
-    // If an error happened, break the loop
-    renderFunc.Call(0, NULL);
-    if (env.IsExceptionPending()) {
-      break;
-    }
-
-    if (priv->drawTarget) {
-      SDL_UpdateTexture(texture, NULL, priv->drawTarget->buffer,
-                        priv->drawTarget->pitch);
-    }
-
-    SDL_RenderCopy(renderer, texture, NULL, NULL);
-    // Swap buffers to display
-    SDL_RenderPresent(renderer);
-
-    keeper.WaitNextFrame();
-
-    if (num_render > 0) {
-      num_render--;
-    }
-
-    EndFrame();
-  }
-
-  return Napi::Number::New(env, 0);
-}
-
-Napi::Value RasterJS::AppQuit(const Napi::CallbackInfo& info) {
-  PrivateState* priv = (PrivateState*)this->priv;
-  priv->is_running = false;
-  return info.Env().Null();
 }
 
 #define TAU 6.283
 
 #define OPAQUE 255
 
-void RasterJS::StartFrame() {
-  SDL_RenderClear(renderer);
-}
-
-void RasterJS::EndFrame() {
-  PrivateState* priv = (PrivateState*)this->priv;
-  priv->drawTarget = NULL;
-}
-
-Napi::Value RasterJS::AssignRgbMapping(const Napi::CallbackInfo& info) {
-  PrivateState* priv = (PrivateState*)this->priv;
-
+Napi::Value Plane::AssignRgbMapping(const Napi::CallbackInfo& info) {
   Napi::Value elem = info[0];
   Napi::Object list = elem.ToObject();
   Napi::Value list_length = list.Get("length");
 
   int num = list_length.As<Napi::Number>().Int32Value();
-  priv->rgb_map_length = num;
+  this->rgb_map_length = num;
 
   for (int i = 0; i < num; i++) {
     elem = list[uint32_t(i)];
     int val = elem.As<Napi::Number>().Int32Value();
     // Store values as little-endian RGBA.
-    priv->rgb_map[i] = val * 0x100 + 0xff;
+    this->rgb_map[i] = val * 0x100 + 0xff;
   }
 
   return info.Env().Null();
 }
 
-Napi::Value RasterJS::FillColorizedImage(const Napi::CallbackInfo& info) {
-  PrivateState* priv = (PrivateState*)this->priv;
-
-  GfxTarget* target = priv->drawTarget;
+Napi::Value Plane::FillColorizedImage(const Napi::CallbackInfo& info) {
+  GfxTarget* target = this->drawTarget;
   int x_size = target->x_size;
   int y_size = target->y_size;
   int pitch = target->pitch;
@@ -385,7 +161,7 @@ Napi::Value RasterJS::FillColorizedImage(const Napi::CallbackInfo& info) {
 
   for (int y = 0; y < y_size; y++) {
     for (int x = 0; x < x_size; x++) {
-      color = priv->drawTarget->buffer[x + y*pitch/4];
+      color = this->drawTarget->buffer[x + y*pitch/4];
       auto it = color_lookup.find(color);
       if (it == color_lookup.end()) {
         color_lookup[color] = index_value;
@@ -422,19 +198,17 @@ Napi::Value RasterJS::FillColorizedImage(const Napi::CallbackInfo& info) {
   return info.Env().Null();
 }
 
-Napi::Value RasterJS::SetColor(const Napi::CallbackInfo& info) {
-  PrivateState* priv = (PrivateState*)this->priv;
-
+Napi::Value Plane::SetColor(const Napi::CallbackInfo& info) {
   Napi::Value val = info[0];
   int color = val.As<Napi::Number>().Int32Value();
 
-  uint32_t rgb = priv->rgb_map[color % priv->rgb_map_length];
-  priv->frontColor = rgb;
+  uint32_t rgb = this->rgb_map[color % this->rgb_map_length];
+  this->frontColor = rgb;
 
   return info.Env().Null();
 }
 
-Napi::Value RasterJS::PutRect(const Napi::CallbackInfo& info) {
+Napi::Value Plane::PutRect(const Napi::CallbackInfo& info) {
   // TODO: Validate length of parameters, all should be numbers
 
   Napi::Value xval = info[0];
@@ -448,45 +222,42 @@ Napi::Value RasterJS::PutRect(const Napi::CallbackInfo& info) {
   int w = round(wval.As<Napi::Number>().FloatValue());
   int h = round(hval.As<Napi::Number>().FloatValue());
 
-  PrivateState* priv = (PrivateState*)this->priv;
-  if (!priv->drawTarget) {
-    priv->drawTarget = instantiateDrawTarget(priv);
+  if (!this->drawTarget) {
+    this->drawTarget = instantiateDrawTarget();
   }
 
-  uint32_t color = makeColor(priv);
-  drawRect(priv->drawTarget, x, y, x+w, y+h, fill, color);
+  uint32_t color = this->frontColor;
+  drawRect(this->drawTarget, x, y, x+w, y+h, fill, color);
 
   Napi::Env env = info.Env();
   return Napi::Number::New(env, 0);
 }
 
-Napi::Value RasterJS::PutPoint(const Napi::CallbackInfo& info) {
+Napi::Value Plane::PutPoint(const Napi::CallbackInfo& info) {
   Napi::Value xval = info[0];
   Napi::Value yval = info[1];
 
   int x = round(xval.As<Napi::Number>().FloatValue());
   int y = round(yval.As<Napi::Number>().FloatValue());
 
-  PrivateState* priv = (PrivateState*)this->priv;
-  uint32_t color = makeColor(priv);
-  if (!priv->drawTarget) {
-    priv->drawTarget = instantiateDrawTarget(priv);
+  uint32_t color = this->frontColor;
+  if (!this->drawTarget) {
+    this->drawTarget = instantiateDrawTarget();
   }
-  priv->drawTarget->buffer[x + y*priv->drawTarget->pitch/4] = color;
+  this->drawTarget->buffer[x + y*this->drawTarget->pitch/4] = color;
 
   return info.Env().Null();
 }
 
-Napi::Value RasterJS::PutLine(const Napi::CallbackInfo& info) {
+Napi::Value Plane::PutLine(const Napi::CallbackInfo& info) {
   Napi::Value xval  = info[0];
   Napi::Value yval  = info[1];
   Napi::Value x1val = info[2];
   Napi::Value y1val = info[3];
   Napi::Value ccval = info[4];
 
-  PrivateState* priv = (PrivateState*)this->priv;
-  if (!priv->drawTarget) {
-    priv->drawTarget = instantiateDrawTarget(priv);
+  if (!this->drawTarget) {
+    this->drawTarget = instantiateDrawTarget();
   }
 
   int x0 = round(xval.As<Napi::Number>().FloatValue());
@@ -495,7 +266,7 @@ Napi::Value RasterJS::PutLine(const Napi::CallbackInfo& info) {
   int y1 = round(y1val.As<Napi::Number>().FloatValue());
   int connectCorners = ccval.As<Napi::Number>().Int32Value();
 
-  uint32_t color = makeColor(priv);
+  uint32_t color = this->frontColor;
 
   PointList point_list;
   point_list.num = 2;
@@ -506,21 +277,20 @@ Napi::Value RasterJS::PutLine(const Napi::CallbackInfo& info) {
   point_list.ys[0] = y0;
   point_list.ys[1] = y1;
 
-  drawLine(priv->drawTarget, &point_list, color, connectCorners);
+  drawLine(this->drawTarget, &point_list, color, connectCorners);
 
   Napi::Env env = info.Env();
   return Napi::Number::New(env, 0);
 }
 
-Napi::Value RasterJS::PutPolygon(const Napi::CallbackInfo& info) {
+Napi::Value Plane::PutPolygon(const Napi::CallbackInfo& info) {
   if (info.Length() != 4) {
     printf("expected 4 arguments to this function\n");
     return info.Env().Null();
   }
 
-  PrivateState* priv = (PrivateState*)this->priv;
-  if (!priv->drawTarget) {
-    priv->drawTarget = instantiateDrawTarget(priv);
+  if (!this->drawTarget) {
+    this->drawTarget = instantiateDrawTarget();
   }
 
   int baseX = info[0].ToNumber().Int32Value();
@@ -556,63 +326,42 @@ Napi::Value RasterJS::PutPolygon(const Napi::CallbackInfo& info) {
     }
 
     bool fill = info[3].ToBoolean().Value();
-    uint32_t color = makeColor(priv);
+    uint32_t color = this->frontColor;
     if (fill) {
-      fillPolygon(priv->drawTarget, &point_list, color);
+      fillPolygon(this->drawTarget, &point_list, color);
     } else {
-      drawPolygonOutline(priv->drawTarget, &point_list, color);
+      drawPolygonOutline(this->drawTarget, &point_list, color);
     }
   }
 
   return info.Env().Null();
 }
 
-Napi::Value RasterJS::FillBackground(const Napi::CallbackInfo& info) {
-  PrivateState* priv = (PrivateState*)this->priv;
-
+Napi::Value Plane::FillBackground(const Napi::CallbackInfo& info) {
   Napi::Value val = info[0];
   int color = round(val.As<Napi::Number>().FloatValue());
 
-  uint32_t rgb = priv->rgb_map[color % priv->rgb_map_length];
-  priv->backColor = rgb;
+  uint32_t rgb = this->rgb_map[color % this->rgb_map_length];
+  this->backColor = rgb;
 
-  if (!priv->drawTarget) {
+  if (!this->drawTarget) {
     if (viewWidth && viewHeight) {
-      priv->drawTarget = instantiateDrawTarget(priv);
+      this->drawTarget = instantiateDrawTarget();
     }
   }
 
   return info.Env().Null();
 }
 
-Image** g_img_list = NULL;
-int num_img = 0;
+// TODO: Fix me
+extern Image** g_img_list;
+extern int num_img;
 
-Napi::Value RasterJS::LoadImage(const Napi::CallbackInfo& info) {
-  Napi::Value val = info[0];
-  Napi::String str = val.ToString();
-  std::string s = str.Utf8Value();
-  // TODO: Other formats
-  Image* img = LoadPng(s.c_str());
-  if (g_img_list == NULL) {
-    int capacity = sizeof(Image*) * 100;
-    g_img_list = (Image**)malloc(capacity);
-    memset(g_img_list, 0, capacity);
+Napi::Value Plane::PutImage(const Napi::CallbackInfo& info) {
+  if (!this->drawTarget) {
+    this->drawTarget = instantiateDrawTarget();
   }
-  int id = num_img;
-  g_img_list[num_img] = img;
-  num_img++;
-
-  Napi::Env env = info.Env();
-  return Napi::Number::New(env, id);
-}
-
-Napi::Value RasterJS::PutImage(const Napi::CallbackInfo& info) {
-  PrivateState* priv = (PrivateState*)this->priv;
-  if (!priv->drawTarget) {
-    priv->drawTarget = instantiateDrawTarget(priv);
-  }
-  GfxTarget* target = priv->drawTarget;
+  GfxTarget* target = this->drawTarget;
 
   Napi::Object imgObj = info[0].ToObject();
   int baseX = info[1].ToNumber().Int32Value();
@@ -678,7 +427,7 @@ Napi::Value RasterJS::PutImage(const Napi::CallbackInfo& info) {
   return info.Env().Null();
 }
 
-Napi::Value RasterJS::PutCircleFromArc(const Napi::CallbackInfo& info) {
+Napi::Value Plane::PutCircleFromArc(const Napi::CallbackInfo& info) {
   int baseX = info[0].ToNumber().Int32Value();
   int baseY = info[1].ToNumber().Int32Value();
 
@@ -715,12 +464,11 @@ Napi::Value RasterJS::PutCircleFromArc(const Napi::CallbackInfo& info) {
 
   bool fill = info[4].ToBoolean().Value();
 
-  PrivateState* priv = (PrivateState*)this->priv;
-  if (!priv->drawTarget) {
-    priv->drawTarget = instantiateDrawTarget(priv);
+  if (!this->drawTarget) {
+    this->drawTarget = instantiateDrawTarget();
   }
-  GfxTarget* target = priv->drawTarget;
-  uint32_t color = makeColor(priv);
+  GfxTarget* target = this->drawTarget;
+  uint32_t color = this->frontColor;
 
   for (int i = 0; i < num_points; i++) {
     Napi::Value elem = parameter_list[uint32_t(i)];
@@ -766,12 +514,11 @@ Napi::Value RasterJS::PutCircleFromArc(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, 0);
 }
 
-Napi::Value RasterJS::PutFrameMemory(const Napi::CallbackInfo& info) {
-  PrivateState* priv = (PrivateState*)this->priv;
-  if (!priv->drawTarget) {
-    priv->drawTarget = instantiateDrawTarget(priv);
+Napi::Value Plane::PutFrameMemory(const Napi::CallbackInfo& info) {
+  if (!this->drawTarget) {
+    this->drawTarget = instantiateDrawTarget();
   }
-  GfxTarget* target = priv->drawTarget;
+  GfxTarget* target = this->drawTarget;
 
   if (info.Length() < 1) {
     printf("PutFrameMemory needs 1 param");
@@ -788,7 +535,7 @@ Napi::Value RasterJS::PutFrameMemory(const Napi::CallbackInfo& info) {
   for (int y = 0; y < target->y_size; y++) {
     for (int x = 0; x < target->x_size; x++) {
       unsigned char color = data[x + y*target->pitch/4];
-      uint32_t rgb = priv->rgb_map[color % priv->rgb_map_length];
+      uint32_t rgb = this->rgb_map[color % this->rgb_map_length];
       target->buffer[x + y*target->pitch/4] = rgb;
     }
   }
@@ -797,12 +544,11 @@ Napi::Value RasterJS::PutFrameMemory(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, 0);
 }
 
-Napi::Value RasterJS::SaveImage(const Napi::CallbackInfo& info) {
-  PrivateState* priv = (PrivateState*)this->priv;
-  if (!priv->drawTarget) {
-    priv->drawTarget = instantiateDrawTarget(priv);
+Napi::Value Plane::SaveImage(const Napi::CallbackInfo& info) {
+  if (!this->drawTarget) {
+    this->drawTarget = instantiateDrawTarget();
   }
-  GfxTarget* target = priv->drawTarget;
+  GfxTarget* target = this->drawTarget;
 
   if (info.Length() < 2) {
     printf("SaveImage needs 2 params");

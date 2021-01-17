@@ -193,7 +193,6 @@ Runner.prototype.fillFrame_params = ['fillerFunc:f'];
 Runner.prototype.fillFrame = function(fillerFunc) {
   var mem = frameMemory.NewFrameMemory(this._config.screenWidth,
                                        this._config.screenHeight);
-  // TODO: Move to another sourcefile?
   mem.fill(this._config.bgColor);
   // If there was a buffer last frame, and it had a back-buffer, use the
   // previous front-buffer as the back-buffer for this next frame.
@@ -336,7 +335,7 @@ MethodSet.prototype.makeShape = function(method, params) {
 }
 
 MethodSet.prototype.handleEvent = function(eventName, callback) {
-  this.owner.renderer.handleEvent(eventName, callback);
+  this.owner.display.handleEvent(eventName, callback);
 }
 
 MethodSet.prototype.getPaletteEntry = function(x, y) {

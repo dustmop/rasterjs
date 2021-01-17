@@ -219,11 +219,10 @@ Napi::Value SDLDisplay::AppQuit(const Napi::CallbackInfo& info) {
 
 void SDLDisplay::StartFrame() {
   SDL_RenderClear(g_renderer);
+  this->renderPlane->BeginFrame();
 }
 
 void SDLDisplay::EndFrame() {
-  // TODO: Forget why we need this.
-  //this->drawTarget = NULL;
 }
 
 Image** g_img_list = NULL;

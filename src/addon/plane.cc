@@ -22,9 +22,7 @@ void Plane::InitClass(Napi::Env env, Napi::Object exports) {
       {InstanceMethod("resetState", &Plane::ResetState),
        InstanceMethod("setSize", &Plane::SetSize),
        InstanceMethod("setColor", &Plane::SetColor),
-       //InstanceMethod("setRealColor", &Plane::SetRealColor),
        InstanceMethod("fillBackground", &Plane::FillBackground),
-       //InstanceMethod("fillRealBackground", &Plane::FillRealBackground),
        InstanceMethod("fillColorizedImage", &Plane::FillColorizedImage),
        InstanceMethod("saveTo", &Plane::SaveTo),
        InstanceMethod("saveImage", &Plane::SaveImage),
@@ -54,6 +52,7 @@ Plane::Plane(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Plane>(info) {
   this->allocTarget = NULL;
   this->viewWidth = 0;
   this->viewHeight = 0;
+  this->needErase = false;
 };
 
 Napi::Object Plane::NewInstance(Napi::Env env, Napi::Value arg) {
@@ -101,7 +100,23 @@ GfxTarget* Plane::instantiateDrawTarget() {
   return this->allocTarget;
 }
 
+void Plane::maybeErase() {
+  if (!this->needErase) {
+    return;
+  }
+  // Erase the buffer contents.
+  uint32_t* colors = (uint32_t*)this->allocTarget->buffer;
+  for (int n = 0; n < this->allocTarget->capacity / 4; n++) {
+    colors[n] = this->backColor;
+  }
+  this->needErase = false;
+}
+
 void putRange(GfxTarget* target, int x0, int y0, int x1, int y1, uint32_t color);
+
+void Plane::BeginFrame() {
+  this->needErase = false;
+}
 
 Napi::Value Plane::ResetState(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
@@ -172,6 +187,8 @@ Napi::Value Plane::AddRgbMapEntry(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value Plane::FillColorizedImage(const Napi::CallbackInfo& info) {
+  this->needErase = true;
+
   GfxTarget* target = this->drawTarget;
   int x_size = target->x_size;
   int y_size = target->y_size;
@@ -233,6 +250,7 @@ Napi::Value Plane::SetColor(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value Plane::PutRect(const Napi::CallbackInfo& info) {
+  this->maybeErase();
   // TODO: Validate length of parameters, all should be numbers
 
   Napi::Value xval = info[0];
@@ -258,6 +276,8 @@ Napi::Value Plane::PutRect(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value Plane::PutPoint(const Napi::CallbackInfo& info) {
+  this->maybeErase();
+
   Napi::Value xval = info[0];
   Napi::Value yval = info[1];
 
@@ -274,6 +294,8 @@ Napi::Value Plane::PutPoint(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value Plane::PutLine(const Napi::CallbackInfo& info) {
+  this->maybeErase();
+
   Napi::Value xval  = info[0];
   Napi::Value yval  = info[1];
   Napi::Value x1val = info[2];
@@ -308,6 +330,8 @@ Napi::Value Plane::PutLine(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value Plane::PutPolygon(const Napi::CallbackInfo& info) {
+  this->maybeErase();
+
   if (info.Length() != 4) {
     printf("expected 4 arguments to this function\n");
     return info.Env().Null();
@@ -373,6 +397,7 @@ Napi::Value Plane::FillBackground(const Napi::CallbackInfo& info) {
       this->drawTarget = instantiateDrawTarget();
     }
   }
+  this->needErase = true;
 
   return info.Env().Null();
 }
@@ -382,6 +407,8 @@ extern Image** g_img_list;
 extern int num_img;
 
 Napi::Value Plane::PutImage(const Napi::CallbackInfo& info) {
+  this->maybeErase();
+
   if (!this->drawTarget) {
     this->drawTarget = instantiateDrawTarget();
   }
@@ -452,6 +479,8 @@ Napi::Value Plane::PutImage(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value Plane::PutCircleFromArc(const Napi::CallbackInfo& info) {
+  this->maybeErase();
+
   int baseX = info[0].ToNumber().Int32Value();
   int baseY = info[1].ToNumber().Int32Value();
 
@@ -539,6 +568,8 @@ Napi::Value Plane::PutCircleFromArc(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value Plane::PutFrameMemory(const Napi::CallbackInfo& info) {
+  this->maybeErase();
+
   if (!this->drawTarget) {
     this->drawTarget = instantiateDrawTarget();
   }
@@ -569,6 +600,8 @@ Napi::Value Plane::PutFrameMemory(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value Plane::SaveImage(const Napi::CallbackInfo& info) {
+  this->maybeErase();
+
   if (!this->drawTarget) {
     this->drawTarget = instantiateDrawTarget();
   }

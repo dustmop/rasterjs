@@ -10,14 +10,13 @@ class Plane : public Napi::ObjectWrap<Plane> {
   static void InitClass(Napi::Env env, Napi::Object exports);
   static Napi::Object NewInstance(Napi::Env env, Napi::Value arg);
   Plane(const Napi::CallbackInfo& info);
+  void BeginFrame();
 
  private:
   Napi::Value ResetState(const Napi::CallbackInfo& info);
   Napi::Value SetSize(const Napi::CallbackInfo& info);
   Napi::Value SetColor(const Napi::CallbackInfo& info);
-  //Napi::Value SetRealColor(const Napi::CallbackInfo& info);
   Napi::Value FillBackground(const Napi::CallbackInfo& info);
-  //Napi::Value FillRealBackground(const Napi::CallbackInfo& info);
   Napi::Value FillColorizedImage(const Napi::CallbackInfo& info);
   Napi::Value SaveTo(const Napi::CallbackInfo& info);
   Napi::Value SaveImage(const Napi::CallbackInfo& info);
@@ -33,6 +32,7 @@ class Plane : public Napi::ObjectWrap<Plane> {
   Napi::Value PutFrameMemory(const Napi::CallbackInfo& info);
 
   GfxTarget* instantiateDrawTarget();
+  void maybeErase();
 
   int rgb_map_length;
   int rgb_map[256];
@@ -43,6 +43,7 @@ class Plane : public Napi::ObjectWrap<Plane> {
   GfxTarget* drawTarget;
   int viewWidth;
   int viewHeight;
+  int needErase;
 };
 
 #endif

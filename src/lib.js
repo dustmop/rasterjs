@@ -126,6 +126,10 @@ Raster.prototype.getPaletteEntry = function(x, y) {
   return this.methods.getPaletteEntry(x, y);
 }
 
+Raster.prototype.getPaletteAll = function() {
+  return this.methods.getPaletteAll();
+}
+
 ////////////////////////////////////////
 // Rendering functionality
 

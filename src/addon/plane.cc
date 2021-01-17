@@ -23,7 +23,7 @@ void Plane::InitClass(Napi::Env env, Napi::Object exports) {
        InstanceMethod("setSize", &Plane::SetSize),
        InstanceMethod("setColor", &Plane::SetColor),
        InstanceMethod("fillBackground", &Plane::FillBackground),
-       InstanceMethod("fillColorizedImage", &Plane::FillColorizedImage),
+       InstanceMethod("retrieveRealContent", &Plane::RetrieveRealContent),
        InstanceMethod("saveTo", &Plane::SaveTo),
        InstanceMethod("saveImage", &Plane::SaveImage),
        InstanceMethod("assignRgbMap", &Plane::AssignRgbMap),
@@ -190,36 +190,42 @@ Napi::Value Plane::AddRgbMapEntry(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, size);
 }
 
-Napi::Value Plane::FillColorizedImage(const Napi::CallbackInfo& info) {
+Napi::Value Plane::RetrieveRealContent(const Napi::CallbackInfo& info) {
   GfxTarget* target = this->drawTarget;
   int x_size = target->x_size;
   int y_size = target->y_size;
   int pitch = target->pitch;
-  uint32_t color;
+  uint32_t rgb_val;
 
+  // u8 valued pixel data to be filled from the buffer
   std::vector<u8_t> pixel_data;
-  std::map<uint32_t, u8_t> color_lookup;
-  u8_t index_value = 0;
+  // Map from rgb values to u8 values
+  std::map<uint32_t, u8_t> color_use_lookup;
+  u8_t num_colors = 0;
+  // match the buffer
   pixel_data.resize(y_size * pitch/4);
 
+  // Convert rgb colors in buffer into pixel data, and a collection
+  // of all unique colors used
   for (int y = 0; y < y_size; y++) {
     for (int x = 0; x < x_size; x++) {
-      color = this->drawTarget->buffer[x + y*pitch/4];
-      auto it = color_lookup.find(color);
-      if (it == color_lookup.end()) {
-        color_lookup[color] = index_value;
-        pixel_data[x + y*pitch/4] = index_value;
-        index_value++;
+      rgb_val = this->drawTarget->buffer[x + y*pitch/4];
+      auto it = color_use_lookup.find(rgb_val);
+      if (it == color_use_lookup.end()) {
+        color_use_lookup[rgb_val] = num_colors;
+        pixel_data[x + y*pitch/4] = num_colors;
+        num_colors++;
       } else {
         pixel_data[x + y*pitch/4] = it->second;
       }
     }
   }
 
-  std::vector<uint32_t> color_palette;
-  color_palette.resize(index_value);
-  for (auto it = color_lookup.begin(); it != color_lookup.end(); it++) {
-    color_palette[it->second] = it->first;
+  // Merge 32-bit rgb values from color usage table to make real color list
+  std::vector<uint32_t> real_colors;
+  real_colors.resize(num_colors);
+  for (auto it = color_use_lookup.begin(); it != color_use_lookup.end(); it++) {
+    real_colors[it->second] = it->first;
   }
 
   Napi::Value elem = info[0];
@@ -228,16 +234,20 @@ Napi::Value Plane::FillColorizedImage(const Napi::CallbackInfo& info) {
   Napi::Value bufferval = container.Get("buffer");
 
   // TODO: Type check IsArray() for these
+  // Palette is a list of real colors used by image
   Napi::Object palette = paletteval.ToObject();
+  // Buffer is the u8 values in the plane
   Napi::Object buffer = bufferval.ToObject();
 
   for (size_t i = 0; i < pixel_data.size(); i++) {
     buffer[i] = pixel_data[i];
   }
-  for (size_t i = 0; i < color_palette.size(); i++) {
-    palette[i] = color_palette[i];
+  for (size_t i = 0; i < real_colors.size(); i++) {
+    palette[i] = real_colors[i];
   }
-
+  // Assign pitch of image
+  Napi::Env env = info.Env();
+  container.Set("pitch", Napi::Number::New(env, pitch/4));
   return info.Env().Null();
 }
 

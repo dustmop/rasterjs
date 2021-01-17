@@ -342,9 +342,11 @@ MethodSet.prototype.getPaletteEntry = function(x, y) {
   let image = {
     palette: [],
     buffer: [],
+    pitch: null,
   };
-  this.owner.normalPlane.fillColorizedImage(image);
+  this.owner.normalPlane.retrieveRealContent(image);
 
+  // Build index from each 8-bt color to where it is used in the plane
   let index = {};
   for (let k = 0; k < image.buffer.length; k++) {
     let color = image.buffer[k];
@@ -354,11 +356,31 @@ MethodSet.prototype.getPaletteEntry = function(x, y) {
     index[color].push(k);
   }
 
-  // TODO: Fix this.
-  let pitch = this.owner._config.screenWidth;
+  let pitch = image.pitch;
   let val = image.buffer[x + y*pitch];
-  return paletteEntry.NewPaletteEntry(this.owner.normalPlane, image.palette,
-                                      image.buffer, pitch, index, val);
+  let real = image.palette[val];
+
+  return paletteEntry.NewPaletteEntry(this.owner.normalPlane, pitch,
+                                      index, val, real);
+}
+
+MethodSet.prototype.getPaletteAll = function() {
+  let image = {
+    palette: [],
+    buffer: [],
+    pitch: null,
+  };
+  this.owner.normalPlane.retrieveRealContent(image);
+
+  let all = [];
+  for (let k = 0; k < image.palette.length; k++) {
+    let color = Math.floor(image.palette[k] / 0x100);
+    let ent = paletteEntry.NewPaletteEntry(this.owner.normalPlane, image.pitch,
+                                          null, k, color);
+    all.push(ent);
+  }
+
+  return all;
 }
 
 ////////////////////////////////////////

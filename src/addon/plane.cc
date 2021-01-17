@@ -104,6 +104,10 @@ void Plane::maybeErase() {
   if (!this->needErase) {
     return;
   }
+  if (!this->drawTarget) {
+    this->drawTarget = instantiateDrawTarget();
+  }
+
   // Erase the buffer contents.
   uint32_t* colors = (uint32_t*)this->allocTarget->buffer;
   for (int n = 0; n < this->allocTarget->capacity / 4; n++) {
@@ -187,8 +191,6 @@ Napi::Value Plane::AddRgbMapEntry(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value Plane::FillColorizedImage(const Napi::CallbackInfo& info) {
-  this->needErase = true;
-
   GfxTarget* target = this->drawTarget;
   int x_size = target->x_size;
   int y_size = target->y_size;

@@ -30,7 +30,7 @@ void Plane::InitClass(Napi::Env env, Napi::Object exports) {
        InstanceMethod("clearRgbMap", &Plane::ClearRgbMap),
        InstanceMethod("addRgbMapEntry", &Plane::AddRgbMapEntry),
        InstanceMethod("putRect", &Plane::PutRect),
-       InstanceMethod("putPoint", &Plane::PutPoint),
+       InstanceMethod("putDot", &Plane::PutDot),
        InstanceMethod("putPolygon", &Plane::PutPolygon),
        InstanceMethod("putLine", &Plane::PutLine),
        InstanceMethod("putImage", &Plane::PutImage),
@@ -287,7 +287,7 @@ Napi::Value Plane::PutRect(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, 0);
 }
 
-Napi::Value Plane::PutPoint(const Napi::CallbackInfo& info) {
+Napi::Value Plane::PutDot(const Napi::CallbackInfo& info) {
   this->maybeErase();
 
   Napi::Value xval = info[0];

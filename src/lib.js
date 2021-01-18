@@ -165,8 +165,8 @@ Raster.prototype.drawRect = function() {
   this.cmd.push(['drawRect', arguments]);
 }
 
-Raster.prototype.drawPoint = function() {
-  this.cmd.push(['drawPoint', arguments]);
+Raster.prototype.drawDot = function() {
+  this.cmd.push(['drawDot', arguments]);
 }
 
 Raster.prototype.fillPolygon = function() {

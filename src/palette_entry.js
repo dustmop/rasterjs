@@ -32,7 +32,7 @@ PaletteEntry.prototype.setColor = function(color) {
     let e = elems[i];
     let x = e % this.pitch;
     let y = Math.floor(e / this.pitch);
-    this.plane.putPoint(x, y);
+    this.plane.putDot(x, y);
   }
 }
 

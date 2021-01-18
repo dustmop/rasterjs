@@ -18,7 +18,7 @@ describe('Simple', function() {
     ra.drawSquare({x: 8, y: 1, size: 4})
     // Purple dot
     ra.setColor(0x1f);
-    ra.drawPoint({x: 1, y: 6})
+    ra.drawDot({x: 1, y: 6})
     // Orange diagonal line
     ra.setColor(0x21);
     ra.drawLine(1, 8, 12, 10);

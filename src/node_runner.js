@@ -120,11 +120,11 @@ Runner.prototype.drawLine = function(x0, y0, x1, y1, cc) {
   this.normalPlane.putLine(tx + x0, ty + y0, tx + x1, ty + y1, cc);
 }
 
-Runner.prototype.drawPoint_params = ['x:i', 'y:i'];
-Runner.prototype.drawPoint = function(x, y) {
+Runner.prototype.drawDot_params = ['x:i', 'y:i'];
+Runner.prototype.drawDot = function(x, y) {
   let [tx, ty] = this._getTranslation();
   this.initMem.push([tx + x, ty + y, this._config.color]);
-  this.normalPlane.putPoint(tx + x, ty + y);
+  this.normalPlane.putDot(tx + x, ty + y);
 }
 
 Runner.prototype.fillSquare_params = ['x:i', 'y:i', 'size:i'];
@@ -200,7 +200,7 @@ Runner.prototype.fillFrame = function(fillerFunc) {
     mem._back_buffer = this.initBackBuffer;
     this.initBackBuffer = null;
   }
-  // TODO: A hack to have drawPoint affect the initial mem state
+  // TODO: A hack to have drawDot affect the initial mem state
   for (let i = 0; i < this.initMem.length; i++) {
     let row = this.initMem[i];
     let x = row[0];

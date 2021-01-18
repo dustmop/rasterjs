@@ -104,8 +104,8 @@ Runner.prototype.fillBackground = function(color) {
 }
 
 Runner.prototype.fillRealBackground_params = ['rgb:i'];
-Runner.prototype.fillRealBackground = function(rgb) {
-  let color = this.normalPlane.addRgbMapEntry(rgb);
+Runner.prototype.fillRealBackground = function(real) {
+  let color = this.normalPlane.addRgbMapEntry(real);
   this.fillBackground(color);
 }
 
@@ -357,11 +357,11 @@ MethodSet.prototype.getPaletteEntry = function(x, y) {
   }
 
   let pitch = image.pitch;
-  let val = image.buffer[x + y*pitch];
-  let real = image.palette[val];
+  let color = image.buffer[x + y*pitch];
+  let real = image.palette[color];
 
   return paletteEntry.NewPaletteEntry(this.owner.normalPlane, pitch,
-                                      index, val, real);
+                                      index, color, real);
 }
 
 MethodSet.prototype.getPaletteAll = function() {
@@ -374,9 +374,9 @@ MethodSet.prototype.getPaletteAll = function() {
 
   let all = [];
   for (let k = 0; k < image.palette.length; k++) {
-    let color = Math.floor(image.palette[k] / 0x100);
+    let real = Math.floor(image.palette[k] / 0x100);
     let ent = paletteEntry.NewPaletteEntry(this.owner.normalPlane, image.pitch,
-                                          null, k, color);
+                                          null, k, real);
     all.push(ent);
   }
 

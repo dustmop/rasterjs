@@ -85,8 +85,9 @@ GfxTarget* Plane::instantiateDrawTarget() {
     }
     this->allocTarget->x_size = this->viewWidth;
     this->allocTarget->y_size = this->viewHeight;
-    this->allocTarget->pitch = this->viewWidth * 4;
-    this->allocTarget->capacity = this->allocTarget->pitch * this->viewHeight;
+    this->allocTarget->row_size = this->viewWidth;
+    int pitch = this->allocTarget->row_size*4;
+    this->allocTarget->capacity = pitch * this->viewHeight;
     this->allocTarget->buffer = (uint32_t*)malloc(this->allocTarget->capacity);
     if (this->allocTarget->buffer == NULL) {
       printf("allocTarget.buffer failed to malloc\n");
@@ -140,11 +141,12 @@ Napi::Value Plane::SaveTo(const Napi::CallbackInfo& info) {
   }
 
   Napi::String savepath = info[0].ToString();
+  int pitch = this->drawTarget->row_size*4;
   write_png(savepath.Utf8Value().c_str(),
             (unsigned char*)this->drawTarget->buffer,
             this->viewWidth,
             this->viewHeight,
-            this->drawTarget->pitch);
+            pitch);
   return Napi::Number::New(env, 0);
 }
 
@@ -194,7 +196,7 @@ Napi::Value Plane::RetrieveRealContent(const Napi::CallbackInfo& info) {
   GfxTarget* target = this->drawTarget;
   int x_size = target->x_size;
   int y_size = target->y_size;
-  int pitch = target->pitch;
+  int row_size = target->row_size;
   uint32_t rgb_val;
 
   // u8 valued pixel data to be filled from the buffer
@@ -203,20 +205,20 @@ Napi::Value Plane::RetrieveRealContent(const Napi::CallbackInfo& info) {
   std::map<uint32_t, u8_t> color_use_lookup;
   u8_t num_colors = 0;
   // match the buffer
-  pixel_data.resize(y_size * pitch/4);
+  pixel_data.resize(y_size * x_size);
 
   // Convert rgb colors in buffer into pixel data, and a collection
   // of all unique colors used
   for (int y = 0; y < y_size; y++) {
     for (int x = 0; x < x_size; x++) {
-      rgb_val = this->drawTarget->buffer[x + y*pitch/4];
+      rgb_val = this->drawTarget->buffer[x + y*row_size];
       auto it = color_use_lookup.find(rgb_val);
       if (it == color_use_lookup.end()) {
         color_use_lookup[rgb_val] = num_colors;
-        pixel_data[x + y*pitch/4] = num_colors;
+        pixel_data[x + y*row_size] = num_colors;
         num_colors++;
       } else {
-        pixel_data[x + y*pitch/4] = it->second;
+        pixel_data[x + y*row_size] = it->second;
       }
     }
   }
@@ -247,7 +249,7 @@ Napi::Value Plane::RetrieveRealContent(const Napi::CallbackInfo& info) {
   }
   // Assign pitch of image
   Napi::Env env = info.Env();
-  container.Set("pitch", Napi::Number::New(env, pitch/4));
+  container.Set("pitch", Napi::Number::New(env, row_size));
   return info.Env().Null();
 }
 
@@ -300,7 +302,7 @@ Napi::Value Plane::PutDot(const Napi::CallbackInfo& info) {
   if (!this->drawTarget) {
     this->drawTarget = instantiateDrawTarget();
   }
-  this->drawTarget->buffer[x + y*this->drawTarget->pitch/4] = color;
+  this->drawTarget->buffer[x + y*this->drawTarget->row_size] = color;
 
   return info.Env().Null();
 }
@@ -481,7 +483,7 @@ Napi::Value Plane::PutImage(const Napi::CallbackInfo& info) {
         int pixelY = y + baseY;
         if (pixelX >= 0 && pixelX < viewWidth &&
             pixelY >= 0 && pixelY < viewHeight) {
-          target->buffer[pixelX + pixelY*target->pitch/4] = color;
+          target->buffer[pixelX + pixelY*target->row_size] = color;
         }
       }
     }
@@ -601,9 +603,9 @@ Napi::Value Plane::PutFrameMemory(const Napi::CallbackInfo& info) {
 
   for (int y = 0; y < target->y_size; y++) {
     for (int x = 0; x < target->x_size; x++) {
-      unsigned char color = data[x + y*target->pitch/4];
+      unsigned char color = data[x + y*target->row_size];
       uint32_t rgb = this->rgb_map[color % this->rgb_map_length];
-      target->buffer[x + y*target->pitch/4] = rgb;
+      target->buffer[x + y*target->row_size] = rgb;
     }
   }
 
@@ -699,7 +701,7 @@ void putRange(GfxTarget* target, int x0, int y0, int x1, int y1, uint32_t color)
     }
     int x = x0;
     for (int y = y0; y <= y1; y++) {
-      target->buffer[x + y*target->pitch/4] = color;
+      target->buffer[x + y*target->row_size] = color;
     }
   } else {
     if (y0 < 0 || y1 >= target->y_size) {
@@ -713,7 +715,7 @@ void putRange(GfxTarget* target, int x0, int y0, int x1, int y1, uint32_t color)
     }
     int y = y0;
     for (int x = x0; x <= x1; x++) {
-      target->buffer[x + y*target->pitch/4] = color;
+      target->buffer[x + y*target->row_size] = color;
     }
   }
 }

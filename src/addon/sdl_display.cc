@@ -188,8 +188,9 @@ Napi::Value SDLDisplay::AppRenderAndLoop(const Napi::CallbackInfo& info) {
     }
 
     if (this->renderPlane->drawTarget) {
+      int pitch = this->renderPlane->drawTarget->row_size*4;
       SDL_UpdateTexture(g_texture, NULL, this->renderPlane->drawTarget->buffer,
-                        this->renderPlane->drawTarget->pitch);
+                        pitch);
     }
 
     SDL_RenderCopy(g_renderer, g_texture, NULL, NULL);

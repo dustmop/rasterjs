@@ -7,7 +7,7 @@ typedef struct GfxTarget {
 	uint32_t* buffer;
 	int x_size;
 	int y_size;
-	int pitch;
+	int row_size;
 	int capacity;
 } GfxTarget;
 

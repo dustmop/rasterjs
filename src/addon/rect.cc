@@ -37,7 +37,7 @@ void drawRect(GfxTarget* target, int x0, int y0, int x1, int y1, bool fill, uint
   if (fill) {
     for (int y = y0; y < y1; y++) {
       for (int x = x0; x < x1; x++) {
-        target->buffer[x + y*target->pitch/4] = color;
+        target->buffer[x + y*target->row_size] = color;
       }
     }
   } else {
@@ -45,16 +45,16 @@ void drawRect(GfxTarget* target, int x0, int y0, int x1, int y1, bool fill, uint
     // Horizontal lines
     for (x = x0; x < x1; x++) {
       y = y0;
-      target->buffer[x + y*target->pitch/4] = color;
+      target->buffer[x + y*target->row_size] = color;
       y = y1 - 1;
-      target->buffer[x + y*target->pitch/4] = color;
+      target->buffer[x + y*target->row_size] = color;
     }
     // Vertical lines
     for (y = y0; y < y1; y++) {
       x = x0;
-      target->buffer[x + y*target->pitch/4] = color;
+      target->buffer[x + y*target->row_size] = color;
       x = x1 - 1;
-      target->buffer[x + y*target->pitch/4] = color;
+      target->buffer[x + y*target->row_size] = color;
     }
   }
 }

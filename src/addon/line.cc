@@ -44,7 +44,7 @@ void drawLine(GfxTarget* target, PointList* points, uint32_t color, int connectC
     for (int x = x0; x <= x1; x++) {
       // Draw a pixel
       if (x >= 0 && x < target->x_size && y >= 0 && y < target->y_size) {
-        target->buffer[x + y*target->pitch/4] = color;
+        target->buffer[x + y*target->row_size] = color;
       }
 
       if (dist > 0) {
@@ -86,7 +86,7 @@ void drawLine(GfxTarget* target, PointList* points, uint32_t color, int connectC
     for (int y = y0; y <= y1; y++) {
       // Draw a pixel
       if (x >= 0 && x < target->x_size && y >= 0 && y < target->y_size) {
-        target->buffer[x + y*target->pitch/4] = color;
+        target->buffer[x + y*target->row_size] = color;
       }
 
       if (dist > 0) {

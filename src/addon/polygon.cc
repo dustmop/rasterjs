@@ -122,7 +122,7 @@ void fillPolygon(GfxTarget* target, PointList* points, uint32_t color) {
         x1 = target->x_size - 1;
       }
       for (pixelX=x0; pixelX<=x1; pixelX++) {
-        target->buffer[pixelX + pixelY*target->pitch/4] = color;
+        target->buffer[pixelX + pixelY*target->row_size] = color;
       }
     }
   }

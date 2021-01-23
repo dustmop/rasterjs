@@ -5,10 +5,9 @@
 
 typedef struct GfxTarget {
 	uint32_t* buffer;
-	int x_size;
-	int y_size;
-	int row_size;
-	int capacity;
+	int width;
+	int height;
+	int rowSize;
 } GfxTarget;
 
 typedef struct PointList {

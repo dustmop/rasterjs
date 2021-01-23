@@ -345,6 +345,9 @@ MethodSet.prototype.getPaletteEntry = function(x, y) {
     pitch: null,
   };
   this.owner.normalPlane.retrieveRealContent(image);
+  if (!image.buffer.length) {
+    throw 'cannot getPaletteEntry with an empty plane';
+  }
 
   // Build index from each 8-bt color to where it is used in the plane
   let index = {};

@@ -1,9 +1,9 @@
 #ifndef PLANE_H
 #define PLANE_H
 
+#include "gfx_types.h"
+#include <cstdint>
 #include <napi.h>
-
-struct GfxTarget;
 
 class Plane : public Napi::ObjectWrap<Plane> {
  public:
@@ -31,18 +31,22 @@ class Plane : public Napi::ObjectWrap<Plane> {
   Napi::Value PutCircleFromArc(const Napi::CallbackInfo& info);
   Napi::Value PutFrameMemory(const Napi::CallbackInfo& info);
 
-  GfxTarget* instantiateDrawTarget();
-  void maybeErase();
+  void prepare(int shouldErase);
+  void fillTarget(GfxTarget* t);
 
-  int rgb_map_length;
-  int rgb_map[256];
-  GfxTarget* allocTarget;
+  // Configuration, safe defaults.
+  int rgbMapLength;
+  int rgbMap[256];
   uint32_t frontColor;
   uint32_t backColor;
  public:
-  GfxTarget* drawTarget;
-  int viewWidth;
-  int viewHeight;
+  // lazy allocation of buffer
+  int rowSize;
+  int numElems;
+  uint32_t* buffer;
+  //
+  int width;
+  int height;
   int needErase;
 };
 

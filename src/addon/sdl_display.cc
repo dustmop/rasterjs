@@ -75,9 +75,8 @@ Napi::Value SDLDisplay::CreateWindow(const Napi::CallbackInfo& info) {
   this->renderPlane = plane;
 
   int zoomLevel = info[1].As<Napi::Number>().Int32Value();
-  // TODO: Remove global variables.
-  this->windowWidth = this->renderPlane->viewWidth * zoomLevel;
-  this->windowHeight = this->renderPlane->viewHeight * zoomLevel;
+  this->windowWidth = this->renderPlane->width * zoomLevel;
+  this->windowHeight = this->renderPlane->height * zoomLevel;
 
   // Create window
   g_window = SDL_CreateWindow(
@@ -95,8 +94,7 @@ Napi::Value SDLDisplay::CreateWindow(const Napi::CallbackInfo& info) {
 
 Napi::Value SDLDisplay::CreateDisplay(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  int viewWidth = 100;//info[0].As<Napi::Number>().Int32Value();
-  int viewHeight = 100;//info[1].As<Napi::Number>().Int32Value();
+  // TODO: Implement me?
   return Napi::Number::New(env, 0);
 }
 
@@ -134,8 +132,8 @@ Napi::Value SDLDisplay::AppRenderAndLoop(const Napi::CallbackInfo& info) {
     return Napi::Number::New(env, -1);
   }
 
-  int viewWidth = this->renderPlane->viewWidth;
-  int viewHeight = this->renderPlane->viewHeight;
+  int viewWidth = this->renderPlane->width;
+  int viewHeight = this->renderPlane->height;
 
   g_texture = SDL_CreateTexture(g_renderer, SDL_PIXELFORMAT_RGBA8888,
                                 SDL_TEXTUREACCESS_STREAMING,
@@ -187,10 +185,9 @@ Napi::Value SDLDisplay::AppRenderAndLoop(const Napi::CallbackInfo& info) {
       break;
     }
 
-    if (this->renderPlane->drawTarget) {
-      int pitch = this->renderPlane->drawTarget->row_size*4;
-      SDL_UpdateTexture(g_texture, NULL, this->renderPlane->drawTarget->buffer,
-                        pitch);
+    if (this->renderPlane->buffer) {
+      int pitch = this->renderPlane->rowSize*4;
+      SDL_UpdateTexture(g_texture, NULL, this->renderPlane->buffer, pitch);
     }
 
     SDL_RenderCopy(g_renderer, g_texture, NULL, NULL);

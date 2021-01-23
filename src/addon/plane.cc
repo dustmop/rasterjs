@@ -3,11 +3,10 @@
 #include "plane.h"
 #include "png_read_write.h"
 
-#include "polygon.h"
-#include "line.h"
-#include "rect.h"
+#include "pixel_update_tasks.h"
 #include "load_image.h"
 
+#include <cstdint>
 #include <cmath> // round
 #include <map> // std::map
 
@@ -45,13 +44,15 @@ Plane::Plane(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Plane>(info) {
   Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
 
-  this->rgb_map_length = 0;
+  this->rgbMapLength = 0;
+  // rgbMap[256];
   this->frontColor = 0xffffffff;
   this->backColor = 0;
-  this->drawTarget = NULL;
-  this->allocTarget = NULL;
-  this->viewWidth = 0;
-  this->viewHeight = 0;
+  this->rowSize = 0;
+  this->numElems = 0;
+  this->buffer = NULL;
+  this->width = 0;
+  this->height = 0;
   this->needErase = false;
 };
 
@@ -67,57 +68,35 @@ int point_y[16];
 
 Napi::Value Plane::SetSize(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  this->viewWidth = info[0].As<Napi::Number>().Int32Value();
-  this->viewHeight = info[1].As<Napi::Number>().Int32Value();
+  this->width = info[0].As<Napi::Number>().Int32Value();
+  this->height = info[1].As<Napi::Number>().Int32Value();
   return Napi::Number::New(env, 0);
 }
 
-GfxTarget* Plane::instantiateDrawTarget() {
-  if (!this->allocTarget) {
-    this->allocTarget = (GfxTarget*)malloc(sizeof(GfxTarget));
-    if (this->allocTarget == NULL) {
-      printf("allocTarget failed to malloc\n");
-      exit(1);
-    }
-    if (!this->viewWidth || !this->viewHeight) {
-      printf("cannot allocate a target with zero size\n");
-      exit(1);
-    }
-    this->allocTarget->x_size = this->viewWidth;
-    this->allocTarget->y_size = this->viewHeight;
-    this->allocTarget->row_size = this->viewWidth;
-    int pitch = this->allocTarget->row_size*4;
-    this->allocTarget->capacity = pitch * this->viewHeight;
-    this->allocTarget->buffer = (uint32_t*)malloc(this->allocTarget->capacity);
-    if (this->allocTarget->buffer == NULL) {
-      printf("allocTarget.buffer failed to malloc\n");
-      exit(1);
-    }
+void Plane::prepare(int shouldErase) {
+  // If buffer has not yet been allocated
+  if (this->buffer == NULL) {
+    int width = this->width ? this->width : 100;
+    int height = this->height ? this->height : 100;
+    // TODO: Make this larger? Test the performance of the change.
+    this->rowSize = width;
+    // Number of words.
+    int numElems = height * this->rowSize;
+    // Allocate the buffer.
+    uint32_t* buffer = new uint32_t[numElems];
+    // Assign.
+    this->buffer = buffer;
+    this->numElems = numElems;
+    this->needErase = true;
   }
-  uint32_t* colors = (uint32_t*)this->allocTarget->buffer;
-  for (int n = 0; n < this->allocTarget->capacity / 4; n++) {
-    colors[n] = this->backColor;
-  }
-  return this->allocTarget;
-}
-
-void Plane::maybeErase() {
   if (!this->needErase) {
     return;
   }
-  if (!this->drawTarget) {
-    this->drawTarget = instantiateDrawTarget();
-  }
-
-  // Erase the buffer contents.
-  uint32_t* colors = (uint32_t*)this->allocTarget->buffer;
-  for (int n = 0; n < this->allocTarget->capacity / 4; n++) {
-    colors[n] = this->backColor;
+  for (int n = 0; n < this->numElems; n++) {
+    this->buffer[n] = this->backColor;
   }
   this->needErase = false;
 }
-
-void putRange(GfxTarget* target, int x0, int y0, int x1, int y1, uint32_t color);
 
 void Plane::BeginFrame() {
   this->needErase = false;
@@ -125,27 +104,27 @@ void Plane::BeginFrame() {
 
 Napi::Value Plane::ResetState(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  if (this->allocTarget) {
-    free(this->allocTarget);
-    this->allocTarget = NULL;
-    this->drawTarget = NULL;
+  if (this->buffer) {
+    delete[]this->buffer;
+    this->buffer = NULL;
   }
   return Napi::Number::New(env, 0);
 }
 
+
 Napi::Value Plane::SaveTo(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  if (!viewWidth || !viewHeight) {
+  if (!this->width || !this->height) {
     printf("cannot save file with zero size\n");
     exit(1);
   }
 
   Napi::String savepath = info[0].ToString();
-  int pitch = this->drawTarget->row_size*4;
+  int pitch = this->rowSize*4;
   write_png(savepath.Utf8Value().c_str(),
-            (unsigned char*)this->drawTarget->buffer,
-            this->viewWidth,
-            this->viewHeight,
+            (unsigned char*)this->buffer,
+            this->width,
+            this->height,
             pitch);
   return Napi::Number::New(env, 0);
 }
@@ -160,43 +139,47 @@ Napi::Value Plane::AssignRgbMap(const Napi::CallbackInfo& info) {
   Napi::Value list_length = list.Get("length");
 
   int num = list_length.As<Napi::Number>().Int32Value();
-  this->rgb_map_length = num;
+  this->rgbMapLength = num;
 
   for (int i = 0; i < num; i++) {
     elem = list[uint32_t(i)];
     int val = elem.As<Napi::Number>().Int32Value();
     // Store values as little-endian RGBA.
-    this->rgb_map[i] = val * 0x100 + 0xff;
+    this->rgbMap[i] = val * 0x100 + 0xff;
   }
 
   return info.Env().Null();
 }
 
 Napi::Value Plane::ClearRgbMap(const Napi::CallbackInfo& info) {
-  this->rgb_map_length = 0;
+  this->rgbMapLength = 0;
+  return info.Env().Null();
 }
 
 Napi::Value Plane::AddRgbMapEntry(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   Napi::Value val = info[0];
   int num = val.As<Napi::Number>().Int32Value();
-  int size = this->rgb_map_length;
+  int size = this->rgbMapLength;
   int color = num * 0x100 + 0xff;
   for (int i = 0; i < size; i++) {
-    if (this->rgb_map[i] == color) {
+    if (this->rgbMap[i] == color) {
       return Napi::Number::New(env, i);
     }
   }
-  this->rgb_map[size] = color;
-  this->rgb_map_length++;
+  this->rgbMap[size] = color;
+  this->rgbMapLength++;
   return Napi::Number::New(env, size);
 }
 
 Napi::Value Plane::RetrieveRealContent(const Napi::CallbackInfo& info) {
-  GfxTarget* target = this->drawTarget;
-  int x_size = target->x_size;
-  int y_size = target->y_size;
-  int row_size = target->row_size;
+  if (!this->buffer) {
+    return info.Env().Null();
+  }
+
+  int x_size = this->width;
+  int y_size = this->height;
+  int row_size = this->rowSize;
   uint32_t rgb_val;
 
   // u8 valued pixel data to be filled from the buffer
@@ -211,7 +194,7 @@ Napi::Value Plane::RetrieveRealContent(const Napi::CallbackInfo& info) {
   // of all unique colors used
   for (int y = 0; y < y_size; y++) {
     for (int x = 0; x < x_size; x++) {
-      rgb_val = this->drawTarget->buffer[x + y*row_size];
+      rgb_val = this->buffer[x + y*row_size];
       auto it = color_use_lookup.find(rgb_val);
       if (it == color_use_lookup.end()) {
         color_use_lookup[rgb_val] = num_colors;
@@ -257,14 +240,15 @@ Napi::Value Plane::SetColor(const Napi::CallbackInfo& info) {
   Napi::Value val = info[0];
   int color = val.As<Napi::Number>().Int32Value();
 
-  uint32_t rgb = this->rgb_map[color % this->rgb_map_length];
+  uint32_t rgb = this->rgbMap[color % this->rgbMapLength];
   this->frontColor = rgb;
 
   return info.Env().Null();
 }
 
 Napi::Value Plane::PutRect(const Napi::CallbackInfo& info) {
-  this->maybeErase();
+  this->prepare(true);
+
   // TODO: Validate length of parameters, all should be numbers
 
   Napi::Value xval = info[0];
@@ -278,19 +262,17 @@ Napi::Value Plane::PutRect(const Napi::CallbackInfo& info) {
   int w = round(wval.As<Napi::Number>().FloatValue());
   int h = round(hval.As<Napi::Number>().FloatValue());
 
-  if (!this->drawTarget) {
-    this->drawTarget = instantiateDrawTarget();
-  }
-
   uint32_t color = this->frontColor;
-  drawRect(this->drawTarget, x, y, x+w, y+h, fill, color);
+  GfxTarget target;
+  this->fillTarget(&target);
+  putRect(&target, x, y, x+w, y+h, fill, color);
 
   Napi::Env env = info.Env();
   return Napi::Number::New(env, 0);
 }
 
 Napi::Value Plane::PutDot(const Napi::CallbackInfo& info) {
-  this->maybeErase();
+  this->prepare(true);
 
   Napi::Value xval = info[0];
   Napi::Value yval = info[1];
@@ -299,26 +281,19 @@ Napi::Value Plane::PutDot(const Napi::CallbackInfo& info) {
   int y = round(yval.As<Napi::Number>().FloatValue());
 
   uint32_t color = this->frontColor;
-  if (!this->drawTarget) {
-    this->drawTarget = instantiateDrawTarget();
-  }
-  this->drawTarget->buffer[x + y*this->drawTarget->row_size] = color;
+  this->buffer[x + y*this->rowSize] = color;
 
   return info.Env().Null();
 }
 
 Napi::Value Plane::PutLine(const Napi::CallbackInfo& info) {
-  this->maybeErase();
+  this->prepare(true);
 
   Napi::Value xval  = info[0];
   Napi::Value yval  = info[1];
   Napi::Value x1val = info[2];
   Napi::Value y1val = info[3];
   Napi::Value ccval = info[4];
-
-  if (!this->drawTarget) {
-    this->drawTarget = instantiateDrawTarget();
-  }
 
   int x0 = round(xval.As<Napi::Number>().FloatValue());
   int y0 = round(yval.As<Napi::Number>().FloatValue());
@@ -337,22 +312,20 @@ Napi::Value Plane::PutLine(const Napi::CallbackInfo& info) {
   point_list.ys[0] = y0;
   point_list.ys[1] = y1;
 
-  drawLine(this->drawTarget, &point_list, color, connectCorners);
+  GfxTarget target;
+  this->fillTarget(&target);
+  putLine(&target, &point_list, color, connectCorners);
 
   Napi::Env env = info.Env();
   return Napi::Number::New(env, 0);
 }
 
 Napi::Value Plane::PutPolygon(const Napi::CallbackInfo& info) {
-  this->maybeErase();
+  this->prepare(true);
 
   if (info.Length() != 4) {
     printf("expected 4 arguments to this function\n");
     return info.Env().Null();
-  }
-
-  if (!this->drawTarget) {
-    this->drawTarget = instantiateDrawTarget();
   }
 
   int baseX = info[0].ToNumber().Int32Value();
@@ -389,10 +362,12 @@ Napi::Value Plane::PutPolygon(const Napi::CallbackInfo& info) {
 
     bool fill = info[3].ToBoolean().Value();
     uint32_t color = this->frontColor;
+    GfxTarget target;
+    this->fillTarget(&target);
     if (fill) {
-      fillPolygon(this->drawTarget, &point_list, color);
+      putPolygonFill(&target, &point_list, color);
     } else {
-      drawPolygonOutline(this->drawTarget, &point_list, color);
+      putPolygonOutline(&target, &point_list, color);
     }
   }
 
@@ -403,14 +378,14 @@ Napi::Value Plane::FillBackground(const Napi::CallbackInfo& info) {
   Napi::Value val = info[0];
   int color = round(val.As<Napi::Number>().FloatValue());
 
-  uint32_t rgb = this->rgb_map[color % this->rgb_map_length];
+  uint32_t rgb = this->rgbMap[color % this->rgbMapLength];
   this->backColor = rgb;
 
-  if (!this->drawTarget) {
-    if (viewWidth && viewHeight) {
-      this->drawTarget = instantiateDrawTarget();
-    }
-  }
+  // Don't allocate just now, because maybe the size hasn't been set yet.
+  // Just record the color.
+  // TODO: Planes should support a "background" color, perhaps require it
+  // to be 0. That will be used as the transparent color when planes are
+  // merged.
   this->needErase = true;
 
   return info.Env().Null();
@@ -421,12 +396,7 @@ extern Image** g_img_list;
 extern int num_img;
 
 Napi::Value Plane::PutImage(const Napi::CallbackInfo& info) {
-  this->maybeErase();
-
-  if (!this->drawTarget) {
-    this->drawTarget = instantiateDrawTarget();
-  }
-  GfxTarget* target = this->drawTarget;
+  this->prepare(true);
 
   Napi::Object imgObj = info[0].ToObject();
   int baseX = info[1].ToNumber().Int32Value();
@@ -481,9 +451,9 @@ Napi::Value Plane::PutImage(const Napi::CallbackInfo& info) {
                           0xff);
         int pixelX = x + baseX;
         int pixelY = y + baseY;
-        if (pixelX >= 0 && pixelX < viewWidth &&
-            pixelY >= 0 && pixelY < viewHeight) {
-          target->buffer[pixelX + pixelY*target->row_size] = color;
+        if (pixelX >= 0 && pixelX < this->width &&
+            pixelY >= 0 && pixelY < this->height) {
+          this->buffer[pixelX + pixelY*this->rowSize] = color;
         }
       }
     }
@@ -493,7 +463,7 @@ Napi::Value Plane::PutImage(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value Plane::PutCircleFromArc(const Napi::CallbackInfo& info) {
-  this->maybeErase();
+  this->prepare(true);
 
   int baseX = info[0].ToNumber().Int32Value();
   int baseY = info[1].ToNumber().Int32Value();
@@ -530,12 +500,9 @@ Napi::Value Plane::PutCircleFromArc(const Napi::CallbackInfo& info) {
   }
 
   bool fill = info[4].ToBoolean().Value();
-
-  if (!this->drawTarget) {
-    this->drawTarget = instantiateDrawTarget();
-  }
-  GfxTarget* target = this->drawTarget;
   uint32_t color = this->frontColor;
+  GfxTarget target;
+  this->fillTarget(&target);
 
   for (int i = 0; i < num_points; i++) {
     Napi::Value elem = parameter_list[uint32_t(i)];
@@ -567,14 +534,14 @@ Napi::Value Plane::PutCircleFromArc(const Napi::CallbackInfo& info) {
     } else {
       L = L + 2;
     }
-    putRange(target, baseX + a, baseY + b, baseX + L, baseY + b, color);
-    putRange(target, baseX - a, baseY + b, baseX - L, baseY + b, color);
-    putRange(target, baseX + a, baseY - b, baseX + L, baseY - b, color);
-    putRange(target, baseX - a, baseY - b, baseX - L, baseY - b, color);
-    putRange(target, baseX + b, baseY + a, baseX + b, baseY + L, color);
-    putRange(target, baseX - b, baseY + a, baseX - b, baseY + L, color);
-    putRange(target, baseX + b, baseY - a, baseX + b, baseY - L, color);
-    putRange(target, baseX - b, baseY - a, baseX - b, baseY - L, color);
+    putRange(&target, baseX + a, baseY + b, baseX + L, baseY + b, color);
+    putRange(&target, baseX - a, baseY + b, baseX - L, baseY + b, color);
+    putRange(&target, baseX + a, baseY - b, baseX + L, baseY - b, color);
+    putRange(&target, baseX - a, baseY - b, baseX - L, baseY - b, color);
+    putRange(&target, baseX + b, baseY + a, baseX + b, baseY + L, color);
+    putRange(&target, baseX - b, baseY + a, baseX - b, baseY + L, color);
+    putRange(&target, baseX + b, baseY - a, baseX + b, baseY - L, color);
+    putRange(&target, baseX - b, baseY - a, baseX - b, baseY - L, color);
   }
 
   Napi::Env env = info.Env();
@@ -582,12 +549,7 @@ Napi::Value Plane::PutCircleFromArc(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value Plane::PutFrameMemory(const Napi::CallbackInfo& info) {
-  this->maybeErase();
-
-  if (!this->drawTarget) {
-    this->drawTarget = instantiateDrawTarget();
-  }
-  GfxTarget* target = this->drawTarget;
+  this->prepare(true);
 
   if (info.Length() < 1) {
     printf("PutFrameMemory needs 1 param");
@@ -601,11 +563,11 @@ Napi::Value Plane::PutFrameMemory(const Napi::CallbackInfo& info) {
   Napi::ArrayBuffer buffer = info[0].As<Napi::TypedArray>().ArrayBuffer();
   unsigned char* data = (unsigned char*)buffer.Data();
 
-  for (int y = 0; y < target->y_size; y++) {
-    for (int x = 0; x < target->x_size; x++) {
-      unsigned char color = data[x + y*target->row_size];
-      uint32_t rgb = this->rgb_map[color % this->rgb_map_length];
-      target->buffer[x + y*target->row_size] = rgb;
+  for (int y = 0; y < this->height; y++) {
+    for (int x = 0; x < this->width; x++) {
+      unsigned char color = data[x + y*this->rowSize];
+      uint32_t rgb = this->rgbMap[color % this->rgbMapLength];
+      this->buffer[x + y*this->rowSize] = rgb;
     }
   }
 
@@ -614,12 +576,7 @@ Napi::Value Plane::PutFrameMemory(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value Plane::SaveImage(const Napi::CallbackInfo& info) {
-  this->maybeErase();
-
-  if (!this->drawTarget) {
-    this->drawTarget = instantiateDrawTarget();
-  }
-  GfxTarget* target = this->drawTarget;
+  this->prepare(true);
 
   if (info.Length() < 2) {
     printf("SaveImage needs 2 params");
@@ -675,47 +632,9 @@ Napi::Value Plane::SaveImage(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, 0);
 }
 
-void swap(int* a, int* b) {
-  static int tmp;
-  tmp = *a;
-  *a = *b;
-  *b = tmp;
-}
-
-void putRange(GfxTarget* target, int x0, int y0, int x1, int y1, uint32_t color) {
-  if (x0 > x1) {
-    swap(&x0, &x1);
-  }
-  if (y0 > y1) {
-    swap(&y0, &y1);
-  }
-  if (x0 == x1) {
-    if (x0 < 0 || x1 >= target->x_size) {
-      return;
-    }
-    if (y0 < 0) {
-      y0 = 0;
-    }
-    if (y1 >= target->y_size) {
-      y1 = target->y_size - 1;
-    }
-    int x = x0;
-    for (int y = y0; y <= y1; y++) {
-      target->buffer[x + y*target->row_size] = color;
-    }
-  } else {
-    if (y0 < 0 || y1 >= target->y_size) {
-      return;
-    }
-    if (x0 < 0) {
-      x0 = 0;
-    }
-    if (x1 >= target->x_size) {
-      x1 = target->x_size - 1;
-    }
-    int y = y0;
-    for (int x = x0; x <= x1; x++) {
-      target->buffer[x + y*target->row_size] = color;
-    }
-  }
+void Plane::fillTarget(GfxTarget* t) {
+  t->buffer  = this->buffer;
+  t->width   = this->width;
+  t->height  = this->height;
+  t->rowSize = this->rowSize;
 }

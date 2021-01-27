@@ -53,8 +53,8 @@ Runner.prototype.setColor = function(color) {
   this.normalPlane.setColor(color);
 }
 
-Runner.prototype.setRealColor_params = ['rgb:i'];
-Runner.prototype.setRealColor = function(rgb) {
+Runner.prototype.setTrueColor_params = ['rgb:i'];
+Runner.prototype.setTrueColor = function(rgb) {
   let color = this.normalPlane.addRgbMapEntry(rgb);
   this.setColor(color);
 }
@@ -103,9 +103,9 @@ Runner.prototype.fillBackground = function(color) {
   this.normalPlane.fillBackground(color);
 }
 
-Runner.prototype.fillRealBackground_params = ['rgb:i'];
-Runner.prototype.fillRealBackground = function(real) {
-  let color = this.normalPlane.addRgbMapEntry(real);
+Runner.prototype.fillTrueBackground_params = ['rgb:i'];
+Runner.prototype.fillTrueBackground = function(tr) {
+  let color = this.normalPlane.addRgbMapEntry(tr);
   this.fillBackground(color);
 }
 
@@ -344,7 +344,7 @@ MethodSet.prototype.getPaletteEntry = function(x, y) {
     buffer: [],
     pitch: null,
   };
-  this.owner.normalPlane.retrieveRealContent(image);
+  this.owner.normalPlane.retrieveTrueContent(image);
   if (!image.buffer.length) {
     throw 'cannot getPaletteEntry with an empty plane';
   }
@@ -361,10 +361,10 @@ MethodSet.prototype.getPaletteEntry = function(x, y) {
 
   let pitch = image.pitch;
   let color = image.buffer[x + y*pitch];
-  let real = image.palette[color];
+  let tr = image.palette[color];
 
   return paletteEntry.NewPaletteEntry(this.owner.normalPlane, pitch,
-                                      index, color, real);
+                                      index, color, tr);
 }
 
 MethodSet.prototype.getPaletteAll = function() {
@@ -373,13 +373,13 @@ MethodSet.prototype.getPaletteAll = function() {
     buffer: [],
     pitch: null,
   };
-  this.owner.normalPlane.retrieveRealContent(image);
+  this.owner.normalPlane.retrieveTrueContent(image);
 
   let all = [];
   for (let k = 0; k < image.palette.length; k++) {
-    let real = Math.floor(image.palette[k] / 0x100);
+    let tr = Math.floor(image.palette[k] / 0x100);
     let ent = paletteEntry.NewPaletteEntry(this.owner.normalPlane, image.pitch,
-                                          null, k, real);
+                                          null, k, tr);
     all.push(ent);
   }
 

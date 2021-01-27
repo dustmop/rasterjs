@@ -22,7 +22,7 @@ void Plane::InitClass(Napi::Env env, Napi::Object exports) {
        InstanceMethod("setSize", &Plane::SetSize),
        InstanceMethod("setColor", &Plane::SetColor),
        InstanceMethod("fillBackground", &Plane::FillBackground),
-       InstanceMethod("retrieveRealContent", &Plane::RetrieveRealContent),
+       InstanceMethod("retrieveTrueContent", &Plane::RetrieveTrueContent),
        InstanceMethod("saveTo", &Plane::SaveTo),
        InstanceMethod("saveImage", &Plane::SaveImage),
        InstanceMethod("assignRgbMap", &Plane::AssignRgbMap),
@@ -172,7 +172,7 @@ Napi::Value Plane::AddRgbMapEntry(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, size);
 }
 
-Napi::Value Plane::RetrieveRealContent(const Napi::CallbackInfo& info) {
+Napi::Value Plane::RetrieveTrueContent(const Napi::CallbackInfo& info) {
   if (!this->buffer) {
     return info.Env().Null();
   }
@@ -206,11 +206,11 @@ Napi::Value Plane::RetrieveRealContent(const Napi::CallbackInfo& info) {
     }
   }
 
-  // Merge 32-bit rgb values from color usage table to make real color list
-  std::vector<uint32_t> real_colors;
-  real_colors.resize(num_colors);
+  // Merge 32-bit rgb values from color usage table to make true color list
+  std::vector<uint32_t> true_colors;
+  true_colors.resize(num_colors);
   for (auto it = color_use_lookup.begin(); it != color_use_lookup.end(); it++) {
-    real_colors[it->second] = it->first;
+    true_colors[it->second] = it->first;
   }
 
   Napi::Value elem = info[0];
@@ -219,7 +219,7 @@ Napi::Value Plane::RetrieveRealContent(const Napi::CallbackInfo& info) {
   Napi::Value bufferval = container.Get("buffer");
 
   // TODO: Type check IsArray() for these
-  // Palette is a list of real colors used by image
+  // Palette is a list of true colors used by image
   Napi::Object palette = paletteval.ToObject();
   // Buffer is the u8 values in the plane
   Napi::Object buffer = bufferval.ToObject();
@@ -227,8 +227,8 @@ Napi::Value Plane::RetrieveRealContent(const Napi::CallbackInfo& info) {
   for (size_t i = 0; i < pixel_data.size(); i++) {
     buffer[i] = pixel_data[i];
   }
-  for (size_t i = 0; i < real_colors.size(); i++) {
-    palette[i] = real_colors[i];
+  for (size_t i = 0; i < true_colors.size(); i++) {
+    palette[i] = true_colors[i];
   }
   // Assign pitch of image
   Napi::Env env = info.Env();

@@ -137,16 +137,16 @@ Raster.prototype.fillBackground = function() {
   this.cmd.push(['fillBackground', arguments]);
 }
 
-Raster.prototype.fillRealBackground = function() {
-  this.cmd.push(['fillRealBackground', arguments]);
+Raster.prototype.fillTrueBackground = function() {
+  this.cmd.push(['fillTrueBackground', arguments]);
 }
 
 Raster.prototype.setColor = function() {
   this.cmd.push(['setColor', arguments]);
 }
 
-Raster.prototype.setRealColor = function() {
-  this.cmd.push(['setRealColor', arguments]);
+Raster.prototype.setTrueColor = function() {
+  this.cmd.push(['setTrueColor', arguments]);
 }
 
 Raster.prototype.fillSquare = function() {

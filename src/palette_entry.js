@@ -1,15 +1,15 @@
-function NewPaletteEntry(plane, pitch, index, color, real) {
+function NewPaletteEntry(plane, pitch, index, color, rgb) {
   let pal = new PaletteEntry();
   // reference to the owning plane
   pal.plane = plane;
   // pitch of the image
   pal.pitch = pitch;
-  // index from 8-bit values to their real color
+  // index from 8-bit values to their true color
   pal.index = index;
   // 8-bit color value
   pal.color = color;
-  // real rgb value
-  pal.real = real;
+  // true rgb value
+  pal.rgb = rgb;
   return pal;
 }
 

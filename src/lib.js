@@ -60,11 +60,11 @@ Raster.prototype.useSystemColors = function() {
 // Methods with interesting return values
 
 Raster.prototype.loadImage = function(filepath) {
-  return this.makeShape('load', [filepath]);
+  return this.runner.makeShape('load', [filepath]);
 }
 
 Raster.prototype.rotatePolygon = function(shape, angle) {
-  return this.makeShape('rotate', [shape, angle]);
+  return this.runner.makeShape('rotate', [shape, angle]);
 }
 
 Raster.prototype.oscil = function(period, fracOffset, click) {
@@ -79,11 +79,11 @@ Raster.prototype.oscil = function(period, fracOffset, click) {
 }
 
 Raster.prototype.getPaletteEntry = function(x, y) {
-  return this.getPaletteEntry(x, y);
+  return this.runner.getPaletteEntry(x, y);
 }
 
 Raster.prototype.getPaletteAll = function() {
-  return this.getPaletteAll();
+  return this.runner.getPaletteAll();
 }
 
 ////////////////////////////////////////

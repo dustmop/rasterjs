@@ -298,10 +298,6 @@ Runner.prototype.quit = function() {
   this.doQuit();
 }
 
-Runner.prototype.fillFrame = function(fillerFunc) {
-  this.fillFrame(fillerFunc);
-}
-
 Runner.prototype.showFrame = function(fillerFunc) {
   this.fillFrame(fillerFunc);
   this.doRender(1, null, null);

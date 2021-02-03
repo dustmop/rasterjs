@@ -9,12 +9,10 @@ const image_loader = require('./image_loader.js');
 ////////////////////////////////////////
 
 function Runner() {
-  this.cmd = null;
-  this.methods = null;
-  this.then = null;
   this.display = null;
   this.normalPlane = null;
   this._config = {};
+  this.initialize();
   return this;
 }
 
@@ -38,6 +36,10 @@ Runner.prototype.resetState = function() {
   const cppmodule = require('../build/Release/native');
   this.normalPlane = cppmodule.plane();
   this.normalPlane.assignRgbMap(rgbMap.rgb_map_default);
+}
+
+Runner.prototype.then = function(cb) {
+  cb();
 }
 
 Runner.prototype.setSize_params = ['w:i', 'h:i'];
@@ -264,17 +266,10 @@ Runner.prototype.doQuit = function() {
   this.display.appQuit();
 }
 
-////////////////////////////////////////
-
-function Commander(owner) {
-  this.owner = owner;
-  return this;
-}
-
-Commander.prototype.push = function(row) {
+Runner.prototype.dispatch = function(row) {
   let fname = row[0];
-  let fn = this.owner[fname]
-  let param_spec = this.owner[fname + '_params'];
+  let fn = this[fname]
+  let param_spec = this[fname + '_params'];
   if (fn === undefined) {
     console.log(`function ${fname} is not defined`);
     throw `function ${fname} is not defined`
@@ -284,67 +279,56 @@ Commander.prototype.push = function(row) {
     throw `function ${fname} does not have parameter spec`
   }
   let args = destructure(param_spec, row);
-  fn.apply(this.owner, args);
+  fn.apply(this, args);
 }
 
-////////////////////////////////////////
-
-function MethodSet(owner) {
-  this.owner = owner;
-  return this;
+Runner.prototype.show = function() {
+  this.doRender(1, null, null);
 }
 
-MethodSet.prototype.resetState = function() {
-  this.owner.resetState();
+Runner.prototype.run = function(renderFunc, postFunc) {
+  this.doRender(-1, renderFunc, postFunc);
 }
 
-MethodSet.prototype.show = function() {
-  this.owner.doRender(1, null, null);
+Runner.prototype.save = function(savepath) {
+  this.doRenderFile(savepath);
 }
 
-MethodSet.prototype.run = function(renderFunc, postFunc) {
-  this.owner.doRender(-1, renderFunc, postFunc);
+Runner.prototype.quit = function() {
+  this.doQuit();
 }
 
-MethodSet.prototype.save = function(savepath) {
-  this.owner.doRenderFile(savepath);
+Runner.prototype.fillFrame = function(fillerFunc) {
+  this.fillFrame(fillerFunc);
 }
 
-MethodSet.prototype.quit = function() {
-  this.owner.doQuit();
+Runner.prototype.showFrame = function(fillerFunc) {
+  this.fillFrame(fillerFunc);
+  this.doRender(1, null, null);
 }
 
-MethodSet.prototype.fillFrame = function(fillerFunc) {
-  this.owner.fillFrame(fillerFunc);
-}
-
-MethodSet.prototype.showFrame = function(fillerFunc) {
-  this.owner.fillFrame(fillerFunc);
-  this.owner.doRender(1, null, null);
-}
-
-MethodSet.prototype.makeShape = function(method, params) {
+Runner.prototype.makeShape = function(method, params) {
   if (method == 'rotate') {
     let [shape, angle] = params;
     geometry.rotatePolygon(shape, angle);
     return shape;
   } else if (method == 'load') {
     let [filepath] = params;
-    return this.owner.loadImage(filepath);
+    return this.loadImage(filepath);
   }
 }
 
-MethodSet.prototype.handleEvent = function(eventName, callback) {
-  this.owner.display.handleEvent(eventName, callback);
+Runner.prototype.handleEvent = function(eventName, callback) {
+  this.display.handleEvent(eventName, callback);
 }
 
-MethodSet.prototype.getPaletteEntry = function(x, y) {
+Runner.prototype.getPaletteEntry = function(x, y) {
   let image = {
     palette: [],
     buffer: [],
     pitch: null,
   };
-  this.owner.normalPlane.retrieveTrueContent(image);
+  this.normalPlane.retrieveTrueContent(image);
   if (!image.buffer.length) {
     throw 'cannot getPaletteEntry with an empty plane';
   }
@@ -363,42 +347,27 @@ MethodSet.prototype.getPaletteEntry = function(x, y) {
   let color = image.buffer[x + y*pitch];
   let tr = image.palette[color];
 
-  return paletteEntry.NewPaletteEntry(this.owner.normalPlane, pitch,
+  return paletteEntry.NewPaletteEntry(this.normalPlane, pitch,
                                       index, color, tr);
 }
 
-MethodSet.prototype.getPaletteAll = function() {
+Runner.prototype.getPaletteAll = function() {
   let image = {
     palette: [],
     buffer: [],
     pitch: null,
   };
-  this.owner.normalPlane.retrieveTrueContent(image);
+  this.normalPlane.retrieveTrueContent(image);
 
   let all = [];
   for (let k = 0; k < image.palette.length; k++) {
     let tr = Math.floor(image.palette[k] / 0x100);
-    let ent = paletteEntry.NewPaletteEntry(this.owner.normalPlane, image.pitch,
-                                          null, k, tr);
+    let ent = paletteEntry.NewPaletteEntry(this.normalPlane, image.pitch,
+                                           null, k, tr);
     all.push(ent);
   }
 
   return all;
 }
 
-////////////////////////////////////////
-
-function justDo(cb) {
-  cb();
-}
-
-function start(callback) {
-  let r = new Runner();
-  r.cmd = new Commander(r);
-  r.methods = new MethodSet(r);
-  r.then = justDo;
-  r.initialize();
-  callback(r);
-}
-
-module.exports.start = start;
+module.exports.Runner = Runner;

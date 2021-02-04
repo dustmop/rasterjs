@@ -8,9 +8,10 @@ const image_loader = require('./image_loader.js');
 
 ////////////////////////////////////////
 
-function Runner() {
-  this.display = null;
-  this.normalPlane = null;
+function Runner(env) {
+  this.display = env.makeDisplay();
+  // TODO: rename to `aPlane`
+  this.normalPlane = env.makePlane();
   this._config = {};
   this.initialize();
   return this;
@@ -25,17 +26,14 @@ Runner.prototype.initialize = function () {
   this._config.translateY = 0;
   this.initMem = new Array();
   this.initBackBuffer = null;
-  const cppmodule = require('../build/Release/native');
-  this.display = cppmodule.display();
   this.display.initialize();
-  this.normalPlane = cppmodule.plane();
   this.normalPlane.assignRgbMap(rgbMap.rgb_map_default);
 }
 
 Runner.prototype.resetState = function() {
-  const cppmodule = require('../build/Release/native');
-  this.normalPlane = cppmodule.plane();
-  this.normalPlane.assignRgbMap(rgbMap.rgb_map_default);
+  // TODO
+  //this.normalPlane = cppmodule.plane();
+  //this.normalPlane.assignRgbMap(rgbMap.rgb_map_default);
 }
 
 Runner.prototype.then = function(cb) {

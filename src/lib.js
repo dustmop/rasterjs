@@ -1,29 +1,10 @@
 
-////////////////////////////////////////
-// Private global data used by Raster object
+const runner = require('./runner.js');
 
-function Raster() {
-  this.runner = null;
+function Raster(env) {
+  this.runner = new runner.Runner(env);
   return this;
 }
-
-var singleton = new Raster();
-
-////////////////////////////////////////
-// Pick which backend renderer to use
-
-if (typeof window === 'undefined') {
-  if (!process.env.WEBPACK_COMPILE_FOR_BROWSER) {
-    const runner = require('./node_runner.js');
-    singleton.runner = new runner.Runner();
-  }
-} else {
-  const runner = require('./web_runner.js');
-  singleton.runner = runner;
-}
-
-////////////////////////////////////////
-// primary object
 
 Raster.prototype.resetState = function() {
   this.runner.resetState();
@@ -199,20 +180,34 @@ Raster.prototype.quit = function() {
 }
 
 Raster.prototype.on = function(eventName, callback) {
-  this.handleEvent(eventName, callback);
+  this.runner.handleEvent(eventName, callback);
 }
 
 ////////////////////////////////////////
 // Export
 
+var env = null;
+if (typeof window === 'undefined') {
+  // Node.js
+  if (!process.env.WEBPACK_COMPILE_FOR_BROWSER) {
+    env = require('./node_env.js');
+  }
+} else if (process.env.WEBPACK_COMPILE_FOR_BROWSER) {
+  // Web browser
+  env = require('./web_env.js');
+}
+
+var singleton = new Raster(env);
 singleton.resetState();
 if (typeof window === 'undefined') {
+  // Node.js
   module.exports = singleton;
 } else {
-  function require(moduleName) {
+  // Web browser
+  window['require'] = function(moduleName) {
     if (moduleName === 'raster.js' || moduleName === './raster.js') {
       return singleton;
     }
     throw 'Could not require module named "' + moduleName + '"';
-  }
+  };
 }

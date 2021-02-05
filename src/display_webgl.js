@@ -113,6 +113,9 @@ void main() {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 
+  gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
   // First update
   gl.bindTexture(gl.TEXTURE_2D, texture);
 

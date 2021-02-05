@@ -10,8 +10,7 @@ const image_loader = require('./image_loader.js');
 
 function Runner(env) {
   this.display = env.makeDisplay();
-  // TODO: rename to `aPlane`
-  this.normalPlane = env.makePlane();
+  this.aPlane = env.makePlane();
   this._config = {};
   this.initialize();
   return this;
@@ -27,11 +26,11 @@ Runner.prototype.initialize = function () {
   this.initMem = new Array();
   this.initBackBuffer = null;
   this.display.initialize();
-  this.normalPlane.assignRgbMap(rgbMap.rgb_map_default);
+  this.aPlane.assignRgbMap(rgbMap.rgb_map_default);
 }
 
 Runner.prototype.resetState = function() {
-  this.normalPlane.clear();
+  this.aPlane.clear();
 }
 
 Runner.prototype.then = function(cb) {
@@ -42,18 +41,18 @@ Runner.prototype.setSize_params = ['w:i', 'h:i'];
 Runner.prototype.setSize = function(w, h) {
   this._config.screenWidth = w;
   this._config.screenHeight = h;
-  this.normalPlane.setSize(w, h);
+  this.aPlane.setSize(w, h);
 }
 
 Runner.prototype.setColor_params = ['color:i'];
 Runner.prototype.setColor = function(color) {
   this._config.color = color;
-  this.normalPlane.setColor(color);
+  this.aPlane.setColor(color);
 }
 
 Runner.prototype.setTrueColor_params = ['rgb:i'];
 Runner.prototype.setTrueColor = function(rgb) {
-  let color = this.normalPlane.addRgbMapEntry(rgb);
+  let color = this.aPlane.addRgbMapEntry(rgb);
   this.setColor(color);
 }
 
@@ -79,31 +78,31 @@ Runner.prototype.useSystemColors = function(obj) {
   if (typeof obj == 'string') {
     let text = obj;
     if (text == 'quick') {
-      this.normalPlane.assignRgbMap(rgbMap.rgb_map_default);
+      this.aPlane.assignRgbMap(rgbMap.rgb_map_default);
     } else if (text == 'dos') {
-      this.normalPlane.assignRgbMap(rgbMap.rgb_map_dos);
+      this.aPlane.assignRgbMap(rgbMap.rgb_map_dos);
     } else if (text == 'nes') {
-      this.normalPlane.assignRgbMap(rgbMap.rgb_map_nes);
+      this.aPlane.assignRgbMap(rgbMap.rgb_map_nes);
     } else {
       throw 'Unknown system: ' + text;
     }
   } else if (Array.isArray(obj)) {
     let list = obj;
-    this.normalPlane.assignRgbMap(list);
+    this.aPlane.assignRgbMap(list);
   } else if (!obj) {
-    this.normalPlane.clearRgbMap();
+    this.aPlane.clearRgbMap();
   }
 }
 
 Runner.prototype.fillBackground_params = ['color:i'];
 Runner.prototype.fillBackground = function(color) {
   this._config.bgColor = color;
-  this.normalPlane.fillBackground(color);
+  this.aPlane.fillBackground(color);
 }
 
 Runner.prototype.fillTrueBackground_params = ['rgb:i'];
 Runner.prototype.fillTrueBackground = function(tr) {
-  let color = this.normalPlane.addRgbMapEntry(tr);
+  let color = this.aPlane.addRgbMapEntry(tr);
   this.fillBackground(color);
 }
 
@@ -115,38 +114,38 @@ Runner.prototype.drawLine_params = ['x0:i', 'y0:i', 'x1:i', 'y1:i', 'cc?b'];
 Runner.prototype.drawLine = function(x0, y0, x1, y1, cc) {
   cc = cc ? 1 : 0;
   let [tx, ty] = this._getTranslation();
-  this.normalPlane.putLine(tx + x0, ty + y0, tx + x1, ty + y1, cc);
+  this.aPlane.putLine(tx + x0, ty + y0, tx + x1, ty + y1, cc);
 }
 
 Runner.prototype.drawDot_params = ['x:i', 'y:i'];
 Runner.prototype.drawDot = function(x, y) {
   let [tx, ty] = this._getTranslation();
   this.initMem.push([tx + x, ty + y, this._config.color]);
-  this.normalPlane.putDot(tx + x, ty + y);
+  this.aPlane.putDot(tx + x, ty + y);
 }
 
 Runner.prototype.fillSquare_params = ['x:i', 'y:i', 'size:i'];
 Runner.prototype.fillSquare = function(x, y, size) {
   let [tx, ty] = this._getTranslation();
-  this.normalPlane.putRect(tx + x, ty + y, size, size, true);
+  this.aPlane.putRect(tx + x, ty + y, size, size, true);
 }
 
 Runner.prototype.drawSquare_params = ['x:i', 'y:i', 'size:i'];
 Runner.prototype.drawSquare = function(x, y, size) {
   let [tx, ty] = this._getTranslation();
-  this.normalPlane.putRect(tx + x, ty + y, size, size, false);
+  this.aPlane.putRect(tx + x, ty + y, size, size, false);
 }
 
 Runner.prototype.fillRect_params = ['x:i', 'y:i', 'w:i', 'h:i'];
 Runner.prototype.fillRect = function(x, y, w, h) {
   let [tx, ty] = this._getTranslation();
-  this.normalPlane.putRect(tx + x, ty + y, w, h, true);
+  this.aPlane.putRect(tx + x, ty + y, w, h, true);
 }
 
 Runner.prototype.drawRect_params = ['x:i', 'y:i', 'w:i', 'h:i'];
 Runner.prototype.drawRect = function(x, y, w, h) {
   let [tx, ty] = this._getTranslation();
-  this.normalPlane.putRect(tx + x, ty + y, w, h, false);
+  this.aPlane.putRect(tx + x, ty + y, w, h, false);
 }
 
 Runner.prototype.fillCircle_params = ['x:i', 'y:i', 'r:i'];
@@ -155,7 +154,7 @@ Runner.prototype.fillCircle = function(x, y, r) {
   let centerX = tx + x + r;
   let centerY = ty + y + r;
   let arc = algorithm.midpointCircleRasterize(r);
-  this.normalPlane.putCircleFromArc(centerX, centerY, arc, null, true);
+  this.aPlane.putCircleFromArc(centerX, centerY, arc, null, true);
 }
 
 Runner.prototype.drawCircle_params = ['x:i', 'y:i', 'r:i', 'width?i'];
@@ -168,7 +167,7 @@ Runner.prototype.drawCircle = function(x, y, r, width) {
   if (width) {
     inner = algorithm.midpointCircleRasterize(r - width - 1);
   }
-  this.normalPlane.putCircleFromArc(centerX, centerY, arc, inner, false);
+  this.aPlane.putCircleFromArc(centerX, centerY, arc, inner, false);
 }
 
 Runner.prototype.fillPolygon_params = ['points:ps', 'x?i', 'y?i'];
@@ -176,7 +175,7 @@ Runner.prototype.fillPolygon = function(points, x, y) {
   x = x || 0;
   y = y || 0;
   let [tx, ty] = this._getTranslation();
-  this.normalPlane.putPolygon(tx + x, ty + y, points, true);
+  this.aPlane.putPolygon(tx + x, ty + y, points, true);
 }
 
 Runner.prototype.drawPolygon_params = ['points:ps', 'x?i', 'y?i'];
@@ -184,7 +183,7 @@ Runner.prototype.drawPolygon = function(points, x, y) {
   x = x || 0;
   y = y || 0;
   let [tx, ty] = this._getTranslation();
-  this.normalPlane.putPolygon(tx + x, ty + y, points, false);
+  this.aPlane.putPolygon(tx + x, ty + y, points, false);
 }
 
 Runner.prototype.fillFrame_params = ['fillerFunc:f'];
@@ -221,7 +220,7 @@ Runner.prototype.fillFrame = function(fillerFunc) {
   } else {
     throw 'Invalid arguments for fillFrame: length = ' + fillerFunc.length;
   }
-  this.normalPlane.putFrameMemory(mem);
+  this.aPlane.putFrameMemory(mem);
 
   // TODO: Figure out semantics of calling fillFrame twice in one frame.
   // If this frame had a back-buffer, save the front-buffer.
@@ -239,11 +238,11 @@ Runner.prototype.drawImage_params = ['img:a', 'x:i', 'y:i'];
 Runner.prototype.drawImage = function(img, x, y) {
   image_loader.loadAll(this.display);
   let [tx, ty] = this._getTranslation();
-  this.normalPlane.putImage(img, tx + x, ty + y);
+  this.aPlane.putImage(img, tx + x, ty + y);
 }
 
 Runner.prototype.doRender = function(num, renderFunc, postFunc) {
-  this.display.createWindow(this.normalPlane, this._config.zoomScale);
+  this.display.createWindow(this.aPlane, this._config.zoomScale);
   this.display.appRenderAndLoop(function() {
     if (renderFunc) {
       renderFunc();
@@ -255,7 +254,7 @@ Runner.prototype.doRender = function(num, renderFunc, postFunc) {
 }
 
 Runner.prototype.doRenderFile = function(savepath) {
-  this.normalPlane.saveTo(savepath);
+  this.aPlane.saveTo(savepath);
 }
 
 Runner.prototype.doQuit = function() {
@@ -320,7 +319,7 @@ Runner.prototype.getPaletteEntry = function(x, y) {
     buffer: [],
     pitch: null,
   };
-  this.normalPlane.retrieveTrueContent(image);
+  this.aPlane.retrieveTrueContent(image);
   if (!image.buffer.length) {
     throw 'cannot getPaletteEntry with an empty plane';
   }
@@ -339,7 +338,7 @@ Runner.prototype.getPaletteEntry = function(x, y) {
   let color = image.buffer[x + y*pitch];
   let tr = image.palette[color];
 
-  return paletteEntry.NewPaletteEntry(this.normalPlane, pitch,
+  return paletteEntry.NewPaletteEntry(this.aPlane, pitch,
                                       index, color, tr);
 }
 
@@ -349,12 +348,12 @@ Runner.prototype.getPaletteAll = function() {
     buffer: [],
     pitch: null,
   };
-  this.normalPlane.retrieveTrueContent(image);
+  this.aPlane.retrieveTrueContent(image);
 
   let all = [];
   for (let k = 0; k < image.palette.length; k++) {
     let tr = Math.floor(image.palette[k] / 0x100);
-    let ent = paletteEntry.NewPaletteEntry(this.normalPlane, image.pitch,
+    let ent = paletteEntry.NewPaletteEntry(this.aPlane, image.pitch,
                                            null, k, tr);
     all.push(ent);
   }

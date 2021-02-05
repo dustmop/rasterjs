@@ -31,9 +31,7 @@ Runner.prototype.initialize = function () {
 }
 
 Runner.prototype.resetState = function() {
-  // TODO
-  //this.normalPlane = cppmodule.plane();
-  //this.normalPlane.assignRgbMap(rgbMap.rgb_map_default);
+  this.normalPlane.clear();
 }
 
 Runner.prototype.then = function(cb) {

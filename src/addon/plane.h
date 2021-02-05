@@ -13,7 +13,7 @@ class Plane : public Napi::ObjectWrap<Plane> {
   void BeginFrame();
 
  private:
-  Napi::Value ResetState(const Napi::CallbackInfo& info);
+  Napi::Value Clear(const Napi::CallbackInfo& info);
   Napi::Value SetSize(const Napi::CallbackInfo& info);
   Napi::Value SetColor(const Napi::CallbackInfo& info);
   Napi::Value FillBackground(const Napi::CallbackInfo& info);

@@ -18,7 +18,7 @@ void Plane::InitClass(Napi::Env env, Napi::Object exports) {
   Napi::Function func = DefineClass(
       env,
       "Plane",
-      {InstanceMethod("resetState", &Plane::ResetState),
+      {InstanceMethod("clear", &Plane::Clear),
        InstanceMethod("setSize", &Plane::SetSize),
        InstanceMethod("setColor", &Plane::SetColor),
        InstanceMethod("fillBackground", &Plane::FillBackground),
@@ -102,12 +102,16 @@ void Plane::BeginFrame() {
   this->needErase = false;
 }
 
-Napi::Value Plane::ResetState(const Napi::CallbackInfo& info) {
+Napi::Value Plane::Clear(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if (this->buffer) {
     delete[]this->buffer;
     this->buffer = NULL;
   }
+  this->width = 0;
+  this->height = 0;
+  this->frontColor = 0xffffffff;
+  this->backColor = 0;
   return Napi::Number::New(env, 0);
 }
 

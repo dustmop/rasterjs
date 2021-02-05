@@ -104,10 +104,8 @@ void main() {
   var texture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, texture);
   console.log('using plane.buffer!');
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE,
-                plane.buffer);
-
-  ////new Uint8Array([0, 255, 255, 255]));
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, plane.width, plane.height,
+                0, gl.RGBA, gl.UNSIGNED_BYTE, plane.buffer);
 
   // let's assume all images are not a power of 2
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);

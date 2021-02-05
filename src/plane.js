@@ -35,9 +35,37 @@ Plane.prototype.fillBackground = function(color) {
 }
 
 Plane.prototype.putLine = function(x0, y0, x1, y1, c) {
+  this._prepare();
   // TODO
-  //this._maybeAllocate();
 }
 
+Plane.prototype._prepare = function() {
+  if (this.buffer == null) {
+    let width = this.width || 100;
+    let height = this.height || 100;
+    this.rowSize = width;
+    let numElems = height * this.rowSize;
+    let capacity = numElems * 4;
+    this.buffer = new Uint8Array(capacity);
+    this.numElems = numElems;
+    this.needErase = true;
+  }
+  if (!this.needErase) {
+    return;
+  }
+  // TODO real thing
+  let h = this.height;
+  let w = this.width;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      let k = (y * w + x) * 4;
+      this.buffer[k+0] = Math.floor(255 * y/h);
+      this.buffer[k+1] = Math.floor(255 * x/w);
+      this.buffer[k+2] = Math.floor(255 * 0.5 * ((1.0 - y/h) + (1.0 - x/w)));
+      this.buffer[k+3] = 0xff;
+    }
+  }
+  this.needErase = false;
+}
 
 module.exports.Plane = Plane;

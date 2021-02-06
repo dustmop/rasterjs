@@ -1,3 +1,5 @@
+const put = require('./pixel_update_task.js');
+
 function Plane() {
   this.rgbMap = null;
   this.width = 0;
@@ -36,7 +38,20 @@ Plane.prototype.fillBackground = function(color) {
 
 Plane.prototype.putLine = function(x0, y0, x1, y1, c) {
   this._prepare();
-  // TODO
+/*
+  // TODO: Line drawing algorithm.
+  let k = (x0 + y0 * this.width) * 4;
+  this.buffer[k+0] = 0;
+  this.buffer[k+1] = 0;
+  this.buffer[k+2] = 0;
+  this.buffer[k+3] = 0xff;
+  k = (x1 + y1 * this.width) * 4;
+  this.buffer[k+0] = 0;
+  this.buffer[k+1] = 0;
+  this.buffer[k+2] = 0;
+  this.buffer[k+3] = 0xff;
+*/
+  put.putLine(this, x0, y0, x1, y1, 0xffffffff, false)
 }
 
 Plane.prototype._prepare = function() {

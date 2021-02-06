@@ -1,7 +1,7 @@
 <html>
  <head>
   <title>Quick Graphics</title>
-  <script src="/qgfx.js"/></script>
+  <script src="/main.js"/></script>
   <script>
 setTimeout(function() {
 <%- script_code %>
@@ -9,7 +9,8 @@ setTimeout(function() {
   </script>
  </head>
  <body>
-  <div></div>
+  <div id="canvas"></div>
+  <canvas></canvas>
   <textarea style="width:500;height:900;"><%=
 
 script_code

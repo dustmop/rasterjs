@@ -24,7 +24,6 @@ Plane.prototype.setSize = function(width, height) {
   // TODO: destructure
   this.width = width;
   this.height = height;
-  console.log(`setSize, width=${this.width} height=${this.height}`);
 }
 
 Plane.prototype.setColor = function(color) {
@@ -36,22 +35,11 @@ Plane.prototype.fillBackground = function(color) {
   this.needErase = true;
 }
 
-Plane.prototype.putLine = function(x0, y0, x1, y1, c) {
+Plane.prototype.putLine = function(x0, y0, x1, y1, cc) {
   this._prepare();
-/*
-  // TODO: Line drawing algorithm.
-  let k = (x0 + y0 * this.width) * 4;
-  this.buffer[k+0] = 0;
-  this.buffer[k+1] = 0;
-  this.buffer[k+2] = 0;
-  this.buffer[k+3] = 0xff;
-  k = (x1 + y1 * this.width) * 4;
-  this.buffer[k+0] = 0;
-  this.buffer[k+1] = 0;
-  this.buffer[k+2] = 0;
-  this.buffer[k+3] = 0xff;
-*/
-  put.putLine(this, x0, y0, x1, y1, 0xffffffff, false)
+  let rgb = this.rgbMap[this.frontColor];
+  console.log('putLine x0=' + x0 + ' color=' + this.frontColor + ' rgb=' + rgb);
+  put.putLine(this, x0, y0, x1, y1, rgb, false)
 }
 
 Plane.prototype._prepare = function() {
@@ -68,30 +56,24 @@ Plane.prototype._prepare = function() {
   if (!this.needErase) {
     return;
   }
-  // TODO real thing
+  // Background fill color
+  let rgb = this.rgbMap[this.backColor];
+  //console.log('fillBackground, backColor=' + this.backColor + ', rgb=' + rgb);
+  let r = Math.floor(rgb / 0x10000) % 0x100;
+  let g = Math.floor(rgb / 0x100) % 0x100;
+  let b = Math.floor(rgb) % 0x100;
+  //console.log(`filling background: r=${r} g=${g} b=${b}`);
   let h = this.height;
   let w = this.width;
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
       let k = (y * w + x) * 4;
-      this.buffer[k+0] = Math.floor(255 * x/w);
-      this.buffer[k+1] = Math.floor(255 * 0.5 * ((1.0 - y/h) + (1.0 - x/w)));
-      this.buffer[k+2] = Math.floor(255 * y/h);
+      this.buffer[k+0] = r;
+      this.buffer[k+1] = g;
+      this.buffer[k+2] = b;
       this.buffer[k+3] = 0xff;
     }
   }
-
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      let k = (y * w + x) * 4;
-      let r = this.buffer[k+0];
-      let g = this.buffer[k+1];
-      let b = this.buffer[k+2];
-      let a = this.buffer[k+3];
-      //console.log(`${y},${x}: ${r},${g},${b}`);
-    }
-  }
-
   this.needErase = false;
 }
 

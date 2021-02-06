@@ -54,15 +54,11 @@ app.get('/favicon.ico', function(req, res) {
   res.send('');
 });
 
-app.get('/qgfx.js', function(req, res) {
+app.get('/main.js', function(req, res) {
   res.setHeader('Content-Type', 'text/javascript');
-  res.sendFile(process.cwd() + '/qgfx.js');
-});
-
-app.get('/js/:file', function(req, res) {
-  let file = req.params.file;
-  res.setHeader('Content-Type', 'text/javascript');
-  res.sendFile(process.cwd() + '/js/' + file);
+  let distfile = __dirname + '/dist/main.js';
+  console.log('distfile = ' + distfile);
+  res.sendFile(distfile);
 });
 
 app.get('/run/:file', function(req, res) {

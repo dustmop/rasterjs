@@ -51,8 +51,6 @@ const rgb_map_nes = [
    0xf8d878,0xd8f878,0xb8f8b8,0xb8f8d8,0x00fcfc,0xf8d8f8,0x080808,0x080808
 ];
 
-if (typeof module !== 'undefined') {
-  module.exports.rgb_map_default = rgb_map_default;
-  module.exports.rgb_map_nes   = rgb_map_nes;
-  module.exports.rgb_map_dos   = rgb_map_dos;
-}
+module.exports.rgb_map_default = rgb_map_default;
+module.exports.rgb_map_nes   = rgb_map_nes;
+module.exports.rgb_map_dos   = rgb_map_dos;

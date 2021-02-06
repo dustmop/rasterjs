@@ -3,13 +3,22 @@ function abs(n) {
 }
 
 function splitColor(color) {
-  return [0xff, 0xff, 0xff, 0xff];
+  let r = Math.floor(color / 0x10000) % 0x100;
+  let g = Math.floor(color / 0x100) % 0x100;
+  let b = Math.floor(color) % 0x100;
+  return [r, g, b, 0xff];
 }
 
 function putLine(plane, x0, y0, x1, y1, color, connectCorners) {
-console.log(plane);
+
+  x0 = Math.floor(x0);
+  y0 = Math.floor(y0);
+  x1 = Math.floor(x1);
+  y1 = Math.floor(y1);
+
   let deltax = x1 - x0;
   let deltay = y1 - y0;
+  let tuple = splitColor(color);
 
   if (abs(deltay) <= abs(deltax)) {
 
@@ -43,7 +52,6 @@ console.log(plane);
       // Draw a pixel
       if (x >= 0 && x < plane.width && y >= 0 && y < plane.height) {
         let k = (x + y*plane.rowSize)*4;
-        let tuple = splitColor(color);
         plane.buffer[k+0] = tuple[0];
         plane.buffer[k+1] = tuple[1];
         plane.buffer[k+2] = tuple[2];
@@ -71,7 +79,6 @@ console.log(plane);
       y1 = tmp;
       deltax = -deltax;
       deltay = -deltay;
-        let (k = x + y*plane.rowSize)*4;
     }
 
     if (connectCorners) {
@@ -91,7 +98,6 @@ console.log(plane);
       // Draw a pixel
       if (x >= 0 && x < plane.width && y >= 0 && y < plane.height) {
         let k = (x + y*plane.rowSize)*4;
-        let tuple = splitColor(color);
         plane.buffer[k+0] = tuple[0];
         plane.buffer[k+1] = tuple[1];
         plane.buffer[k+2] = tuple[2];

@@ -19,10 +19,20 @@ Display.prototype.createWindow = function(plane, zoomLevel) {
 
   var canvasElems = document.getElementsByTagName('canvas');
   if (canvasElems.length >= 1) {
+    console.log('found element "canvas"');
     this.canvas = canvasElems[0];
   } else {
-    this.canvas = document.createElement('canvas');
-    document.body.appendChild(this.canvas);
+    var canvasContainer = document.getElementById('canvas');
+    if (canvasContainer) {
+      console.log('got div with id "canvas"');
+      //this.canvas = canvasElem;
+      this.canvas = document.createElement('canvas');
+      canvasContainer.appendChild(this.canvas);
+    } else {
+      console.log('createed "canvas"');
+      this.canvas = document.createElement('canvas');
+      document.body.appendChild(this.canvas);
+    }
   }
 
   var gl = this.canvas.getContext("webgl");
@@ -101,6 +111,10 @@ void main() {
   ];
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(texcoords), gl.STATIC_DRAW);
 
+  // Hold onto the plane.
+  this.plane = plane;
+  this.gl = gl;
+
   var texture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, texture);
   console.log('using plane.buffer!');
@@ -134,8 +148,57 @@ void main() {
   gl.drawArrays(gl.TRIANGLES, 0, 6);
 }
 
-Display.prototype.appRenderAndLoop = function() {
-  // TODO
+Display.prototype.appRenderAndLoop = function(nextFrame) {
+  let self = this;
+  let pl = this.plane;
+  let gl = this.gl;
+  let oneBuffer = null;
+  let twoBuffer = null;
+  let whichBuffer = 0;
+  let doubleBuffer = null;
+
+  let renderIt = function() {
+
+    if (doubleBuffer == null) {
+      if (pl.buffer) {
+        oneBuffer = new Uint8Array(pl.buffer.byteLength);
+        for (let k = 0; k < pl.buffer.byteLength; k++) {
+          oneBuffer[k] = pl.buffer[k];
+        }
+        twoBuffer = new Uint8Array(pl.buffer.byteLength);
+        for (let k = 0; k < pl.buffer.byteLength; k++) {
+          twoBuffer[k] = pl.buffer[k];
+        }
+        doubleBuffer = [oneBuffer, twoBuffer];
+      }
+    }
+
+    if (doubleBuffer) {
+      gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 256, 240, gl.RGBA,
+                       gl.UNSIGNED_BYTE, doubleBuffer[whichBuffer]);
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+    }
+
+    // Create the next frame.
+    nextFrame();
+    // Copy to next buffer.
+    if (doubleBuffer) {
+      if (whichBuffer == 0) {
+        whichBuffer = 1;
+      } else {
+        whichBuffer = 0;
+      }
+      //whichBuffer = 1 - whichBuffer;
+      let frontBuffer = doubleBuffer[whichBuffer];
+      for (let k = 0; k < pl.buffer.byteLength; k++) {
+        frontBuffer[k] = pl.buffer[k];
+      }
+    }
+
+    // Wait for next frame.
+    requestAnimationFrame(renderIt);
+  };
+  requestAnimationFrame(renderIt);
 }
 
 module.exports.Display = Display;

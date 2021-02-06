@@ -152,44 +152,25 @@ Display.prototype.appRenderAndLoop = function(nextFrame) {
   let self = this;
   let pl = this.plane;
   let gl = this.gl;
-  let oneBuffer = null;
-  let twoBuffer = null;
-  let whichBuffer = 0;
-  let doubleBuffer = null;
+  let frontBuffer = null;
 
   let renderIt = function() {
-
-    if (doubleBuffer == null) {
-      if (pl.buffer) {
-        oneBuffer = new Uint8Array(pl.buffer.byteLength);
-        for (let k = 0; k < pl.buffer.byteLength; k++) {
-          oneBuffer[k] = pl.buffer[k];
-        }
-        twoBuffer = new Uint8Array(pl.buffer.byteLength);
-        for (let k = 0; k < pl.buffer.byteLength; k++) {
-          twoBuffer[k] = pl.buffer[k];
-        }
-        doubleBuffer = [oneBuffer, twoBuffer];
-      }
-    }
-
-    if (doubleBuffer) {
+    // Render to the display
+    if (frontBuffer) {
       gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 256, 240, gl.RGBA,
-                       gl.UNSIGNED_BYTE, doubleBuffer[whichBuffer]);
+                       gl.UNSIGNED_BYTE, frontBuffer);
       gl.drawArrays(gl.TRIANGLES, 0, 6);
     }
 
     // Create the next frame.
     nextFrame();
+
+    // Allocate buffer once available
+    if (!frontBuffer && pl.buffer) {
+      frontBuffer = new Uint8Array(pl.buffer.byteLength);
+    }
     // Copy to next buffer.
-    if (doubleBuffer) {
-      if (whichBuffer == 0) {
-        whichBuffer = 1;
-      } else {
-        whichBuffer = 0;
-      }
-      //whichBuffer = 1 - whichBuffer;
-      let frontBuffer = doubleBuffer[whichBuffer];
+    if (frontBuffer) {
       for (let k = 0; k < pl.buffer.byteLength; k++) {
         frontBuffer[k] = pl.buffer[k];
       }

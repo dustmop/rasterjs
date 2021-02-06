@@ -57,7 +57,6 @@ app.get('/favicon.ico', function(req, res) {
 app.get('/main.js', function(req, res) {
   res.setHeader('Content-Type', 'text/javascript');
   let distfile = __dirname + '/dist/main.js';
-  console.log('distfile = ' + distfile);
   res.sendFile(distfile);
 });
 

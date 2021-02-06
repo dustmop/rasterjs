@@ -12,24 +12,15 @@ Display.prototype.initialize = function() {
 const SHARPEN = 2;
 
 Display.prototype.createWindow = function(plane, zoomLevel) {
-
-  console.log(`createWindow w=${plane.width}`);
-  console.log(`createWindow h=${plane.height}`);
-  console.log(`createWindow z=${zoomLevel}`);
-
   var canvasElems = document.getElementsByTagName('canvas');
   if (canvasElems.length >= 1) {
-    console.log('found element "canvas"');
     this.canvas = canvasElems[0];
   } else {
     var canvasContainer = document.getElementById('canvas');
     if (canvasContainer) {
-      console.log('got div with id "canvas"');
-      //this.canvas = canvasElem;
       this.canvas = document.createElement('canvas');
       canvasContainer.appendChild(this.canvas);
     } else {
-      console.log('createed "canvas"');
       this.canvas = document.createElement('canvas');
       document.body.appendChild(this.canvas);
     }
@@ -117,7 +108,6 @@ void main() {
 
   var texture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, texture);
-  console.log('using plane.buffer!');
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, plane.width, plane.height,
                 0, gl.RGBA, gl.UNSIGNED_BYTE, plane.buffer);
 

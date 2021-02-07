@@ -35,6 +35,19 @@ Plane.prototype.fillBackground = function(color) {
   this.needErase = true;
 }
 
+Plane.prototype.putDot = function(x, y) {
+  this._prepare();
+  let rgb = this.rgbMap[this.frontColor];
+  let r = Math.floor(rgb / 0x10000) % 0x100;
+  let g = Math.floor(rgb / 0x100) % 0x100;
+  let b = Math.floor(rgb) % 0x100;
+  let k = (y * this.rowSize + x) * 4;
+  this.buffer[k+0] = r;
+  this.buffer[k+1] = g;
+  this.buffer[k+2] = b;
+  this.buffer[k+3] = 0xff;
+}
+
 Plane.prototype.putLine = function(x0, y0, x1, y1, cc) {
   this._prepare();
   let rgb = this.rgbMap[this.frontColor];

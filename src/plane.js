@@ -41,6 +41,21 @@ Plane.prototype.putLine = function(x0, y0, x1, y1, cc) {
   put.putLine(this, x0, y0, x1, y1, rgb, false)
 }
 
+Plane.prototype.putPolygon = function(baseX, baseY, points, fill) {
+  this._prepare();
+  let ps = [];
+  for (let k = 0; k < points.length; k++) {
+    ps.push({x: Math.floor(points[k][0] + baseX),
+             y: Math.floor(points[k][1] + baseY)});
+  }
+  let rgb = this.rgbMap[this.frontColor];
+  if (fill) {
+    put.putPolygonFill(this, ps, rgb);
+  } else {
+    put.putPolygonOutline(this, ps, rgb);
+  }
+}
+
 Plane.prototype._prepare = function() {
   if (this.buffer == null) {
     let width = this.width || 100;

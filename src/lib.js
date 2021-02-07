@@ -141,10 +141,11 @@ Raster.prototype.fillFrame = function(callback) {
 // Display endpoints
 
 Raster.prototype.run = function(renderFunc) {
+  var self = this;
   var runner = this.runner;
   runner.then(function() {
     runner.run(renderFunc, function() {
-      runner.timeClick++;
+      self.timeClick++;
     });
   });
 }

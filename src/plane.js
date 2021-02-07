@@ -69,6 +69,24 @@ Plane.prototype.putPolygon = function(baseX, baseY, points, fill) {
   }
 }
 
+Plane.prototype.putFrameMemory = function(mem) {
+  this._prepare();
+  // TODO: pitch
+  let w = this.width;
+  for (let y = 0; y < this.height; y++) {
+    for (let x = 0; x < this.width; x++) {
+      let color = mem[y*w+x];
+      let rgb = this.rgbMap[color];
+      let tuple = put.splitColor(rgb);
+      let k = (y * this.rowSize + x) * 4;
+      this.buffer[k+0] = tuple[0];
+      this.buffer[k+1] = tuple[1];
+      this.buffer[k+2] = tuple[2];
+      this.buffer[k+3] = 0xff;
+    }
+  }
+}
+
 Plane.prototype._prepare = function() {
   if (this.buffer == null) {
     let width = this.width || 100;

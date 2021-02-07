@@ -266,6 +266,7 @@ function putPolygonOutline(plane, points, color) {
   }
 }
 
+module.exports.splitColor = splitColor;
 module.exports.putLine = putLine;
 module.exports.putPolygonFill = putPolygonFill;
 module.exports.putPolygonOutline = putPolygonOutline;

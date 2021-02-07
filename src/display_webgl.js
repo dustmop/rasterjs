@@ -147,7 +147,7 @@ Display.prototype.appRenderAndLoop = function(nextFrame) {
   let renderIt = function() {
     // Render to the display
     if (frontBuffer) {
-      gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, 256, 240, gl.RGBA,
+      gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, pl.width, pl.height, gl.RGBA,
                        gl.UNSIGNED_BYTE, frontBuffer);
       gl.drawArrays(gl.TRIANGLES, 0, 6);
     }

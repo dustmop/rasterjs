@@ -117,6 +117,99 @@ function putLine(plane, x0, y0, x1, y1, color, connectCorners) {
   }
 }
 
+function putRect(plane, x0, y0, x1, y1, fill, color) {
+  let tuple = splitColor(color);
+  console.log(`putRect ${color} = ${tuple}`)
+
+  x0 = Math.floor(x0);
+  y0 = Math.floor(y0);
+  x1 = Math.floor(x1);
+  y1 = Math.floor(y1);
+
+  let tmp;
+  if (x0 > x1) {
+    tmp = x0;
+    x0 = x1;
+    x1 = tmp;
+  }
+  if (y0 > y1) {
+    tmp = y0;
+    y0 = y1;
+    y1 = tmp;
+  }
+
+  if (x0 >= plane.width) {
+    return;
+  }
+  if (y0 >= plane.height) {
+    return;
+  }
+
+  if (x0 < 0) {
+    x0 = 0;
+  }
+  if (x1 >= plane.width) {
+    x1 = plane.width;
+  }
+  if (y0 < 0) {
+    y0 = 0;
+  }
+  if (y1 >= plane.height) {
+    y1 = plane.height;
+  }
+
+  if (fill) {
+    for (let y = y0; y < y1; y++) {
+      for (let x = x0; x < x1; x++) {
+        //plane.buffer[x + y*plane.rowSize] = color;
+        let k = (x + y*plane.rowSize)*4;
+        plane.buffer[k+0] = tuple[0];
+        plane.buffer[k+1] = tuple[1];
+        plane.buffer[k+2] = tuple[2];
+        plane.buffer[k+3] = 0xff;
+      }
+    }
+  } else {
+    let x, y;
+    // Horizontal lines
+    // TODO: putRange instead
+    for (x = x0; x < x1; x++) {
+      y = y0;
+      //plane.buffer[x + y*plane.rowSize] = color;
+      let k = (x + y*plane.rowSize)*4;
+      plane.buffer[k+0] = tuple[0];
+      plane.buffer[k+1] = tuple[1];
+      plane.buffer[k+2] = tuple[2];
+      plane.buffer[k+3] = 0xff;
+      y = y1 - 1;
+      //plane.buffer[x + y*plane.rowSize] = color;
+      k = (x + y*plane.rowSize)*4;
+      plane.buffer[k+0] = tuple[0];
+      plane.buffer[k+1] = tuple[1];
+      plane.buffer[k+2] = tuple[2];
+      plane.buffer[k+3] = 0xff;
+    }
+    // Vertical lines
+    // TODO: putRange instead
+    for (y = y0; y < y1; y++) {
+      x = x0;
+      //plane.buffer[x + y*plane.rowSize] = color;
+      let k = (x + y*plane.rowSize)*4;
+      plane.buffer[k+0] = tuple[0];
+      plane.buffer[k+1] = tuple[1];
+      plane.buffer[k+2] = tuple[2];
+      plane.buffer[k+3] = 0xff;
+      x = x1 - 1;
+      //plane.buffer[x + y*plane.rowSize] = color;
+      k = (x + y*plane.rowSize)*4;
+      plane.buffer[k+0] = tuple[0];
+      plane.buffer[k+1] = tuple[1];
+      plane.buffer[k+2] = tuple[2];
+      plane.buffer[k+3] = 0xff;
+    }
+  }
+}
+
 function putPolygonFill(plane, points, color) {
   let numEdges;
   let edgeX = [];
@@ -268,5 +361,6 @@ function putPolygonOutline(plane, points, color) {
 
 module.exports.splitColor = splitColor;
 module.exports.putLine = putLine;
+module.exports.putRect = putRect;
 module.exports.putPolygonFill = putPolygonFill;
 module.exports.putPolygonOutline = putPolygonOutline;

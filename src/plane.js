@@ -54,6 +54,12 @@ Plane.prototype.putLine = function(x0, y0, x1, y1, cc) {
   put.putLine(this, x0, y0, x1, y1, rgb, false)
 }
 
+Plane.prototype.putRect = function(x0, y0, w, h, fill) {
+  this._prepare();
+  let rgb = this.rgbMap[this.frontColor];
+  put.putRect(this, x0, y0, x0+w, y0+h, fill, rgb)
+}
+
 Plane.prototype.putPolygon = function(baseX, baseY, points, fill) {
   this._prepare();
   let ps = [];

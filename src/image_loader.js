@@ -29,7 +29,7 @@ function NewImage(filepath) {
   return img;
 }
 
-function loadAll(renderer) {
+function readAll(envBackend) {
   if (!_state.pending) {
     return;
   }
@@ -37,11 +37,11 @@ function loadAll(renderer) {
   for (let i = 0; i < _state.images.length; i++) {
     let img = _state.images[i];
     if (!img.isOpen) {
-      renderer.loadImage(img.filepath);
+      envBackend.readImage(img.filepath);
       img.isOpen = true;
     }
   }
 }
 
 module.exports.NewImage = NewImage;
-module.exports.loadAll = loadAll;
+module.exports.readAll = readAll;

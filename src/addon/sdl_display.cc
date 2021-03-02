@@ -21,7 +21,7 @@ void SDLDisplay::InitClass(Napi::Env env, Napi::Object exports) {
        InstanceMethod("handleEvent", &SDLDisplay::HandleEvent),
        InstanceMethod("appRenderAndLoop", &SDLDisplay::AppRenderAndLoop),
        InstanceMethod("appQuit", &SDLDisplay::AppQuit),
-       InstanceMethod("loadImage", &SDLDisplay::LoadImage),
+       InstanceMethod("readImage", &SDLDisplay::ReadImage),
   });
   g_displayConstructor = Napi::Persistent(func);
   g_displayConstructor.SuppressDestruct();
@@ -226,7 +226,7 @@ void SDLDisplay::EndFrame() {
 Image** g_img_list = NULL;
 int num_img = 0;
 
-Napi::Value SDLDisplay::LoadImage(const Napi::CallbackInfo& info) {
+Napi::Value SDLDisplay::ReadImage(const Napi::CallbackInfo& info) {
   Napi::Value val = info[0];
   Napi::String str = val.ToString();
   std::string s = str.Utf8Value();

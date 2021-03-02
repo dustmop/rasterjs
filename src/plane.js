@@ -93,6 +93,10 @@ Plane.prototype.putFrameMemory = function(mem) {
   }
 }
 
+Plane.prototype.putImage = function(img, x, y) {
+  // TODO
+}
+
 Plane.prototype._prepare = function() {
   if (this.buffer == null) {
     let width = this.width || 100;

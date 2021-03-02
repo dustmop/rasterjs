@@ -236,7 +236,7 @@ Runner.prototype.loadImage = function(filepath) {
 
 Runner.prototype.drawImage_params = ['img:a', 'x:i', 'y:i'];
 Runner.prototype.drawImage = function(img, x, y) {
-  image_loader.loadAll(this.display);
+  image_loader.readAll(this.display);
   let [tx, ty] = this._getTranslation();
   this.aPlane.putImage(img, tx + x, ty + y);
 }

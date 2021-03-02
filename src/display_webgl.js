@@ -138,6 +138,11 @@ void main() {
   gl.drawArrays(gl.TRIANGLES, 0, 6);
 }
 
+Display.prototype.readImage = function(filepath) {
+  // TODO
+  return null;
+}
+
 Display.prototype.appRenderAndLoop = function(nextFrame) {
   let self = this;
   let pl = this.plane;

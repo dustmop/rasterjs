@@ -6,7 +6,9 @@ function Display() {
 }
 
 Display.prototype.initialize = function() {
-  // TODO
+  this.imgSet = [];
+  this.numToLoad = 0;
+  this.numLoadDone = 0;
 }
 
 const SHARPEN = 2;
@@ -139,7 +141,12 @@ void main() {
 }
 
 Display.prototype.readImage = function(filepath) {
-  // TODO
+  let img = new Image;
+  this.numToLoad++;
+  img.onload = function() {
+    this.numLoadDone++;
+  }
+  img.src = "/" + filepath;
   return null;
 }
 
@@ -174,7 +181,20 @@ Display.prototype.appRenderAndLoop = function(nextFrame) {
     // Wait for next frame.
     requestAnimationFrame(renderIt);
   };
-  requestAnimationFrame(renderIt);
+  this.waitForImageLoads(function() {
+    requestAnimationFrame(renderIt);
+  });
+}
+
+Display.prototype.waitForImageLoads = function(cb) {
+  let self = this;
+  setTimeout(function() {
+    if (self.numToLoad > self.numLoadDone) {
+      self.waitForImageLoads(cb);
+      return;
+    }
+    cb();
+  }, 0);
 }
 
 module.exports.Display = Display;

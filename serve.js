@@ -66,6 +66,13 @@ app.get('/run/:file', function(req, res) {
   res.render('pages/render', {script_code: script_code});
 });
 
+app.get('/asset/:file', function(req, res) {
+  let file = req.params.file;
+  let cwd = process.cwd();
+  let imagefile = cwd + '/asset/' + file;
+  res.sendFile(imagefile);
+});
+
 app.listen(PORT, function() {
   console.log('Running at localhost:' + PORT);
 });

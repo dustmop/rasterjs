@@ -20,7 +20,7 @@ class SDLDisplay : public Napi::ObjectWrap<SDLDisplay> {
   Napi::Value HandleEvent(const Napi::CallbackInfo& info);
   Napi::Value AppRenderAndLoop(const Napi::CallbackInfo& info);
   Napi::Value AppQuit(const Napi::CallbackInfo& info);
-  Napi::Value LoadImage(const Napi::CallbackInfo& info);
+  Napi::Value ReadImage(const Napi::CallbackInfo& info);
   void StartFrame();
   void EndFrame();
 
@@ -31,20 +31,5 @@ class SDLDisplay : public Napi::ObjectWrap<SDLDisplay> {
   int windowHeight;
   Plane* renderPlane;
 };
-
-/*
-PrivateState::PrivateState() {
-
-  //printf("Napi::PrivateState::ctor\n");
-
-  this->rgb_map_length = 0;
-  this->frontColor = 0xffffffff;
-  this->backColor = 0;
-  this->drawTarget = NULL;
-  this->allocTarget = NULL;
-}
-
-};
-*/
 
 #endif

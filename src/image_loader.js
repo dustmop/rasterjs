@@ -1,47 +1,38 @@
-var _state = {
-  pending: false,
-  images: [],
-};
+function Loader(envBackend) {
+  this.pending = false;
+  this.assets = [];
+  this.envBackend = envBackend;
+  return this;
+}
 
-function Image() {
+Loader.prototype.loadBegin = function(filepath) {
+  let img = new ImagePlane();
+  img.filepath = filepath;
+  img.loader = this;
+  img.id = this.envBackend.readImage(filepath);
+  return img;
+}
+
+function ImagePlane() {
   this.filepath = null;
+  this.loader = null;
   this.id = null;
-  this.isOpen = false;
   this.slice = null;
   return this;
 }
 
-Image.prototype.copy = function(x, y, w, h) {
+ImagePlane.prototype.copy = function(x, y, w, h) {
   let make = new Image();
   make.filepath = this.filepath;
+  make.loader = this.loader;
   make.id = this.id;
-  make.isOpen = this.isOpen;
   make.slice = [x, y, w, h];
   return make;
 }
 
-function NewImage(filepath) {
-  let img = new Image();
-  img.filepath = filepath;
-  img.id = _state.images.length;
-  _state.images.push(img);
-  _state.pending = true;
-  return img;
+ImagePlane.prototype.getPixels = function() {
+  return this.loader.envBackend.getImagePixels(this.id);
 }
 
-function readAll(envBackend) {
-  if (!_state.pending) {
-    return;
-  }
-  _state.pending = false;
-  for (let i = 0; i < _state.images.length; i++) {
-    let img = _state.images[i];
-    if (!img.isOpen) {
-      envBackend.readImage(img.filepath);
-      img.isOpen = true;
-    }
-  }
-}
+module.exports.Loader = Loader;
 
-module.exports.NewImage = NewImage;
-module.exports.readAll = readAll;

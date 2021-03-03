@@ -93,8 +93,28 @@ Plane.prototype.putFrameMemory = function(mem) {
   }
 }
 
-Plane.prototype.putImage = function(img, x, y) {
-  // TODO
+Plane.prototype.putImage = function(img, targetX, targetY) {
+  this._prepare();
+  let pixels = img.getPixels();
+  targetX = Math.floor(targetX);
+  targetY = Math.floor(targetY);
+  let data = pixels.data;
+  for (let srcY = 0; srcY < pixels.height; srcY++) {
+    for (let srcX = 0; srcX < pixels.width; srcX++) {
+      let j = (srcY * pixels.width + srcX) * 4;
+      if (data[j+3] > 0x80) {
+        if (srcY+targetY < 0 || srcY+targetY >= this.height ||
+            srcX+targetX < 0 || srcX+targetX >= this.width) {
+          continue;
+        }
+        let k = ((srcY+targetY) * this.rowSize + (srcX+targetX)) * 4;
+        this.buffer[k+0] = data[j+0];
+        this.buffer[k+1] = data[j+1];
+        this.buffer[k+2] = data[j+2];
+        this.buffer[k+3] = 0xff;
+      }
+    }
+  }
 }
 
 Plane.prototype._prepare = function() {

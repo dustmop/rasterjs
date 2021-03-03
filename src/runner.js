@@ -4,7 +4,7 @@ const algorithm = require('./algorithm.js');
 const frameMemory = require('./frame_memory.js');
 const paletteEntry = require('./palette_entry.js');
 const geometry = require('./geometry.js');
-const image_loader = require('./image_loader.js');
+const imageLoader = require('./image_loader.js');
 
 ////////////////////////////////////////
 
@@ -27,6 +27,7 @@ Runner.prototype.initialize = function () {
   this.initBackBuffer = null;
   this.display.initialize();
   this.aPlane.assignRgbMap(rgbMap.rgb_map_default);
+  this.imgLoader = new imageLoader.Loader(this.display);
 }
 
 Runner.prototype.resetState = function() {
@@ -231,12 +232,11 @@ Runner.prototype.fillFrame = function(fillerFunc) {
 }
 
 Runner.prototype.loadImage = function(filepath) {
-  return image_loader.NewImage(filepath);
+  return this.imgLoader.loadBegin(filepath);
 }
 
 Runner.prototype.drawImage_params = ['img:a', 'x:i', 'y:i'];
 Runner.prototype.drawImage = function(img, x, y) {
-  image_loader.readAll(this.display);
   let [tx, ty] = this._getTranslation();
   this.aPlane.putImage(img, tx + x, ty + y);
 }

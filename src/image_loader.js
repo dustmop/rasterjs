@@ -22,7 +22,7 @@ function ImagePlane() {
 }
 
 ImagePlane.prototype.copy = function(x, y, w, h) {
-  let make = new Image();
+  let make = new ImagePlane();
   make.filepath = this.filepath;
   make.loader = this.loader;
   make.id = this.id;

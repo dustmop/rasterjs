@@ -6,10 +6,9 @@ function Display() {
 }
 
 Display.prototype.initialize = function() {
-  this.imgSet = [];
   this.numToLoad = 0;
   this.numLoadDone = 0;
-  this.imgLoadAssets = [];
+  this.imgAssets = [];
 }
 
 const SHARPEN = 2;
@@ -151,13 +150,13 @@ Display.prototype.readImage = function(filepath) {
   }
   imgElem.src = "/" + filepath;
   // Keep track of the image being loaded, to retrieve later
-  let id = this.imgLoadAssets.length;
-  this.imgLoadAssets.push({imgElem: imgElem, pixels: null});
+  let id = this.imgAssets.length;
+  this.imgAssets.push({imgElem: imgElem, pixels: null});
   return id;
 }
 
 Display.prototype.getImagePixels = function(id) {
-  let asset = this.imgLoadAssets[id];
+  let asset = this.imgAssets[id];
   let imgElem = asset.imgElem;
   if (asset.pixels == null) {
     let canvas = document.createElement('canvas');

@@ -184,6 +184,7 @@ Napi::Value SDLDisplay::AppRenderAndLoop(const Napi::CallbackInfo& info) {
     if (env.IsExceptionPending()) {
       break;
     }
+    this->renderPlane->Finish();
 
     if (this->renderPlane->buffer) {
       int pitch = this->renderPlane->rowSize*4;

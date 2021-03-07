@@ -74,7 +74,7 @@ Napi::Value Plane::SetSize(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, 0);
 }
 
-void Plane::prepare(int shouldErase) {
+void Plane::prepare() {
   // If buffer has not yet been allocated
   if (this->buffer == NULL) {
     int width = this->width ? this->width : 100;
@@ -101,6 +101,10 @@ void Plane::prepare(int shouldErase) {
 
 void Plane::BeginFrame() {
   this->needErase = false;
+}
+
+void Plane::Finish() {
+  this->prepare();
 }
 
 Napi::Value Plane::Clear(const Napi::CallbackInfo& info) {
@@ -259,7 +263,7 @@ Napi::Value Plane::SetColor(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value Plane::PutRect(const Napi::CallbackInfo& info) {
-  this->prepare(true);
+  this->prepare();
 
   // TODO: Validate length of parameters, all should be numbers
 
@@ -284,7 +288,7 @@ Napi::Value Plane::PutRect(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value Plane::PutDot(const Napi::CallbackInfo& info) {
-  this->prepare(true);
+  this->prepare();
 
   Napi::Value xval = info[0];
   Napi::Value yval = info[1];
@@ -299,7 +303,7 @@ Napi::Value Plane::PutDot(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value Plane::PutLine(const Napi::CallbackInfo& info) {
-  this->prepare(true);
+  this->prepare();
 
   Napi::Value xval  = info[0];
   Napi::Value yval  = info[1];
@@ -333,7 +337,7 @@ Napi::Value Plane::PutLine(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value Plane::PutPolygon(const Napi::CallbackInfo& info) {
-  this->prepare(true);
+  this->prepare();
 
   if (info.Length() != 4) {
     printf("expected 4 arguments to this function\n");
@@ -408,7 +412,7 @@ extern Image** g_img_list;
 extern int num_img;
 
 Napi::Value Plane::PutImage(const Napi::CallbackInfo& info) {
-  this->prepare(true);
+  this->prepare();
 
   Napi::Object imgObj = info[0].ToObject();
   int baseX = info[1].ToNumber().Int32Value();
@@ -475,7 +479,7 @@ Napi::Value Plane::PutImage(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value Plane::PutCircleFromArc(const Napi::CallbackInfo& info) {
-  this->prepare(true);
+  this->prepare();
 
   int baseX = info[0].ToNumber().Int32Value();
   int baseY = info[1].ToNumber().Int32Value();
@@ -561,7 +565,7 @@ Napi::Value Plane::PutCircleFromArc(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value Plane::PutFrameMemory(const Napi::CallbackInfo& info) {
-  this->prepare(true);
+  this->prepare();
 
   if (info.Length() < 1) {
     printf("PutFrameMemory needs 1 param");
@@ -588,7 +592,7 @@ Napi::Value Plane::PutFrameMemory(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value Plane::SaveImage(const Napi::CallbackInfo& info) {
-  this->prepare(true);
+  this->prepare();
 
   if (info.Length() < 2) {
     printf("SaveImage needs 2 params");

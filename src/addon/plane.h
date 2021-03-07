@@ -11,6 +11,7 @@ class Plane : public Napi::ObjectWrap<Plane> {
   static Napi::Object NewInstance(Napi::Env env, Napi::Value arg);
   Plane(const Napi::CallbackInfo& info);
   void BeginFrame();
+  void Finish();
 
  private:
   Napi::Value Clear(const Napi::CallbackInfo& info);
@@ -31,7 +32,7 @@ class Plane : public Napi::ObjectWrap<Plane> {
   Napi::Value PutCircleFromArc(const Napi::CallbackInfo& info);
   Napi::Value PutFrameMemory(const Napi::CallbackInfo& info);
 
-  void prepare(int shouldErase);
+  void prepare();
   void fillTarget(GfxTarget* t);
 
   // Configuration, safe defaults.

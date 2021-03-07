@@ -84,6 +84,8 @@ Runner.prototype.useSystemColors = function(obj) {
       this.aPlane.assignRgbMap(rgbMap.rgb_map_dos);
     } else if (text == 'nes') {
       this.aPlane.assignRgbMap(rgbMap.rgb_map_nes);
+    } else if (text == 'grey') {
+      this.aPlane.assignRgbMap(rgbMap.rgb_map_grey);
     } else {
       throw 'Unknown system: ' + text;
     }

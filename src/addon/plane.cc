@@ -44,7 +44,8 @@ Plane::Plane(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Plane>(info) {
   Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
 
-  this->rgbMapLength = 0;
+  this->rgbMapIndex = 0;
+  this->rgbMapSize = 0;
   // rgbMap[256];
   this->frontColor = 0xffffffff;
   this->backColor = 0;
@@ -143,7 +144,8 @@ Napi::Value Plane::AssignRgbMap(const Napi::CallbackInfo& info) {
   Napi::Value list_length = list.Get("length");
 
   int num = list_length.As<Napi::Number>().Int32Value();
-  this->rgbMapLength = num;
+  this->rgbMapIndex = num;
+  this->rgbMapSize = num;
 
   for (int i = 0; i < num; i++) {
     elem = list[uint32_t(i)];
@@ -156,7 +158,8 @@ Napi::Value Plane::AssignRgbMap(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value Plane::ClearRgbMap(const Napi::CallbackInfo& info) {
-  this->rgbMapLength = 0;
+  this->rgbMapIndex = 0;
+  this->rgbMapSize = 0;
   return info.Env().Null();
 }
 
@@ -164,16 +167,21 @@ Napi::Value Plane::AddRgbMapEntry(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   Napi::Value val = info[0];
   int num = val.As<Napi::Number>().Int32Value();
-  int size = this->rgbMapLength;
+  int size = this->rgbMapSize;
   int color = num * 0x100 + 0xff;
   for (int i = 0; i < size; i++) {
     if (this->rgbMap[i] == color) {
       return Napi::Number::New(env, i);
     }
   }
-  this->rgbMap[size] = color;
-  this->rgbMapLength++;
-  return Napi::Number::New(env, size);
+  // Add it to the map
+  int index = this->rgbMapIndex;
+  this->rgbMap[index] = color;
+  if (size < 0x100) {
+    this->rgbMapSize++;
+  }
+  this->rgbMapIndex = (this->rgbMapIndex + 1) % 0x100;
+  return Napi::Number::New(env, index);
 }
 
 Napi::Value Plane::RetrieveTrueContent(const Napi::CallbackInfo& info) {
@@ -244,7 +252,7 @@ Napi::Value Plane::SetColor(const Napi::CallbackInfo& info) {
   Napi::Value val = info[0];
   int color = val.As<Napi::Number>().Int32Value();
 
-  uint32_t rgb = this->rgbMap[color % this->rgbMapLength];
+  uint32_t rgb = this->rgbMap[color % this->rgbMapSize];
   this->frontColor = rgb;
 
   return info.Env().Null();
@@ -382,7 +390,7 @@ Napi::Value Plane::FillBackground(const Napi::CallbackInfo& info) {
   Napi::Value val = info[0];
   int color = round(val.As<Napi::Number>().FloatValue());
 
-  uint32_t rgb = this->rgbMap[color % this->rgbMapLength];
+  uint32_t rgb = this->rgbMap[color % this->rgbMapSize];
   this->backColor = rgb;
 
   // Don't allocate just now, because maybe the size hasn't been set yet.
@@ -570,7 +578,7 @@ Napi::Value Plane::PutFrameMemory(const Napi::CallbackInfo& info) {
   for (int y = 0; y < this->height; y++) {
     for (int x = 0; x < this->width; x++) {
       unsigned char color = data[x + y*this->rowSize];
-      uint32_t rgb = this->rgbMap[color % this->rgbMapLength];
+      uint32_t rgb = this->rgbMap[color % this->rgbMapSize];
       this->buffer[x + y*this->rowSize] = rgb;
     }
   }

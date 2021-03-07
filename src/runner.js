@@ -31,7 +31,10 @@ Runner.prototype.initialize = function () {
 }
 
 Runner.prototype.resetState = function() {
+  this.initMem = new Array();
+  this.initBackBuffer = null;
   this.aPlane.clear();
+  this.aPlane.assignRgbMap(rgbMap.rgb_map_default);
 }
 
 Runner.prototype.then = function(cb) {

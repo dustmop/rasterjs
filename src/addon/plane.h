@@ -35,7 +35,8 @@ class Plane : public Napi::ObjectWrap<Plane> {
   void fillTarget(GfxTarget* t);
 
   // Configuration, safe defaults.
-  int rgbMapLength;
+  int rgbMapIndex;
+  int rgbMapSize;
   int rgbMap[256];
   uint32_t frontColor;
   uint32_t backColor;

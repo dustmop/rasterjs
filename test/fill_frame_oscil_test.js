@@ -16,7 +16,6 @@ describe('Fill', function() {
         return 0x22;
       }
     });
-    ra.save(tmpout);
-    assert.ok(util.compareFiles('test/testdata/fill_oscil.png', tmpout));
+    util.saveTmpCompareTo(ra, 'test/testdata/fill_oscil.png');
   });
 });

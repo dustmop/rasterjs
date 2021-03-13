@@ -11,7 +11,6 @@
         "src/addon/plane.cc",
         "src/addon/png_read_write.cc",
         "src/addon/sdl_display.cc",
-        "src/addon/time_keeper.cc",
       ],
       "include_dirs": [
         "<!@(node -p \"require('node-addon-api').include\")",

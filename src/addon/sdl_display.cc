@@ -2,7 +2,6 @@
 #include "plane.h"
 
 #include "gfx_types.h"
-#include "time_keeper.h"
 #include "load_image.h"
 
 #include <SDL.h>
@@ -126,7 +125,9 @@ Napi::Value SDLDisplay::AppRenderAndLoop(const Napi::CallbackInfo& info) {
   int num_render = info[1].ToNumber().Int32Value();
 
   // Get window renderer
-  g_renderer = SDL_CreateRenderer(g_window, -1, SDL_RENDERER_ACCELERATED);
+  g_renderer = SDL_CreateRenderer(g_window, -1,
+    SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+
   if (!g_renderer) {
     printf("SDL_CreateRenderer() failed with \"%s.\"", SDL_GetError());
     return Napi::Number::New(env, -1);
@@ -138,9 +139,6 @@ Napi::Value SDLDisplay::AppRenderAndLoop(const Napi::CallbackInfo& info) {
   g_texture = SDL_CreateTexture(g_renderer, SDL_PIXELFORMAT_RGBA8888,
                                 SDL_TEXTUREACCESS_STREAMING,
                                 viewWidth, viewHeight);
-
-  TimeKeeper keeper;
-  keeper.Init();
 
   // A basic main loop to handle events
   this->is_running = true;
@@ -194,8 +192,6 @@ Napi::Value SDLDisplay::AppRenderAndLoop(const Napi::CallbackInfo& info) {
     SDL_RenderCopy(g_renderer, g_texture, NULL, NULL);
     // Swap buffers to display
     SDL_RenderPresent(g_renderer);
-
-    keeper.WaitNextFrame();
 
     if (num_render > 0) {
       num_render--;

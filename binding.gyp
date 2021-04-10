@@ -10,7 +10,7 @@
         "src/addon/pixel_update_tasks.cc",
         "src/addon/plane.cc",
         "src/addon/png_read_write.cc",
-        "src/addon/sdl_display.cc",
+        "src/addon/display_sdl.cc",
       ],
       "include_dirs": [
         "<!@(node -p \"require('node-addon-api').include\")",

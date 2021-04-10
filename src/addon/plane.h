@@ -5,7 +5,7 @@
 #include <cstdint>
 #include <napi.h>
 
-class SDLDisplay;
+class DisplaySDL;
 
 class Plane : public Napi::ObjectWrap<Plane> {
  public:
@@ -54,7 +54,7 @@ class Plane : public Napi::ObjectWrap<Plane> {
   int needErase;
 
   // TODO: Replace with Resources (owns Image list)
-  SDLDisplay* display;
+  DisplaySDL* display;
 };
 
 #endif

@@ -1,6 +1,6 @@
 #include <napi.h>
 #include "plane.h"
-#include "sdl_display.h"
+#include "display_sdl.h"
 
 
 Napi::Object CreatePlane(const Napi::CallbackInfo& info) {
@@ -8,7 +8,7 @@ Napi::Object CreatePlane(const Napi::CallbackInfo& info) {
 }
 
 Napi::Object CreateDisplay(const Napi::CallbackInfo& info) {
-  return SDLDisplay::NewInstance(info.Env(), info[0]);
+  return DisplaySDL::NewInstance(info.Env(), info[0]);
 }
 
 Napi::Object InitAll(Napi::Env env, Napi::Object exports) {
@@ -19,7 +19,7 @@ Napi::Object InitAll(Napi::Env env, Napi::Object exports) {
 
   Napi::HandleScope scope(env);
 
-  SDLDisplay::InitClass(env, exports);
+  DisplaySDL::InitClass(env, exports);
   Plane::InitClass(env, exports);
 
   return exports;

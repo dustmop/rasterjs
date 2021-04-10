@@ -5,7 +5,7 @@
 
 #include "pixel_update_tasks.h"
 #include "load_image.h"
-#include "sdl_display.h"
+#include "display_sdl.h"
 
 #include <cstdint>
 #include <cmath> // round
@@ -46,7 +46,7 @@ Plane::Plane(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Plane>(info) {
   Napi::HandleScope scope(env);
 
   Napi::Object displayObj = info[0].As<Napi::Object>();
-  SDLDisplay* display = Napi::ObjectWrap<SDLDisplay>::Unwrap(displayObj);
+  DisplaySDL* display = Napi::ObjectWrap<DisplaySDL>::Unwrap(displayObj);
 
   this->rgbMapIndex = 0;
   this->rgbMapSize = 0;

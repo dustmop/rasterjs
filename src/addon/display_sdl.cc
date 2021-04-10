@@ -1,4 +1,4 @@
-#include "sdl_display.h"
+#include "display_sdl.h"
 #include "plane.h"
 
 #include "gfx_types.h"
@@ -10,24 +10,24 @@ using namespace Napi;
 
 Napi::FunctionReference g_displayConstructor;
 
-void SDLDisplay::InitClass(Napi::Env env, Napi::Object exports) {
+void DisplaySDL::InitClass(Napi::Env env, Napi::Object exports) {
   Napi::Function func = DefineClass(
       env,
       "Display",
-      {InstanceMethod("initialize", &SDLDisplay::Initialize),
-       InstanceMethod("createWindow", &SDLDisplay::CreateWindow),
-       InstanceMethod("createDisplay", &SDLDisplay::CreateDisplay),
-       InstanceMethod("handleEvent", &SDLDisplay::HandleEvent),
-       InstanceMethod("appRenderAndLoop", &SDLDisplay::AppRenderAndLoop),
-       InstanceMethod("appQuit", &SDLDisplay::AppQuit),
-       InstanceMethod("readImage", &SDLDisplay::ReadImage),
+      {InstanceMethod("initialize", &DisplaySDL::Initialize),
+       InstanceMethod("createWindow", &DisplaySDL::CreateWindow),
+       InstanceMethod("createDisplay", &DisplaySDL::CreateDisplay),
+       InstanceMethod("handleEvent", &DisplaySDL::HandleEvent),
+       InstanceMethod("appRenderAndLoop", &DisplaySDL::AppRenderAndLoop),
+       InstanceMethod("appQuit", &DisplaySDL::AppQuit),
+       InstanceMethod("readImage", &DisplaySDL::ReadImage),
   });
   g_displayConstructor = Napi::Persistent(func);
   g_displayConstructor.SuppressDestruct();
 }
 
-SDLDisplay::SDLDisplay(const Napi::CallbackInfo& info)
-    : Napi::ObjectWrap<SDLDisplay>(info) {
+DisplaySDL::DisplaySDL(const Napi::CallbackInfo& info)
+    : Napi::ObjectWrap<DisplaySDL>(info) {
   this->sdlInitialized = 0;
   this->windowWidth = 0;
   this->windowHeight = 0;
@@ -37,13 +37,13 @@ SDLDisplay::SDLDisplay(const Napi::CallbackInfo& info)
   this->textureHandle = NULL;
 };
 
-Napi::Object SDLDisplay::NewInstance(Napi::Env env, Napi::Value arg) {
+Napi::Object DisplaySDL::NewInstance(Napi::Env env, Napi::Value arg) {
   Napi::EscapableHandleScope scope(env);
   Napi::Object obj = g_displayConstructor.New({arg});
   return scope.Escape(napi_value(obj)).ToObject();
 }
 
-Napi::Value SDLDisplay::Initialize(const Napi::CallbackInfo& info) {
+Napi::Value DisplaySDL::Initialize(const Napi::CallbackInfo& info) {
   this->renderPlane = NULL;
   Napi::Env env = info.Env();
   if( SDL_Init( SDL_INIT_VIDEO ) < 0 ) {
@@ -54,7 +54,7 @@ Napi::Value SDLDisplay::Initialize(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, 0);
 }
 
-Napi::Value SDLDisplay::CreateWindow(const Napi::CallbackInfo& info) {
+Napi::Value DisplaySDL::CreateWindow(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   if (!this->sdlInitialized) {
@@ -88,13 +88,13 @@ Napi::Value SDLDisplay::CreateWindow(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, 0);
 }
 
-Napi::Value SDLDisplay::CreateDisplay(const Napi::CallbackInfo& info) {
+Napi::Value DisplaySDL::CreateDisplay(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   // TODO: Implement me?
   return Napi::Number::New(env, 0);
 }
 
-Napi::Value SDLDisplay::HandleEvent(const Napi::CallbackInfo& info) {
+Napi::Value DisplaySDL::HandleEvent(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   Napi::String eventName = info[0].ToString();
   if (eventName.Utf8Value() == std::string("keypress")) {
@@ -106,7 +106,7 @@ Napi::Value SDLDisplay::HandleEvent(const Napi::CallbackInfo& info) {
 
 void on_render(SDL_Window* window, SDL_Renderer* renderer);
 
-Napi::Value SDLDisplay::AppRenderAndLoop(const Napi::CallbackInfo& info) {
+Napi::Value DisplaySDL::AppRenderAndLoop(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   if (!this->sdlInitialized || !this->windowHandle) {
@@ -204,7 +204,7 @@ Napi::Value SDLDisplay::AppRenderAndLoop(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, 0);
 }
 
-Napi::Value SDLDisplay::AppQuit(const Napi::CallbackInfo& info) {
+Napi::Value DisplaySDL::AppQuit(const Napi::CallbackInfo& info) {
   this->isRunning = false;
   return info.Env().Null();
 }
@@ -213,15 +213,15 @@ Napi::Value SDLDisplay::AppQuit(const Napi::CallbackInfo& info) {
 
 #define OPAQUE 255
 
-void SDLDisplay::StartFrame() {
+void DisplaySDL::StartFrame() {
   SDL_RenderClear(this->rendererHandle);
   this->renderPlane->BeginFrame();
 }
 
-void SDLDisplay::EndFrame() {
+void DisplaySDL::EndFrame() {
 }
 
-Napi::Value SDLDisplay::ReadImage(const Napi::CallbackInfo& info) {
+Napi::Value DisplaySDL::ReadImage(const Napi::CallbackInfo& info) {
   Napi::Value val = info[0];
   Napi::String str = val.ToString();
   std::string s = str.Utf8Value();
@@ -240,10 +240,10 @@ Napi::Value SDLDisplay::ReadImage(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, id);
 }
 
-int SDLDisplay::numImages() {
+int DisplaySDL::numImages() {
   return this->imgList.size();
 }
 
-Image* SDLDisplay::getImage(int num) {
+Image* DisplaySDL::getImage(int num) {
   return this->imgList[num];
 }

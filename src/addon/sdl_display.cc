@@ -220,24 +220,29 @@ void SDLDisplay::StartFrame() {
 void SDLDisplay::EndFrame() {
 }
 
-Image** g_img_list = NULL;
-int num_img = 0;
-
 Napi::Value SDLDisplay::ReadImage(const Napi::CallbackInfo& info) {
   Napi::Value val = info[0];
   Napi::String str = val.ToString();
   std::string s = str.Utf8Value();
-  // TODO: Other formats
-  Image* img = LoadPng(s.c_str());
-  if (g_img_list == NULL) {
-    int capacity = sizeof(Image*) * 100;
-    g_img_list = (Image**)malloc(capacity);
-    memset(g_img_list, 0, capacity);
-  }
-  int id = num_img;
-  g_img_list[num_img] = img;
-  num_img++;
-
   Napi::Env env = info.Env();
+
+  // TODO: Other formats
+  Image* img = NULL;
+  int err = LoadPng(s.c_str(), &img);
+  if (err != 0) {
+    // TODO: Throw an error
+    return Napi::Number::New(env, -1);
+  }
+  int id = this->imgList.size();
+  this->imgList.push_back(img);
+
   return Napi::Number::New(env, id);
+}
+
+int SDLDisplay::numImages() {
+  return this->imgList.size();
+}
+
+Image* SDLDisplay::getImage(int num) {
+  return this->imgList[num];
 }

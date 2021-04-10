@@ -1,9 +1,9 @@
 #include "type.h"
 
 struct Image {
-	void* data;
+  void* data;
 };
 
-Image* LoadPng(const char* filename);
+int LoadPng(const char* filename, Image** img_ptr);
 
 void GetPng(Image* img, int* width, int* height, uint8** data);

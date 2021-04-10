@@ -5,6 +5,8 @@
 #include <cstdint>
 #include <napi.h>
 
+class SDLDisplay;
+
 class Plane : public Napi::ObjectWrap<Plane> {
  public:
   static void InitClass(Napi::Env env, Napi::Object exports);
@@ -50,6 +52,9 @@ class Plane : public Napi::ObjectWrap<Plane> {
   int width;
   int height;
   int needErase;
+
+  // TODO: Replace with Resources (owns Image list)
+  SDLDisplay* display;
 };
 
 #endif

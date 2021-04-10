@@ -4,8 +4,8 @@ function makeDisplay() {
   return cppmodule.display();
 }
 
-function makePlane() {
-  return cppmodule.plane();
+function makePlane(disp) {
+  return cppmodule.plane(disp);
 }
 
 module.exports.makeDisplay = makeDisplay;

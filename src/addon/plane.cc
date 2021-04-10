@@ -5,6 +5,7 @@
 
 #include "pixel_update_tasks.h"
 #include "load_image.h"
+#include "sdl_display.h"
 
 #include <cstdint>
 #include <cmath> // round
@@ -44,6 +45,9 @@ Plane::Plane(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Plane>(info) {
   Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
 
+  Napi::Object displayObj = info[0].As<Napi::Object>();
+  SDLDisplay* display = Napi::ObjectWrap<SDLDisplay>::Unwrap(displayObj);
+
   this->rgbMapIndex = 0;
   this->rgbMapSize = 0;
   // rgbMap[256];
@@ -55,6 +59,7 @@ Plane::Plane(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Plane>(info) {
   this->width = 0;
   this->height = 0;
   this->needErase = false;
+  this->display = display;
 };
 
 Napi::Object Plane::NewInstance(Napi::Env env, Napi::Value arg) {
@@ -407,10 +412,6 @@ Napi::Value Plane::FillBackground(const Napi::CallbackInfo& info) {
   return info.Env().Null();
 }
 
-// TODO: Fix me
-extern Image** g_img_list;
-extern int num_img;
-
 Napi::Value Plane::PutImage(const Napi::CallbackInfo& info) {
   this->prepare();
 
@@ -421,11 +422,11 @@ Napi::Value Plane::PutImage(const Napi::CallbackInfo& info) {
   Napi::Value imgIdval = imgObj["id"];
   int imgId = imgIdval.ToNumber().Int32Value();
 
-  if (imgId >= num_img) {
+  if (imgId >= this->display->numImages()) {
     printf("invalid image id: %d\n", imgId);
     return info.Env().Null();
   }
-  Image* img_struct = g_img_list[imgId];
+  Image* img_struct = display->getImage(imgId);
 
   int imgLeft, imgTop;
   int imgWidth, imgHeight, imgPitch;
@@ -608,11 +609,11 @@ Napi::Value Plane::SaveImage(const Napi::CallbackInfo& info) {
   Napi::Object objSlice = valSlice.ToObject();
 
   int imgId = valImg.ToNumber().Int32Value();
-  if (imgId >= num_img) {
+  if (imgId >= this->display->numImages()) {
     printf("invalid image id: %d\n", imgId);
     return info.Env().Null();
   }
-  Image* img_struct = g_img_list[imgId];
+  Image* img_struct = display->getImage(imgId);
 
   int width, height;
   uint8* data = NULL;

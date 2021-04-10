@@ -5,8 +5,9 @@ function makeDisplay() {
   return new displayWebGL.Display();
 }
 
-function makePlane() {
-  return new plane.Plane();
+function makePlane(disp) {
+  // TODO: plane construct should accept this disp
+  return new plane.Plane(disp);
 }
 
 module.exports.makeDisplay = makeDisplay;

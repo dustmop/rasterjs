@@ -82,12 +82,12 @@ Napi::Value Plane::SetSize(const Napi::CallbackInfo& info) {
 void Plane::prepare() {
   // If buffer has not yet been allocated
   if (this->buffer == NULL) {
-    int width = this->width ? this->width : 100;
-    int height = this->height ? this->height : 100;
+    if (this->width == 0) { this->width = 100; }
+    if (this->height == 0) { this->height = 100; }
     // TODO: Make this larger? Test the performance of the change.
-    this->rowSize = width;
+    this->rowSize = this->width;
     // Number of words.
-    int numElems = height * this->rowSize;
+    int numElems = this->height * this->rowSize;
     // Allocate the buffer.
     uint32_t* buffer = new uint32_t[numElems];
     // Assign.

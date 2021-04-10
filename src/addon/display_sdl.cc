@@ -1,8 +1,8 @@
 #include "display_sdl.h"
 #include "plane.h"
+#include "resources.h"
 
 #include "gfx_types.h"
-#include "load_image.h"
 
 #include <SDL.h>
 
@@ -20,7 +20,6 @@ void DisplaySDL::InitClass(Napi::Env env, Napi::Object exports) {
        InstanceMethod("handleEvent", &DisplaySDL::HandleEvent),
        InstanceMethod("appRenderAndLoop", &DisplaySDL::AppRenderAndLoop),
        InstanceMethod("appQuit", &DisplaySDL::AppQuit),
-       InstanceMethod("readImage", &DisplaySDL::ReadImage),
   });
   g_displayConstructor = Napi::Persistent(func);
   g_displayConstructor.SuppressDestruct();
@@ -219,31 +218,4 @@ void DisplaySDL::StartFrame() {
 }
 
 void DisplaySDL::EndFrame() {
-}
-
-Napi::Value DisplaySDL::ReadImage(const Napi::CallbackInfo& info) {
-  Napi::Value val = info[0];
-  Napi::String str = val.ToString();
-  std::string s = str.Utf8Value();
-  Napi::Env env = info.Env();
-
-  // TODO: Other formats
-  Image* img = NULL;
-  int err = LoadPng(s.c_str(), &img);
-  if (err != 0) {
-    // TODO: Throw an error
-    return Napi::Number::New(env, -1);
-  }
-  int id = this->imgList.size();
-  this->imgList.push_back(img);
-
-  return Napi::Number::New(env, id);
-}
-
-int DisplaySDL::numImages() {
-  return this->imgList.size();
-}
-
-Image* DisplaySDL::getImage(int num) {
-  return this->imgList[num];
 }

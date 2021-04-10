@@ -17,9 +17,6 @@ class DisplaySDL : public Napi::ObjectWrap<DisplaySDL> {
   static Napi::Object NewInstance(Napi::Env env, Napi::Value arg);
   DisplaySDL(const Napi::CallbackInfo& info);
 
-  int numImages();
-  Image* getImage(int num);
-
  private:
   Napi::Value Initialize(const Napi::CallbackInfo& info);
   Napi::Value CreateWindow(const Napi::CallbackInfo& info);
@@ -37,7 +34,6 @@ class DisplaySDL : public Napi::ObjectWrap<DisplaySDL> {
   int windowWidth;
   int windowHeight;
   Plane* renderPlane;
-  std::vector<Image*> imgList;
 
   SDL_Window* windowHandle;
   SDL_Renderer* rendererHandle;

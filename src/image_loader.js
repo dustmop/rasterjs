@@ -1,7 +1,6 @@
-function Loader(envBackend) {
+function Loader(resources) {
   this.pending = false;
-  this.assets = [];
-  this.envBackend = envBackend;
+  this.resources = resources;
   return this;
 }
 
@@ -9,7 +8,7 @@ Loader.prototype.loadBegin = function(filepath) {
   let img = new ImagePlane();
   img.filepath = filepath;
   img.loader = this;
-  img.id = this.envBackend.readImage(filepath);
+  img.id = this.resources.readImage(filepath);
   return img;
 }
 
@@ -31,7 +30,7 @@ ImagePlane.prototype.copy = function(x, y, w, h) {
 }
 
 ImagePlane.prototype.getPixels = function() {
-  return this.loader.envBackend.getImagePixels(this.id);
+  return this.loader.resources.getImagePixels(this.id);
 }
 
 module.exports.Loader = Loader;

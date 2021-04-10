@@ -6,6 +6,7 @@
 #include <napi.h>
 
 class DisplaySDL;
+class Resources;
 
 class Plane : public Napi::ObjectWrap<Plane> {
  public:
@@ -52,9 +53,7 @@ class Plane : public Napi::ObjectWrap<Plane> {
   int width;
   int height;
   int needErase;
-
-  // TODO: Replace with Resources (owns Image list)
-  DisplaySDL* display;
+  Resources* res;
 };
 
 #endif

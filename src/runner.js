@@ -9,8 +9,9 @@ const imageLoader = require('./image_loader.js');
 ////////////////////////////////////////
 
 function Runner(env) {
+  this.resources = env.makeResources();
   this.display = env.makeDisplay();
-  this.aPlane = env.makePlane(this.display);
+  this.aPlane = env.makePlane(this.resources);
   this._config = {};
   this.initialize();
   return this;
@@ -27,7 +28,7 @@ Runner.prototype.initialize = function () {
   this.initBackBuffer = null;
   this.display.initialize();
   this.aPlane.assignRgbMap(rgbMap.rgb_map_default);
-  this.imgLoader = new imageLoader.Loader(this.display);
+  this.imgLoader = new imageLoader.Loader(this.resources);
 }
 
 Runner.prototype.resetState = function() {

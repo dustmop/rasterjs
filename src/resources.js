@@ -1,0 +1,3 @@
+function Resources() {
+  return this;
+}

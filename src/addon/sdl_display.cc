@@ -28,17 +28,14 @@ void SDLDisplay::InitClass(Napi::Env env, Napi::Object exports) {
 
 SDLDisplay::SDLDisplay(const Napi::CallbackInfo& info)
     : Napi::ObjectWrap<SDLDisplay>(info) {
-  this->sdl_initialized = 0;
+  this->sdlInitialized = 0;
   this->windowWidth = 0;
   this->windowHeight = 0;
   this->renderPlane = NULL;
+  this->windowHandle = NULL;
+  this->rendererHandle = NULL;
+  this->textureHandle = NULL;
 };
-
-// TODO: Global display object
-SDL_Window* g_window = NULL;
-SDL_Renderer* g_renderer = NULL;
-SDL_Texture* g_texture = NULL;
-
 
 Napi::Object SDLDisplay::NewInstance(Napi::Env env, Napi::Value arg) {
   Napi::EscapableHandleScope scope(env);
@@ -52,7 +49,7 @@ Napi::Value SDLDisplay::Initialize(const Napi::CallbackInfo& info) {
   if( SDL_Init( SDL_INIT_VIDEO ) < 0 ) {
     printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
   } else {
-    sdl_initialized = 1;
+    this->sdlInitialized = 1;
   }
   return Napi::Number::New(env, 0);
 }
@@ -60,7 +57,7 @@ Napi::Value SDLDisplay::Initialize(const Napi::CallbackInfo& info) {
 Napi::Value SDLDisplay::CreateWindow(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
-  if (!sdl_initialized) {
+  if (!this->sdlInitialized) {
     return Napi::Number::New(env, -1);
   }
 
@@ -78,13 +75,13 @@ Napi::Value SDLDisplay::CreateWindow(const Napi::CallbackInfo& info) {
   this->windowHeight = this->renderPlane->height * zoomLevel;
 
   // Create window
-  g_window = SDL_CreateWindow(
+  this->windowHandle = SDL_CreateWindow(
       "RasterJS",
       SDL_WINDOWPOS_UNDEFINED,
       SDL_WINDOWPOS_UNDEFINED,
       windowWidth, windowHeight,
       SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
-  if (g_window == NULL) {
+  if (this->windowHandle == NULL) {
     printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
     exit(1);
   }
@@ -112,7 +109,7 @@ void on_render(SDL_Window* window, SDL_Renderer* renderer);
 Napi::Value SDLDisplay::AppRenderAndLoop(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
-  if (!this->sdl_initialized || !g_window) {
+  if (!this->sdlInitialized || !this->windowHandle) {
     return Napi::Number::New(env, -1);
   }
 
@@ -125,10 +122,10 @@ Napi::Value SDLDisplay::AppRenderAndLoop(const Napi::CallbackInfo& info) {
   int num_render = info[1].ToNumber().Int32Value();
 
   // Get window renderer
-  g_renderer = SDL_CreateRenderer(g_window, -1,
+  this->rendererHandle = SDL_CreateRenderer(this->windowHandle, -1,
     SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
-  if (!g_renderer) {
+  if (!this->rendererHandle) {
     printf("SDL_CreateRenderer() failed with \"%s.\"", SDL_GetError());
     return Napi::Number::New(env, -1);
   }
@@ -136,22 +133,25 @@ Napi::Value SDLDisplay::AppRenderAndLoop(const Napi::CallbackInfo& info) {
   int viewWidth = this->renderPlane->width;
   int viewHeight = this->renderPlane->height;
 
-  g_texture = SDL_CreateTexture(g_renderer, SDL_PIXELFORMAT_RGBA8888,
-                                SDL_TEXTUREACCESS_STREAMING,
-                                viewWidth, viewHeight);
+  this->textureHandle = SDL_CreateTexture(
+      this->rendererHandle,
+      SDL_PIXELFORMAT_RGBA8888,
+      SDL_TEXTUREACCESS_STREAMING,
+      viewWidth,
+      viewHeight);
 
   // A basic main loop to handle events
-  this->is_running = true;
+  this->isRunning = true;
   SDL_Event event;
-  while (this->is_running) {
+  while (this->isRunning) {
     if (SDL_PollEvent(&event)) {
       switch (event.type) {
       case SDL_QUIT:
-        this->is_running = false;
+        this->isRunning = false;
         break;
       case SDL_KEYDOWN:
         if (event.key.keysym.sym == SDLK_ESCAPE) {
-          this->is_running = false;
+          this->isRunning = false;
         } else if (!this->keyHandleFunc.IsEmpty()) {
           int code = event.key.keysym.sym;
           std::string s(1, char(code));
@@ -163,7 +163,7 @@ Napi::Value SDLDisplay::AppRenderAndLoop(const Napi::CallbackInfo& info) {
         }
         break;
       case SDL_WINDOWEVENT_CLOSE:
-        this->is_running = false;
+        this->isRunning = false;
         break;
       default:
         break;
@@ -186,12 +186,13 @@ Napi::Value SDLDisplay::AppRenderAndLoop(const Napi::CallbackInfo& info) {
 
     if (this->renderPlane->buffer) {
       int pitch = this->renderPlane->rowSize*4;
-      SDL_UpdateTexture(g_texture, NULL, this->renderPlane->buffer, pitch);
+      SDL_UpdateTexture(this->textureHandle, NULL, this->renderPlane->buffer,
+                        pitch);
     }
 
-    SDL_RenderCopy(g_renderer, g_texture, NULL, NULL);
+    SDL_RenderCopy(this->rendererHandle, this->textureHandle, NULL, NULL);
     // Swap buffers to display
-    SDL_RenderPresent(g_renderer);
+    SDL_RenderPresent(this->rendererHandle);
 
     if (num_render > 0) {
       num_render--;
@@ -204,7 +205,7 @@ Napi::Value SDLDisplay::AppRenderAndLoop(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value SDLDisplay::AppQuit(const Napi::CallbackInfo& info) {
-  this->is_running = false;
+  this->isRunning = false;
   return info.Env().Null();
 }
 
@@ -213,7 +214,7 @@ Napi::Value SDLDisplay::AppQuit(const Napi::CallbackInfo& info) {
 #define OPAQUE 255
 
 void SDLDisplay::StartFrame() {
-  SDL_RenderClear(g_renderer);
+  SDL_RenderClear(this->rendererHandle);
   this->renderPlane->BeginFrame();
 }
 

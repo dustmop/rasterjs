@@ -7,6 +7,10 @@ struct GfxTarget;
 struct Image;
 class Plane;
 
+struct SDL_Window;
+struct SDL_Renderer;
+struct SDL_Texture;
+
 class SDLDisplay : public Napi::ObjectWrap<SDLDisplay> {
  public:
   static void InitClass(Napi::Env env, Napi::Object exports);
@@ -28,12 +32,16 @@ class SDLDisplay : public Napi::ObjectWrap<SDLDisplay> {
   void EndFrame();
 
   Napi::FunctionReference keyHandleFunc;
-  bool is_running;
-  int sdl_initialized;
+  bool isRunning;
+  int sdlInitialized;
   int windowWidth;
   int windowHeight;
   Plane* renderPlane;
   std::vector<Image*> imgList;
+
+  SDL_Window* windowHandle;
+  SDL_Renderer* rendererHandle;
+  SDL_Texture* textureHandle;
 };
 
 #endif

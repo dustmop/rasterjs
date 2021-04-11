@@ -50,7 +50,6 @@ Plane::Plane(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Plane>(info) {
 
   this->rgbMapIndex = 0;
   this->rgbMapSize = 0;
-  // rgbMap[256];
   this->frontColor = 0xffffffff;
   this->backColor = 0;
   this->rowSize = 0;
@@ -67,10 +66,6 @@ Napi::Object Plane::NewInstance(Napi::Env env, Napi::Value arg) {
   Napi::Object obj = g_planeConstructor.New({arg});
   return scope.Escape(napi_value(obj)).ToObject();
 }
-
-// Drawing globals, used for putLine and putPolygon
-int point_x[16];
-int point_y[16];
 
 Napi::Value Plane::SetSize(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
@@ -325,17 +320,12 @@ Napi::Value Plane::PutLine(const Napi::CallbackInfo& info) {
   uint32_t color = this->frontColor;
 
   PointList point_list;
-  point_list.num = 2;
-  point_list.xs = point_x;
-  point_list.ys = point_y;
-  point_list.xs[0] = x0;
-  point_list.xs[1] = x1;
-  point_list.ys[0] = y0;
-  point_list.ys[1] = y1;
+  point_list.push_back(Point(x0, y0));
+  point_list.push_back(Point(x1, y1));
 
   GfxTarget target;
   this->fillTarget(&target);
-  putLine(&target, &point_list, color, connectCorners);
+  putLine(&target, point_list, color, connectCorners);
 
   Napi::Env env = info.Env();
   return Napi::Number::New(env, 0);
@@ -363,10 +353,6 @@ Napi::Value Plane::PutPolygon(const Napi::CallbackInfo& info) {
     int num_points = parameter_length.As<Napi::Number>().Int32Value();
 
     PointList point_list;
-    point_list.num = num_points;
-    point_list.xs = point_x;
-    point_list.ys = point_y;
-
     for (int i = 0; i < num_points; i++) {
       Napi::Value elem = parameter_list[uint32_t(i)];
       // TODO: Validate this is an object
@@ -375,10 +361,9 @@ Napi::Value Plane::PutPolygon(const Napi::CallbackInfo& info) {
       // TODO: handle x,y object, instead of just array
       Napi::Value first = pair[uint32_t(0)];
       Napi::Value second = pair[uint32_t(1)];
-      int first_num = round(first.As<Napi::Number>().FloatValue());
-      int second_num = round(second.As<Napi::Number>().FloatValue());
-      point_list.xs[i] = first_num + baseX;
-      point_list.ys[i] = second_num + baseY;
+      int firstNum = round(first.As<Napi::Number>().FloatValue());
+      int secondNum = round(second.As<Napi::Number>().FloatValue());
+      point_list.push_back(Point(firstNum + baseX, secondNum + baseY));
     }
 
     bool fill = info[3].ToBoolean().Value();
@@ -386,9 +371,9 @@ Napi::Value Plane::PutPolygon(const Napi::CallbackInfo& info) {
     GfxTarget target;
     this->fillTarget(&target);
     if (fill) {
-      putPolygonFill(&target, &point_list, color);
+      putPolygonFill(&target, point_list, color);
     } else {
-      putPolygonOutline(&target, &point_list, color);
+      putPolygonOutline(&target, point_list, color);
     }
   }
 

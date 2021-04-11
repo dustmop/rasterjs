@@ -104,13 +104,11 @@ void putRect(GfxTarget* target, int x0, int y0, int x1, int y1, bool fill, uint3
   }
 }
 
-void putLine(GfxTarget* target, PointList* points, uint32_t color, int connectCorners) {
-  int tmp;
-
-  int x0 = points->xs[0];
-  int y0 = points->ys[0];
-  int x1 = points->xs[1];
-  int y1 = points->ys[1];
+void putLine(GfxTarget* target, const PointList& points, uint32_t color, int connectCorners) {
+  int x0 = points[0].x;
+  int y0 = points[0].y;
+  int x1 = points[1].x;
+  int y1 = points[1].y;
 
   int deltax = x1 - x0;
   int deltay = y1 - y0;
@@ -118,12 +116,8 @@ void putLine(GfxTarget* target, PointList* points, uint32_t color, int connectCo
   if (abs(deltay) <= abs(deltax)) {
 
     if (deltax < 0) {
-      tmp = x0;
-      x0 = x1;
-      x1 = tmp;
-      tmp = y0;
-      y0 = y1;
-      y1 = tmp;
+      swap(&x0, &x1);
+      swap(&y0, &y1);
       deltax = -deltax;
       deltay = -deltay;
     }
@@ -161,12 +155,8 @@ void putLine(GfxTarget* target, PointList* points, uint32_t color, int connectCo
   } else {
 
     if (deltay < 0) {
-      tmp = x0;
-      x0 = x1;
-      x1 = tmp;
-      tmp = y0;
-      y0 = y1;
-      y1 = tmp;
+      swap(&x0, &x1);
+      swap(&y0, &y1);
       deltax = -deltax;
       deltay = -deltay;
     }
@@ -203,38 +193,33 @@ void putLine(GfxTarget* target, PointList* points, uint32_t color, int connectCo
   }
 }
 
-#define MAX_POLY_CORNERS 16
-
-void putPolygonFill(GfxTarget* target, PointList* points, uint32_t color) {
-  int numEdges, edgeX[MAX_POLY_CORNERS], edgeDir[MAX_POLY_CORNERS];
-  int pixelX, pixelY;
-  int i, j, swap, prev;
-  int numCorners = 0;
+void putPolygonFill(GfxTarget* target, const PointList& points, uint32_t color) {
+  std::vector<int> edgeX, edgeDir;
+  int pixelX, pixelY, prev;
+  size_t i, j;
   double polyYi, polyYj, polyXi, polyXj;
 
   int imageTop, imageBottom;
   int imageLeft, imageRight;
-  imageTop = points->ys[0];
-  imageBottom = points->ys[0];
-  imageLeft = points->xs[0];
-  imageRight = points->xs[0];
-  numCorners++;
+  imageTop = points[0].y;
+  imageBottom = points[0].y;
+  imageLeft = points[0].x;
+  imageRight = points[0].x;
 
-  // Count number of corners, and find polygon's top and bottom.
-  for (i = 1; i < points->num; i++) {
-    if (points->xs[i] < imageLeft) {
-      imageLeft = points->xs[i];
+  // Find polygon's top and bottom.
+  for (size_t i = 1; i < points.size(); i++) {
+    if (points[i].x < imageLeft) {
+      imageLeft = points[i].x;
     }
-    if (points->xs[i] > imageRight) {
-      imageRight = points->xs[i];
+    if (points[i].x > imageRight) {
+      imageRight = points[i].x;
     }
-    if (points->ys[i] < imageTop) {
-      imageTop = points->ys[i];
+    if (points[i].y < imageTop) {
+      imageTop = points[i].y;
     }
-    if (points->ys[i] > imageBottom) {
-      imageBottom = points->ys[i];
+    if (points[i].y > imageBottom) {
+      imageBottom = points[i].y;
     }
-    numCorners++;
   }
 
   int y0 = imageTop;
@@ -248,17 +233,20 @@ void putPolygonFill(GfxTarget* target, PointList* points, uint32_t color) {
 
   //  Loop through the rows of the image.
   for (pixelY = imageTop; pixelY <= imageBottom; pixelY++) {
-    //  Build a list of edges.
-    numEdges = 0;
-    prev = numCorners-1;
-    for (i = 0; i < numCorners; i++) {
-      j = prev;
-      prev = i;
+    edgeX.clear();
+    edgeDir.clear();
 
-      polyXi = points->xs[i];
-      polyXj = points->xs[j];
-      polyYi = points->ys[i];
-      polyYj = points->ys[j];
+    // Build a list of edges
+    for (i = 0; i < points.size(); i++) {
+      if (i > 0) {
+        j = i - 1;
+      } else {
+        j = points.size() - 1;
+      }
+      polyXi = points[i].x;
+      polyXj = points[j].x;
+      polyYi = points[i].y;
+      polyYj = points[j].y;
 
       double scanlineY = pixelY;
       // If the current scanline's Y position overlaps the line segment.
@@ -278,8 +266,8 @@ void putPolygonFill(GfxTarget* target, PointList* points, uint32_t color) {
 
         // If edge is already intersecting this pixel, and this edge
         // is going in the same direction, skip adding it.
-        if (numEdges > 0) {
-          int last = numEdges-1;
+        if (edgeX.size() > 0) {
+          int last = edgeX.size() - 1;
           if (edgeX[last] == intersect && edgeDir[last] == lineDirY) {
             continue;
           }
@@ -289,30 +277,26 @@ void putPolygonFill(GfxTarget* target, PointList* points, uint32_t color) {
         }
 
         // Add the edge intersection.
-        edgeX[numEdges] = intersect;
-        edgeDir[numEdges] = lineDirY;
-        numEdges++;
+        edgeX.push_back(intersect);
+        edgeDir.push_back(lineDirY);
       }
     }
 
-    //  Sort the numEdges, via a simple “Bubble” sort.
+    // Sort the edges, via a simple bubble sort.
     i = 0;
-    while (i < numEdges - 1) {
+    while (i < edgeX.size() - 1) {
       if (edgeX[i] > edgeX[i+1]) {
-        swap = edgeX[i];
-        edgeX[i] = edgeX[i+1];
-        edgeX[i+1]=swap;
+        swap(&edgeX[i], &edgeX[i+1]);
         if (i) {
           i--;
         }
-      }
-      else {
+      } else {
         i++;
       }
     }
 
     // Fill the pixels between the edges.
-    for (i=0; i < numEdges; i+=2) {
+    for (i = 0; i < edgeX.size(); i += 2) {
       int x0 = edgeX[i];
       int x1 = edgeX[i+1];
       if (x0 < 0) {
@@ -321,35 +305,29 @@ void putPolygonFill(GfxTarget* target, PointList* points, uint32_t color) {
       if (x1 >= target->width) {
         x1 = target->width - 1;
       }
-      for (pixelX=x0; pixelX<=x1; pixelX++) {
+      for (pixelX = x0; pixelX <= x1; pixelX++) {
         target->buffer[pixelX + pixelY*target->rowSize] = color;
       }
     }
   }
 }
 
-int segment_x[2];
-int segment_y[2];
+void putPolygonOutline(GfxTarget* target, const PointList& points, uint32_t color) {
+  PointList lineSegment;
+  lineSegment.push_back(Point());
+  lineSegment.push_back(Point());
+  size_t i, j;
 
-void putPolygonOutline(GfxTarget* target, PointList* points, uint32_t color) {
-  PointList line_segment;
-  line_segment.num = 2;
-  line_segment.xs = segment_x;
-  line_segment.ys = segment_y;
-
-  for (int k = 0; k < points->num; k++) {
-    if (k < points->num - 1) {
-      line_segment.xs[0] = points->xs[k+0];
-      line_segment.xs[1] = points->xs[k+1];
-      line_segment.ys[0] = points->ys[k+0];
-      line_segment.ys[1] = points->ys[k+1];
+  for (i = 0; i < points.size(); i++) {
+    if (i > 0) {
+      j = i - 1;
     } else {
-      line_segment.xs[0] = points->xs[k];
-      line_segment.xs[1] = points->xs[0];
-      line_segment.ys[0] = points->ys[k];
-      line_segment.ys[1] = points->ys[0];
+      j = points.size() - 1;
     }
-    putLine(target, &line_segment, color, 1);
+    lineSegment[0].x = points[i].x;
+    lineSegment[1].x = points[j].x;
+    lineSegment[0].y = points[i].y;
+    lineSegment[1].y = points[j].y;
+    putLine(target, lineSegment, color, 1);
   }
 }
-

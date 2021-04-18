@@ -1,5 +1,4 @@
 #include "type.h"
-#include "gfx_types.h"
 #include "plane.h"
 #include "png_read_write.h"
 

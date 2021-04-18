@@ -1,4 +1,4 @@
-#include "gfx_types.h"
+#include "type.h"
 #include <cstdlib> // abs
 
 void swap(int* a, int* b) {

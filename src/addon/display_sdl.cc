@@ -1,8 +1,7 @@
 #include "display_sdl.h"
 #include "plane.h"
 #include "resources.h"
-
-#include "gfx_types.h"
+#include "type.h"
 
 #include <SDL.h>
 

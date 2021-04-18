@@ -1,7 +1,7 @@
 #ifndef PLANE_H
 #define PLANE_H
 
-#include "gfx_types.h"
+#include "type.h"
 #include <cstdint>
 #include <napi.h>
 

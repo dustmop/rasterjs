@@ -46,4 +46,13 @@ describe('Destructure', function() {
     let values = destructure(['x:i', 'width?i'], ['fn8', [123, 456]]);
     assert.deepEqual(values, [123, 456]);
   });
+  it('optional options object', function() {
+    let values = destructure(['o?o', 'func:f'], ['fn9', [function(){}]]);
+    assert(values[0] === null);
+    assert(typeof values[1] == 'function');
+
+    values = destructure(['o?o', 'func:f'], ['fn9', [{a:1}, function(){}]]);
+    assert.deepEqual(values[0], {a:1});
+    assert(typeof values[1] == 'function');
+  });
 });

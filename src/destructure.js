@@ -44,6 +44,15 @@ function destructure(param_spec, row) {
       need++;
     }
   }
+
+  if (got == 1 && need == 1 && want == 2) {
+    let [n, t, required] = splitParam(param_spec[0]);
+    // HACK: Quick and dirty handling of optional options at [0]
+    if (!required) {
+      return [null, values[0]];
+    }
+  }
+
   // TODO: Improve this check.
   if ((got >= need) && (got <= want)) {
     // TODO: Handle type conversions.

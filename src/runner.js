@@ -8,11 +8,19 @@ const imageLoader = require('./image_loader.js');
 
 ////////////////////////////////////////
 
+const D_CLEAN      = 0;
+const D_FILL_SOLID = 1;
+const D_FILL_DOTS  = 2;
+const D_DIRTY      = 3;
+const D_DID_FILL   = 4;
+const MAX_DOTS_DRAWN = 36;
+
 function Runner(env) {
   this.resources = env.makeResources();
   this.display = env.makeDisplay();
   this.aPlane = env.makePlane(this.resources);
   this._config = {};
+  this.mem = null;
   this.initialize();
   return this;
 }
@@ -24,7 +32,9 @@ Runner.prototype.initialize = function () {
   this._config.titleText = '';
   this._config.translateX = 0;
   this._config.translateY = 0;
-  this.initMem = new Array();
+  this._config.bgColor = 0;
+  this.dirtyState = D_CLEAN;
+  this.dotsDrawn = new Array();
   this.initBackBuffer = null;
   this.display.initialize();
   this.aPlane.assignRgbMap(rgbMap.rgb_map_default);
@@ -32,7 +42,9 @@ Runner.prototype.initialize = function () {
 }
 
 Runner.prototype.resetState = function() {
-  this.initMem = new Array();
+  this.mem = null;
+  this.dirtyState = D_CLEAN;
+  this.dotsDrawn = new Array();
   this.initBackBuffer = null;
   this.aPlane.clear();
   this.aPlane.assignRgbMap(rgbMap.rgb_map_default);
@@ -104,11 +116,13 @@ Runner.prototype.useSystemColors = function(obj) {
 Runner.prototype.fillBackground_params = ['color:i'];
 Runner.prototype.fillBackground = function(color) {
   this._config.bgColor = color;
+  this.dirtyState = D_FILL_SOLID;
   this.aPlane.fillBackground(color);
 }
 
 Runner.prototype.fillTrueBackground_params = ['rgb:i'];
 Runner.prototype.fillTrueBackground = function(tr) {
+  this.dirtyState = D_FILL_SOLID; // TODO: This is correct?
   let color = this.aPlane.addRgbMapEntry(tr);
   this.fillBackground(color);
 }
@@ -121,43 +135,58 @@ Runner.prototype.drawLine_params = ['x0:i', 'y0:i', 'x1:i', 'y1:i', 'cc?b'];
 Runner.prototype.drawLine = function(x0, y0, x1, y1, cc) {
   cc = cc ? 1 : 0;
   let [tx, ty] = this._getTranslation();
+  this.dirtyState = D_DIRTY;
   this.aPlane.putLine(tx + x0, ty + y0, tx + x1, ty + y1, cc);
 }
 
 Runner.prototype.drawDot_params = ['x:i', 'y:i'];
 Runner.prototype.drawDot = function(x, y) {
   let [tx, ty] = this._getTranslation();
-  this.initMem.push([tx + x, ty + y, this._config.color]);
+  if (this.dirtyState == D_CLEAN || D_FILL_SOLID) {
+    this.dirtyState = D_FILL_DOTS;
+  }
+  if (this.dirtyState == D_FILL_DOTS) {
+    this.dotsDrawn.push([tx + x, ty + y, this._config.color]);
+  }
+  if (this.dotsDrawn.length > MAX_DOTS_DRAWN) {
+    this.dirtyState = D_DIRTY;
+    this.dotsDrawn.splice(0);
+  }
   this.aPlane.putDot(tx + x, ty + y);
 }
 
 Runner.prototype.fillSquare_params = ['x:i', 'y:i', 'size:i'];
 Runner.prototype.fillSquare = function(x, y, size) {
   let [tx, ty] = this._getTranslation();
+  this.dirtyState = D_DIRTY;
   this.aPlane.putRect(tx + x, ty + y, size, size, true);
 }
 
 Runner.prototype.drawSquare_params = ['x:i', 'y:i', 'size:i'];
 Runner.prototype.drawSquare = function(x, y, size) {
   let [tx, ty] = this._getTranslation();
+  this.dirtyState = D_DIRTY;
   this.aPlane.putRect(tx + x, ty + y, size, size, false);
 }
 
 Runner.prototype.fillRect_params = ['x:i', 'y:i', 'w:i', 'h:i'];
 Runner.prototype.fillRect = function(x, y, w, h) {
   let [tx, ty] = this._getTranslation();
+  this.dirtyState = D_DIRTY;
   this.aPlane.putRect(tx + x, ty + y, w, h, true);
 }
 
 Runner.prototype.drawRect_params = ['x:i', 'y:i', 'w:i', 'h:i'];
 Runner.prototype.drawRect = function(x, y, w, h) {
   let [tx, ty] = this._getTranslation();
+  this.dirtyState = D_DIRTY;
   this.aPlane.putRect(tx + x, ty + y, w, h, false);
 }
 
 Runner.prototype.fillCircle_params = ['x:i', 'y:i', 'r:i'];
 Runner.prototype.fillCircle = function(x, y, r) {
   let [tx, ty] = this._getTranslation();
+  this.dirtyState = D_DIRTY;
   let centerX = tx + x + r;
   let centerY = ty + y + r;
   let arc = algorithm.midpointCircleRasterize(r);
@@ -167,6 +196,7 @@ Runner.prototype.fillCircle = function(x, y, r) {
 Runner.prototype.drawCircle_params = ['x:i', 'y:i', 'r:i', 'width?i'];
 Runner.prototype.drawCircle = function(x, y, r, width) {
   let [tx, ty] = this._getTranslation();
+  this.dirtyState = D_DIRTY;
   let centerX = tx + x + r;
   let centerY = ty + y + r;
   let arc = algorithm.midpointCircleRasterize(r);
@@ -182,6 +212,7 @@ Runner.prototype.fillPolygon = function(points, x, y) {
   x = x || 0;
   y = y || 0;
   let [tx, ty] = this._getTranslation();
+  this.dirtyState = D_DIRTY;
   this.aPlane.putPolygon(tx + x, ty + y, points, true);
 }
 
@@ -190,51 +221,69 @@ Runner.prototype.drawPolygon = function(points, x, y) {
   x = x || 0;
   y = y || 0;
   let [tx, ty] = this._getTranslation();
+  this.dirtyState = D_DIRTY;
   this.aPlane.putPolygon(tx + x, ty + y, points, false);
 }
 
 Runner.prototype.fillFrame_params = ['fillerFunc:f'];
 Runner.prototype.fillFrame = function(fillerFunc) {
-  var mem = frameMemory.NewFrameMemory(this._config.screenWidth,
-                                       this._config.screenHeight);
-  mem.fill(this._config.bgColor);
+  if (this.mem == null) {
+    this.mem = frameMemory.NewFrameMemory(this._config.screenWidth,
+                                          this._config.screenHeight);
+    if (this.dirtyState == D_CLEAN) {
+      this.dirtyState = D_FILL_SOLID;
+    }
+  }
+  // If background color was set, fill the memory
+  if (this.dirtyState == D_FILL_SOLID) {
+    this.mem.fill(this._config.bgColor);
+  }
+  // TODO: Pass an additional parameter to fillFrame when back-buffer is
+  // needed. Otherwise, there's no way to do it without being very inefficient
   // If there was a buffer last frame, and it had a back-buffer, use the
   // previous front-buffer as the back-buffer for this next frame.
   if (this.initBackBuffer) {
-    mem._back_buffer = this.initBackBuffer;
+    this.mem._back_buffer = this.initBackBuffer;
     this.initBackBuffer = null;
   }
-  // TODO: A hack to have drawDot affect the initial mem state
-  for (let i = 0; i < this.initMem.length; i++) {
-    let row = this.initMem[i];
-    let x = row[0];
-    let y = row[1];
-    mem[x + y*mem.pitch] = row[2];
+  // Update the frame memory based upon changes made to the plane.
+  if (this.dirtyState == D_FILL_DOTS) {
+    for (let i = 0; i < this.dotsDrawn.length; i++) {
+      let row = this.dotsDrawn[i];
+      let x = row[0];
+      let y = row[1];
+      this.mem[x + y*this.mem.pitch] = row[2];
+    }
+    this.dotsDrawn.splice(0);
+  } else if (this.dirtyState == D_DIRTY) {
+    let image = {
+      palette: [],
+      buffer: [],
+      pitch: null,
+    };
+    this.aPlane.retrieveTrueContent(image);
+    for (let k = 0; k < image.buffer.length; k++) {
+      this.mem[k] = image.buffer[k];
+    }
   }
-  this.initMem = new Array();
-
+  // Invoke the callback
   if (fillerFunc.length == 1) {
-    fillerFunc(mem);
+    fillerFunc(this.mem);
   } else if (fillerFunc.length == 3) {
-    for (let y = 0; y < mem.y_dim; y++) {
-      for (let x = 0; x < mem.x_dim; x++) {
-        let ret = fillerFunc(mem, x, y);
+    for (let y = 0; y < this.mem.y_dim; y++) {
+      for (let x = 0; x < this.mem.x_dim; x++) {
+        let ret = fillerFunc(this.mem, x, y);
         if (ret !== null && ret !== undefined) {
-          mem[x + y*mem.pitch] = ret;
+          this.mem[x + y*this.mem.pitch] = ret;
         }
       }
     }
   } else {
     throw 'Invalid arguments for fillFrame: length = ' + fillerFunc.length;
   }
-  this.aPlane.putFrameMemory(mem);
-
-  // TODO: Figure out semantics of calling fillFrame twice in one frame.
-  // If this frame had a back-buffer, save the front-buffer.
-  if (mem._back_buffer) {
-    mem._back_buffer = null;
-    this.initBackBuffer = mem;
-  }
+  // Render the frame memory into the plane
+  this.dirtyState = D_DID_FILL;
+  this.aPlane.putFrameMemory(this.mem);
 }
 
 Runner.prototype.loadImage = function(filepath) {
@@ -244,17 +293,20 @@ Runner.prototype.loadImage = function(filepath) {
 Runner.prototype.drawImage_params = ['img:a', 'x:i', 'y:i'];
 Runner.prototype.drawImage = function(img, x, y) {
   let [tx, ty] = this._getTranslation();
+  // TODO: Not just dirty, after drawImage we're not sure if the image
+  // is 8-bit safe, or if it now needs trueColor
+  this.dirtyState = D_DIRTY;
   this.aPlane.putImage(img, tx + x, ty + y);
 }
 
-Runner.prototype.doRender = function(num, renderFunc, postFunc) {
+Runner.prototype.doRender = function(num, renderFunc, betweenFrameFunc) {
   this.display.createWindow(this.aPlane, this._config.zoomScale);
   this.display.appRenderAndLoop(function() {
     if (renderFunc) {
       renderFunc();
     }
-    if (postFunc) {
-      postFunc();
+    if (betweenFrameFunc) {
+      betweenFrameFunc();
     }
   }, num);
 }
@@ -287,8 +339,8 @@ Runner.prototype.show = function() {
   this.doRender(1, null, null);
 }
 
-Runner.prototype.run = function(renderFunc, postFunc) {
-  this.doRender(-1, renderFunc, postFunc);
+Runner.prototype.run = function(renderFunc, betweenFrameFunc) {
+  this.doRender(-1, renderFunc, betweenFrameFunc);
 }
 
 Runner.prototype.save = function(savepath) {
@@ -299,9 +351,13 @@ Runner.prototype.quit = function() {
   this.doQuit();
 }
 
-Runner.prototype.showFrame = function(fillerFunc) {
-  this.fillFrame(fillerFunc);
-  this.doRender(1, null, null);
+Runner.prototype.nextFrame = function() {
+  this.dirtyState = D_CLEAN;
+  // TODO
+  //if (this.mem._back_buffer) {
+  //  this.mem._back_buffer = null;
+  //  this.initBackBuffer = this.mem;
+  //}
 }
 
 Runner.prototype.makeShape = function(method, params) {

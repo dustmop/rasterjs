@@ -5,7 +5,6 @@ var fs = require('fs');
 
 function mkTmpDir(targetPath) {
   let tmpdir = fs.mkdtempSync(path.join(os.tmpdir(), 'raster_test_'));
-  console.log('tmpdir = ' + tmpdir);
   return tmpdir;
 }
 
@@ -28,7 +27,13 @@ function saveTmpCompareTo(client, goldenPath) {
   let tmpout = tmpdir + '/actual.png';
   client.save(tmpout);
   if (!compareFiles(goldenPath, tmpout)) {
+    let e = new Error();
+    let lines = e.stack.split('\n');
+    let callerLine = lines[2].split(' (')[1].slice(0, -1)
     console.log('');
+    console.log(callerLine);
+    console.log('mismatch (expect, actual):');
+    console.log('open ' + goldenPath);
     console.log('open ' + tmpout);
     console.log('');
   }

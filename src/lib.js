@@ -8,10 +8,12 @@ function Raster(env) {
 
 Raster.prototype.resetState = function() {
   this.runner.resetState();
+  this.time = 0.0;
+  this.timeClick = 0;
 }
 
 Raster.prototype.TAU = 6.283185307179586;
-
+Raster.prototype.time = 0.0;
 Raster.prototype.timeClick = 0;
 
 ////////////////////////////////////////
@@ -144,9 +146,10 @@ Raster.prototype.run = function(renderFunc) {
   var self = this;
   var runner = this.runner;
   runner.then(function() {
-    runner.run(renderFunc, function() {
-      self.timeClick++;
-    });
+    runner.run(
+      renderFunc,
+      self.nextFrame.bind(self),
+    );
   });
 }
 
@@ -167,9 +170,8 @@ Raster.prototype.save = function(savepath) {
 Raster.prototype.showFrame = function(callback) {
   var runner = this.runner;
   runner.then(function() {
-    // TODO: Figure out if web_runner can call this syncronously.
-    // If so, replace with fillFrame -> show
-    runner.showFrame(callback);
+    runner.fillFrame(callback);
+    runner.show();
   });
 }
 
@@ -177,6 +179,16 @@ Raster.prototype.quit = function() {
   var runner = this.runner;
   runner.then(function() {
     runner.quit();
+  });
+}
+
+Raster.prototype.nextFrame = function() {
+  var runner = this.runner;
+  var self = this;
+  runner.then(function() {
+    self.timeClick++;
+    self.time = self.timeClick / 60.0;
+    runner.nextFrame();
   });
 }
 

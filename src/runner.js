@@ -13,6 +13,8 @@ const D_FILL_SOLID = 1;
 const D_FILL_DOTS  = 2;
 const D_DIRTY      = 3;
 const D_DID_FILL   = 4;
+const D_DRAWN      = 5;
+
 const MAX_DOTS_DRAWN = 36;
 
 function Runner(env) {
@@ -21,6 +23,7 @@ function Runner(env) {
   this.aPlane = env.makePlane(this.resources);
   this._config = {};
   this.mem = null;
+  this._backBuffer = null;
   this.initialize();
   return this;
 }
@@ -35,7 +38,6 @@ Runner.prototype.initialize = function () {
   this._config.bgColor = 0;
   this.dirtyState = D_CLEAN;
   this.dotsDrawn = new Array();
-  this.initBackBuffer = null;
   this.display.initialize();
   this.aPlane.assignRgbMap(rgbMap.rgb_map_default);
   this.imgLoader = new imageLoader.Loader(this.resources);
@@ -43,9 +45,9 @@ Runner.prototype.initialize = function () {
 
 Runner.prototype.resetState = function() {
   this.mem = null;
+  this._backBuffer = null;
   this.dirtyState = D_CLEAN;
   this.dotsDrawn = new Array();
-  this.initBackBuffer = null;
   this.aPlane.clear();
   this.aPlane.assignRgbMap(rgbMap.rgb_map_default);
 }
@@ -225,8 +227,8 @@ Runner.prototype.drawPolygon = function(points, x, y) {
   this.aPlane.putPolygon(tx + x, ty + y, points, false);
 }
 
-Runner.prototype.fillFrame_params = ['fillerFunc:f'];
-Runner.prototype.fillFrame = function(fillerFunc) {
+Runner.prototype.fillFrame_params = ['options?o', 'fillerFunc:f'];
+Runner.prototype.fillFrame = function(options, fillerFunc) {
   if (this.mem == null) {
     this.mem = frameMemory.NewFrameMemory(this._config.screenWidth,
                                           this._config.screenHeight);
@@ -234,18 +236,28 @@ Runner.prototype.fillFrame = function(fillerFunc) {
       this.dirtyState = D_FILL_SOLID;
     }
   }
+
+  if (options && options.previous && !this.mem._didFrame) {
+    this.mem.createBackBuffer();
+    // If buffer is created from an unknown previous frame, load the contents
+    if (this.dirtyState == D_DRAWN) {
+      let image = {
+        palette: [],
+        buffer: [],
+        pitch: null,
+      };
+      this.aPlane.retrieveTrueContent(image);
+      for (let k = 0; k < image.buffer.length; k++) {
+        this.mem._backBuffer[k] = image.buffer[k];
+      }
+    }
+  }
+
   // If background color was set, fill the memory
   if (this.dirtyState == D_FILL_SOLID) {
     this.mem.fill(this._config.bgColor);
   }
-  // TODO: Pass an additional parameter to fillFrame when back-buffer is
-  // needed. Otherwise, there's no way to do it without being very inefficient
-  // If there was a buffer last frame, and it had a back-buffer, use the
-  // previous front-buffer as the back-buffer for this next frame.
-  if (this.initBackBuffer) {
-    this.mem._back_buffer = this.initBackBuffer;
-    this.initBackBuffer = null;
-  }
+
   // Update the frame memory based upon changes made to the plane.
   if (this.dirtyState == D_FILL_DOTS) {
     for (let i = 0; i < this.dotsDrawn.length; i++) {
@@ -255,7 +267,7 @@ Runner.prototype.fillFrame = function(fillerFunc) {
       this.mem[x + y*this.mem.pitch] = row[2];
     }
     this.dotsDrawn.splice(0);
-  } else if (this.dirtyState == D_DIRTY) {
+  } else if (this.dirtyState == D_DIRTY || this.dirtyState == D_DRAWN) {
     let image = {
       palette: [],
       buffer: [],
@@ -284,6 +296,7 @@ Runner.prototype.fillFrame = function(fillerFunc) {
   // Render the frame memory into the plane
   this.dirtyState = D_DID_FILL;
   this.aPlane.putFrameMemory(this.mem);
+  this.mem._didFrame = true;
 }
 
 Runner.prototype.loadImage = function(filepath) {
@@ -352,12 +365,15 @@ Runner.prototype.quit = function() {
 }
 
 Runner.prototype.nextFrame = function() {
-  this.dirtyState = D_CLEAN;
-  // TODO
-  //if (this.mem._back_buffer) {
-  //  this.mem._back_buffer = null;
-  //  this.initBackBuffer = this.mem;
-  //}
+  let old = this.dirtyState;
+  if (this.dirtyState == D_DID_FILL || this.dirtyState == D_CLEAN) {
+    this.dirtyState = D_CLEAN;
+  } else {
+    this.dirtyState = D_DRAWN;
+  }
+  if (this.mem) {
+    this.mem._didFrame = false;
+  }
 }
 
 Runner.prototype.makeShape = function(method, params) {

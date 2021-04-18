@@ -132,10 +132,11 @@ Raster.prototype.drawCircle = function() {
   this.runner.dispatch(['drawCircle', arguments]);
 }
 
-Raster.prototype.fillFrame = function(callback) {
+Raster.prototype.fillFrame = function() {
   var runner = this.runner;
+  var args = arguments;
   runner.then(function() {
-    runner.fillFrame(callback);
+    runner.dispatch(['fillFrame', args]);
   });
 }
 
@@ -167,10 +168,11 @@ Raster.prototype.save = function(savepath) {
   });
 }
 
-Raster.prototype.showFrame = function(callback) {
+Raster.prototype.showFrame = function() {
   var runner = this.runner;
+  var args = arguments;
   runner.then(function() {
-    runner.fillFrame(callback);
+    runner.dispatch(['fillFrame', args]);
     runner.show();
   });
 }

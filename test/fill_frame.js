@@ -133,10 +133,9 @@ describe('Fill', function() {
     let newA = null;
     let newB = null;
 
-    // TODO: Finish me!
-    /*
     ra.nextFrame();
 
+    ra.fillBackground(0);
     ra.fillFrame({previous: true}, function(mem) {
       oldA = mem.getPrevious(1, 1);
       oldB = mem.getPrevious(1, 5);
@@ -156,7 +155,6 @@ describe('Fill', function() {
     assert.equal(newA, 0);
     assert.equal(oldB, 0x36);
     assert.equal(newB, 0);
-    */
   });
 
 });

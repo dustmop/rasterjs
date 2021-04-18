@@ -5,6 +5,8 @@ function NewFrameMemory(w, h) {
   make.height = h;
   make.width = w;
   make.pitch = w;
+  make._didFrame = false;
+  make._backBuffer = null;
   make.put = function(x, y, v) {
     if (x < 0 || x >= this.x_dim || y < 0 || y >= this.y_dim) {
       return;
@@ -17,19 +19,20 @@ function NewFrameMemory(w, h) {
     }
     return this[x + y*this.pitch];
   };
-  make._back_buffer = null;
   make.getPrevious = function(x, y) {
-    var self = this;
-    if (!self._back_buffer) {
-      var copy_size = self.y_dim * self.pitch;
-      var copy = new Uint8Array(copy_size);
-      for (var k = 0; k < copy_size; k++) {
-        copy[k] = self[k];
-      }
-      self._back_buffer = copy;
+    let k = x + y*this.pitch;
+    if (this._backBuffer) {
+      return this._backBuffer[x + y*this.pitch];
     }
-    return self._back_buffer[x + y*this.pitch];
+    throw 'getPrevious only works if fillFrame is given {previous:true}';
   };
+  make.createBackBuffer = function() {
+    var self = this;
+    if (self._backBuffer == null) {
+      self._backBuffer = new Uint8Array(w * h);
+    }
+    self._backBuffer.set(self);
+  }
   return make;
 }
 

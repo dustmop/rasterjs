@@ -2,7 +2,7 @@ var util = require('./util.js');
 var ra = require('../src/lib.js');
 
 describe('Line', function() {
-  it('draw operations', function() {
+  it('draw directions', function() {
     ra.resetState();
 
     // Black background
@@ -33,5 +33,42 @@ describe('Line', function() {
     ra.drawLine(9, 12, 9, 15);
 
     util.saveTmpCompareTo(ra, 'test/testdata/line.png');
+  });
+
+  it('draw float', function() {
+    ra.resetState();
+
+    ra.fillBackground(0);
+    ra.setSize(13, 13);
+
+    //red
+    ra.setColor(0x18);
+    ra.drawLine(0.7, 0.8, 5.4, 2.4);
+
+    //blue
+    ra.setColor(0x1e);
+    ra.drawLine(7, 1, 10, 1);
+
+    //yellow
+    ra.setColor(0x1a);
+    ra.drawLine(6, 3, 9, 6);
+
+    //purple
+    ra.setColor(0x1f);
+    ra.drawLine(11, 3, 11, 5);
+
+    //green
+    ra.setColor(0x1c);
+    ra.drawLine(1.2, 4.3, 3.3, 7.2);
+
+    //light blue
+    ra.setColor(0x1d);
+    ra.drawLine(1.0, 12.0, 3.5, 8.4);
+
+    //orange
+    ra.setColor(0x19);
+    ra.drawLine(7.4, 10.4, 11.1, 8.2);
+
+    util.saveTmpCompareTo(ra, 'test/testdata/line_float.png');
   });
 });

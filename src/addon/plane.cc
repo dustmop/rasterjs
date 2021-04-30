@@ -14,6 +14,8 @@ using namespace Napi;
 
 Napi::FunctionReference g_planeConstructor;
 
+bool isInt(float f);
+
 void Plane::InitClass(Napi::Env env, Napi::Object exports) {
   Napi::Function func = DefineClass(
       env,
@@ -310,21 +312,28 @@ Napi::Value Plane::PutLine(const Napi::CallbackInfo& info) {
   Napi::Value y1val = info[3];
   Napi::Value ccval = info[4];
 
-  int x0 = round(xval.As<Napi::Number>().FloatValue());
-  int y0 = round(yval.As<Napi::Number>().FloatValue());
-  int x1 = round(x1val.As<Napi::Number>().FloatValue());
-  int y1 = round(y1val.As<Napi::Number>().FloatValue());
+  float x0 = xval.As<Napi::Number>().FloatValue();
+  float y0 = yval.As<Napi::Number>().FloatValue();
+  float x1 = x1val.As<Napi::Number>().FloatValue();
+  float y1 = y1val.As<Napi::Number>().FloatValue();
   int connectCorners = ccval.As<Napi::Number>().Int32Value();
 
   uint32_t color = this->frontColor;
 
-  PointList point_list;
-  point_list.push_back(Point(x0, y0));
-  point_list.push_back(Point(x1, y1));
-
   GfxTarget target;
   this->fillTarget(&target);
-  putLine(&target, point_list, color, connectCorners);
+
+  if (isInt(x0) && isInt(y0) && isInt(x1) && isInt(y1)) {
+    PointList point_list;
+    point_list.push_back(Point(int(x0), int(y0)));
+    point_list.push_back(Point(int(x1), int(y1)));
+    putLineInt(&target, point_list, color, connectCorners);
+  } else {
+    FloatPointList point_list;
+    point_list.push_back(FloatPoint(x0, y0));
+    point_list.push_back(FloatPoint(x1, y1));
+    putLineFloat(&target, point_list, color, connectCorners);
+  }
 
   Napi::Env env = info.Env();
   return Napi::Number::New(env, 0);
@@ -638,4 +647,10 @@ void Plane::fillTarget(GfxTarget* t) {
   t->width   = this->width;
   t->height  = this->height;
   t->rowSize = this->rowSize;
+}
+
+bool isInt(float f) {
+  double whole;
+  double fract = modf(double(f), &whole);
+  return fract == 0.0;
 }

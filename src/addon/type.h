@@ -26,4 +26,17 @@ class Point {
 
 typedef std::vector<Point> PointList;
 
+class FloatPoint {
+ public:
+  float x;
+  float y;
+  FloatPoint(float x = 0, float y = 0) {
+    this->x = x;
+    this->y = y;
+  }
+};
+
+typedef std::vector<FloatPoint> FloatPointList;
+
+
 #endif

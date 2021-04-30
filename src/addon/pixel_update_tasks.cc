@@ -1,5 +1,6 @@
 #include "type.h"
 #include <cstdlib> // abs
+#include <math.h>
 
 void swap(int* a, int* b) {
   static int tmp;
@@ -7,6 +8,16 @@ void swap(int* a, int* b) {
   *a = *b;
   *b = tmp;
 }
+
+void swapFloat(float* a, float* b) {
+  static float tmp;
+  tmp = *a;
+  *a = *b;
+  *b = tmp;
+}
+
+float fract(float n);
+float distFromMidpoint(float x, float y);
 
 void putRange(GfxTarget* target, int x0, int y0, int x1, int y1, uint32_t color) {
   if (x0 > x1) {
@@ -104,7 +115,7 @@ void putRect(GfxTarget* target, int x0, int y0, int x1, int y1, bool fill, uint3
   }
 }
 
-void putLine(GfxTarget* target, const PointList& points, uint32_t color, int connectCorners) {
+void putLineInt(GfxTarget* target, const PointList& points, uint32_t color, int connectCorners) {
   int x0 = points[0].x;
   int y0 = points[0].y;
   int x1 = points[1].x;
@@ -193,9 +204,73 @@ void putLine(GfxTarget* target, const PointList& points, uint32_t color, int con
   }
 }
 
+void putLineFloat(GfxTarget* target, const FloatPointList& points, uint32_t color, int connectCorners) {
+  float x0 = points[0].x;
+  float y0 = points[0].y;
+  float x1 = points[1].x;
+  float y1 = points[1].y;
+
+  float deltax = x1 - x0;
+  float deltay = y1 - y0;
+  float slope = deltay / deltax;
+
+  if (abs(deltay) <= abs(deltax)) {
+    // Always draw left to right. If backwards, swap the endpoints.
+    if (deltax < 0) {
+      swapFloat(&x0, &x1);
+      swapFloat(&y0, &y1);
+      deltax = -deltax;
+      deltay = -deltay;
+    }
+    // Iterate each X pixel until we reach the endpoint.
+    float midpoint;
+    int limit = int(ceil(x1));
+    int x, y;
+    x = x0;
+
+    if (fract(x0) > 0.5) {
+      x += 1;
+    }
+    if (fract(x1) > 0.0 && fract(x1) < 0.5) {
+      limit -= 1;
+    }
+
+    for (; x < limit; x++) {
+      midpoint = float(x) + 0.5;
+      y = floor((midpoint - x0) * slope + y0);
+      target->buffer[x + y*target->rowSize] = color;
+    }
+  } else {
+    if (deltay < 0) {
+      swapFloat(&x0, &x1);
+      swapFloat(&y0, &y1);
+      deltax = -deltax;
+      deltay = -deltay;
+    }
+    // Iterate each Y pixel until we reach the endpoint.
+    float midpoint;
+    int limit = int(ceil(y1));
+    int x, y;
+    y = y0;
+
+    if (fract(y0) > 0.5) {
+      y += 1;
+    }
+    if (fract(y1) > 0.0 && fract(y1) < 0.5) {
+      limit -= 1;
+    }
+
+    for (; y < limit; y++) {
+      midpoint = float(y) + 0.5;
+      x = floor((midpoint - y0) / slope + x0);
+      target->buffer[x + y*target->rowSize] = color;
+    }
+  }
+}
+
 void putPolygonFill(GfxTarget* target, const PointList& points, uint32_t color) {
   std::vector<int> edgeX, edgeDir;
-  int pixelX, pixelY, prev;
+  int pixelX, pixelY;
   size_t i, j;
   double polyYi, polyYj, polyXi, polyXj;
 
@@ -328,6 +403,17 @@ void putPolygonOutline(GfxTarget* target, const PointList& points, uint32_t colo
     lineSegment[1].x = points[j].x;
     lineSegment[0].y = points[i].y;
     lineSegment[1].y = points[j].y;
-    putLine(target, lineSegment, color, 1);
+    putLineInt(target, lineSegment, color, 1);
   }
+}
+
+float fract(float n) {
+  double whole;
+  return modf(n, &whole);
+}
+
+float distFromMidpoint(float x, float y) {
+  float distx = fabs(fract(x) - 0.5);
+  float disty = fabs(fract(y) - 0.5);
+  return distx + disty;
 }

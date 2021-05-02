@@ -14,17 +14,15 @@ struct GfxTarget {
   int rowSize;
 };
 
-class Point {
+class IntPoint {
  public:
   int x;
   int y;
-  Point(int x = 0, int y = 0) {
+  IntPoint(int x = 0, int y = 0) {
     this->x = x;
     this->y = y;
   }
 };
-
-typedef std::vector<Point> PointList;
 
 class FloatPoint {
  public:
@@ -36,7 +34,32 @@ class FloatPoint {
   }
 };
 
-typedef std::vector<FloatPoint> FloatPointList;
+#define TYPE_INT_POINT 1
+#define TYPE_FLOAT_POINT 2
 
+class PointList {
+ public:
+  int type;
+  std::vector<IntPoint> ip;
+  std::vector<FloatPoint> fp;
+  size_t size() const {
+    if (this->type == TYPE_INT_POINT) {
+      return this->ip.size();
+    }
+    return this->fp.size();
+  }
+  PointList convertFloatToInt() const {
+    if (this->type == TYPE_INT_POINT) {
+      return *this;
+    }
+    PointList make;
+    make.type = TYPE_INT_POINT;
+    for (size_t k = 0; k < this->fp.size(); k++) {
+      const FloatPoint& p = this->fp[k];
+      make.ip.push_back(IntPoint(p.x, p.y));
+    }
+    return make;
+  }
+};
 
 #endif

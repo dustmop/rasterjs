@@ -28,11 +28,6 @@ describe('Polygon Rotation', function() {
     ra.fillPolygon(rotated, 0,  24);
     ra.drawPolygon(rotated, 14, 24);
 
-
-    ra.save(tmpout);
-    if (!util.compareFiles('test/testdata/polygon_rotate.png', tmpout)) {
-      console.log('open ' + tmpout);
-    }
-    assert.ok(util.compareFiles('test/testdata/polygon_rotate.png', tmpout));
+    util.saveTmpCompareTo(ra, 'test/testdata/polygon_rotate.png');
   });
 });

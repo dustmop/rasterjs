@@ -18,6 +18,7 @@ void swapFloat(float* a, float* b) {
 
 float fract(float n);
 float distFromMidpoint(float x, float y);
+void putLineFloat(GfxTarget* target, const PointList& points, uint32_t color);
 
 void putRange(GfxTarget* target, int x0, int y0, int x1, int y1, uint32_t color) {
   if (x0 > x1) {
@@ -115,11 +116,16 @@ void putRect(GfxTarget* target, int x0, int y0, int x1, int y1, bool fill, uint3
   }
 }
 
-void putLineInt(GfxTarget* target, const PointList& points, uint32_t color, int connectCorners) {
-  int x0 = points[0].x;
-  int y0 = points[0].y;
-  int x1 = points[1].x;
-  int y1 = points[1].y;
+void putLine(GfxTarget* target, const PointList& points, uint32_t color, int connectCorners) {
+  if (points.type == TYPE_FLOAT_POINT) {
+    putLineFloat(target, points, color);
+    return;
+  }
+
+  int x0 = points.ip[0].x;
+  int y0 = points.ip[0].y;
+  int x1 = points.ip[1].x;
+  int y1 = points.ip[1].y;
 
   int deltax = x1 - x0;
   int deltay = y1 - y0;
@@ -204,11 +210,11 @@ void putLineInt(GfxTarget* target, const PointList& points, uint32_t color, int 
   }
 }
 
-void putLineFloat(GfxTarget* target, const FloatPointList& points, uint32_t color, int connectCorners) {
-  float x0 = points[0].x;
-  float y0 = points[0].y;
-  float x1 = points[1].x;
-  float y1 = points[1].y;
+void putLineFloat(GfxTarget* target, const PointList& points, uint32_t color) {
+  float x0 = points.fp[0].x;
+  float y0 = points.fp[0].y;
+  float x1 = points.fp[1].x;
+  float y1 = points.fp[1].y;
 
   float deltax = x1 - x0;
   float deltay = y1 - y0;
@@ -268,32 +274,35 @@ void putLineFloat(GfxTarget* target, const FloatPointList& points, uint32_t colo
   }
 }
 
-void putPolygonFill(GfxTarget* target, const PointList& points, uint32_t color) {
+void putPolygonFill(GfxTarget* target, const PointList& inPoints, uint32_t color) {
   std::vector<int> edgeX, edgeDir;
   int pixelX, pixelY;
   size_t i, j;
   double polyYi, polyYj, polyXi, polyXj;
 
+  // FIXME: Should be able to fill using floating point values.
+  PointList points = inPoints.convertFloatToInt();
+
   int imageTop, imageBottom;
   int imageLeft, imageRight;
-  imageTop = points[0].y;
-  imageBottom = points[0].y;
-  imageLeft = points[0].x;
-  imageRight = points[0].x;
+  imageTop = points.ip[0].y;
+  imageBottom = points.ip[0].y;
+  imageLeft = points.ip[0].x;
+  imageRight = points.ip[0].x;
 
   // Find polygon's top and bottom.
   for (size_t i = 1; i < points.size(); i++) {
-    if (points[i].x < imageLeft) {
-      imageLeft = points[i].x;
+    if (points.ip[i].x < imageLeft) {
+      imageLeft = points.ip[i].x;
     }
-    if (points[i].x > imageRight) {
-      imageRight = points[i].x;
+    if (points.ip[i].x > imageRight) {
+      imageRight = points.ip[i].x;
     }
-    if (points[i].y < imageTop) {
-      imageTop = points[i].y;
+    if (points.ip[i].y < imageTop) {
+      imageTop = points.ip[i].y;
     }
-    if (points[i].y > imageBottom) {
-      imageBottom = points[i].y;
+    if (points.ip[i].y > imageBottom) {
+      imageBottom = points.ip[i].y;
     }
   }
 
@@ -318,10 +327,10 @@ void putPolygonFill(GfxTarget* target, const PointList& points, uint32_t color) 
       } else {
         j = points.size() - 1;
       }
-      polyXi = points[i].x;
-      polyXj = points[j].x;
-      polyYi = points[i].y;
-      polyYj = points[j].y;
+      polyXi = points.ip[i].x;
+      polyXj = points.ip[j].x;
+      polyYi = points.ip[i].y;
+      polyYj = points.ip[j].y;
 
       double scanlineY = pixelY;
       // If the current scanline's Y position overlaps the line segment.
@@ -389,8 +398,10 @@ void putPolygonFill(GfxTarget* target, const PointList& points, uint32_t color) 
 
 void putPolygonOutline(GfxTarget* target, const PointList& points, uint32_t color) {
   PointList lineSegment;
-  lineSegment.push_back(Point());
-  lineSegment.push_back(Point());
+  lineSegment.ip.push_back(IntPoint());
+  lineSegment.ip.push_back(IntPoint());
+  lineSegment.fp.push_back(FloatPoint());
+  lineSegment.fp.push_back(FloatPoint());
   size_t i, j;
 
   for (i = 0; i < points.size(); i++) {
@@ -399,11 +410,20 @@ void putPolygonOutline(GfxTarget* target, const PointList& points, uint32_t colo
     } else {
       j = points.size() - 1;
     }
-    lineSegment[0].x = points[i].x;
-    lineSegment[1].x = points[j].x;
-    lineSegment[0].y = points[i].y;
-    lineSegment[1].y = points[j].y;
-    putLineInt(target, lineSegment, color, 1);
+    if (points.type == TYPE_INT_POINT) {
+      lineSegment.type = points.type;
+      lineSegment.ip[0].x = points.ip[i].x;
+      lineSegment.ip[0].y = points.ip[i].y;
+      lineSegment.ip[1].x = points.ip[j].x;
+      lineSegment.ip[1].y = points.ip[j].y;
+    } else {
+      lineSegment.type = points.type;
+      lineSegment.fp[0].x = points.fp[i].x;
+      lineSegment.fp[0].y = points.fp[i].y;
+      lineSegment.fp[1].x = points.fp[j].x;
+      lineSegment.fp[1].y = points.fp[j].y;
+    }
+    putLine(target, lineSegment, color, 1);
   }
 }
 

@@ -51,10 +51,45 @@ describe('Polygon', function() {
     ra.fillPolygon(polygon, 16, 20);
     ra.drawPolygon(polygon, 24, 20);
 
-    ra.save(tmpout);
-    if (!util.compareFiles('test/testdata/polygon.png', tmpout)) {
-      console.log('open ' + tmpout);
-    }
-    assert.ok(util.compareFiles('test/testdata/polygon.png', tmpout));
+    util.saveTmpCompareTo(ra, 'test/testdata/polygon.png');
+  });
+
+  it('draw floats', function() {
+    ra.resetState();
+
+    ra.setSize({w: 16, h: 20});
+    ra.fillBackground(0);
+
+    // Even floating polygon, center is at a whole number (5.0, 5.0) => width=8
+    let points = [
+      [ 5.0,  1.5], // top
+      [ 8.5,  5.0], // right
+      [ 5.0,  8.5], // bottom
+      [ 1.5,  5.0], // left
+    ];
+    ra.setColor(0x25);
+    ra.drawPolygon(points);
+
+    // Odd floating polygon, center is at half number (4.5, 14.5) => width=7
+    points = [
+      [ 4.5, 11.5],
+      [ 7.5, 14.5],
+      [ 4.5, 17.5],
+      [ 1.5, 14.5],
+    ];
+    ra.setColor(0x24);
+    ra.drawPolygon(points);
+
+    // Odd pixel polygon, center is at half number (12.5, 10.5) => width=5
+    points = [
+      [12,  8],
+      [14, 10],
+      [12, 12],
+      [10, 10],
+    ];
+    ra.setColor(0x23);
+    ra.drawPolygon(points);
+
+    util.saveTmpCompareTo(ra, 'test/testdata/polygon_float.png');
   });
 });

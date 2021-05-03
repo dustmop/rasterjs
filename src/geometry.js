@@ -1,6 +1,22 @@
 function rotatePolygon(polygon, angle) {
   var axis = centerOf(polygon);
 
+  var isPixelPolygon = true;
+
+  for (var i = 0; i < polygon.length; i++) {
+    if (!isInt(polygon[i][0]) && !isInt(polygon[i][0])) {
+      isPixelPolygon = false;
+      break;
+    }
+  }
+
+  if (isPixelPolygon) {
+    for (var i = 0; i < polygon.length; i++) {
+      polygon[i][0] += 0.50000001;
+      polygon[i][1] += 0.50000001;
+    }
+  }
+
   for (var i = 0; i < polygon.length; i++) {
     var x = polygon[i][0];
     var y = polygon[i][1];
@@ -36,6 +52,11 @@ function centerOf(polygon) {
     }
   }
   return [(left+right)/2, (top+bot)/2];
+}
+
+function isInt(n) {
+  let fract = n - Math.floor(n);
+  return fract == 0.0;
 }
 
 module.exports.rotatePolygon = rotatePolygon;

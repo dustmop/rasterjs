@@ -39,7 +39,7 @@ describe('Line', function() {
     ra.resetState();
 
     ra.fillBackground(0);
-    ra.setSize(13, 13);
+    ra.setSize(14, 17);
 
     //red
     ra.setColor(0x18);
@@ -68,6 +68,14 @@ describe('Line', function() {
     //orange
     ra.setColor(0x19);
     ra.drawLine(7.4, 10.4, 11.1, 8.2);
+
+    //dark gray
+    ra.setColor(0x3);
+    ra.drawLine(3.5, 15.0, 6.0, 12.5);
+
+    //light gray
+    ra.setColor(0x5);
+    ra.drawLine(7.0, 12.5, 9.5, 15.0);
 
     util.saveTmpCompareTo(ra, 'test/testdata/line_float.png');
   });

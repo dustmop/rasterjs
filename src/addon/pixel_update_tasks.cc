@@ -219,6 +219,7 @@ void putLineFloat(GfxTarget* target, const PointList& points, uint32_t color) {
   float deltax = x1 - x0;
   float deltay = y1 - y0;
   float slope = deltay / deltax;
+  int positiveTorque = 1;
 
   if (abs(deltay) <= abs(deltax)) {
     // Always draw left to right. If backwards, swap the endpoints.
@@ -227,9 +228,10 @@ void putLineFloat(GfxTarget* target, const PointList& points, uint32_t color) {
       swapFloat(&y0, &y1);
       deltax = -deltax;
       deltay = -deltay;
+      positiveTorque = 0;
     }
     // Iterate each X pixel until we reach the endpoint.
-    float midpoint;
+    float midpoint, intercept;
     int limit = int(ceil(x1));
     int x, y;
     x = x0;
@@ -243,7 +245,12 @@ void putLineFloat(GfxTarget* target, const PointList& points, uint32_t color) {
 
     for (; x < limit; x++) {
       midpoint = float(x) + 0.5;
-      y = floor((midpoint - x0) * slope + y0);
+      intercept = (midpoint - x0) * slope + y0;
+      y = floor(intercept);
+      if (fract(intercept) == 0.0 && !positiveTorque) {
+        // Handle rounding depending on the torque of the line draw.
+        y -= 1;
+      }
       target->buffer[x + y*target->rowSize] = color;
     }
   } else {
@@ -252,9 +259,10 @@ void putLineFloat(GfxTarget* target, const PointList& points, uint32_t color) {
       swapFloat(&y0, &y1);
       deltax = -deltax;
       deltay = -deltay;
+      positiveTorque = 0;
     }
     // Iterate each Y pixel until we reach the endpoint.
-    float midpoint;
+    float midpoint, intercept;
     int limit = int(ceil(y1));
     int x, y;
     y = y0;
@@ -268,7 +276,12 @@ void putLineFloat(GfxTarget* target, const PointList& points, uint32_t color) {
 
     for (; y < limit; y++) {
       midpoint = float(y) + 0.5;
-      x = floor((midpoint - y0) / slope + x0);
+      intercept = (midpoint - y0) / slope + x0;
+      x = floor(intercept);
+      if (fract(intercept) == 0.0 && !positiveTorque) {
+        // Handle rounding depending on the torque of the line draw.
+        x -= 1;
+      }
       target->buffer[x + y*target->rowSize] = color;
     }
   }

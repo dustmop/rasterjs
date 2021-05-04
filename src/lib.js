@@ -154,8 +154,11 @@ Raster.prototype.run = function(renderFunc) {
   });
 }
 
-Raster.prototype.show = function() {
+Raster.prototype.show = function(renderFunc) {
   var runner = this.runner;
+  if (renderFunc) {
+    renderFunc();
+  }
   runner.then(function() {
     runner.show();
   });

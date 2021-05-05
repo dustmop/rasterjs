@@ -23,15 +23,14 @@ describe('True Color', function() {
     util.saveTmpCompareTo(ra, 'test/testdata/true_color.png');
 
     let pal = ra.getPaletteAll();
-    assert.equal(pal.length, 4);
+    assert.equal(pal.length, 68);
     // Validate palette contents.
-    assert.equal(pal[0].rgb, 0x44aa66);
-    assert.equal(pal[1].rgb, 0xcc66cc);
-    assert.equal(pal[2].rgb, 0x224488);
-    assert.equal(pal[3].rgb, 0xdd4444);
-    assert.equal(pal[0].color, 0);
-    assert.equal(pal[1].color, 1);
-    assert.equal(pal[2].color, 2);
-    assert.equal(pal[3].color, 3);
+    assert.equal(pal[64].rgb, 0xcc66cc);
+    assert.equal(pal[65].rgb, 0x44aa66);
+    assert.equal(pal[66].rgb, 0x224488);
+    assert.equal(pal[67].rgb, 0xdd4444);
+    for (let k = 0; k < pal.length; k++) {
+      assert.equal(pal[k].color, k);
+    }
   });
 });

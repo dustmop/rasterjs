@@ -207,6 +207,13 @@ Napi::Value Plane::RetrieveTrueContent(const Napi::CallbackInfo& info) {
   // match the buffer
   pixel_data.resize(y_size * x_size);
 
+  // Read the already existing color set.
+  for (int i = 0; i < this->rgbMapSize; i++) {
+    rgb_val = this->rgbMap[i];
+    color_use_lookup[rgb_val] = i;
+    num_colors++;
+  }
+
   // Convert rgb colors in buffer into pixel data, and a collection
   // of all unique colors used
   for (int y = 0; y < y_size; y++) {

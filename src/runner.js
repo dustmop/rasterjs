@@ -421,13 +421,18 @@ Runner.prototype.getPaletteEntry = function(x, y) {
                                        index, color, tr);
 }
 
-Runner.prototype.getPaletteAll = function() {
+Runner.prototype.getPaletteAll = function(opt) {
+  opt = opt || {};
   let image = {
     palette: [],
     buffer: [],
     pitch: null,
   };
   this.aPlane.retrieveTrueContent(image);
+
+  if (opt.sort) {
+    algorithm.sortByHSV(image);
+  }
 
   let index = {};
   for (let k = 0; k < image.buffer.length; k++) {
@@ -440,9 +445,9 @@ Runner.prototype.getPaletteAll = function() {
 
   let all = [];
   for (let k = 0; k < image.palette.length; k++) {
-    let tr = Math.floor(image.palette[k] / 0x100);
+    let rgb = Math.floor(image.palette[k] / 0x100);
     let ent = new paletteEntry.PaletteEntry(this.aPlane, image.pitch,
-                                            index, k, tr);
+                                            index, k, rgb);
     all.push(ent);
   }
 

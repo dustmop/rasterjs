@@ -65,8 +65,9 @@ Raster.prototype.getPaletteEntry = function(x, y) {
   return this.runner.getPaletteEntry(x, y);
 }
 
-Raster.prototype.getPaletteAll = function() {
-  return this.runner.getPaletteAll();
+Raster.prototype.getPaletteAll = function(opt) {
+  opt = opt || {};
+  return this.runner.getPaletteAll(opt);
 }
 
 ////////////////////////////////////////

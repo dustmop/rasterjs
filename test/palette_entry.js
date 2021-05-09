@@ -1,6 +1,7 @@
 var assert = require('assert');
 var util = require('./util.js');
 var ra = require('../src/lib.js');
+var rgb_map = require('../src/rgb_map.js');
 
 describe('Palette entry', function() {
   it('set color', function() {
@@ -18,6 +19,26 @@ describe('Palette entry', function() {
     entry.setColor(0x13);
 
     util.saveTmpCompareTo(ra, 'test/testdata/pal_set.png');
+  });
+
+  it('default palette', function() {
+    ra.resetState();
+    ra.setSize(8, 8);
+
+    let result = [];
+    let colors = ra.getPaletteAll();
+    let i = 0;
+    for (let y = 0; y < 8; y++) {
+      for (let x = 0; x < 8; x++) {
+        ra.setColor(i);
+        ra.fillRect({x:x, y:y, w:1, h:1});
+        result.push(colors[i].rgb);
+        i++;
+      }
+    }
+
+    assert.deepEqual(result, rgb_map.rgb_map_default);
+    util.saveTmpCompareTo(ra, 'test/testdata/pal_default.png');
   });
 
   it('get all', function() {

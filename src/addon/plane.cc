@@ -191,9 +191,7 @@ Napi::Value Plane::AddRgbMapEntry(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value Plane::RetrieveTrueContent(const Napi::CallbackInfo& info) {
-  if (!this->buffer) {
-    return info.Env().Null();
-  }
+  this->prepare();
 
   int x_size = this->width;
   int y_size = this->height;

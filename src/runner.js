@@ -21,6 +21,7 @@ function Runner(env) {
   this.resources = env.makeResources();
   this.display = env.makeDisplay();
   this.aPlane = env.makePlane(this.resources);
+  this.env = env;
   this._config = {};
   this.mem = null;
   this._backBuffer = null;
@@ -416,8 +417,8 @@ Runner.prototype.getPaletteEntry = function(x, y) {
   let color = image.buffer[x + y*pitch];
   let tr = image.palette[color];
 
-  return paletteEntry.NewPaletteEntry(this.aPlane, pitch,
-                                      index, color, tr);
+  return new paletteEntry.PaletteEntry(this.aPlane, pitch,
+                                       index, color, tr);
 }
 
 Runner.prototype.getPaletteAll = function() {
@@ -428,15 +429,24 @@ Runner.prototype.getPaletteAll = function() {
   };
   this.aPlane.retrieveTrueContent(image);
 
+  let index = {};
+  for (let k = 0; k < image.buffer.length; k++) {
+    let color = image.buffer[k];
+    if (index[color] === undefined) {
+      index[color] = [];
+    }
+    index[color].push(k);
+  }
+
   let all = [];
   for (let k = 0; k < image.palette.length; k++) {
     let tr = Math.floor(image.palette[k] / 0x100);
-    let ent = paletteEntry.NewPaletteEntry(this.aPlane, image.pitch,
-                                           null, k, tr);
+    let ent = new paletteEntry.PaletteEntry(this.aPlane, image.pitch,
+                                            index, k, tr);
     all.push(ent);
   }
 
-  return all;
+  return paletteEntry.NewPaletteCollection(this.env, this.resources, all);
 }
 
 module.exports.Runner = Runner;

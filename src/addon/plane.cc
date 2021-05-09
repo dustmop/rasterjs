@@ -37,6 +37,7 @@ void Plane::InitClass(Napi::Env env, Napi::Object exports) {
        InstanceMethod("putImage", &Plane::PutImage),
        InstanceMethod("putCircleFromArc", &Plane::PutCircleFromArc),
        InstanceMethod("putFrameMemory", &Plane::PutFrameMemory),
+       InstanceMethod("putColorChange", &Plane::PutColorChange),
   });
   g_planeConstructor = Napi::Persistent(func);
   g_planeConstructor.SuppressDestruct();
@@ -173,15 +174,15 @@ Napi::Value Plane::AddRgbMapEntry(const Napi::CallbackInfo& info) {
   Napi::Value val = info[0];
   int num = val.As<Napi::Number>().Int32Value();
   int size = this->rgbMapSize;
-  int color = num * 0x100 + 0xff;
+  int rgb = num * 0x100 + 0xff;
   for (int i = 0; i < size; i++) {
-    if (this->rgbMap[i] == color) {
+    if (this->rgbMap[i] == rgb) {
       return Napi::Number::New(env, i);
     }
   }
   // Add it to the map
   int index = this->rgbMapIndex;
-  this->rgbMap[index] = color;
+  this->rgbMap[index] = rgb;
   if (size < 0x100) {
     this->rgbMapSize++;
   }
@@ -601,6 +602,43 @@ Napi::Value Plane::PutFrameMemory(const Napi::CallbackInfo& info) {
 
   Napi::Env env = info.Env();
   return Napi::Number::New(env, 0);
+}
+
+Napi::Value retError(const Napi::CallbackInfo& info, const char* msg) {
+  printf("%s\n", msg);
+  return info.Env().Null();
+}
+
+Napi::Value Plane::PutColorChange(const Napi::CallbackInfo& info) {
+  Napi::Value val = info[0];
+  int nextRgb = val.As<Napi::Number>().Int32Value();
+
+  val = info[1];
+  int color = val.As<Napi::Number>().Int32Value();
+
+  val = info[2];
+  int pitch = val.As<Napi::Number>().Int32Value();
+
+  val = info[3];
+  if (!val.IsObject()) {
+    return retError(info, "arg[3] needs to be an object");
+  }
+  if (!val.IsArray()) {
+    return retError(info, "arg[3] needs to be an array");
+  }
+
+  Napi::Object parameter_list = val.ToObject();
+  Napi::Value parameter_length = parameter_list.Get("length");
+  int numElems = parameter_length.As<Napi::Number>().Int32Value();
+
+  this->rgbMap[color] = nextRgb;
+
+  for (int i = 0; i < numElems; i++) {
+    Napi::Value elem = parameter_list[uint32_t(i)];
+    int imageIndex = elem.As<Napi::Number>().Int32Value();
+    this->buffer[imageIndex] = nextRgb;
+  }
+  return info.Env().Null();
 }
 
 Napi::Value Plane::SaveImage(const Napi::CallbackInfo& info) {

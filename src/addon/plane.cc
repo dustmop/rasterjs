@@ -16,6 +16,9 @@ Napi::FunctionReference g_planeConstructor;
 
 bool isInt(float f);
 
+#define WHITE_32BIT 0xffffffff
+#define BLACK_32BIT 0x000000ff
+
 void Plane::InitClass(Napi::Env env, Napi::Object exports) {
   Napi::Function func = DefineClass(
       env,
@@ -52,14 +55,14 @@ Plane::Plane(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Plane>(info) {
 
   this->rgbMapIndex = 0;
   this->rgbMapSize = 0;
-  this->frontColor = 0xffffffff;
-  this->backColor = 0;
+  this->frontColor = WHITE_32BIT;
+  this->backColor = BLACK_32BIT;
   this->rowSize = 0;
   this->numElems = 0;
   this->buffer = NULL;
   this->width = 0;
   this->height = 0;
-  this->needErase = false;
+  this->needErase = true;
   this->res = res;
 };
 
@@ -95,6 +98,7 @@ void Plane::prepare() {
   if (!this->needErase) {
     return;
   }
+
   for (int n = 0; n < this->numElems; n++) {
     this->buffer[n] = this->backColor;
   }
@@ -117,8 +121,8 @@ Napi::Value Plane::Clear(const Napi::CallbackInfo& info) {
   }
   this->width = 0;
   this->height = 0;
-  this->frontColor = 0xffffffff;
-  this->backColor = 0;
+  this->frontColor = WHITE_32BIT;
+  this->backColor = BLACK_32BIT;
   return Napi::Number::New(env, 0);
 }
 

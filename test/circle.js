@@ -34,4 +34,36 @@ describe('Circle', function() {
 
     util.saveTmpCompareTo(ra, 'test/testdata/circle.png');
   });
+
+  it('simple circle', function() {
+    ra.resetState();
+
+    ra.setSize({w: 42, h: 42});
+
+    // Circles
+    ra.setColor(0x22);
+    ra.fillCircle({x: 2, y: 2, r: 8});
+
+    // Size 1
+    ra.setColor(0x28);
+    ra.fillCircle({x: 24, y: 1, r: 1});
+
+    // Size 2
+    ra.setColor(0x29);
+    ra.fillCircle({x: 24, y: 5, r: 2});
+
+    // Size 3
+    ra.setColor(0x2a);
+    ra.fillCircle({x: 24, y: 11, r: 3});
+
+    // Size 4
+    ra.setColor(0x2b);
+    ra.fillCircle({x: 24, y: 19, r: 4});
+
+    // Size 5
+    ra.setColor(0x2c);
+    ra.fillCircle({x: 24, y: 29, r: 5});
+
+    util.saveTmpCompareTo(ra, 'test/testdata/circle_simple.png');
+  });
 });

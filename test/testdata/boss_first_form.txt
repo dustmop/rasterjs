@@ -1,0 +1,5 @@
+Name: 3-form RPG boss: "Harlequin Epicycle."
+Copyright: Stephen Challener (Redshrike), hosted by OpenGameArt.org
+URL: https://opengameart.org/content/3-form-rpg-boss-harlequin-epicycle
+License: CC-BY 3.0
+Link: https://creativecommons.org/licenses/by/3.0/

@@ -41,14 +41,46 @@ describe('Circle', function() {
     util.saveTmpCompareTo(ra, 'test/testdata/circle.png');
   });
 
-  it('simple circle', function() {
+  it('circle small sizes', function() {
     ra.resetState();
 
-    ra.setSize({w: 42, h: 42});
+    ra.setSize({w: 44, h: 108});
 
-    // Circles
-    ra.setColor(0x22);
-    ra.fillCircle({x: 2, y: 2, r: 8});
+    // Size 0.5
+    ra.setColor(0x28);
+    ra.fillCircle({x: 2, y: 1, r: 0.5});
+
+    // Size 1.5
+    ra.setColor(0x29);
+    ra.fillCircle({x: 2, y: 5, r: 1.5});
+
+    // Size 2.5
+    ra.setColor(0x2a);
+    ra.fillCircle({x: 2, y: 11, r: 2.5});
+
+    // Size 3.5
+    ra.setColor(0x2b);
+    ra.fillCircle({x: 2, y: 19, r: 3.5});
+
+    // Size 4.5
+    ra.setColor(0x2c);
+    ra.fillCircle({x: 2, y: 29, r: 4.5});
+
+    // Size 5.5
+    ra.setColor(0x2d);
+    ra.fillCircle({x: 2, y: 41, r: 5.5});
+
+    // Size 6.5
+    ra.setColor(0x2e);
+    ra.fillCircle({x: 2, y: 55, r: 6.5});
+
+    // Size 7.5
+    ra.setColor(0x2f);
+    ra.fillCircle({x: 2, y: 71, r: 7.5});
+
+    // Size 8.5
+    ra.setColor(0x30);
+    ra.fillCircle({x: 2, y: 89, r: 8.5});
 
     // Size 1
     ra.setColor(0x28);
@@ -70,6 +102,22 @@ describe('Circle', function() {
     ra.setColor(0x2c);
     ra.fillCircle({x: 24, y: 29, r: 5});
 
-    util.saveTmpCompareTo(ra, 'test/testdata/circle_simple.png');
+    // Size 6
+    ra.setColor(0x2d);
+    ra.fillCircle({x: 24, y: 41, r: 6});
+
+    // Size 7
+    ra.setColor(0x2e);
+    ra.fillCircle({x: 24, y: 55, r: 7});
+
+    // Size 8
+    ra.setColor(0x2f);
+    ra.fillCircle({x: 24, y: 71, r: 8});
+
+    // Size 9
+    ra.setColor(0x30);
+    ra.fillCircle({x: 24, y: 89, r: 9});
+
+    util.saveTmpCompareTo(ra, 'test/testdata/circle_sizes.png');
   });
 });

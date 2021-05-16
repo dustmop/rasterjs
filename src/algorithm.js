@@ -1,8 +1,22 @@
 function midpointCircleRasterize(r) {
+  // Only allow radius to be a whole number, or 0.5 more than a whole number.
+  r = Math.round(r * 2) / 2;
+  // Special case for some small circles, to make them look better.
+  if (r == 1.5) {
+    return [[1,0],[0,1]];
+  } else if (r == 3.0) {
+    return [[3,1],[2,2]];
+  } else if (r == 5.5) {
+    return [[5,0],[5,1],[4,2],[4,3]];
+  } else if (r == 7.0) {
+    return [[7,1],[7,2],[6,3],[6,4],[5,5]];
+  }
+  // Construct the arc.
   let arc = new Array();
   let y = 0;
   let x = r;
   let rSquared = r * r;
+  // Sample pixels from their center.
   x -= 0.5;
   if (isHalfwayValue(x)) {
     y += 0.5;

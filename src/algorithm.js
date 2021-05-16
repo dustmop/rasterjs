@@ -3,22 +3,25 @@ function midpointCircleRasterize(r) {
   let y = 0;
   let x = r;
   let rSquared = r * r;
-  let xSquared = rSquared;
-  let ySquared = 0 * 0;
+  x -= 0.5;
+  if (isHalfwayValue(x)) {
+    y += 0.5;
+  }
+  let xSquared = x * x;
+  let ySquared = y * y;
   // Loop increments Y each step, and decrements X occasionally, based upon
   // error accumulation. Eventually X==Y, which breaks the loop.
   while (true) {
     // Invariant: x * x == xSquared && y * y == ySquared
-    let answer = rSquared - ySquared;
-    let err = xSquared - answer;
-    if (err >= x) {
+    let dist = xSquared + ySquared;
+    if (dist > rSquared) {
       xSquared = xSquared - 2 * x + 1;
       x -= 1;
     }
     if (x < y) {
       break;
     }
-    arc.push([x, y])
+    arc.push([Math.ceil(x), Math.ceil(y)])
     ySquared = ySquared + 2 * y + 1;
     y += 1;
   }
@@ -31,6 +34,11 @@ function color32BitToRGB(val) {
   let g = Math.floor(rgb / 0x100) % 0x100;
   let b = rgb % 0x100;
   return [r, g, b];
+}
+
+function isHalfwayValue(num) {
+  let fract = num - Math.floor(num);
+  return fract >= 0.25 && fract < 0.75;
 }
 
 function rgbToHSV(r, g, b) {
@@ -69,14 +77,6 @@ function sortByHSV(image) {
     return 0;
   });
 
-  if (false) {
-    // Debugging
-    for (let i = 0; i < colors.length; i++) {
-      let c = colors[i];
-      console.log(`${i+1}: key=${c[0]} r=${c[1]} g=${c[2]} b=${c[3]}`);
-    }
-  }
-
   let remap = {};
   let palette = [];
   // Put the bgColor at the front
@@ -100,3 +100,4 @@ function sortByHSV(image) {
 
 module.exports.midpointCircleRasterize = midpointCircleRasterize;
 module.exports.sortByHSV = sortByHSV;
+module.exports.isHalfwayValue = isHalfwayValue;

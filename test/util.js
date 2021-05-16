@@ -36,6 +36,9 @@ function saveTmpCompareTo(client, goldenPath) {
     console.log('open ' + goldenPath);
     console.log('open ' + tmpout);
     console.log('');
+    console.log('to accept this change:');
+    console.log('cp ' + tmpout + ' ' + goldenPath);
+    console.log('');
   }
   assert.ok(compareFiles(goldenPath, tmpout));
 }

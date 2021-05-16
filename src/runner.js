@@ -193,7 +193,8 @@ Runner.prototype.fillCircle = function(x, y, r) {
   let centerX = tx + x + r;
   let centerY = ty + y + r;
   let arc = algorithm.midpointCircleRasterize(r);
-  this.aPlane.putCircleFromArc(centerX, centerY, arc, null, true);
+  let half = algorithm.isHalfwayValue(r);
+  this.aPlane.putCircleFromArc(centerX, centerY, arc, null, true, half);
 }
 
 Runner.prototype.drawCircle_params = ['x:i', 'y:i', 'r:i', 'width?i'];
@@ -205,9 +206,10 @@ Runner.prototype.drawCircle = function(x, y, r, width) {
   let arc = algorithm.midpointCircleRasterize(r);
   let inner = null;
   if (width) {
-    inner = algorithm.midpointCircleRasterize(r - width - 1);
+    inner = algorithm.midpointCircleRasterize(r - width + 1);
   }
-  this.aPlane.putCircleFromArc(centerX, centerY, arc, inner, false);
+  let half = algorithm.isHalfwayValue(r);
+  this.aPlane.putCircleFromArc(centerX, centerY, arc, inner, false, half);
 }
 
 Runner.prototype.fillPolygon_params = ['points:ps', 'x?i', 'y?i'];

@@ -496,12 +496,12 @@ Napi::Value Plane::PutImage(const Napi::CallbackInfo& info) {
 Napi::Value Plane::PutCircleFromArc(const Napi::CallbackInfo& info) {
   this->prepare();
 
-  int baseX = info[0].ToNumber().Int32Value();
-  int baseY = info[1].ToNumber().Int32Value();
+  int x = info[0].ToNumber().Int32Value();
+  int y = info[1].ToNumber().Int32Value();
 
   // Num points will always be assigned, but num inner is optional.
-  int num_points = -1;
-  int num_inner = -1;
+  int numPoints = -1;
+  int numInner = -1;
 
   // Validate that first parameter is an array of pairs.
   Napi::Value val = info[2];
@@ -515,18 +515,18 @@ Napi::Value Plane::PutCircleFromArc(const Napi::CallbackInfo& info) {
   }
 
   // Get list of pairs and its length.
-  Napi::Object parameter_list = val.ToObject();
-  Napi::Value parameter_length = parameter_list.Get("length");
-  num_points = parameter_length.As<Napi::Number>().Int32Value();
+  Napi::Object parameterList = val.ToObject();
+  Napi::Value parameterLength = parameterList.Get("length");
+  numPoints = parameterLength.As<Napi::Number>().Int32Value();
 
   // Optionally get the second list of pairs, and if so, assign num inner.
   Napi::Value inner = info[3];
-  Napi::Object inner_list;
+  Napi::Object innerList;
   if (inner.IsObject()) {
     if (inner.IsArray()) {
-      inner_list = inner.ToObject();
-      Napi::Value inner_length = inner_list.Get("length");
-      num_inner = inner_length.As<Napi::Number>().Int32Value();
+      innerList = inner.ToObject();
+      Napi::Value innerLength = innerList.Get("length");
+      numInner = innerLength.As<Napi::Number>().Int32Value();
     }
   }
 
@@ -535,44 +535,117 @@ Napi::Value Plane::PutCircleFromArc(const Napi::CallbackInfo& info) {
   GfxTarget target;
   this->fillTarget(&target);
 
-  for (int i = 0; i < num_points; i++) {
-    Napi::Value elem = parameter_list[uint32_t(i)];
+  bool half = info[5].ToBoolean().Value();
+
+  for (int i = 0; i < numPoints; i++) {
+    Napi::Value elem = parameterList[uint32_t(i)];
     // TODO: Validate this is an object
     Napi::Object pair = elem.ToObject();
     // TODO: validate length is 2
     Napi::Value first = pair[uint32_t(0)];
     Napi::Value second = pair[uint32_t(1)];
-    int a = first.As<Napi::Number>().Int32Value();
-    int b = second.As<Napi::Number>().Int32Value();
 
-    int L = -1;
-    if (i < num_inner) {
+    // The circle is defined by an arc that represents one octant of the
+    // full circle. This arc is a list of int pairs. One is called the stretch
+    // and begins equal to the radius, then moves occassional back towards
+    // the origin as it moves around the circumfrence. The other is called
+    // the cross, and moves laterally away from the origin, monotonically at
+    // end step.
+    //
+    // For example:
+    //
+    //           arc
+    //            |
+    //            v
+    //           \    ^
+    //            |   |
+    //             \  | <- cross
+    //              | |
+    //              | |
+    // ------------->
+    //        ^
+    //        |
+    //     stretch
+    //
+    // In this case, the total stretch = 13, and the total cross = 5.
+    // The arc is this list of ints: [[13,0],[13,1],[12,2],[12,3],[11,4]]
+
+    int stretch = first.As<Napi::Number>().Int32Value();
+    int cross = second.As<Napi::Number>().Int32Value();
+
+    int limit = -1;
+    if (i < numInner) {
       // If inner list exists, and we're inside it, get the Left value.
-      Napi::Value elem = inner_list[uint32_t(i)];
+      Napi::Value elem = innerList[uint32_t(i)];
       Napi::Object pair = elem.ToObject();
       Napi::Value left = pair[uint32_t(0)];
-      L = left.As<Napi::Number>().Int32Value();
-    } else if (num_inner != -1) {
+      limit = left.As<Napi::Number>().Int32Value();
+    } else if (numInner != -1) {
       // If inner list exists, and we're past it, Left is the diagonal border.
-      L = b - 2;
+      limit = cross - 2;
     }
 
-    if (fill) {
-      L = 0;
-    } else if (L == -1) {
-      // If no width given, set a width of 1
-      L = a;
-    } else {
-      L = L + 2;
+    // Handle the difference between far values (those going in a positive
+    // direction), and near values (those going in a negative direction),
+    // when the circle radius is at a halfway value. This is needed in order
+    // to give the circle the proper width.
+    int adjustFar = 0;
+    if (!half) {
+      adjustFar = 1;
     }
-    putRange(&target, baseX + a, baseY + b, baseX + L, baseY + b, color);
-    putRange(&target, baseX - a, baseY + b, baseX - L, baseY + b, color);
-    putRange(&target, baseX + a, baseY - b, baseX + L, baseY - b, color);
-    putRange(&target, baseX - a, baseY - b, baseX - L, baseY - b, color);
-    putRange(&target, baseX + b, baseY + a, baseX + b, baseY + L, color);
-    putRange(&target, baseX - b, baseY + a, baseX - b, baseY + L, color);
-    putRange(&target, baseX + b, baseY - a, baseX + b, baseY - L, color);
-    putRange(&target, baseX - b, baseY - a, baseX - b, baseY - L, color);
+    // Far stretch, near stretch, far cross, and near cross.
+    int fars = stretch - adjustFar;
+    int nears = -stretch;
+    int farc = cross - adjustFar;
+    int nearc = -cross;
+
+    // Far limit, and near limit.
+    int farl = 0;
+    int nearl = 0;
+    if (fill) {
+      // When filling the circle, put the range completely to the origin.
+      farl = 0;
+      nearl = 0;
+    } else if (limit == -1) {
+      // If no width given, set a width of 1
+      farl = stretch - adjustFar;
+      nearl = -stretch;
+    } else {
+      // If a width was given, use a range limit.
+      farl = limit - adjustFar;
+      nearl = -limit;
+    }
+
+    // Call putRange, and draw the appropriate mirrored octant of the arc
+    // in order to draw the complete the circle. Numbered as follows:
+    //
+    //            2    |    1
+    //             \   |   /
+    //              |  |  |
+    //               \ | /
+    //   3 ____      | | |      ____ 0
+    //         \----  \|/  ----/
+    //              \--|--/
+    // -----------------------------------
+    //               --|--
+    //          ----/ /|\ \----
+    //     ____/      |||      \____ 7
+    //   4           / | \
+    //              |  |  |
+    //             /   |   \
+    //            5    |    6
+
+    // The octants with x-scretchs and y-crosses
+    putRange(&target, x + fars,  y + nearc, x + farl,  y + nearc, color); // 0
+    putRange(&target, x + fars,  y + farc,  x + farl,  y + farc,  color); // 7
+    putRange(&target, x + nears, y + nearc, x + nearl, y + nearc, color); // 3
+    putRange(&target, x + nears, y + farc,  x + nearl, y + farc,  color); // 4
+
+    // The octants with x-crosses and y-stretchs
+    putRange(&target, x + farc,  y + nears, x + farc,  y + nearl, color); // 1
+    putRange(&target, x + nearc, y + nears, x + nearc, y + nearl, color); // 2
+    putRange(&target, x + farc,  y + fars,  x + farc,  y + farl,  color); // 6
+    putRange(&target, x + nearc, y + fars,  x + nearc, y + farl,  color); // 5
   }
 
   Napi::Env env = info.Env();

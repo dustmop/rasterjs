@@ -213,19 +213,21 @@ Runner.prototype.drawCircle = function(x, y, r, width) {
 }
 
 Runner.prototype.fillPolygon_params = ['points:ps', 'x?i', 'y?i'];
-Runner.prototype.fillPolygon = function(points, x, y) {
+Runner.prototype.fillPolygon = function(polygon, x, y) {
   x = x || 0;
   y = y || 0;
   let [tx, ty] = this._getTranslation();
+  let points = geometry.convertToPoints(polygon);
   this.dirtyState = D_DIRTY;
   this.aPlane.putPolygon(tx + x, ty + y, points, true);
 }
 
 Runner.prototype.drawPolygon_params = ['points:ps', 'x?i', 'y?i'];
-Runner.prototype.drawPolygon = function(points, x, y) {
+Runner.prototype.drawPolygon = function(polygon, x, y) {
   x = x || 0;
   y = y || 0;
   let [tx, ty] = this._getTranslation();
+  let points = geometry.convertToPoints(polygon);
   this.dirtyState = D_DIRTY;
   this.aPlane.putPolygon(tx + x, ty + y, points, false);
 }
@@ -341,11 +343,11 @@ Runner.prototype.dispatch = function(row) {
   let param_spec = this[fname + '_params'];
   if (fn === undefined) {
     console.log(`function ${fname} is not defined`);
-    throw `function ${fname} is not defined`
+    throw `function ${fname} is not defined`;
   }
   if (param_spec === undefined) {
     console.log(`function ${fname} does not have parameter spec`);
-    throw `function ${fname} does not have parameter spec`
+    throw `function ${fname} does not have parameter spec`;
   }
   let args = destructure(param_spec, row);
   fn.apply(this, args);
@@ -380,10 +382,14 @@ Runner.prototype.nextFrame = function() {
 }
 
 Runner.prototype.makeShape = function(method, params) {
-  if (method == 'rotate') {
-    let [shape, angle] = params;
-    geometry.rotatePolygon(shape, angle);
-    return shape;
+  if (method == 'polygon') {
+    let pointsOrPolygon = params[0];
+    return geometry.convertToPolygon(pointsOrPolygon);
+  } else if (method == 'rotate') {
+    let [pointsOrPolygon, angle] = params;
+    let polygon = geometry.convertToPolygon(pointsOrPolygon);
+    polygon.rotate(angle);
+    return polygon;
   } else if (method == 'load') {
     let [filepath] = params;
     return this.loadImage(filepath);

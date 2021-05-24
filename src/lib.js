@@ -46,6 +46,10 @@ Raster.prototype.loadImage = function(filepath) {
   return this.runner.makeShape('load', [filepath]);
 }
 
+Raster.prototype.makePolygon = function(shape, angle) {
+  return this.runner.makeShape('polygon', [shape]);
+}
+
 Raster.prototype.rotatePolygon = function(shape, angle) {
   return this.runner.makeShape('rotate', [shape, angle]);
 }

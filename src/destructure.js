@@ -8,7 +8,7 @@ function destructure(param_spec, row) {
   // TODO: Handle empty arguments
   let first_param = values[0];
 
-  if (got == 1 && isObject(first_param)) {
+  if (got == 1 && isRawObject(first_param)) {
     // Object containing named parameters.
     let result = [];
     let haveKeys = Object.keys(first_param);
@@ -61,11 +61,14 @@ function destructure(param_spec, row) {
   throw `function ${fname} expected ${want} arguments, got ${got}`
 }
 
-function isObject(thing) {
+function isRawObject(thing) {
   if (thing === null) {
     return false;
   }
-  return (typeof thing === 'object' && !Array.isArray(thing));
+  if (typeof thing === 'object' && !Array.isArray(thing)) {
+    return (thing.constructor.name === 'Object');
+  }
+  return false;
 }
 
 function splitParam(spec) {

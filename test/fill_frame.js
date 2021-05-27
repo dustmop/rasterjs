@@ -4,8 +4,6 @@ var ra = require('../src/lib.js');
 
 describe('Fill', function() {
   it('basic', function() {
-    let tmpdir = util.mkTmpDir();
-    let tmpout = tmpdir + '/actual.png';
     ra.resetState();
     ra.setSize({w: 8, h: 8});
     ra.fillFrame(function(mem, x, y) {
@@ -15,8 +13,6 @@ describe('Fill', function() {
   });
 
   it('using oscil', function() {
-    let tmpdir = util.mkTmpDir();
-    let tmpout = tmpdir + '/actual.png';
     ra.resetState();
     ra.setSize({w: 8, h: 8});
     ra.fillFrame(function(mem, x, y) {
@@ -29,8 +25,6 @@ describe('Fill', function() {
   });
 
   it('twice, keep contents', function() {
-    let tmpdir = util.mkTmpDir();
-    let tmpout = tmpdir + '/actual.png';
     ra.resetState();
     ra.setSize({w: 8, h: 8});
     // Draw upper left
@@ -49,8 +43,6 @@ describe('Fill', function() {
   });
 
   it ('twice, clear contents', function() {
-    let tmpdir = util.mkTmpDir();
-    let tmpout = tmpdir + '/actual.png';
     ra.resetState();
     ra.setSize({w: 8, h: 8});
     // Draw upper left
@@ -71,8 +63,6 @@ describe('Fill', function() {
   });
 
   it ('drawDot to initialize', function() {
-    let tmpdir = util.mkTmpDir();
-    let tmpout = tmpdir + '/actual.png';
     ra.resetState();
     ra.setSize({w: 8, h: 8});
     ra.setColor(8);
@@ -86,8 +76,6 @@ describe('Fill', function() {
   });
 
   it ('drawLine to initialize', function() {
-    let tmpdir = util.mkTmpDir();
-    let tmpout = tmpdir + '/actual.png';
     ra.resetState();
     ra.setSize({w: 8, h: 8});
     ra.setColor(0x20);
@@ -100,8 +88,6 @@ describe('Fill', function() {
   });
 
   it ('function(mem) with for loops', function() {
-    let tmpdir = util.mkTmpDir();
-    let tmpout = tmpdir + '/actual.png';
     ra.resetState();
     ra.setSize({w: 10, h: 6});
     ra.fillFrame(function(mem) {
@@ -116,8 +102,6 @@ describe('Fill', function() {
   });
 
   it('from previous memory', function() {
-    let tmpdir = util.mkTmpDir();
-    let tmpout = tmpdir + '/actual.png';
     ra.resetState();
 
     ra.setSize({w: 7, h: 7});

@@ -5,6 +5,7 @@ const frameMemory = require('./frame_memory.js');
 const paletteEntry = require('./palette_entry.js');
 const geometry = require('./geometry.js');
 const imageLoader = require('./image_loader.js');
+const displayAscii = require('./display_ascii.js');
 
 ////////////////////////////////////////
 
@@ -113,6 +114,15 @@ Runner.prototype.useSystemColors = function(obj) {
     this.aPlane.assignRgbMap(list);
   } else if (!obj) {
     this.aPlane.clearRgbMap();
+  }
+}
+
+Runner.prototype.useDisplay_params = ['name:s'];
+Runner.prototype.useDisplay = function(name) {
+  if (name == 'ascii') {
+    this.display = new displayAscii.DisplayAscii();
+  } else {
+    throw `Unknown display "${name}"`;
   }
 }
 

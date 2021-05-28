@@ -39,6 +39,10 @@ Raster.prototype.useSystemColors = function() {
   this.runner.dispatch(['useSystemColors', arguments]);
 }
 
+Raster.prototype.useDisplay = function() {
+  this.runner.dispatch(['useDisplay', arguments]);
+}
+
 ////////////////////////////////////////
 // Methods with interesting return values
 

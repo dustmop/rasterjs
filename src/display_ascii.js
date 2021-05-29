@@ -20,21 +20,23 @@ DisplayAscii.prototype.appRenderAndLoop = function(nextFrame) {
   let line = '';
   for (let k = 0; k < image.buffer.length; k++) {
     if ((k > 0) && (k % image.pitch == 0)) {
-      console.log(line);
+      line += '\n';
+      process.stdout.write(line);
       line = '';
     }
     line += byteToAscii(image.buffer[k]);
   }
   if (line != '') {
-    console.log(line);
+    line += '\n';
+    process.stdout.write(line);
   }
 }
 
 function byteToAscii(b) {
   if (b == 0) {
-    return '.';
-  } else if (b == 1) {
     return ' ';
+  } else if (b == 1) {
+    return '.';
   } else if (b == 2) {
     return '_';
   } else if (b == 3) {

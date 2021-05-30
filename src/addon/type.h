@@ -60,6 +60,17 @@ class PointList {
     }
     return make;
   }
+  std::vector<FloatPoint> asFloats() const {
+    if (this->type == TYPE_FLOAT_POINT) {
+      return this->fp;
+    }
+    std::vector<FloatPoint> fp;
+    for (size_t k = 0; k < this->ip.size(); k++) {
+      const IntPoint& p = this->ip[k];
+      fp.push_back(FloatPoint(p.x + 0.5000001, p.y + 0.500001));
+    }
+    return fp;
+  }
 };
 
 #endif

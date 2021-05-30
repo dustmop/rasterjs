@@ -19,6 +19,7 @@ void swapFloat(float* a, float* b) {
 float fract(float n);
 float distFromMidpoint(float x, float y);
 void putLineFloat(GfxTarget* target, const PointList& points, uint32_t color);
+void putPolygonOutline(GfxTarget* target, const PointList& points, uint32_t color);
 
 void putRange(GfxTarget* target, int x0, int y0, int x1, int y1, uint32_t color) {
   if (x0 > x1) {
@@ -291,31 +292,30 @@ void putPolygonFill(GfxTarget* target, const PointList& inPoints, uint32_t color
   std::vector<int> edgeX, edgeDir;
   int pixelX, pixelY;
   size_t i, j;
-  double polyYi, polyYj, polyXi, polyXj;
+  double lineSegYi, lineSegYj, lineSegXi, lineSegXj;
 
-  // FIXME: Should be able to fill using floating point values.
-  PointList points = inPoints.convertFloatToInt();
+  std::vector<FloatPoint> points = inPoints.asFloats();
 
-  int imageTop, imageBottom;
-  int imageLeft, imageRight;
-  imageTop = points.ip[0].y;
-  imageBottom = points.ip[0].y;
-  imageLeft = points.ip[0].x;
-  imageRight = points.ip[0].x;
+  float imageTop, imageBottom;
+  float imageLeft, imageRight;
+  imageTop = points[0].y;
+  imageBottom = points[0].y;
+  imageLeft = points[0].x;
+  imageRight = points[0].x;
 
   // Find polygon's top and bottom.
   for (size_t i = 1; i < points.size(); i++) {
-    if (points.ip[i].x < imageLeft) {
-      imageLeft = points.ip[i].x;
+    if (points[i].x < imageLeft) {
+      imageLeft = points[i].x;
     }
-    if (points.ip[i].x > imageRight) {
-      imageRight = points.ip[i].x;
+    if (points[i].x > imageRight) {
+      imageRight = points[i].x;
     }
-    if (points.ip[i].y < imageTop) {
-      imageTop = points.ip[i].y;
+    if (points[i].y < imageTop) {
+      imageTop = points[i].y;
     }
-    if (points.ip[i].y > imageBottom) {
-      imageBottom = points.ip[i].y;
+    if (points[i].y > imageBottom) {
+      imageBottom = points[i].y;
     }
   }
 
@@ -330,6 +330,8 @@ void putPolygonFill(GfxTarget* target, const PointList& inPoints, uint32_t color
 
   //  Loop through the rows of the image.
   for (pixelY = imageTop; pixelY <= imageBottom; pixelY++) {
+    double scanlineY = pixelY + 0.5;
+
     edgeX.clear();
     edgeDir.clear();
 
@@ -340,25 +342,24 @@ void putPolygonFill(GfxTarget* target, const PointList& inPoints, uint32_t color
       } else {
         j = points.size() - 1;
       }
-      polyXi = points.ip[i].x;
-      polyXj = points.ip[j].x;
-      polyYi = points.ip[i].y;
-      polyYj = points.ip[j].y;
+      lineSegXi = points[i].x;
+      lineSegXj = points[j].x;
+      lineSegYi = points[i].y;
+      lineSegYj = points[j].y;
 
-      double scanlineY = pixelY;
       // If the current scanline's Y position overlaps the line segment.
-      if ((polyYi <= scanlineY && polyYj >= scanlineY) ||
-          (polyYj <= scanlineY && polyYi >= scanlineY)) {
+      if ((lineSegYi <= scanlineY && lineSegYj >= scanlineY) ||
+          (lineSegYj <= scanlineY && lineSegYi >= scanlineY)) {
 
-        if (polyYi == polyYj) {
+        if (lineSegYi == lineSegYj) {
           continue;
         }
 
         // Calculate where the edge intersects the scanline.
-        double deltaX = polyXj - polyXi;
-        double deltaY = polyYj - polyYi;
-        double slope = (pixelY-polyYi)/deltaY*deltaX;
-        int intersect = polyXi + (int)(slope);
+        double deltaX = lineSegXj - lineSegXi;
+        double deltaY = lineSegYj - lineSegYi;
+        double slope = (scanlineY-lineSegYi)/deltaY*deltaX;
+        int intersect = int(lineSegXi + slope);
         int lineDirY = deltaY >= 0 ? 1 : -1;
 
         // If edge is already intersecting this pixel, and this edge
@@ -380,15 +381,17 @@ void putPolygonFill(GfxTarget* target, const PointList& inPoints, uint32_t color
     }
 
     // Sort the edges, via a simple bubble sort.
-    i = 0;
-    while (i < edgeX.size() - 1) {
-      if (edgeX[i] > edgeX[i+1]) {
-        swap(&edgeX[i], &edgeX[i+1]);
-        if (i) {
-          i--;
+    if (edgeX.size()) {
+      i = 0;
+      while (i < edgeX.size() - 1) {
+        if (edgeX[i] > edgeX[i+1]) {
+          swap(&edgeX[i], &edgeX[i+1]);
+          if (i) {
+            i--;
+          }
+        } else {
+          i++;
         }
-      } else {
-        i++;
       }
     }
 
@@ -407,6 +410,9 @@ void putPolygonFill(GfxTarget* target, const PointList& inPoints, uint32_t color
       }
     }
   }
+
+  // TODO: Handle fractional edges such that this call isn't needed.
+  putPolygonOutline(target, inPoints, color);
 }
 
 void putPolygonOutline(GfxTarget* target, const PointList& points, uint32_t color) {

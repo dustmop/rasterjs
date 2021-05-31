@@ -145,6 +145,10 @@ Raster.prototype.drawCircle = function() {
   this.runner.dispatch(['drawCircle', arguments]);
 }
 
+Raster.prototype.fillFlood = function() {
+  this.runner.dispatch(['fillFlood', arguments]);
+}
+
 Raster.prototype.fillFrame = function() {
   var runner = this.runner;
   var args = arguments;

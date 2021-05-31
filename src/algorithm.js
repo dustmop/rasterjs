@@ -112,6 +112,38 @@ function sortByHSV(image) {
   image.palette = palette;
 }
 
+function flood(mem, initX, initY, color) {
+  let target = mem[initY*mem.pitch+initX];
+  let queue = [{x:initX,y:initY}];
+  let i = 0;
+  while (queue.length > 0) {
+    let node = queue.shift();
+    // Inside?
+    let value = mem[node.y*mem.pitch+node.x];
+    if (value != target) {
+      continue;
+    }
+    mem[node.y*mem.pitch+node.x] = color;
+    // West
+    if (node.x > 0) {
+      queue.push({x:node.x-1, y:node.y});
+    }
+    // North
+    if (node.y > 0) {
+      queue.push({x:node.x, y:node.y-1});
+    }
+    // East
+    if (node.x < mem.x_dim - 1) {
+      queue.push({x:node.x+1, y:node.y});
+    }
+    // South
+    if (node.y < mem.y_dim - 1) {
+      queue.push({x:node.x, y:node.y+1});
+    }
+  }
+}
+
 module.exports.midpointCircleRasterize = midpointCircleRasterize;
 module.exports.sortByHSV = sortByHSV;
 module.exports.isHalfwayValue = isHalfwayValue;
+module.exports.flood = flood;

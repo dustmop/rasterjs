@@ -262,6 +262,24 @@ Runner.prototype.drawPolygon = function(polygon, x, y) {
   this.aPlane.putPolygon(tx + x, ty + y, points, false);
 }
 
+Runner.prototype.fillFlood_params = ['x:i', 'y:i'];
+ Runner.prototype.fillFlood = function(x, y) {
+  this.dirtyState = D_DIRTY;
+  let image = {
+    palette: [],
+    buffer: [],
+     pitch: null,
+  };
+  this.aPlane.retrieveTrueContent(image);
+  let mem = frameMemory.NewFrameMemory(this._config.screenWidth,
+                                       this._config.screenHeight);
+  for (let k = 0; k < image.buffer.length; k++) {
+    mem[k] = image.buffer[k];
+  }
+  algorithm.flood(mem, x, y, this._config.color);
+  this.aPlane.putFrameMemory(mem);
+}
+
 Runner.prototype.fillFrame_params = ['options?o', 'fillerFunc:f'];
 Runner.prototype.fillFrame = function(options, fillerFunc) {
   if (this.mem == null) {

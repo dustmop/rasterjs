@@ -94,8 +94,8 @@ Runner.prototype.originAtCenter = function() {
   this._config.translateY = this._config.screenHeight / 2;
 }
 
-Runner.prototype.useSystemColors_params = ['obj:any'];
-Runner.prototype.useSystemColors = function(obj) {
+Runner.prototype.useColors_params = ['obj:any'];
+Runner.prototype.useColors = function(obj) {
   if (typeof obj == 'string') {
     let text = obj;
     if (text == 'quick') {
@@ -104,6 +104,9 @@ Runner.prototype.useSystemColors = function(obj) {
       this.aPlane.assignRgbMap(rgbMap.rgb_map_dos);
     } else if (text == 'nes') {
       this.aPlane.assignRgbMap(rgbMap.rgb_map_nes);
+    // gameboy
+    // zx-spectrum
+    // pico8
     } else if (text == 'grey') {
       this.aPlane.assignRgbMap(rgbMap.rgb_map_grey);
     } else {
@@ -166,6 +169,23 @@ Runner.prototype.drawDot = function(x, y) {
     this.dotsDrawn.splice(0);
   }
   this.aPlane.putDot(tx + x, ty + y);
+}
+
+Runner.prototype.fillDot_params = ['dots:any'];
+Runner.prototype.fillDot = function(dots) {
+  this.dirtyState = D_DIRTY;
+  let height = dots.length;
+  let width = dots[0].length;
+  let mem = frameMemory.NewFrameMemory(this._config.screenWidth,
+                                       this._config.screenHeight);
+  for (let y = 0; y < mem.y_dim; y++) {
+    for (let x = 0; x < mem.x_dim; x++) {
+      let i = y % height;
+      let j = x % width;
+      mem[y*mem.pitch+x] = dots[i][j];
+    }
+  }
+  this.aPlane.putFrameMemory(mem);
 }
 
 Runner.prototype.fillSquare_params = ['x:i', 'y:i', 'size:i'];

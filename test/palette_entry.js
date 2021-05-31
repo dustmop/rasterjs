@@ -44,7 +44,7 @@ describe('Palette entry', function() {
   it('get all', function() {
     ra.resetState();
     let img = ra.loadImage('test/testdata/boss_first_form.png');
-    ra.useSystemColors(null);
+    ra.useColors(null);
     ra.fillTrueBackground(0x444444);
     ra.drawImage(img, 0, 0);
     let colors = ra.getPaletteAll({sort: true});

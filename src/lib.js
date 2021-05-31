@@ -35,8 +35,8 @@ Raster.prototype.originAtCenter = function() {
   this.runner.dispatch(['originAtCenter', []]);
 }
 
-Raster.prototype.useSystemColors = function() {
-  this.runner.dispatch(['useSystemColors', arguments]);
+Raster.prototype.useColors = function() {
+  this.runner.dispatch(['useColors', arguments]);
 }
 
 Raster.prototype.useDisplay = function() {
@@ -111,6 +111,10 @@ Raster.prototype.fillRect = function() {
 
 Raster.prototype.drawRect = function() {
   this.runner.dispatch(['drawRect', arguments]);
+}
+
+Raster.prototype.fillDot = function() {
+  this.runner.dispatch(['fillDot', arguments]);
 }
 
 Raster.prototype.drawDot = function() {

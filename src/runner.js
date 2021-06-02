@@ -369,7 +369,12 @@ Runner.prototype.doRender = function(num, renderFunc, betweenFrameFunc) {
   this.display.createWindow(this.aPlane, this._config.zoomScale);
   this.display.appRenderAndLoop(function() {
     if (renderFunc) {
-      renderFunc();
+      try {
+        renderFunc();
+      } catch(e) {
+        console.log(e);
+        throw e;
+      }
     }
     if (betweenFrameFunc) {
       betweenFrameFunc();
@@ -390,12 +395,10 @@ Runner.prototype.dispatch = function(row) {
   let fn = this[fname]
   let param_spec = this[fname + '_params'];
   if (fn === undefined) {
-    console.log(`function ${fname} is not defined`);
-    throw `function ${fname} is not defined`;
+    throw new Error(`function ${fname} is not defined`);
   }
   if (param_spec === undefined) {
-    console.log(`function ${fname} does not have parameter spec`);
-    throw `function ${fname} does not have parameter spec`;
+    throw new Error(`function ${fname} does not have parameter spec`);
   }
   let args = destructure(param_spec, row);
   fn.apply(this, args);

@@ -104,6 +104,14 @@ Napi::Value DisplaySDL::HandleEvent(const Napi::CallbackInfo& info) {
 
 void on_render(SDL_Window* window, SDL_Renderer* renderer);
 
+void display_napi_value(Napi::Env env, napi_value value) {
+  size_t size;
+  char buffer[256];
+  memset(buffer, 0, sizeof(buffer));
+  napi_get_value_string_utf8(env, value, buffer, sizeof(buffer), &size);
+  printf("%s\n", buffer);
+}
+
 Napi::Value DisplaySDL::AppRenderAndLoop(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
@@ -137,6 +145,15 @@ Napi::Value DisplaySDL::AppRenderAndLoop(const Napi::CallbackInfo& info) {
       SDL_TEXTUREACCESS_STREAMING,
       viewWidth,
       viewHeight);
+
+  napi_value result;
+  napi_value self;
+  napi_status status;
+  status = napi_create_object(env, &self);
+  if (status != napi_ok) {
+    printf("napi_create_object(self) failed to create\n");
+    return Napi::Number::New(env, -1);
+  }
 
   // A basic main loop to handle events
   this->isRunning = true;
@@ -175,11 +192,30 @@ Napi::Value DisplaySDL::AppRenderAndLoop(const Napi::CallbackInfo& info) {
 
     StartFrame();
 
-    // If an error happened, break the loop
-    renderFunc.Call(0, NULL);
-    if (env.IsExceptionPending()) {
+    status = napi_call_function(env, self, renderFunc, 0, NULL, &result);
+    if (status != napi_ok) {
+      if (status == napi_pending_exception) {
+        napi_status s;
+        s = napi_get_and_clear_last_exception(env, &result);
+        napi_valuetype valuetype;
+        napi_typeof(env, result, &valuetype);
+        // Convert the error to a string, display it.
+        napi_value errval;
+        napi_coerce_to_string(env, result, &errval);
+        //display_napi_value(env, errval);
+        break;
+      }
+      napi_status err;
+      const napi_extended_error_info* errInfo = NULL;
+      err = napi_get_last_error_info(env, &errInfo);
+      if (err != napi_ok) {
+        printf("Encountered an error getting error code: %d\n", err);
+        break;
+      }
+      printf("Err code %d: %s\n", status, errInfo->error_message);
       break;
     }
+
     this->renderPlane->Finish();
 
     if (this->renderPlane->buffer) {

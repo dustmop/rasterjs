@@ -20,7 +20,7 @@ function destructure(param_spec, row) {
         if (!required) {
           continue;
         }
-        throw `function ${fname} missing parameter ${n}`;
+        throw new Error(`function ${fname} missing parameter ${n}`);
       }
       haveKeys.splice(pos, 1);
       result.push(first_param[n]);
@@ -29,9 +29,9 @@ function destructure(param_spec, row) {
     // Validate there's no unknown parameters passed to the function.
     if (haveKeys.length == 1) {
       let f = haveKeys[0];
-      throw `function ${fname} unknown parameter ${f}`;
+      throw new Error(`function ${fname} unknown parameter ${f}`);
     } else if (haveKeys.length > 1) {
-      throw `function ${fname} unknown parameters ${haveKeys}`;
+      throw new Error(`function ${fname} unknown parameters ${haveKeys}`);
     }
     return result;
   }
@@ -58,7 +58,7 @@ function destructure(param_spec, row) {
     // TODO: Handle type conversions.
     return values;
   }
-  throw `function ${fname} expected ${want} arguments, got ${got}`
+  throw new Error(`function ${fname} expected ${want} arguments, got ${got}`);
 }
 
 function isRawObject(thing) {
@@ -84,7 +84,7 @@ function splitParam(spec) {
     let t = spec.slice(i + 1);
     return [n, t, false];
   }
-  throw `IMPLEMENT ME: ${spec}`
+  throw new Error(`IMPLEMENT ME: ${spec}`);
 }
 
 module.exports = destructure;

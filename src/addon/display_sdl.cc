@@ -119,13 +119,14 @@ Napi::Value DisplaySDL::AppRenderAndLoop(const Napi::CallbackInfo& info) {
     return Napi::Number::New(env, -1);
   }
 
-  if ((info.Length() < 2) || (!info[0].IsFunction()) || (!info[1].IsNumber())) {
-    printf("AppRenderAndLoop arguments: function, bool\n");
+  if ((info.Length() < 3) || (!info[0].IsFunction()) || (!info[1].IsNumber())) {
+    printf("AppRenderAndLoop argument error: want (function, number, bool)\n");
     exit(1);
   }
 
   Napi::Function renderFunc = info[0].As<Napi::Function>();
-  int num_render = info[1].ToNumber().Int32Value();
+  int numRender = info[1].ToNumber().Int32Value();
+  bool exitAfter = info[2].ToBoolean();
 
   // Get window renderer
   this->rendererHandle = SDL_CreateRenderer(this->windowHandle, -1,
@@ -185,7 +186,12 @@ Napi::Value DisplaySDL::AppRenderAndLoop(const Napi::CallbackInfo& info) {
       }
     }
 
-    if (num_render == 0) {
+    if (numRender == 0) {
+      if (exitAfter) {
+        // Number of frames have completed, exit the app.
+        break;
+      }
+      // This was a show() call, keep window open.
       SDL_Delay(16);
       continue;
     }
@@ -228,8 +234,8 @@ Napi::Value DisplaySDL::AppRenderAndLoop(const Napi::CallbackInfo& info) {
     // Swap buffers to display
     SDL_RenderPresent(this->rendererHandle);
 
-    if (num_render > 0) {
-      num_render--;
+    if (numRender > 0) {
+      numRender--;
     }
 
     EndFrame();

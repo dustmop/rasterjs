@@ -17,6 +17,7 @@ const D_DID_FILL   = 4;
 const D_DRAWN      = 5;
 
 const MAX_DOTS_DRAWN = 36;
+const FRAMES_LOOP_FOREVER = -1;
 
 function Runner(env) {
   this.resources = env.makeResources();
@@ -26,6 +27,7 @@ function Runner(env) {
   this._config = {};
   this.mem = null;
   this._backBuffer = null;
+  this.numFrames = FRAMES_LOOP_FOREVER;
   this.initialize();
   return this;
 }
@@ -43,6 +45,8 @@ Runner.prototype.initialize = function () {
   this.display.initialize();
   this.aPlane.assignRgbMap(rgbMap.rgb_map_default);
   this.imgLoader = new imageLoader.Loader(this.resources);
+  let options = this.env.getOptions();
+  this.numFrames = options.num_frames || -1;
 }
 
 Runner.prototype.resetState = function() {
@@ -365,7 +369,7 @@ Runner.prototype.drawImage = function(img, x, y) {
   this.aPlane.putImage(img, tx + x, ty + y);
 }
 
-Runner.prototype.doRender = function(num, renderFunc, betweenFrameFunc) {
+Runner.prototype.doRender = function(num, exitAfter, renderFunc, betweenFrameFunc) {
   this.display.createWindow(this.aPlane, this._config.zoomScale);
   this.display.appRenderAndLoop(function() {
     if (renderFunc) {
@@ -379,7 +383,7 @@ Runner.prototype.doRender = function(num, renderFunc, betweenFrameFunc) {
     if (betweenFrameFunc) {
       betweenFrameFunc();
     }
-  }, num);
+  }, num, exitAfter);
 }
 
 Runner.prototype.doRenderFile = function(savepath) {
@@ -405,11 +409,11 @@ Runner.prototype.dispatch = function(row) {
 }
 
 Runner.prototype.show = function() {
-  this.doRender(1, null, null);
+  this.doRender(1, false, null, null);
 }
 
 Runner.prototype.run = function(renderFunc, betweenFrameFunc) {
-  this.doRender(-1, renderFunc, betweenFrameFunc);
+  this.doRender(this.numFrames, true, renderFunc, betweenFrameFunc);
 }
 
 Runner.prototype.save = function(savepath) {

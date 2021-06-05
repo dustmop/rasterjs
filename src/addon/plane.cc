@@ -43,6 +43,7 @@ void Plane::InitClass(Napi::Env env, Napi::Object exports) {
        InstanceMethod("putColorChange", &Plane::PutColorChange),
        InstanceAccessor<&Plane::GetWidth>("width"),
        InstanceAccessor<&Plane::GetHeight>("height"),
+       InstanceMethod("toRawBuffer", &Plane::ToRawBuffer),
   });
   g_planeConstructor = Napi::Persistent(func);
   g_planeConstructor.SuppressDestruct();
@@ -62,6 +63,7 @@ Plane::Plane(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Plane>(info) {
   this->rowSize = 0;
   this->numElems = 0;
   this->buffer = NULL;
+  this->longLivedBuffer = NULL;
   this->width = 0;
   this->height = 0;
   this->needErase = true;
@@ -89,6 +91,29 @@ Napi::Value Plane::GetWidth(const Napi::CallbackInfo &info) {
 Napi::Value Plane::GetHeight(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
   return Napi::Number::New(env, this->height);
+}
+
+Napi::Value Plane::ToRawBuffer(const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+
+  //
+  int numElems = this->height * this->rowSize;
+  if (this->longLivedBuffer == NULL) {
+    uint32_t* buffer = new uint32_t[numElems];
+    this->longLivedBuffer = buffer;
+  }
+
+  //
+  for (int k = 0; k < numElems; k++) {
+    this->longLivedBuffer[k] = this->buffer[k];
+  }
+
+  //
+  int numBytes = numElems * 4;
+  Napi::ArrayBuffer buff;
+  buff = Napi::ArrayBuffer::New(env, this->longLivedBuffer, numBytes);
+
+  return buff;
 }
 
 void Plane::prepare() {

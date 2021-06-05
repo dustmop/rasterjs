@@ -42,11 +42,14 @@ Runner.prototype.initialize = function () {
   this._config.bgColor = 0;
   this.dirtyState = D_CLEAN;
   this.dotsDrawn = new Array();
-  this.display.initialize();
   this.aPlane.assignRgbMap(rgbMap.rgb_map_default);
   this.imgLoader = new imageLoader.Loader(this.resources);
   let options = this.env.getOptions();
   this.numFrames = options.num_frames || -1;
+  if (options.display) {
+    this.display = options.display;
+  }
+  this.display.initialize();
 }
 
 Runner.prototype.resetState = function() {

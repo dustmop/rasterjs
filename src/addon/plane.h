@@ -20,6 +20,7 @@ class Plane : public Napi::ObjectWrap<Plane> {
   Napi::Value Clear(const Napi::CallbackInfo& info);
   Napi::Value GetWidth(const Napi::CallbackInfo &info);
   Napi::Value GetHeight(const Napi::CallbackInfo &info);
+  Napi::Value ToRawBuffer(const Napi::CallbackInfo &info);
   Napi::Value SetSize(const Napi::CallbackInfo& info);
   Napi::Value SetColor(const Napi::CallbackInfo& info);
   Napi::Value FillBackground(const Napi::CallbackInfo& info);
@@ -52,6 +53,8 @@ class Plane : public Napi::ObjectWrap<Plane> {
   int rowSize;
   int numElems;
   uint32_t* buffer;
+  //
+  uint32_t* longLivedBuffer;
   //
   int width;
   int height;

@@ -125,12 +125,15 @@ Runner.prototype.useColors = function(obj) {
 }
 
 Runner.prototype.useDisplay_params = ['name:s'];
-Runner.prototype.useDisplay = function(name) {
-  if (name == 'ascii') {
+Runner.prototype.useDisplay = function(nameOrDisplay) {
+  if (nameOrDisplay == 'ascii') {
     this.display = new displayAscii.DisplayAscii();
+  } else if (this.isDisplayObject(nameOrDisplay)) {
+    this.display = nameOrDisplay;
   } else {
-    throw `Unknown display "${name}"`;
+    throw `Invalid display "${nameOrDisplay}"`;
   }
+  this.display.initialize();
 }
 
 Runner.prototype.fillBackground_params = ['color:i'];
@@ -369,9 +372,9 @@ Runner.prototype.drawImage = function(img, x, y) {
   this.aPlane.putImage(img, tx + x, ty + y);
 }
 
-Runner.prototype.doRender = function(num, exitAfter, renderFunc, betweenFrameFunc) {
-  this.display.createWindow(this.aPlane, this._config.zoomScale);
-  this.display.appRenderAndLoop(function() {
+Runner.prototype.doRender = function(num, exitAfter, renderFunc, betweenFunc) {
+  this.display.setSource(this.aPlane, this._config.zoomScale);
+  this.display.renderLoop(function() {
     if (renderFunc) {
       try {
         renderFunc();
@@ -380,8 +383,8 @@ Runner.prototype.doRender = function(num, exitAfter, renderFunc, betweenFrameFun
         throw e;
       }
     }
-    if (betweenFrameFunc) {
-      betweenFrameFunc();
+    if (betweenFunc) {
+      betweenFunc();
     }
   }, num, exitAfter);
 }
@@ -453,6 +456,17 @@ Runner.prototype.makeShape = function(method, params) {
 
 Runner.prototype.handleEvent = function(eventName, callback) {
   this.display.handleEvent(eventName, callback);
+}
+
+Runner.prototype.isDisplayObject = function(obj) {
+  let needMethods = ['initialize', 'setSource', 'renderLoop'];
+  for (let i = 0; i < needMethods.length; i++) {
+    let method = obj[needMethods[i]];
+    if (!method || typeof method != 'function') {
+      return false;
+    }
+  }
+  return true;
 }
 
 Runner.prototype.getPaletteEntry = function(x, y) {

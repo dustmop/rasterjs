@@ -14,10 +14,9 @@ void DisplaySDL::InitClass(Napi::Env env, Napi::Object exports) {
       env,
       "Display",
       {InstanceMethod("initialize", &DisplaySDL::Initialize),
-       InstanceMethod("createWindow", &DisplaySDL::CreateWindow),
-       InstanceMethod("createDisplay", &DisplaySDL::CreateDisplay),
+       InstanceMethod("setSource", &DisplaySDL::SetSource),
        InstanceMethod("handleEvent", &DisplaySDL::HandleEvent),
-       InstanceMethod("appRenderAndLoop", &DisplaySDL::AppRenderAndLoop),
+       InstanceMethod("renderLoop", &DisplaySDL::RenderLoop),
        InstanceMethod("appQuit", &DisplaySDL::AppQuit),
   });
   g_displayConstructor = Napi::Persistent(func);
@@ -52,7 +51,7 @@ Napi::Value DisplaySDL::Initialize(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, 0);
 }
 
-Napi::Value DisplaySDL::CreateWindow(const Napi::CallbackInfo& info) {
+Napi::Value DisplaySDL::SetSource(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   if (!this->sdlInitialized) {
@@ -60,7 +59,7 @@ Napi::Value DisplaySDL::CreateWindow(const Napi::CallbackInfo& info) {
   }
 
   if (info.Length() < 2) {
-    printf("CreateWindow needs two parameters\n");
+    printf("SetSource needs two parameters\n");
     exit(1);
   }
 
@@ -86,12 +85,6 @@ Napi::Value DisplaySDL::CreateWindow(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, 0);
 }
 
-Napi::Value DisplaySDL::CreateDisplay(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  // TODO: Implement me?
-  return Napi::Number::New(env, 0);
-}
-
 Napi::Value DisplaySDL::HandleEvent(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   Napi::String eventName = info[0].ToString();
@@ -112,7 +105,7 @@ void display_napi_value(Napi::Env env, napi_value value) {
   printf("%s\n", buffer);
 }
 
-Napi::Value DisplaySDL::AppRenderAndLoop(const Napi::CallbackInfo& info) {
+Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   if (!this->sdlInitialized || !this->windowHandle) {
@@ -120,7 +113,7 @@ Napi::Value DisplaySDL::AppRenderAndLoop(const Napi::CallbackInfo& info) {
   }
 
   if ((info.Length() < 3) || (!info[0].IsFunction()) || (!info[1].IsNumber())) {
-    printf("AppRenderAndLoop argument error: want (function, number, bool)\n");
+    printf("RenderLoop argument error: want (function, number, bool)\n");
     exit(1);
   }
 

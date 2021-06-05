@@ -19,10 +19,9 @@ class DisplaySDL : public Napi::ObjectWrap<DisplaySDL> {
 
  private:
   Napi::Value Initialize(const Napi::CallbackInfo& info);
-  Napi::Value CreateWindow(const Napi::CallbackInfo& info);
-  Napi::Value CreateDisplay(const Napi::CallbackInfo& info);
+  Napi::Value SetSource(const Napi::CallbackInfo& info);
   Napi::Value HandleEvent(const Napi::CallbackInfo& info);
-  Napi::Value AppRenderAndLoop(const Napi::CallbackInfo& info);
+  Napi::Value RenderLoop(const Napi::CallbackInfo& info);
   Napi::Value AppQuit(const Napi::CallbackInfo& info);
   Napi::Value ReadImage(const Napi::CallbackInfo& info);
   void StartFrame();

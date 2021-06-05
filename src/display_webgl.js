@@ -13,7 +13,7 @@ Display.prototype.initialize = function() {
 
 const SHARPEN = 2;
 
-Display.prototype.createWindow = function(plane, zoomLevel) {
+Display.prototype.setSource = function(plane, zoomLevel) {
   var canvasElems = document.getElementsByTagName('canvas');
   if (canvasElems.length >= 1) {
     this.canvas = canvasElems[0];
@@ -180,7 +180,7 @@ Display.prototype.waitForImageLoads = function(cb) {
   }, 0);
 }
 
-Display.prototype.appRenderAndLoop = function(nextFrame) {
+Display.prototype.renderLoop = function(nextFrame) {
   let self = this;
   let pl = this.plane;
   let gl = this.gl;

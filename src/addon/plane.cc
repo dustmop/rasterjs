@@ -41,6 +41,8 @@ void Plane::InitClass(Napi::Env env, Napi::Object exports) {
        InstanceMethod("putCircleFromArc", &Plane::PutCircleFromArc),
        InstanceMethod("putFrameMemory", &Plane::PutFrameMemory),
        InstanceMethod("putColorChange", &Plane::PutColorChange),
+       InstanceAccessor<&Plane::GetWidth>("width"),
+       InstanceAccessor<&Plane::GetHeight>("height"),
   });
   g_planeConstructor = Napi::Persistent(func);
   g_planeConstructor.SuppressDestruct();
@@ -77,6 +79,16 @@ Napi::Value Plane::SetSize(const Napi::CallbackInfo& info) {
   this->width = info[0].As<Napi::Number>().Int32Value();
   this->height = info[1].As<Napi::Number>().Int32Value();
   return Napi::Number::New(env, 0);
+}
+
+Napi::Value Plane::GetWidth(const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+  return Napi::Number::New(env, this->width);
+}
+
+Napi::Value Plane::GetHeight(const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+  return Napi::Number::New(env, this->height);
 }
 
 void Plane::prepare() {

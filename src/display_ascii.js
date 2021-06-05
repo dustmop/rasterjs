@@ -6,11 +6,11 @@ function DisplayAscii() {
 DisplayAscii.prototype.initialize = function() {
 }
 
-DisplayAscii.prototype.createWindow = function(plane, zoomLevel) {
+DisplayAscii.prototype.setSource = function(plane, zoomLevel) {
   this.plane = plane;
 }
 
-DisplayAscii.prototype.appRenderAndLoop = function(nextFrame) {
+DisplayAscii.prototype.renderLoop = function(nextFrame) {
   let image = {
     palette: [],
     buffer: [],

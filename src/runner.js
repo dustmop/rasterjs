@@ -514,7 +514,7 @@ Runner.prototype.getPaletteAll = function(opt) {
     all.push(ent);
   }
 
-  return paletteEntry.NewPaletteCollection(this.env, this.resources, all);
+  return new paletteEntry.PaletteCollection(this.env, this.resources, all);
 }
 
 module.exports.Runner = Runner;

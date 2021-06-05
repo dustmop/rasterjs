@@ -41,6 +41,48 @@ describe('Palette entry', function() {
     util.saveTmpCompareTo(ra, 'test/testdata/pal_default.png');
   });
 
+  it('palette save', function() {
+    let tmpdir = util.mkTmpDir();
+    let tmpout = tmpdir + '/actual.png';
+    ra.resetState();
+
+    let colors = ra.getPaletteAll();
+    colors.save(tmpout);
+
+    // TODO: Add palette numbers to the rendered palette.
+    assert.ok(util.compareFiles(tmpout, 'test/testdata/pal_saved.png'));
+  });
+
+  it('palette alternate', function() {
+    let tmpdir = util.mkTmpDir();
+    let tmpout = tmpdir + '/actual.png';
+    ra.resetState();
+    ra.useColors('dos');
+
+    let colors = ra.getPaletteAll();
+    colors.save(tmpout);
+
+    assert.ok(util.compareFiles(tmpout, 'test/testdata/pal_dos_saved.png'));
+  });
+
+  it('palette array', function() {
+    let tmpdir = util.mkTmpDir();
+    let tmpout = tmpdir + '/actual.png';
+    ra.resetState();
+    ra.useColors('dos');
+
+    let colors = ra.getPaletteAll();
+    for (let i = 0; i < colors.length; i++) {
+      if (colors[i].rgb != rgb_map.rgb_map_dos[i]) {
+        assert.fail('Did not match!');
+      }
+    }
+
+    let expect = 'PaletteCollection{0: 0x000000, 1: 0x0000aa, 2: 0x00aa00, 3: 0x00aaaa, 4: 0xaa0000, 5: 0xaa00aa, 6: 0xaa5500, 7: 0xaaaaaa, 8: 0x555555, 9: 0x5555ff, 10: 0x55ff55, 11: 0x55ffff, 12: 0xff5555, 13: 0xff55ff, 14: 0xffff55, 15: 0xffffff}';
+    let actual = colors.toString();
+    assert.equal(expect, actual);
+  });
+
   it('get all', function() {
     ra.resetState();
     let img = ra.loadImage('test/testdata/boss_first_form.png');

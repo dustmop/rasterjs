@@ -1,7 +1,3 @@
-function NewPaletteEntry(plane, pitch, index, color, rgb) {
-  return new PaletteEntry(plane, pitch, index, color, rgb);
-}
-
 function PaletteEntry(plane, pitch, index, color, rgb) {
   this.plane = plane;
   this.pitch = pitch;
@@ -40,12 +36,38 @@ PaletteEntry.prototype.setTrueColor = function(rgb) {
   this.plane.putColorChange(rgb, this.color, this.pitch, elems);
 }
 
-function NewPaletteCollection(env, res, items) {
-  let make = items;
-  make.save = function(filename) {
-    return savePaletteCollection(env, res, make, filename);
+function PaletteCollection(env, res, items) {
+  this.env = env;
+  this.res = res;
+  this.items = items;
+  // Let the collection be used like an Array.
+  for (let i = 0; i < this.items.length; i++) {
+    this[i] = this.items[i];
   }
-  return make;
+  this.length = this.items.length;
+  // Customize how console.log displays this object.
+  this[Symbol.for('nodejs.util.inspect.custom')] = this._stringify;
+  return this;
+}
+
+PaletteCollection.prototype.save = function(filename) {
+  return savePaletteCollection(this.env, this.res, this, filename);
+}
+
+PaletteCollection.prototype.toString = function() {
+  return this._stringify(0, {});
+}
+
+PaletteCollection.prototype._stringify = function(depth, opts) {
+  let elems = [];
+  for (let i = 0; i < this.length; i++) {
+    let val = this[i].rgb.toString(16);
+    while (val.length < 6) {
+      val = '0' + val;
+    }
+    elems.push(`${i}: 0x${val}`);
+  }
+  return 'PaletteCollection{' + elems.join(', ') + '}';
 }
 
 function savePaletteCollection(env, res, pc, filename) {
@@ -64,6 +86,5 @@ function savePaletteCollection(env, res, pc, filename) {
   target.saveTo(filename);
 }
 
-module.exports.NewPaletteEntry = NewPaletteEntry;
 module.exports.PaletteEntry = PaletteEntry;
-module.exports.NewPaletteCollection = NewPaletteCollection;
+module.exports.PaletteCollection = PaletteCollection;

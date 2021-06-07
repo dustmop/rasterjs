@@ -35,8 +35,7 @@ void Plane::InitClass(Napi::Env env, Napi::Object exports) {
        InstanceMethod("addRgbMapEntry", &Plane::AddRgbMapEntry),
        InstanceMethod("putRect", &Plane::PutRect),
        InstanceMethod("putDot", &Plane::PutDot),
-       InstanceMethod("putPolygon", &Plane::PutPolygon),
-       InstanceMethod("putLine", &Plane::PutLine),
+       InstanceMethod("putSequence", &Plane::PutSequence),
        InstanceMethod("putImage", &Plane::PutImage),
        InstanceMethod("putCircleFromArc", &Plane::PutCircleFromArc),
        InstanceMethod("putFrameMemory", &Plane::PutFrameMemory),
@@ -350,100 +349,49 @@ Napi::Value Plane::PutDot(const Napi::CallbackInfo& info) {
   return info.Env().Null();
 }
 
-Napi::Value Plane::PutLine(const Napi::CallbackInfo& info) {
+Napi::Value Plane::PutSequence(const Napi::CallbackInfo& info) {
   this->prepare();
 
-  Napi::Value xval  = info[0];
-  Napi::Value yval  = info[1];
-  Napi::Value x1val = info[2];
-  Napi::Value y1val = info[3];
-  Napi::Value ccval = info[4];
-
-  float x0 = xval.As<Napi::Number>().FloatValue();
-  float y0 = yval.As<Napi::Number>().FloatValue();
-  float x1 = x1val.As<Napi::Number>().FloatValue();
-  float y1 = y1val.As<Napi::Number>().FloatValue();
-  int connectCorners = ccval.As<Napi::Number>().Int32Value();
-
   uint32_t color = this->frontColor;
+
+  Napi::Value elem = info[0];
+  Napi::Object list = elem.ToObject();
+  Napi::Value list_length = list.Get("length");
+  int num = list_length.As<Napi::Number>().Int32Value();
 
   GfxTarget target;
   this->fillTarget(&target);
 
-  if (isInt(x0) && isInt(y0) && isInt(x1) && isInt(y1)) {
-    PointList pointList;
-    pointList.type = TYPE_INT_POINT;
-    pointList.ip.push_back(IntPoint(int(x0), int(y0)));
-    pointList.ip.push_back(IntPoint(int(x1), int(y1)));
-    putLine(&target, pointList, color, connectCorners);
-  } else {
-    PointList pointList;
-    pointList.type = TYPE_FLOAT_POINT;
-    pointList.fp.push_back(FloatPoint(x0, y0));
-    pointList.fp.push_back(FloatPoint(x1, y1));
-    putLine(&target, pointList, color, connectCorners);
+  for (int i = 0; i < num; i++) {
+      elem = list[uint32_t(i)];
+      Napi::Object obj = elem.ToObject();
+      Napi::Value obj_length = obj.Get("length");
+      int len = obj_length.As<Napi::Number>().Int32Value();
+      if (len == 2) {
+          Napi::Object pair = obj;
+          Napi::Value first = pair[uint32_t(0)];
+          Napi::Value second = pair[uint32_t(1)];
+          int x = first.As<Napi::Number>().Int32Value();
+          int y = second.As<Napi::Number>().Int32Value();
+          if (x >= 0 && x < this->width && y >= 0 && y < this->height) {
+            this->buffer[x + y*this->rowSize] = color;
+          }
+      } else if (len == 4) {
+          Napi::Object range = obj;
+          Napi::Value first = range[uint32_t(0)];
+          Napi::Value second = range[uint32_t(1)];
+          Napi::Value third = range[uint32_t(2)];
+          Napi::Value fourth = range[uint32_t(3)];
+          int x0 = first.As<Napi::Number>().Int32Value();
+          int x1 = second.As<Napi::Number>().Int32Value();
+          int y0 = third.As<Napi::Number>().Int32Value();
+          int y1 = fourth.As<Napi::Number>().Int32Value();
+          putRange(&target, x0, y0, x1, y1, color);
+      }
   }
 
   Napi::Env env = info.Env();
   return Napi::Number::New(env, 0);
-}
-
-Napi::Value Plane::PutPolygon(const Napi::CallbackInfo& info) {
-  this->prepare();
-
-  if (info.Length() != 4) {
-    printf("expected 4 arguments to this function\n");
-    return info.Env().Null();
-  }
-
-  float baseX = info[0].ToNumber().FloatValue();
-  float baseY = info[1].ToNumber().FloatValue();
-
-  Napi::Value val = info[2];
-  if (val.IsObject()) {
-    if (!val.IsArray()) {
-      printf("expected Val to be Array\n");
-      return info.Env().Null();
-    }
-    Napi::Object parameter_list = val.ToObject();
-    Napi::Value parameter_length = parameter_list.Get("length");
-    int numPoints = parameter_length.As<Napi::Number>().Int32Value();
-
-    int isPixelPolygon = isInt(baseX) && isInt(baseY);
-
-    PointList pointList;
-    pointList.type = TYPE_FLOAT_POINT;
-    for (int i = 0; i < numPoints; i++) {
-      Napi::Value elem = parameter_list[uint32_t(i)];
-      // TODO: Validate this is an object
-      Napi::Object pair = elem.ToObject();
-      // TODO: validate length is 2
-      // TODO: handle x,y object, instead of just array
-      Napi::Value first = pair[uint32_t(0)];
-      Napi::Value second = pair[uint32_t(1)];
-      float firstNum = first.As<Napi::Number>().FloatValue();
-      float secondNum = second.As<Napi::Number>().FloatValue();
-      if (!isInt(firstNum) || !isInt(secondNum)) {
-        isPixelPolygon = false;
-      }
-      pointList.fp.push_back(FloatPoint(firstNum + baseX, secondNum + baseY));
-    }
-    if (isPixelPolygon) {
-      pointList = pointList.convertFloatToInt();
-    }
-
-    bool fill = info[3].ToBoolean().Value();
-    uint32_t color = this->frontColor;
-    GfxTarget target;
-    this->fillTarget(&target);
-    if (fill) {
-      putPolygonFill(&target, pointList, color);
-    } else {
-      putPolygonOutline(&target, pointList, color);
-    }
-  }
-
-  return info.Env().Null();
 }
 
 Napi::Value Plane::FillBackground(const Napi::CallbackInfo& info) {

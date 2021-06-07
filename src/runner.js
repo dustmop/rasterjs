@@ -162,7 +162,8 @@ Runner.prototype.drawLine = function(x0, y0, x1, y1, cc) {
   cc = cc ? 1 : 0;
   let [tx, ty] = this._getTranslation();
   this.dirtyState = D_DIRTY;
-  this.aPlane.putLine(tx + x0, ty + y0, tx + x1, ty + y1, cc);
+  let res = algorithm.renderLine(this.aPlane, tx + x0, ty + y0, tx + x1, ty + y1, cc);
+  this.aPlane.putSequence(res);
 }
 
 Runner.prototype.drawDot_params = ['x:i', 'y:i'];
@@ -259,7 +260,8 @@ Runner.prototype.fillPolygon = function(polygon, x, y) {
   let [tx, ty] = this._getTranslation();
   let points = geometry.convertToPoints(polygon);
   this.dirtyState = D_DIRTY;
-  this.aPlane.putPolygon(tx + x, ty + y, points, true);
+  let res = algorithm.renderPolygon(this.aPlane, tx + x, ty + y, points, true);
+  this.aPlane.putSequence(res);
 }
 
 Runner.prototype.drawPolygon_params = ['points:ps', 'x?i', 'y?i'];
@@ -269,7 +271,8 @@ Runner.prototype.drawPolygon = function(polygon, x, y) {
   let [tx, ty] = this._getTranslation();
   let points = geometry.convertToPoints(polygon);
   this.dirtyState = D_DIRTY;
-  this.aPlane.putPolygon(tx + x, ty + y, points, false);
+  let res = algorithm.renderPolygon(this.aPlane, tx + x, ty + y, points, false);
+  this.aPlane.putSequence(res);
 }
 
 Runner.prototype.fillFlood_params = ['x:i', 'y:i'];

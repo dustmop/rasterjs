@@ -93,3 +93,4 @@ function isInt(n) {
 module.exports.Polygon = Polygon;
 module.exports.convertToPolygon = convertToPolygon;
 module.exports.convertToPoints = convertToPoints;
+module.exports.isInt = isInt;

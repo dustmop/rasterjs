@@ -499,8 +499,121 @@ function renderPolygonOutline(plane, points) {
   return put;
 }
 
+function renderCircle(x, y, points, inner, fill, half) {
+  let put = [];
+
+  // Num points will always be assigned, but num inner is optional.
+  let numPoints = points.length;
+  let numInner = inner ? inner.length : -1;
+
+  for (let i = 0; i < numPoints; i++) {
+    let pair = points[i];
+
+    // The circle is defined by an arc that represents one octant of the
+    // full circle. This arc is a list of int pairs. One is called the stretch
+    // and begins equal to the radius, then moves occassional back towards
+    // the origin as it moves around the circumfrence. The other is called
+    // the cross, and moves laterally away from the origin, monotonically at
+    // end step.
+    //
+    // For example:
+    //
+    //           arc
+    //            |
+    //            v
+    //           \    ^
+    //            |   |
+    //             \  | <- cross
+    //              | |
+    //              | |
+    // ------------->
+    //        ^
+    //        |
+    //     stretch
+    //
+    // In this case, the total stretch = 13, and the total cross = 5.
+    // The arc is this list of ints: [[13,0],[13,1],[12,2],[12,3],[11,4]]
+
+    let stretch = pair[0];
+    let cross = pair[1];
+
+    let limit = -1;
+    if (i < numInner) {
+      // If inner list exists, and we're inside it, get the Left value.
+      pair = inner[i];
+      limit = pair[0];
+    } else if (numInner != -1) {
+      // If inner list exists, and we're past it, Left is the diagonal border.
+      limit = cross - 2;
+    }
+
+    // Handle the difference between far values (those going in a positive
+    // direction), and near values (those going in a negative direction),
+    // when the circle radius is at a halfway value. This is needed in order
+    // to give the circle the proper width.
+    let adjustFar = 0;
+    if (!half) {
+      adjustFar = 1;
+    }
+    // Far stretch, near stretch, far cross, and near cross.
+    let fars = stretch - adjustFar;
+    let nears = -stretch;
+    let farc = cross - adjustFar;
+    let nearc = -cross;
+
+    // Far limit, and near limit.
+    let farl = 0;
+    let nearl = 0;
+    if (fill) {
+      // When filling the circle, put the range completely to the origin.
+      farl = 0;
+      nearl = 0;
+    } else if (limit == -1) {
+      // If no width given, set a width of 1
+      farl = stretch - adjustFar;
+      nearl = -stretch;
+    } else {
+      // If a width was given, use a range limit.
+      farl = limit - adjustFar;
+      nearl = -limit;
+    }
+
+    // Call putRange, and draw the appropriate mirrored octant of the arc
+    // in order to draw the complete the circle. Numbered as follows:
+    //
+    //            2    |    1
+    //             \   |   /
+    //              |  |  |
+    //               \ | /
+    //   3 ____      | | |      ____ 0
+    //         \----  \|/  ----/
+    //              \--|--/
+    // -----------------------------------
+    //               --|--
+    //          ----/ /|\ \----
+    //     ____/      |||      \____ 7
+    //   4           / | \
+    //              |  |  |
+    //             /   |   \
+    //            5    |    6
+
+    put.push([x + fars,  x + farl,  y + nearc, y + nearc]); // 0
+    put.push([x + fars,  x + farl,  y + farc , y + farc ]); // 7
+    put.push([x + nears, x + nearl, y + nearc, y + nearc]); // 3
+    put.push([x + nears, x + nearl, y + farc , y + farc ]); // 4
+
+    // The octants with x-crosses and y-stretchs
+    put.push([x + farc,  x + farc,  y + nears, y + nearl]); // 1
+    put.push([x + nearc, x + nearc, y + nears, y + nearl]); // 2
+    put.push([x + farc,  x + farc,  y + fars,  y + farl ]); // 6
+    put.push([x + nearc, x + nearc, y + fars,  y + farl ]); // 5
+  }
+  return put;
+}
+
 module.exports.renderPolygon = renderPolygon;
 module.exports.renderLine = renderLine;
+module.exports.renderCircle = renderCircle;
 module.exports.midpointCircleRasterize = midpointCircleRasterize;
 module.exports.sortByHSV = sortByHSV;
 module.exports.isHalfwayValue = isHalfwayValue;

@@ -34,7 +34,6 @@ class Plane : public Napi::ObjectWrap<Plane> {
   Napi::Value PutDot(const Napi::CallbackInfo& info);
   Napi::Value PutSequence(const Napi::CallbackInfo& info);
   Napi::Value PutImage(const Napi::CallbackInfo& info);
-  Napi::Value PutCircleFromArc(const Napi::CallbackInfo& info);
   Napi::Value PutFrameMemory(const Napi::CallbackInfo& info);
   Napi::Value PutColorChange(const Napi::CallbackInfo& info);
 

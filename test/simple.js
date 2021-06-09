@@ -26,7 +26,6 @@ describe('Simple', function() {
     ra.setColor(0x22);
     ra.drawLine(1, 12, 12, 14, true);
 
-    ra.save(tmpout);
-    assert.ok(util.compareFiles('test/testdata/simple.png', tmpout));
+    util.saveTmpCompareTo(ra, 'test/testdata/simple.png');
   });
 });

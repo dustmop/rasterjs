@@ -311,8 +311,6 @@ Napi::Value Plane::SetColor(const Napi::CallbackInfo& info) {
 Napi::Value Plane::PutRect(const Napi::CallbackInfo& info) {
   this->prepare();
 
-  // TODO: Validate length of parameters, all should be numbers
-
   Napi::Value xval = info[0];
   Napi::Value yval = info[1];
   Napi::Value wval = info[2];

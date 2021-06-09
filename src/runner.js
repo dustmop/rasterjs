@@ -179,7 +179,8 @@ Runner.prototype.drawDot = function(x, y) {
     this.dirtyState = D_DIRTY;
     this.dotsDrawn.splice(0);
   }
-  this.aPlane.putDot(tx + x, ty + y);
+  let put = [[tx + x, ty + y]];
+  this.aPlane.putSequence(put);
 }
 
 Runner.prototype.fillDot_params = ['dots:any'];
@@ -203,28 +204,62 @@ Runner.prototype.fillSquare_params = ['x:i', 'y:i', 'size:i'];
 Runner.prototype.fillSquare = function(x, y, size) {
   let [tx, ty] = this._getTranslation();
   this.dirtyState = D_DIRTY;
-  this.aPlane.putRect(tx + x, ty + y, size, size, true);
+  this._renderRect(tx + x, ty + y, size, size, true);
 }
 
 Runner.prototype.drawSquare_params = ['x:i', 'y:i', 'size:i'];
 Runner.prototype.drawSquare = function(x, y, size) {
   let [tx, ty] = this._getTranslation();
   this.dirtyState = D_DIRTY;
-  this.aPlane.putRect(tx + x, ty + y, size, size, false);
+  this._renderRect(tx + x, ty + y, size, size, false);
 }
 
 Runner.prototype.fillRect_params = ['x:i', 'y:i', 'w:i', 'h:i'];
 Runner.prototype.fillRect = function(x, y, w, h) {
   let [tx, ty] = this._getTranslation();
   this.dirtyState = D_DIRTY;
-  this.aPlane.putRect(tx + x, ty + y, w, h, true);
+  this._renderRect(tx + x, ty + y, w, h, true);
 }
 
 Runner.prototype.drawRect_params = ['x:i', 'y:i', 'w:i', 'h:i'];
 Runner.prototype.drawRect = function(x, y, w, h) {
   let [tx, ty] = this._getTranslation();
   this.dirtyState = D_DIRTY;
-  this.aPlane.putRect(tx + x, ty + y, w, h, false);
+  this._renderRect(tx + x, ty + y, w, h, false);
+}
+
+Runner.prototype._renderRect = function(x, y, w, h, fill) {
+  x = Math.floor(x);
+  y = Math.floor(y);
+  let x1 = Math.floor(x + w - 1);
+  let y1 = Math.floor(y + h - 1);
+
+  let tmp;
+  if (x > x1) {
+    tmp = x;
+    x = x1;
+    x1 = tmp;
+  }
+  if (y > y1) {
+    tmp = y;
+    y = y1;
+    y1 = tmp;
+  }
+
+  let put = [];
+  if (fill) {
+    for (let n = y; n <= y1; n++) {
+      put.push([x, x + w - 1, n, n]);
+    }
+    this.aPlane.putSequence(put);
+    return;
+  }
+
+  put.push([ x, x1,  y,  y]); // top
+  put.push([ x, x1, y1, y1]); // bottom
+  put.push([ x,  x,  y, y1]); // left
+  put.push([x1, x1,  y, y1]); // right
+  this.aPlane.putSequence(put);
 }
 
 Runner.prototype.fillCircle_params = ['x:i', 'y:i', 'r:i'];

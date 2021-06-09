@@ -75,10 +75,6 @@ describe('Rect and square', function() {
     ra.drawSquare({x: 40, y:  4, size: 4});
     ra.drawSquare({x:  4, y: 12, size: 4});
 
-    ra.save(tmpout);
-    if (!util.compareFiles('test/testdata/rect_square.png', tmpout)) {
-      console.log('open ' + tmpout);
-    }
-    assert.ok(util.compareFiles('test/testdata/rect_square.png', tmpout));
+    util.saveTmpCompareTo(ra, 'test/testdata/rect_square.png');
   });
 });

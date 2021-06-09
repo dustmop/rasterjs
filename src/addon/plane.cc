@@ -29,7 +29,6 @@ void Plane::InitClass(Napi::Env env, Napi::Object exports) {
        InstanceMethod("fillBackground", &Plane::FillBackground),
        InstanceMethod("retrieveTrueContent", &Plane::RetrieveTrueContent),
        InstanceMethod("saveTo", &Plane::SaveTo),
-       InstanceMethod("saveImage", &Plane::SaveImage),
        InstanceMethod("assignRgbMap", &Plane::AssignRgbMap),
        InstanceMethod("clearRgbMap", &Plane::ClearRgbMap),
        InstanceMethod("addRgbMapEntry", &Plane::AddRgbMapEntry),
@@ -537,63 +536,6 @@ Napi::Value Plane::PutColorChange(const Napi::CallbackInfo& info) {
     this->buffer[imageIndex] = nextRgb;
   }
   return info.Env().Null();
-}
-
-Napi::Value Plane::SaveImage(const Napi::CallbackInfo& info) {
-  this->prepare();
-
-  if (info.Length() < 2) {
-    printf("SaveImage needs 2 params");
-    exit(1);
-  }
-
-  std::string outFilename = info[0].ToString().Utf8Value();
-  Napi::Object obj = info[1].ToObject();
-
-  Napi::Value valImg   = obj["img"];
-  Napi::Value valId    = obj["id"];
-  Napi::Value valSlice = obj["slice"];
-  Napi::Object objSlice = valSlice.ToObject();
-
-  int imgId = valImg.ToNumber().Int32Value();
-  Image* img_struct = this->res->getImage(imgId);
-  if (!img_struct) {
-    printf("invalid image id: %d\n", imgId);
-    return info.Env().Null();
-  }
-
-  int width, height;
-  uint8* data = NULL;
-  GetPng(img_struct, &width, &height, &data);
-
-  Napi::Value valX = objSlice["x"];
-  Napi::Value valY = objSlice["y"];
-  Napi::Value valW = objSlice["w"];
-  Napi::Value valH = objSlice["h"];
-
-  int x = valX.ToNumber().Int32Value();
-  int y = valY.ToNumber().Int32Value();
-  int w = valW.ToNumber().Int32Value();
-  int h = valH.ToNumber().Int32Value();
-
-  unsigned char* segment = (unsigned char*)malloc(4 * w * h);
-  for (int i = 0; i < h; i++) {
-    for (int j = 0; j < w; j++) {
-      int m = (i*w + j) * 4;
-      int n = (((y+i)*width) + (x+j)) * 4;
-      segment[m + 0] = data[n + 3];
-      segment[m + 1] = data[n + 2];
-      segment[m + 2] = data[n + 1];
-      segment[m + 3] = data[n + 0];
-    }
-  }
-
-  write_png(outFilename.c_str(), segment, w, h, w*4);
-
-  free(segment);
-
-  Napi::Env env = info.Env();
-  return Napi::Number::New(env, 0);
 }
 
 void Plane::fillTarget(GfxTarget* t) {

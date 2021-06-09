@@ -26,7 +26,6 @@ class Plane : public Napi::ObjectWrap<Plane> {
   Napi::Value FillBackground(const Napi::CallbackInfo& info);
   Napi::Value RetrieveTrueContent(const Napi::CallbackInfo& info);
   Napi::Value SaveTo(const Napi::CallbackInfo& info);
-  Napi::Value SaveImage(const Napi::CallbackInfo& info);
   Napi::Value AssignRgbMap(const Napi::CallbackInfo& info);
   Napi::Value ClearRgbMap(const Napi::CallbackInfo& info);
   Napi::Value AddRgbMapEntry(const Napi::CallbackInfo& info);

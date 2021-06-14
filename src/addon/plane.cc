@@ -1,9 +1,8 @@
 #include "type.h"
 #include "plane.h"
-#include "png_read_write.h"
 
 #include "pixel_update_tasks.h"
-#include "load_image.h"
+#include "image_load_save.h"
 #include "resources.h"
 
 #include <cstdint>
@@ -170,11 +169,11 @@ Napi::Value Plane::SaveTo(const Napi::CallbackInfo& info) {
 
   Napi::String savepath = info[0].ToString();
   int pitch = this->rowSize*4;
-  write_png(savepath.Utf8Value().c_str(),
-            (unsigned char*)this->buffer,
-            this->width,
-            this->height,
-            pitch);
+  WritePng(savepath.Utf8Value().c_str(),
+           (unsigned char*)this->buffer,
+           this->width,
+           this->height,
+           pitch);
   return Napi::Number::New(env, 0);
 }
 

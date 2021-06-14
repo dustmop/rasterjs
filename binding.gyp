@@ -6,11 +6,10 @@
       "cflags_cc!": [ "-fno-exceptions" ],
       "sources": [
         "src/addon/display_sdl.cc",
-        "src/addon/load_image.cc",
+        "src/addon/image_load_save.cc",
         "src/addon/native.cc",
         "src/addon/pixel_update_tasks.cc",
         "src/addon/plane.cc",
-        "src/addon/png_read_write.cc",
         "src/addon/resources.cc",
       ],
       "include_dirs": [

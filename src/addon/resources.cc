@@ -1,6 +1,6 @@
 #include "resources.h"
 
-#include "load_image.h"
+#include "image_load_save.h"
 
 Napi::FunctionReference g_resourcesConstructor;
 

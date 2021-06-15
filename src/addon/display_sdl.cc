@@ -26,9 +26,7 @@ void DisplaySDL::InitClass(Napi::Env env, Napi::Object exports) {
 DisplaySDL::DisplaySDL(const Napi::CallbackInfo& info)
     : Napi::ObjectWrap<DisplaySDL>(info) {
   this->sdlInitialized = 0;
-  this->windowWidth = 0;
-  this->windowHeight = 0;
-  this->renderPlane = NULL;
+  this->zoomLevel = 1;
   this->windowHandle = NULL;
   this->rendererHandle = NULL;
   this->textureHandle = NULL;
@@ -41,7 +39,6 @@ Napi::Object DisplaySDL::NewInstance(Napi::Env env, Napi::Value arg) {
 }
 
 Napi::Value DisplaySDL::Initialize(const Napi::CallbackInfo& info) {
-  this->renderPlane = NULL;
   Napi::Env env = info.Env();
   if( SDL_Init( SDL_INIT_VIDEO ) < 0 ) {
     printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
@@ -64,24 +61,9 @@ Napi::Value DisplaySDL::SetSource(const Napi::CallbackInfo& info) {
   }
 
   Napi::Object planeObj = info[0].As<Napi::Object>();
-  Plane* plane = Napi::ObjectWrap<Plane>::Unwrap(planeObj);
-  this->renderPlane = plane;
+  napi_create_reference(env, planeObj, 1, &this->planeRef);
+  this->zoomLevel = info[1].As<Napi::Number>().Int32Value();
 
-  int zoomLevel = info[1].As<Napi::Number>().Int32Value();
-  this->windowWidth = this->renderPlane->width * zoomLevel;
-  this->windowHeight = this->renderPlane->height * zoomLevel;
-
-  // Create window
-  this->windowHandle = SDL_CreateWindow(
-      "RasterJS",
-      SDL_WINDOWPOS_UNDEFINED,
-      SDL_WINDOWPOS_UNDEFINED,
-      windowWidth, windowHeight,
-      SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
-  if (this->windowHandle == NULL) {
-    printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
-    exit(1);
-  }
   return Napi::Number::New(env, 0);
 }
 
@@ -108,10 +90,6 @@ void display_napi_value(Napi::Env env, napi_value value) {
 Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
-  if (!this->sdlInitialized || !this->windowHandle) {
-    return Napi::Number::New(env, -1);
-  }
-
   if ((info.Length() < 3) || (!info[0].IsFunction()) || (!info[1].IsNumber())) {
     printf("RenderLoop argument error: want (function, number, bool)\n");
     exit(1);
@@ -120,6 +98,51 @@ Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
   Napi::Function renderFunc = info[0].As<Napi::Function>();
   int numRender = info[1].ToNumber().Int32Value();
   bool exitAfter = info[2].ToBoolean();
+
+  // Get the stored plane object, retrieve its basic data.
+  napi_value planeVal;
+  napi_get_reference_value(env, this->planeRef, &planeVal);
+  Napi::Object planeObj = Napi::Object(env, planeVal);
+  Napi::Value widthNum = planeObj.Get("width");
+  Napi::Value heightNum = planeObj.Get("height");
+  Napi::Value asBufferVal = planeObj.Get("asBuffer");
+  Napi::Function asBufferFunc = asBufferVal.As<Napi::Function>();
+
+  // Get the buffer of raw data.
+  napi_status status;
+  napi_value buffVal;
+  status = napi_call_function(env, planeObj, asBufferFunc, 0, NULL, &buffVal);
+  if (status != napi_ok) {
+    printf("failed to get plane.asBuffer!\n");
+    exit(1);
+  }
+  Napi::Value buffObj = Napi::Value(env, buffVal);
+  if (!buffObj.IsArrayBuffer()) {
+    printf("plane.asBuffer did not return an ArrayBuffer\n!");
+    exit(1);
+  }
+  Napi::ArrayBuffer arrBuff = buffObj.As<Napi::ArrayBuffer>();
+
+  // Calculate texture and window size.
+  int viewWidth = widthNum.As<Napi::Number>().Int32Value();
+  int viewHeight = heightNum.As<Napi::Number>().Int32Value();
+  // TODO: Fix this
+  int pitch = viewWidth*4;
+  int zoomLevel = this->zoomLevel;
+  int windowWidth = viewWidth * zoomLevel;
+  int windowHeight = viewHeight * zoomLevel;
+
+  // Create window
+  this->windowHandle = SDL_CreateWindow(
+      "RasterJS",
+      SDL_WINDOWPOS_UNDEFINED,
+      SDL_WINDOWPOS_UNDEFINED,
+      windowWidth, windowHeight,
+      SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
+  if (this->windowHandle == NULL) {
+    printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
+    exit(1);
+  }
 
   // Get window renderer
   this->rendererHandle = SDL_CreateRenderer(this->windowHandle, -1,
@@ -130,9 +153,7 @@ Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
     return Napi::Number::New(env, -1);
   }
 
-  int viewWidth = this->renderPlane->width;
-  int viewHeight = this->renderPlane->height;
-
+  // Create the texture that the plane is mapped to
   this->textureHandle = SDL_CreateTexture(
       this->rendererHandle,
       SDL_PIXELFORMAT_RGBA8888,
@@ -140,19 +161,24 @@ Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
       viewWidth,
       viewHeight);
 
+  // Create an empty object for js function calls
   napi_value result;
   napi_value self;
-  napi_status status;
   status = napi_create_object(env, &self);
   if (status != napi_ok) {
     printf("napi_create_object(self) failed to create\n");
     return Napi::Number::New(env, -1);
   }
 
+  // Raw data from the plane's buffer
+  void* untypedData = arrBuff.Data();
+  unsigned char* rawBuff = (unsigned char*)untypedData;
+
   // A basic main loop to handle events
   this->isRunning = true;
   SDL_Event event;
   while (this->isRunning) {
+    // Get OS events, such as exiting app, and keyboard input
     if (SDL_PollEvent(&event)) {
       switch (event.type) {
       case SDL_QUIT:
@@ -191,9 +217,12 @@ Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
 
     SDL_RenderClear(this->rendererHandle);
 
-    status = napi_call_function(env, self, renderFunc, 0, NULL, &result);
+    // Call the render function.
+    napi_value funcResult;
+    status = napi_call_function(env, self, renderFunc, 0, NULL, &funcResult);
     if (status != napi_ok) {
       if (status == napi_pending_exception) {
+        // Function call failed.
         napi_status s;
         s = napi_get_and_clear_last_exception(env, &result);
         napi_valuetype valuetype;
@@ -215,10 +244,12 @@ Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
       break;
     }
 
-    if (this->renderPlane->rawBuff) {
-      int pitch = this->renderPlane->rowSize*4;
-      SDL_UpdateTexture(this->textureHandle, NULL, this->renderPlane->rawBuff,
-                        pitch);
+    // Send the raw data from the plane's buffer to the texture
+    if (rawBuff) {
+      SDL_UpdateTexture(this->textureHandle, NULL, rawBuff, pitch);
+    } else {
+      printf("no data buffer!\n");
+      return Napi::Number::New(env, 0);
     }
 
     SDL_RenderCopy(this->rendererHandle, this->textureHandle, NULL, NULL);
@@ -229,7 +260,6 @@ Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
       numRender--;
     }
   }
-
   return Napi::Number::New(env, 0);
 }
 

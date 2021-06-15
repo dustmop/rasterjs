@@ -28,9 +28,8 @@ class DisplaySDL : public Napi::ObjectWrap<DisplaySDL> {
   Napi::FunctionReference keyHandleFunc;
   bool isRunning;
   int sdlInitialized;
-  int windowWidth;
-  int windowHeight;
-  Plane* renderPlane;
+  napi_ref planeRef;
+  int zoomLevel;
 
   SDL_Window* windowHandle;
   SDL_Renderer* rendererHandle;

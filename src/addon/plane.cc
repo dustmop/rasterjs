@@ -89,9 +89,11 @@ Napi::Value Plane::GetHeight(const Napi::CallbackInfo &info) {
 }
 
 Napi::Value Plane::AsBuffer(const Napi::CallbackInfo &info) {
+  Napi::Env env = info.Env();
+  this->prepare(env);
   napi_value result;
-  napi_get_reference_value(info.Env(), this->arrayBuff, &result);
-  return Napi::Value(info.Env(), result);
+  napi_get_reference_value(env, this->arrayBuff, &result);
+  return Napi::Value(env, result);
 }
 
 void Plane::prepare(const Napi::Env& env) {
@@ -122,14 +124,6 @@ void Plane::prepare(const Napi::Env& env) {
     this->rawBuff[n] = this->backColor;
   }
   this->needErase = false;
-}
-
-void Plane::BeginFrame() {
-  this->needErase = false;
-}
-
-void Plane::Finish(const Napi::Env& env) {
-  this->prepare(env);
 }
 
 Napi::Value Plane::Clear(const Napi::CallbackInfo& info) {

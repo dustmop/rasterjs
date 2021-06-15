@@ -24,8 +24,6 @@ class DisplaySDL : public Napi::ObjectWrap<DisplaySDL> {
   Napi::Value RenderLoop(const Napi::CallbackInfo& info);
   Napi::Value AppQuit(const Napi::CallbackInfo& info);
   Napi::Value ReadImage(const Napi::CallbackInfo& info);
-  void StartFrame();
-  void EndFrame();
 
   Napi::FunctionReference keyHandleFunc;
   bool isRunning;

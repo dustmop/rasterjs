@@ -13,8 +13,6 @@ class Plane : public Napi::ObjectWrap<Plane> {
   static void InitClass(Napi::Env env, Napi::Object exports);
   static Napi::Object NewInstance(Napi::Env env, Napi::Value arg);
   Plane(const Napi::CallbackInfo& info);
-  void BeginFrame();
-  void Finish(const Napi::Env& env);
 
  private:
   Napi::Value Clear(const Napi::CallbackInfo& info);

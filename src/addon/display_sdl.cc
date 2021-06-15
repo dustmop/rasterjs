@@ -189,7 +189,7 @@ Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
       continue;
     }
 
-    StartFrame();
+    SDL_RenderClear(this->rendererHandle);
 
     status = napi_call_function(env, self, renderFunc, 0, NULL, &result);
     if (status != napi_ok) {
@@ -215,8 +215,6 @@ Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
       break;
     }
 
-    this->renderPlane->Finish(env);
-
     if (this->renderPlane->rawBuff) {
       int pitch = this->renderPlane->rowSize*4;
       SDL_UpdateTexture(this->textureHandle, NULL, this->renderPlane->rawBuff,
@@ -230,8 +228,6 @@ Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
     if (numRender > 0) {
       numRender--;
     }
-
-    EndFrame();
   }
 
   return Napi::Number::New(env, 0);
@@ -240,16 +236,4 @@ Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
 Napi::Value DisplaySDL::AppQuit(const Napi::CallbackInfo& info) {
   this->isRunning = false;
   return info.Env().Null();
-}
-
-#define TAU 6.283
-
-#define OPAQUE 255
-
-void DisplaySDL::StartFrame() {
-  SDL_RenderClear(this->rendererHandle);
-  this->renderPlane->BeginFrame();
-}
-
-void DisplaySDL::EndFrame() {
 }

@@ -14,13 +14,13 @@ class Plane : public Napi::ObjectWrap<Plane> {
   static Napi::Object NewInstance(Napi::Env env, Napi::Value arg);
   Plane(const Napi::CallbackInfo& info);
   void BeginFrame();
-  void Finish();
+  void Finish(const Napi::Env& env);
 
  private:
   Napi::Value Clear(const Napi::CallbackInfo& info);
   Napi::Value GetWidth(const Napi::CallbackInfo &info);
   Napi::Value GetHeight(const Napi::CallbackInfo &info);
-  Napi::Value ToRawBuffer(const Napi::CallbackInfo &info);
+  Napi::Value AsBuffer(const Napi::CallbackInfo &info);
   Napi::Value SetSize(const Napi::CallbackInfo& info);
   Napi::Value SetColor(const Napi::CallbackInfo& info);
   Napi::Value FillBackground(const Napi::CallbackInfo& info);
@@ -36,7 +36,7 @@ class Plane : public Napi::ObjectWrap<Plane> {
   Napi::Value PutFrameMemory(const Napi::CallbackInfo& info);
   Napi::Value PutColorChange(const Napi::CallbackInfo& info);
 
-  void prepare();
+  void prepare(const Napi::Env& env);
   void fillTarget(GfxTarget* t);
 
   // Configuration, safe defaults.
@@ -49,9 +49,9 @@ class Plane : public Napi::ObjectWrap<Plane> {
   // lazy allocation of buffer
   int rowSize;
   int numElems;
-  uint32_t* buffer;
-  //
-  uint32_t* longLivedBuffer;
+  uint32_t* rawBuff;
+  // reference to js friendly array buffer
+  napi_ref arrayBuff;
   //
   int width;
   int height;

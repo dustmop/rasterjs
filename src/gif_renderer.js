@@ -39,7 +39,7 @@ GifRenderer.prototype.renderLoop = function(nextFrame) {
   for (let count = 0; count < numFrames; count++) {
     nextFrame();
     let frameNum = leftPad(count, 3, '0');
-    let rawBuffer = this.plane.toRawBuffer();
+    let rawBuffer = this.plane.asBuffer();
     let imgData = new Uint8Array(rawBuffer);
     let makePng = new PNG({width: width, height: height});
     for (let y = 0; y < height; y++) {

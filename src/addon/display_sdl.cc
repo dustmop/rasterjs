@@ -215,11 +215,11 @@ Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
       break;
     }
 
-    this->renderPlane->Finish();
+    this->renderPlane->Finish(env);
 
-    if (this->renderPlane->buffer) {
+    if (this->renderPlane->rawBuff) {
       int pitch = this->renderPlane->rowSize*4;
-      SDL_UpdateTexture(this->textureHandle, NULL, this->renderPlane->buffer,
+      SDL_UpdateTexture(this->textureHandle, NULL, this->renderPlane->rawBuff,
                         pitch);
     }
 

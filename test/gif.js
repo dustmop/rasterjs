@@ -14,7 +14,7 @@ describe('Gif', function() {
         throw error;
       }
       let goldenPath = 'test/testdata/spin.gif';
-      assert.ok(util.compareFiles(goldenPath, tmpout));
+      assert.ok(util.compareFiles(goldenPath, tmpout), `Failed file comparison, expect: ${goldenPath}, actual: ${tmpout}`);
     });
   });
 });

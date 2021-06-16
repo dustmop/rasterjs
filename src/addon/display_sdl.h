@@ -5,7 +5,7 @@
 
 struct GfxTarget;
 struct Image;
-class Plane;
+class RawBuffer;
 
 struct SDL_Window;
 struct SDL_Renderer;

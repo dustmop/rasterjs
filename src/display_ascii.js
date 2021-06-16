@@ -16,7 +16,9 @@ DisplayAscii.prototype.renderLoop = function(nextFrame) {
     buffer: [],
     pitch: null,
   };
-  this.plane.retrieveTrueContent(image);
+  // TODO: Bad to access the rawBuffer directly. Plane should have
+  // a simpler method to get the 8-bit color data.
+  this.plane.rawBuffer.retrieveTrueContent(image);
   let line = '';
   for (let k = 0; k < image.buffer.length; k++) {
     if ((k > 0) && (k % image.pitch == 0)) {

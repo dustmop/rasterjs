@@ -10,8 +10,8 @@ function makeDisplay() {
   return cppmodule.display();
 }
 
-function makePlane(res) {
-  return cppmodule.plane(res);
+function makeRawBuffer(res) {
+  return cppmodule.rawBuffer(res);
 }
 
 function getOptions() {
@@ -38,6 +38,6 @@ function runningAsTest() {
 }
 
 module.exports.makeDisplay = makeDisplay;
-module.exports.makePlane = makePlane;
+module.exports.makeRawBuffer = makeRawBuffer;
 module.exports.makeResources = makeResources;
 module.exports.getOptions = getOptions;

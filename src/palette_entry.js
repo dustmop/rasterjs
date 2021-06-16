@@ -1,3 +1,5 @@
+const plane = require('./plane.js');
+
 function PaletteEntry(plane, pitch, index, color, rgb) {
   this.plane = plane;
   this.pitch = pitch;
@@ -18,7 +20,7 @@ PaletteEntry.prototype.setColor = function(color) {
     let e = elems[i];
     let x = e % this.pitch;
     let y = Math.floor(e / this.pitch);
-    this.plane.putDot(x, y);
+    this.plane.drawDot(x, y);
   }
 }
 
@@ -33,6 +35,7 @@ PaletteEntry.prototype.setTrueColor = function(rgb) {
     console.log(`color ${this.color} not found in plane`);
     return;
   }
+  // TODO: Fix this, add a test.
   this.plane.putColorChange(rgb, this.color, this.pitch, elems);
 }
 
@@ -70,20 +73,19 @@ PaletteCollection.prototype._stringify = function(depth, opts) {
   return 'PaletteCollection{' + elems.join(', ') + '}';
 }
 
-function savePaletteCollection(env, res, pc, filename) {
-  let target = env.makePlane(res);
+function savePaletteCollection(env, resources, pc, filename) {
+  let rawBuffer = env.makeRawBuffer(resources);
+  let target = new plane.Plane(rawBuffer, {saveService: resources});
   target.setSize(40, 20 * pc.length);
-  target.clearRgbMap();
-  let color = target.addRgbMapEntry(0x606060);
-  target.fillBackground(color);
+  target.assignRgbMap([]);
+  target.fillTrueBackground(0x606060);
   for (let i = 0; i < pc.length; i++) {
     let rgb = pc[i].rgb;
     let y = i * 20;
-    let color = target.addRgbMapEntry(rgb);
-    target.setColor(color);
-    target.putRect(2, 2 + y, 36, 16, true);
+    target.setTrueColor(rgb);
+    target.fillRect(2, 2 + y, 36, 16);
   }
-  target.saveTo(filename);
+  target.save(filename);
 }
 
 module.exports.PaletteEntry = PaletteEntry;

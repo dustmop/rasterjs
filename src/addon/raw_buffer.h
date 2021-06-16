@@ -8,11 +8,11 @@
 class DisplaySDL;
 class Resources;
 
-class Plane : public Napi::ObjectWrap<Plane> {
+class RawBuffer : public Napi::ObjectWrap<RawBuffer> {
  public:
   static void InitClass(Napi::Env env, Napi::Object exports);
   static Napi::Object NewInstance(Napi::Env env, Napi::Value arg);
-  Plane(const Napi::CallbackInfo& info);
+  RawBuffer(const Napi::CallbackInfo& info);
 
  private:
   Napi::Value Clear(const Napi::CallbackInfo& info);
@@ -23,19 +23,15 @@ class Plane : public Napi::ObjectWrap<Plane> {
   Napi::Value SetColor(const Napi::CallbackInfo& info);
   Napi::Value FillBackground(const Napi::CallbackInfo& info);
   Napi::Value RetrieveTrueContent(const Napi::CallbackInfo& info);
-  Napi::Value SaveTo(const Napi::CallbackInfo& info);
   Napi::Value AssignRgbMap(const Napi::CallbackInfo& info);
-  Napi::Value ClearRgbMap(const Napi::CallbackInfo& info);
   Napi::Value AddRgbMapEntry(const Napi::CallbackInfo& info);
-  Napi::Value PutRect(const Napi::CallbackInfo& info);
-  Napi::Value PutDot(const Napi::CallbackInfo& info);
   Napi::Value PutSequence(const Napi::CallbackInfo& info);
   Napi::Value PutImage(const Napi::CallbackInfo& info);
   Napi::Value PutFrameMemory(const Napi::CallbackInfo& info);
   Napi::Value PutColorChange(const Napi::CallbackInfo& info);
 
   void prepare(const Napi::Env& env);
-  void fillTarget(GfxTarget* t);
+  void putRange(int x0, int y0, int x1, int y1, uint32_t color);
 
   // Configuration, safe defaults.
   int rgbMapIndex;

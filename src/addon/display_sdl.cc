@@ -1,5 +1,5 @@
 #include "display_sdl.h"
-#include "plane.h"
+#include "raw_buffer.h"
 #include "resources.h"
 #include "type.h"
 
@@ -230,7 +230,7 @@ Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
         // Convert the error to a string, display it.
         napi_value errval;
         napi_coerce_to_string(env, result, &errval);
-        //display_napi_value(env, errval);
+        display_napi_value(env, errval);
         break;
       }
       napi_status err;

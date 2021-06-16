@@ -14,6 +14,7 @@ class Resources : public Napi::ObjectWrap<Resources> {
 
   Napi::Value Clear(const Napi::CallbackInfo& info);
   Napi::Value ReadImage(const Napi::CallbackInfo& info);
+  Napi::Value SaveTo(const Napi::CallbackInfo& info);
 
   Image* getImage(int id);
 

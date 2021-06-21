@@ -92,11 +92,11 @@ describe('Palette entry', function() {
     let colors = ra.getPaletteAll({sort: true});
     let actual = [];
     for (let i = 0; i < colors.length; i++) {
-      actual.push('0x' + colors[i].rgb.toString(16));
+      actual.push(colors[i].hex());
     }
     let expect = [
       "0x444444",
-      "0x0",
+      "0x000000",
       "0x4d0e05",
       "0xaaaaaa",
       "0xeaeaea",

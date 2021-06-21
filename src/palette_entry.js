@@ -39,6 +39,14 @@ PaletteEntry.prototype.setTrueColor = function(rgb) {
   this.plane.putColorChange(rgb, this.color, this.pitch, elems);
 }
 
+PaletteEntry.prototype.hex = function() {
+  let val = this.rgb.toString(16);
+  while (val.length < 6) {
+    val = '0' + val;
+  }
+  return '0x' + val;
+}
+
 function PaletteCollection(env, res, items) {
   this.env = env;
   this.res = res;
@@ -64,11 +72,8 @@ PaletteCollection.prototype.toString = function() {
 PaletteCollection.prototype._stringify = function(depth, opts) {
   let elems = [];
   for (let i = 0; i < this.length; i++) {
-    let val = this[i].rgb.toString(16);
-    while (val.length < 6) {
-      val = '0' + val;
-    }
-    elems.push(`${i}: 0x${val}`);
+    let val = this[i].hex();
+    elems.push(`${i}: ${val}`);
   }
   return 'PaletteCollection{' + elems.join(', ') + '}';
 }

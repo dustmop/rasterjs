@@ -33,7 +33,7 @@ void RawBuffer::InitClass(Napi::Env env, Napi::Object exports) {
        InstanceMethod("putColorChange", &RawBuffer::PutColorChange),
        InstanceAccessor<&RawBuffer::GetWidth>("width"),
        InstanceAccessor<&RawBuffer::GetHeight>("height"),
-       InstanceMethod("asBuffer", &RawBuffer::AsBuffer),
+       InstanceMethod("rawData", &RawBuffer::RawData),
   });
   g_planeConstructor = Napi::Persistent(func);
   g_planeConstructor.SuppressDestruct();
@@ -82,7 +82,7 @@ Napi::Value RawBuffer::GetHeight(const Napi::CallbackInfo &info) {
   return Napi::Number::New(env, this->height);
 }
 
-Napi::Value RawBuffer::AsBuffer(const Napi::CallbackInfo &info) {
+Napi::Value RawBuffer::RawData(const Napi::CallbackInfo &info) {
   Napi::Env env = info.Env();
   this->prepare(env);
   napi_value result;

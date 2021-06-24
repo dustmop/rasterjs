@@ -18,7 +18,7 @@ class RawBuffer : public Napi::ObjectWrap<RawBuffer> {
   Napi::Value Clear(const Napi::CallbackInfo& info);
   Napi::Value GetWidth(const Napi::CallbackInfo &info);
   Napi::Value GetHeight(const Napi::CallbackInfo &info);
-  Napi::Value AsBuffer(const Napi::CallbackInfo &info);
+  Napi::Value RawData(const Napi::CallbackInfo &info);
   Napi::Value SetSize(const Napi::CallbackInfo& info);
   Napi::Value SetColor(const Napi::CallbackInfo& info);
   Napi::Value FillBackground(const Napi::CallbackInfo& info);

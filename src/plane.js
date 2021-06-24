@@ -34,8 +34,8 @@ Plane.prototype.clear = function() {
   this.rawBuffer.clear();
 }
 
-Plane.prototype.asBuffer = function() {
-  return this.rawBuffer.asBuffer();
+Plane.prototype.trueBuffer = function() {
+  return this.rawBuffer.rawData();
 }
 
 Plane.prototype.setSize = function(width, height) {
@@ -332,7 +332,7 @@ Plane.prototype.nextFrame = function() {
 }
 
 Plane.prototype.save = function(savepath) {
-  let buffer = this.asBuffer();
+  let buffer = this.trueBuffer();
   // TODO: fix definition of pitch
   let pitch = this.width * 4;
   if (!this.saveService) {

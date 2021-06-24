@@ -111,7 +111,7 @@ void main() {
   var texture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, texture);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, plane.width, plane.height,
-                0, gl.RGBA, gl.UNSIGNED_BYTE, plane.buffer);
+                0, gl.RGBA, gl.UNSIGNED_BYTE, null);
 
   // let's assume all images are not a power of 2
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
@@ -181,12 +181,16 @@ Display.prototype.waitForImageLoads = function(cb) {
 }
 
 Display.prototype.renderLoop = function(nextFrame) {
-  let self = this;
   let pl = this.plane;
   let gl = this.gl;
   let frontBuffer = null;
 
   let renderIt = function() {
+    // Get the data buffer from the plane.
+    if (!frontBuffer) {
+      frontBuffer = pl.trueBuffer();
+    }
+
     // Render to the display
     if (frontBuffer) {
       gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, pl.width, pl.height, gl.RGBA,
@@ -196,17 +200,6 @@ Display.prototype.renderLoop = function(nextFrame) {
 
     // Create the next frame.
     nextFrame();
-
-    // Allocate buffer once available
-    if (!frontBuffer && pl.buffer) {
-      frontBuffer = new Uint8Array(pl.buffer.byteLength);
-    }
-    // Copy to next buffer.
-    if (frontBuffer) {
-      for (let k = 0; k < pl.buffer.byteLength; k++) {
-        frontBuffer[k] = pl.buffer[k];
-      }
-    }
 
     // Wait for next frame.
     requestAnimationFrame(renderIt);

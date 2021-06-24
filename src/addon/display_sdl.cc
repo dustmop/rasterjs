@@ -105,20 +105,20 @@ Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
   Napi::Object planeObj = Napi::Object(env, planeVal);
   Napi::Value widthNum = planeObj.Get("width");
   Napi::Value heightNum = planeObj.Get("height");
-  Napi::Value asBufferVal = planeObj.Get("asBuffer");
-  Napi::Function asBufferFunc = asBufferVal.As<Napi::Function>();
+  Napi::Value trueBufferVal = planeObj.Get("trueBuffer");
+  Napi::Function trueBufferFunc = trueBufferVal.As<Napi::Function>();
 
   // Get the buffer of raw data.
   napi_status status;
   napi_value buffVal;
-  status = napi_call_function(env, planeObj, asBufferFunc, 0, NULL, &buffVal);
+  status = napi_call_function(env, planeObj, trueBufferFunc, 0, NULL, &buffVal);
   if (status != napi_ok) {
-    printf("failed to get plane.asBuffer!\n");
+    printf("failed to get plane.trueBuffer!\n");
     exit(1);
   }
   Napi::Value buffObj = Napi::Value(env, buffVal);
   if (!buffObj.IsArrayBuffer()) {
-    printf("plane.asBuffer did not return an ArrayBuffer\n!");
+    printf("plane.trueBuffer did not return an ArrayBuffer\n!");
     exit(1);
   }
   Napi::ArrayBuffer arrBuff = buffObj.As<Napi::ArrayBuffer>();

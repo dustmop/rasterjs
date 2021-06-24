@@ -240,7 +240,7 @@ if (typeof window === 'undefined') {
 } else {
   // Web browser
   window['require'] = function(moduleName) {
-    if (moduleName === 'raster.js' || moduleName === './raster.js') {
+    if (moduleName === 'raster') {
       return singleton;
     }
     throw 'Could not require module named "' + moduleName + '"';

@@ -8,6 +8,7 @@ RawBuffer.prototype.clear = function() {
   this.backColor = 0;
   this.width = 0;
   this.height = 0;
+  this.pitch = 0;
   this.rgbMap = [];
   this.data = null;
   this._needErase = true;
@@ -16,6 +17,8 @@ RawBuffer.prototype.clear = function() {
 RawBuffer.prototype.setSize = function(width, height) {
   this.width = width;
   this.height = height;
+  // TODO: Properly set the pitch
+  this.pitch = width;
 }
 
 RawBuffer.prototype.assignRgbMap = function(rgbMap) {
@@ -31,6 +34,28 @@ RawBuffer.prototype.setColor = function(color) {
   this.frontColor = color;
 }
 
+RawBuffer.prototype.retrieveTrueContent = function(imageContent) {
+  let palette = [];
+  let buffer = [];
+
+  let colorLookup = {};
+  for (let i = 0; i < this.rgbMap.length; i++) {
+    let rgb = this.rgbMap[i];
+    colorLookup[rgb] = i;
+    palette.push(rgb);
+  }
+
+  for (let i = 0; i < this.data.length / 4; i++) {
+    let rgb = this._bytesToColor(this.data.slice(i*4, i*4+4));
+    let v = colorLookup[rgb];
+    buffer.push(v);
+  }
+
+  imageContent.palette = palette;
+  imageContent.buffer = buffer;
+  imageContent.pitch = this.pitch;
+}
+
 RawBuffer.prototype.putSequence = function(seq) {
   this._prepare();
   // Get the current color
@@ -42,7 +67,7 @@ RawBuffer.prototype.putSequence = function(seq) {
       // Sequence of length 2 is a single point
       let x = elem[0];
       let y = elem[1];
-      let k = y * this.width + x;
+      let k = y * this.pitch + x;
       this.data[k*4+0] = r;
       this.data[k*4+1] = g;
       this.data[k*4+2] = b;
@@ -67,7 +92,7 @@ RawBuffer.prototype.putSequence = function(seq) {
       if (x0 == x1) {
         let x = x0;
         for (let y = y0; y <= y1; y++) {
-          let k = y * this.width + x;
+          let k = y * this.pitch + x;
           this.data[k*4+0] = r;
           this.data[k*4+1] = g;
           this.data[k*4+2] = b;
@@ -75,7 +100,7 @@ RawBuffer.prototype.putSequence = function(seq) {
       } else if (y0 == y1) {
         let y = y0;
         for (let x = x0; x <= x1; x++) {
-          let k = y * this.width + x;
+          let k = y * this.pitch + x;
           this.data[k*4+0] = r;
           this.data[k*4+1] = g;
           this.data[k*4+2] = b;
@@ -105,7 +130,7 @@ RawBuffer.prototype.putImage = function(img, baseX, baseY) {
           putY < 0 || putY >= this.height) {
         continue;
       }
-      let k = putY*this.width + putX;
+      let k = putY*this.pitch + putX;
       let alpha = img.data[j*4+3];
       if (alpha < 0x80) {
         continue;
@@ -122,7 +147,7 @@ RawBuffer.prototype.putFrameMemory = function(mem) {
   this._prepare();
   for (let y = 0; y < mem.height; y++) {
     for (let x = 0; x < mem.width; x++) {
-      let k = y * this.width + x;
+      let k = y * this.pitch + x;
       let v = mem[k];
       let [r,g,b] = this._toColor(mem[k]);
       this.data[k*4+0] = r;
@@ -136,7 +161,7 @@ RawBuffer.prototype._prepare = function() {
   if (this.data && !this._needErase) {
     return;
   }
-  let numPixels = this.height * this.width;
+  let numPixels = this.height * this.pitch;
   let [r,g,b] = this._toColor(this.backColor);
   if (!this.data) {
     this.data = new Uint8Array(numPixels*4);
@@ -161,6 +186,12 @@ RawBuffer.prototype._toColor = function(color) {
   let g = (rgb / 0x100) % 0x100;
   let b = (rgb / 0x1) % 0x100;
   return [r, g, b];
+}
+
+RawBuffer.prototype._bytesToColor = function(bytes) {
+  return ((bytes[0] * 0x10000) +
+          (bytes[1] * 0x100) +
+          (bytes[2] * 0x1));
 }
 
 module.exports.RawBuffer = RawBuffer;

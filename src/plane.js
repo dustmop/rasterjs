@@ -230,7 +230,7 @@ Plane.prototype.fillFlood = function(x, y) {
   let image = {
     palette: [],
     buffer: [],
-     pitch: null,
+    pitch: null,
   };
   this.rawBuffer.retrieveTrueContent(image);
   let mem = frameMemory.NewFrameMemory(this.width, this.height);

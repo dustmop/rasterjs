@@ -13,13 +13,10 @@ class Resources : public Napi::ObjectWrap<Resources> {
   Resources(const Napi::CallbackInfo& info);
 
   Napi::Value Clear(const Napi::CallbackInfo& info);
-  Napi::Value ReadImage(const Napi::CallbackInfo& info);
+  Napi::Value OpenImage(const Napi::CallbackInfo& info);
   Napi::Value SaveTo(const Napi::CallbackInfo& info);
+  Napi::Value AllImagesLoaded(const Napi::CallbackInfo& info);
 
-  Image* getImage(int id);
-
- private:
-  std::vector<Image*> imgList;
 };
 
 #endif

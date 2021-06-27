@@ -4,18 +4,11 @@
 #include <png.h>
 #include <stdlib.h>
 
-
-struct imageObject {
-  int width;
-  int height;
-  uint8* data;
-};
-
 #define ERROR_NOT_FOUND 1
 #define ERROR_INVALID_HEADER 2
 #define ERROR_ALLOC_FAILURE 3
 
-int loadPngFile(const char* filename, int *outWidth, int *outHeight, unsigned char** outData, int flipVert) {
+int loadPngFile(const char* filename, int *outWidth, int *outHeight, int *outPitch, unsigned char** outData, int flipVert) {
   FILE* fp = fopen(filename, "rb");
   if (!fp) {
     return ERROR_NOT_FOUND;
@@ -44,6 +37,8 @@ int loadPngFile(const char* filename, int *outWidth, int *outHeight, unsigned ch
 
   *outWidth = width;
   *outHeight = height;
+  // TODO: Pitch should be its own value, not necessarily the width.
+  *outPitch = width;
 
   if (bit_depth == 16) {
     png_set_strip_16(png);
@@ -101,30 +96,20 @@ int loadPngFile(const char* filename, int *outWidth, int *outHeight, unsigned ch
   return 0;
 }
 
-int LoadPng(const char* filename, Image** img_ptr) {
-  int width, height;
+int LoadPng(const char* filename, Image* img) {
+  int width, height, pitch;
   uint8* data = NULL;
-  int ret = loadPngFile(filename, &width, &height, &data, false);
+  int ret = loadPngFile(filename, &width, &height, &pitch, &data, false);
   if (ret != 0) {
     return ret;
   }
-
-  imageObject* obj = new imageObject;
-  obj->width = width;
-  obj->height = height;
-  obj->data = data;
-  Image* img = new Image;
-  img->data = obj;
-
-  *img_ptr = img;
+  img->top = 0;
+  img->left = 0;
+  img->data = data;
+  img->width = width;
+  img->height = height;
+  img->pitch = pitch;
   return 0;
-}
-
-void GetPng(Image* img, int* width, int* height, uint8** data) {
-  imageObject* priv = (imageObject*)img->data;
-  *width = priv->width;
-  *height = priv->height;
-  *data = priv->data;
 }
 
 int WritePng(const char* savepath, uint8* buffer, int width, int height, int pitch) {

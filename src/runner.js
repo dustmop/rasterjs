@@ -45,7 +45,7 @@ Runner.prototype.resetState = function() {
 }
 
 Runner.prototype.then = function(cb) {
-  cb();
+  this.imgLoader.resolveAll(cb);
 }
 
 Runner.prototype.setSize_params = ['w:i', 'h:i'];
@@ -192,7 +192,7 @@ Runner.prototype.fillFrame = function(options, fillerFunc) {
 }
 
 Runner.prototype.loadImage = function(filepath) {
-  return this.imgLoader.loadBegin(filepath);
+  return this.imgLoader.loadImage(filepath);
 }
 
 Runner.prototype.drawImage_params = ['img:a', 'x:i', 'y:i'];
@@ -202,20 +202,23 @@ Runner.prototype.drawImage = function(img, x, y) {
 
 Runner.prototype._doRender = function(num, exitAfter, renderFunc, betweenFunc) {
   let plane = this.aPlane;
-  this.display.setSource(plane, this._config.zoomScale);
-  this.display.renderLoop(function() {
-    if (renderFunc) {
-      try {
-        renderFunc();
-      } catch(e) {
-        console.log(e);
-        throw e;
+  let self = this;
+  this.then(function() {
+    self.display.setSource(plane, self._config.zoomScale);
+    self.display.renderLoop(function() {
+      if (renderFunc) {
+        try {
+          renderFunc();
+        } catch(e) {
+          console.log(e);
+          throw e;
+        }
       }
-    }
-    if (betweenFunc) {
-      betweenFunc();
-    }
-  }, num, exitAfter);
+      if (betweenFunc) {
+        betweenFunc();
+      }
+    }, num, exitAfter);
+  });
 }
 
 Runner.prototype.dispatch = function(row) {

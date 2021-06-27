@@ -9,8 +9,9 @@ void Resources::InitClass(Napi::Env env, Napi::Object exports) {
       env,
       "Resources",
       {InstanceMethod("clear", &Resources::Clear),
-       InstanceMethod("readImage", &Resources::ReadImage),
+       InstanceMethod("openImage", &Resources::OpenImage),
        InstanceMethod("saveTo", &Resources::SaveTo),
+       InstanceMethod("allImagesLoaded", &Resources::AllImagesLoaded),
   });
   g_resourcesConstructor = Napi::Persistent(func);
   g_resourcesConstructor.SuppressDestruct();
@@ -32,23 +33,42 @@ Napi::Value Resources::Clear(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, 0);
 }
 
-Napi::Value Resources::ReadImage(const Napi::CallbackInfo& info) {
-  Napi::Value val = info[0];
-  Napi::String str = val.ToString();
-  std::string s = str.Utf8Value();
+Napi::Value Resources::OpenImage(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
+  Napi::Value fileVal = info[0];
+  Napi::String fileStr = fileVal.ToString();
+  std::string filename = fileStr.Utf8Value();
+
+  Napi::Value imgVal = info[1];
+  Napi::Object imgObj = imgVal.ToObject();
+
   // TODO: Other formats
-  Image* img = NULL;
-  int err = LoadPng(s.c_str(), &img);
+  Image img;
+  img.data = NULL;
+  int err = LoadPng(filename.c_str(), &img);
   if (err != 0) {
     // TODO: Throw an error
     return Napi::Number::New(env, -1);
   }
 
-  int id = this->imgList.size();
-  imgList.push_back(img);
-  return Napi::Number::New(env, id);
+  imgObj.Set("width", img.width);
+  imgObj.Set("height", img.height);
+  imgObj.Set("pitch", img.pitch);
+
+  int byteLength = img.width * img.height * 4;
+  Napi::ArrayBuffer arrayBuff = Napi::ArrayBuffer::New(env, byteLength);
+  uint8* arrayData = (uint8*)arrayBuff.Data();
+  for (int k = 0; k < byteLength; k++) {
+    arrayData[k] = img.data[k];
+  }
+  imgObj.Set("data", arrayBuff);
+
+  // TODO: Return value should be uint8array, not ArrayBuffer
+  //Napi::Value arr = Napi::TypedArrayOf<uint8_t>::New(env, 1, arrayBuff, 0, napi_uint8_array);
+  //imgObj.Set("data", arr);
+
+  return Napi::Number::New(env, 0);
 }
 
 Napi::Value Resources::SaveTo(const Napi::CallbackInfo& info) {
@@ -75,10 +95,7 @@ Napi::Value Resources::SaveTo(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, 0);
 }
 
-Image* Resources::getImage(int id) {
-  if (id >= this->imgList.size()) {
-    return NULL;
-  }
-  return this->imgList[id];
+Napi::Value Resources::AllImagesLoaded(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  return Napi::Number::New(env, 1);
 }
-

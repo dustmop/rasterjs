@@ -85,6 +85,53 @@ RawBuffer.prototype.putSequence = function(seq) {
   }
 }
 
+RawBuffer.prototype.putImage = function(img, baseX, baseY) {
+  this._prepare();
+  let imageTop = img.top;
+  let imageLeft = img.left;
+  let imageHeight = img.height;
+  let imageWidth = img.width;
+  if (this.data == null) {
+    return;
+  }
+  baseX = Math.floor(baseX);
+  baseY = Math.floor(baseY);
+  for (let y = imageTop; y < imageHeight; y++) {
+    for (let x = imageLeft; x < imageWidth; x++) {
+      let j = y*imageWidth + x;
+      let putX = x + baseX;
+      let putY = y + baseY;
+      if (putX < 0 || putX >= this.width ||
+          putY < 0 || putY >= this.height) {
+        continue;
+      }
+      let k = putY*this.width + putX;
+      let alpha = img.data[j*4+3];
+      if (alpha < 0x80) {
+        continue;
+      }
+      this.data[k*4+0] = img.data[j*4+0];
+      this.data[k*4+1] = img.data[j*4+1];
+      this.data[k*4+2] = img.data[j*4+2];
+      this.data[k*4+3] = 0xff;
+    }
+  }
+}
+
+RawBuffer.prototype.putFrameMemory = function(mem) {
+  this._prepare();
+  for (let y = 0; y < mem.height; y++) {
+    for (let x = 0; x < mem.width; x++) {
+      let k = y * this.width + x;
+      let v = mem[k];
+      let [r,g,b] = this._toColor(mem[k]);
+      this.data[k*4+0] = r;
+      this.data[k*4+1] = g;
+      this.data[k*4+2] = b;
+    }
+  }
+}
+
 RawBuffer.prototype._prepare = function() {
   if (this.data && !this._needErase) {
     return;

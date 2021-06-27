@@ -323,48 +323,22 @@ Napi::Value RawBuffer::PutImage(const Napi::CallbackInfo& info) {
   int baseX = info[1].ToNumber().Int32Value();
   int baseY = info[2].ToNumber().Int32Value();
 
-  Napi::Value imgIdval = imgObj["id"];
-  int imgId = imgIdval.ToNumber().Int32Value();
+  int top = Napi::Value(imgObj["top"]).ToNumber().Int32Value();
+  int left = Napi::Value(imgObj["left"]).ToNumber().Int32Value();
+  int width = Napi::Value(imgObj["width"]).ToNumber().Int32Value();
+  int height = Napi::Value(imgObj["height"]).ToNumber().Int32Value();
+  int pitch = Napi::Value(imgObj["pitch"]).ToNumber().Int32Value();
 
-  Image* img_struct = this->res->getImage(imgId);
-  if (!img_struct) {
-    printf("invalid image id: %d\n", imgId);
-    return info.Env().Null();
-  }
+  Napi::Value dataObj = imgObj["data"];
+  Napi::ArrayBuffer buffer = dataObj.As<Napi::TypedArray>().ArrayBuffer();
+  uint8* data = (uint8*)buffer.Data();
 
-  int imgLeft, imgTop;
-  int imgWidth, imgHeight, imgPitch;
-  uint8* data = NULL;
-  imgLeft = imgTop = 0;
-  GetPng(img_struct, &imgWidth, &imgHeight, &data);
-  imgPitch = imgWidth;
-
-  Napi::Value sliceval = imgObj["slice"];
-  if (sliceval.IsObject()) {
-    if (sliceval.IsArray()) {
-      Napi::Object slice = sliceval.ToObject();
-      Napi::Value val;
-      val = slice[uint32_t(0)];
-      int slicex = val.ToNumber().Int32Value();
-      val = slice[uint32_t(1)];
-      int slicey = val.ToNumber().Int32Value();
-      val = slice[uint32_t(2)];
-      int slicew = val.ToNumber().Int32Value();
-      val = slice[uint32_t(3)];
-      int sliceh = val.ToNumber().Int32Value();
-      imgLeft = slicex;
-      imgTop = slicey;
-      imgWidth = slicew;
-      imgHeight = sliceh;
-    }
-  }
-
-  for (int y = imgTop; y < imgHeight; y++) {
-    for (int x = imgLeft; x < imgWidth; x++) {
-      uint8 r = data[(y*imgPitch+x)*4+0];
-      uint8 g = data[(y*imgPitch+x)*4+1];
-      uint8 b = data[(y*imgPitch+x)*4+2];
-      uint8 a = data[(y*imgPitch+x)*4+3];
+  for (int y = top; y < height; y++) {
+    for (int x = left; x < width; x++) {
+      uint8 r = data[(y*pitch+x)*4+0];
+      uint8 g = data[(y*pitch+x)*4+1];
+      uint8 b = data[(y*pitch+x)*4+2];
+      uint8 a = data[(y*pitch+x)*4+3];
       if (a > 0x80) {
         uint32_t color = (r * 0x1000000 +
                           g * 0x10000 +

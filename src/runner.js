@@ -200,7 +200,7 @@ Runner.prototype.drawImage = function(img, x, y) {
   this.aPlane.drawImage(img, x, y);
 }
 
-Runner.prototype._doRender = function(num, exitAfter, renderFunc, betweenFunc) {
+Runner.prototype._doRender = function(num, exitAfter, renderFunc, betweenFunc, finalFunc) {
   let plane = this.aPlane;
   let self = this;
   this.then(function() {
@@ -217,7 +217,7 @@ Runner.prototype._doRender = function(num, exitAfter, renderFunc, betweenFunc) {
       if (betweenFunc) {
         betweenFunc();
       }
-    }, num, exitAfter);
+    }, num, exitAfter, finalFunc);
   });
 }
 
@@ -235,12 +235,12 @@ Runner.prototype.dispatch = function(row) {
   fn.apply(this, args);
 }
 
-Runner.prototype.show = function() {
-  this._doRender(1, false, null, null);
+Runner.prototype.show = function(finalFunc) {
+  this._doRender(1, false, null, null, finalFunc);
 }
 
 Runner.prototype.run = function(renderFunc, betweenFrameFunc) {
-  this._doRender(this.numFrames, true, renderFunc, betweenFrameFunc);
+  this._doRender(this.numFrames, true, renderFunc, betweenFrameFunc, null);
 }
 
 Runner.prototype.save = function(savepath) {

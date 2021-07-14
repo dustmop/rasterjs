@@ -171,13 +171,13 @@ Raster.prototype.run = function(renderFunc) {
   });
 }
 
-Raster.prototype.show = function(renderFunc) {
+Raster.prototype.show = function(renderFunc, finalFunc) {
   var runner = this.runner;
   if (renderFunc) {
     renderFunc();
   }
   runner.then(function() {
-    runner.show();
+    runner.show(finalFunc);
   });
 }
 

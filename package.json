@@ -7,6 +7,7 @@
   "license": "MIT",
   "scripts": {
     "test": "mocha",
+    "web-test": "karma start --single-run --browsers FirefoxHeadless karma.conf.js",
     "build": "webpack"
   },
   "dependencies": {
@@ -19,6 +20,10 @@
     "randomstring": "^1.1.5"
   },
   "devDependencies": {
+    "karma": "^6.3.4",
+    "karma-firefox-launcher": "^2.1.1",
+    "karma-mocha": "^2.0.1",
+    "karma-webpack": "^5.0.0",
     "mocha": "^8.2.1",
     "webpack": "^5.20.0",
     "webpack-cli": "^4.5.0"

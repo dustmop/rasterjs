@@ -180,10 +180,12 @@ Display.prototype.waitForImageLoads = function(cb) {
   }, 0);
 }
 
-Display.prototype.renderLoop = function(nextFrame) {
+Display.prototype.renderLoop = function(nextFrame, num, exitAfter, finalFunc) {
   let pl = this.plane;
   let gl = this.gl;
   let frontBuffer = null;
+
+  // TODO: Use `num`
 
   let renderIt = function() {
     // Get the data buffer from the plane.
@@ -200,6 +202,10 @@ Display.prototype.renderLoop = function(nextFrame) {
 
     // Create the next frame.
     nextFrame();
+
+    if (finalFunc) {
+      finalFunc();
+    }
 
     // Wait for next frame.
     requestAnimationFrame(renderIt);

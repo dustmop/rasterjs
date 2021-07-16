@@ -59,6 +59,7 @@ Raster.prototype.rotatePolygon = function(shape, angle) {
 }
 
 Raster.prototype.oscil = function(period, fracOffset, click) {
+  period = period || 60;
   if (fracOffset === undefined) {
     fracOffset = 0.0;
   }

@@ -88,9 +88,12 @@ Runner.prototype.useColors = function(obj) {
       this.aPlane.assignRgbMap(rgbMap.rgb_map_dos);
     } else if (text == 'nes') {
       this.aPlane.assignRgbMap(rgbMap.rgb_map_nes);
-    // gameboy
-    // zx-spectrum
-    // pico8
+    } else if (text == 'gameboy') {
+      this.aPlane.assignRgbMap(rgbMap.rgb_map_gameboy);
+    } else if (text == 'pico8') {
+      this.aPlane.assignRgbMap(rgbMap.rgb_map_pico8);
+    } else if (text == 'zx-spectrum') {
+      this.aPlane.assignRgbMap(rgbMap.rgb_map_zx_spectrum);
     } else if (text == 'grey') {
       this.aPlane.assignRgbMap(rgbMap.rgb_map_grey);
     } else {

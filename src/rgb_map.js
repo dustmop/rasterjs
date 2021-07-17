@@ -51,6 +51,51 @@ const rgb_map_nes = [
    0xf8d878,0xd8f878,0xb8f8b8,0xb8f8d8,0x00fcfc,0xf8d8f8,0x080808,0x080808
 ];
 
+const rgb_map_gameboy = [
+  0x003f00,
+  0x2e7320,
+  0x8cbf0a,
+  0xa0cf0a,
+];
+
+const rgb_map_pico8 = [
+  0x000000,
+  0x1d2b53,
+  0x7e2553,
+  0x008751,
+  0xab5236,
+  0x5f574f,
+  0xc2c3c7,
+  0xfff1e8,
+  0xff004d,
+  0xffa300,
+  0xffec27,
+  0x00e436,
+  0x29adff,
+  0x83769c,
+  0xff77a8,
+  0xffccaa,
+];
+
+const rgb_map_zx_spectrum = [
+  0x000000,
+  0x0000d7, // basic blue
+  0xd70000, // basic red
+  0xd700d7, // basic magenta
+  0x00d700, // basic green
+  0x00d7d7, // basic cyan
+  0xd7d700, // basic yellow
+  0xd7d7d7, // basic white
+  0x000000,
+  0x0000ff, // bright blue
+  0xff0000, // bright red
+  0xff00ff, // bright magenta
+  0x00ff00, // bright green
+  0x00ffff, // bright cyan
+  0xffff00, // bright yellow
+  0xffffff, // bright white
+];
+
 const rgb_map_grey = function() {
   let colors = [];
   for (let k = 0; k < 0x100; k++) {
@@ -61,6 +106,9 @@ const rgb_map_grey = function() {
 }();
 
 module.exports.rgb_map_default = rgb_map_default;
-module.exports.rgb_map_nes   = rgb_map_nes;
-module.exports.rgb_map_dos   = rgb_map_dos;
-module.exports.rgb_map_grey  = rgb_map_grey;
+module.exports.rgb_map_nes     = rgb_map_nes;
+module.exports.rgb_map_dos     = rgb_map_dos;
+module.exports.rgb_map_grey    = rgb_map_grey;
+module.exports.rgb_map_gameboy = rgb_map_gameboy;
+module.exports.rgb_map_pico8   = rgb_map_pico8;
+module.exports.rgb_map_zx_spectrum = rgb_map_zx_spectrum;

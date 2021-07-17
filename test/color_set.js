@@ -18,6 +18,47 @@ describe('Color set', function() {
     ra.fillDot([[1,2],[3,4]]);
     util.saveTmpCompareTo(ra, 'test/testdata/colors_dos.png');
   });
+
+  it('gameboy', function() {
+    ra.resetState();
+    ra.setSize({w: 8, h: 8})
+    ra.useColors('gameboy');
+    ra.fillDot([[1,2],[3,4]]);
+    util.saveTmpCompareTo(ra, 'test/testdata/colors_gameboy.png');
+  });
+
+  it('pico8', function() {
+    ra.resetState();
+    ra.setSize({w: 8, h: 8})
+    ra.useColors('pico8');
+    ra.fillDot([[1,2],[3,4]]);
+    util.saveTmpCompareTo(ra, 'test/testdata/colors_pico8.png');
+  });
+
+  it('zx-spectrum', function() {
+    ra.resetState();
+    ra.setSize({w: 8, h: 8})
+    ra.useColors('zx-spectrum');
+    ra.fillDot([[1,2],[3,4]]);
+    util.saveTmpCompareTo(ra, 'test/testdata/colors_zx_spectrum.png');
+  });
+
+  it('grey', function() {
+    ra.resetState();
+    ra.setSize({w: 8, h: 8})
+    ra.useColors('grey');
+    ra.fillDot([[1,2],[3,4]]);
+    util.saveTmpCompareTo(ra, 'test/testdata/colors_grey.png');
+  });
+
+  it('custom', function() {
+    ra.resetState();
+    ra.setSize({w: 8, h: 8})
+    ra.useColors([0x000000, 0xa04040, 0x0409050, 0x5050b0]);
+    ra.fillDot([[1,2],[3,4]]);
+    util.saveTmpCompareTo(ra, 'test/testdata/colors_custom.png');
+  });
+
   // TODO: useColors(null) crash
   // TODO: useColors(null) -> drawImage
   // TODO: useColors(null) -> setTrueColor
@@ -25,9 +66,5 @@ describe('Color set', function() {
   // TODO: useColors(ega)
   // TODO: useColors(cga)
   // TODO: useColors(vga)
-  // TODO: useColors(gameboy)
-  // TODO: useColors(zx_spectrum)
-  // TODO: useColors(pico8)
   // TODO: useColors(master_system)
-  // TODO: useColors([0xff0000, 0x00ff00, 0x0000ff])
 });

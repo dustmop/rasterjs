@@ -41,6 +41,12 @@ Names of pre-existing color sets:
 
 `grey`: A grey scale color set.
 
+`gameboy`: Colors used by the Gameboy handheld console.
+
+`zx-spectrum`: Colors used by the ZX Spectrum 8-bit console.
+
+`pico8`: Colors used by the Pico-8 fantasy console.
+
 ### useDisplay(display)
 
 The display to use, instead of the default display. Either the name of a pre-existing display, or an object with the methods `initialize`, `setSource`, and `renderLoop`.

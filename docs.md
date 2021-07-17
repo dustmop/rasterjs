@@ -69,21 +69,37 @@ on
 
 Loads an image, by opening it and reading its contents. Can be passed to `drawImage` once reading has completed.
 
+In some environments, such as node.js, `loadImage` is synchronous, so images are opened and read all at once. However, in order to keep scripts portable, it is recommended to also handle async environments, such as web browsers. To do this, call `loadImage` at the top-level of your script, and then only use `drawImage` inside of a render function that is passed to `show` or `run`. Raster.js guarantees that all images opened will be fully loaded once the render function is invoked, assuming that the images can be loaded without error.
+
+`filename`: the name of the image to load. Either a local filesystem path or a web accessible URL.
+
+`returns` an image, opened but not necessarily loaded
+
 ### makePolygon(shape)
 
 Converts a set of a points into a polygon.
+
+`shape`: Either a list of points or a polygon.
+
+`returns` a polygon
 
 ### rotatePolygon(shape, angle)
 
 Rotates the given polygon by the given angle, returning a new polygon.
 
+`shape`: Either a list of points or a polygon.
+
+`angle`: Number of radians to rotate.
+
+`returns` a polygon
+
 ### oscil(period, fracOffset, click)
 
-TODO
+Produce an oscilating value that varies between 0.0 and 1.0 in a sinusoidal motion.
 
 ### on(eventName, callback)
 
-TODO
+Handle events caused by user interaction. Only eventName that is currently handled is `keypress`. Upon each keypress the callback will be invoked information about the event.
 
 ## Special variables
 
@@ -114,7 +130,21 @@ setColor
 setTrueColor
 ```
 
-TODO
+### fillBackground(color)
+
+Set the background color and clear the plane.
+
+### fillTrueBackground(rgb)
+
+Add the rgb value to the colorSet and use it as the background color. Also clear the plane.
+
+### setColor(color)
+
+Set the foreground color to use for drawing.
+
+### setTrueColor(rgb)
+
+Add the rgb value to the colorSet and use it as the foreground color.
 
 ## Drawing
 
@@ -134,51 +164,59 @@ drawImage    -
 
 ### drawLine(x0, y0, x1, y1, cc)
 
-TODO
+Draw a line from the point x0,y0 to x1,y1.
+
+If any of the values are non-integers, then the line is drawn between those points as though they are floating point values.
+
+`cc`: "connect corners" flag. If all the values are integers, and `cc` is false, then the line is drawn from the center of one point to the center of the other, by off-setting each value by 0.5 to avoid sampling bias. However, if all values are integers and `cc` is a true value, then instead the line is drawn to connect corners between the opposite ends of those points.
 
 ### drawDot(x, y)
 
-TODO
+Draw a dot at point x,y.
 
 ### fillDot(dots)
 
-TODO
+Fill the entire plane by tiling the pattern represented by the dots parameter. Dots must be a 2-d square array, with each element representing a color.
 
 ### drawSquare(x, y, size)
 
-TODO
+Draw a square with x,y as the upper-left point, and size being the width and height of the square. The number of pixels spanned, from the left edge of the left-most pixel, to the right edge of the right-most pixel, and from the top of the top-most pixel to the bottom of the bottom-most pixel, is equal to the value of `size`.
 
 ### fillSquare(x, y, size)
 
-TODO
+Fill a square with x,y as the upper-left point, and size being the width and height of the square. Same as `drawSquare`, except the shape's interior is also filled.
 
 ### drawRect(x, y, w, h)
 
-TODO
+Draw a rectangle with x,y as the upper-left point, and w,h as the width and height.
 
 ### fillRect(x, y, w, h)
 
-TODO
+Fill a rectangle with x,y as the upper-left point, and w,h as the width and height. Same as `drawRect`, except the shape's interior is also filled.
 
 ### drawCircle(x, y, r, width)
 
-TODO
+Draw a circle with x,y as the upper-left point, and radius of `r`. The circle will be a ring 1 pixel wide, unless `width` is specified. If it is, the `width` is measured from the outside edge of the circle and goes inward. The radius is not changed by specifying a `width`.
+
+`r`: radius of the circle. If this is an integer, then the number of pixels from the top or left edge of the top of left pixel to the other extreme will equal `r * 2`, an even number. If `r` is 0.5 more than some integer, the circle will instead span an odd number of pixels from one edge to the other. Other values will be rounded to the nearest half-integer.
 
 ### fillCircle(x, y, r)
 
-TODO
+Fill a circle with x,y as the upper-left point, and radius of `r`. Same as `drawCircle`, except the shape's interior is also filled, and `width` is not used.
 
 ### drawPolygon(shape, x?, y?)
 
-A shape is either a list of points (such as `[[3,4],[5,6],[7,8]`) or a polygon object as returned by `makePolygon` or `rotatePolygon`. This method drawing the outline of the polygon, offset by the optional x,y position.
+Draws the outline of a polygon, offset by the optional x,y position.
+
+`shape`: either a list of points (such as `[[3,4],[5,6],[7,8]]`) or a polygon object as returned by `makePolygon` or `rotatePolygon`.
 
 ### fillPolygon(shape, x?, y?)
 
-A shape is either a list of points or a polygon object. This method fills in that polygon, offset by the optional x,y position.
+Fills a polygon, offset by the optional x,y position. Same as `drawPolygon`, except the shape's interior is filled.
 
 ### drawImage(img, x, y)
 
-draw an image to the plane, downsampling it to match the allowed colors.
+Draw an image to the plane, downsampling it to match the allowed colors.
 
 `img`: An image that was created by `loadImage`. NOTE: If raster.js is running in an async environment, such as in a web browser, calls to `drawImage` must be made inside of a render function such as those passed to `show` or `run`, while `loadImage` must be called earlier, such as at the script's top-level.
 

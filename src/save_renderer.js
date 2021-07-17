@@ -7,21 +7,22 @@ const path = require('path');
 const util = require('util');
 const randstr = require('randomstring');
 
-function GifRenderer(targetPath, numFrames) {
+function SaveRenderer(targetPath, numFrames) {
   this.targetPath = targetPath;
   this.numFrames = numFrames;
+  this.isGif = this.targetPath.endsWith('gif');
   return this;
 }
 
-GifRenderer.prototype.initialize = function() {
-  this.tmpdir = path.join(os.tmpdir(), 'qgfx-gif-' + randstr.generate(8));
+SaveRenderer.prototype.initialize = function() {
+  this.tmpdir = path.join(os.tmpdir(), 'raster-save-' + randstr.generate(8));
 }
 
-GifRenderer.prototype.setSource = function(plane, zoomLevel) {
+SaveRenderer.prototype.setSource = function(plane, zoomLevel) {
   this.plane = plane;
 }
 
-GifRenderer.prototype.renderLoop = function(nextFrame) {
+SaveRenderer.prototype.renderLoop = function(nextFrame) {
   let width = this.plane.width;
   let height = this.plane.height;
   try {
@@ -32,6 +33,9 @@ GifRenderer.prototype.renderLoop = function(nextFrame) {
   let numFrames = this.numFrames;
   if (!numFrames || numFrames < 0) {
     numFrames = 64;
+  }
+  if (!this.isGif) {
+    numFrames = 1;
   }
 
   // Render each frame, and write to a file in a tmp directory.
@@ -70,16 +74,23 @@ GifRenderer.prototype.renderLoop = function(nextFrame) {
       setImmediate(waitToComplete);
       return;
     }
-    // Actually write the gif.
-    const gifOpt = {repeat: 0, delay: 16, quality: 4};
-    const encoder = new GIFEncoder(width, height);
-    const stream = pngFileStream(self.tmpdir + '/*.png')
-          .pipe(encoder.createWriteStream(gifOpt))
-          .pipe(fs.createWriteStream(self.targetPath));
-    stream.on('finish', function () {
-      console.log(`wrote ${self.targetPath}`);
-    });
-    return;
+    if (self.isGif) {
+      // Actually write the gif.
+      const gifOpt = {repeat: 0, delay: 16, quality: 4};
+      const encoder = new GIFEncoder(width, height);
+      const stream = pngFileStream(self.tmpdir + '/*.png')
+            .pipe(encoder.createWriteStream(gifOpt))
+            .pipe(fs.createWriteStream(self.targetPath));
+      stream.on('finish', function () {
+        console.log(`wrote ${self.targetPath}`);
+      });
+      return;
+    } else {
+      // Copy the first frame to our target path.
+      let infile = `${self.tmpdir}/000.png`;
+      let outfile = self.targetPath;
+      fs.copyFileSync(infile, outfile);
+    }
   }
   waitToComplete();
 }
@@ -93,4 +104,4 @@ function leftPad(value, size, fill) {
   return text;
 }
 
-module.exports.GifRenderer = GifRenderer;
+module.exports.SaveRenderer = SaveRenderer;

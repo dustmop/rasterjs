@@ -1,6 +1,6 @@
 const cppmodule = require('../build/Release/native');
 const argparse = require('argparse');
-const gifRenderer = require('./gif_renderer.js');
+const saveRenderer = require('./save_renderer.js');
 
 function makeResources() {
   return cppmodule.resources();
@@ -22,14 +22,14 @@ function getOptions() {
   }
   const parser = new argparse.ArgumentParser({});
   parser.add_argument('--num-frames', {type: 'int'});
-  parser.add_argument('--gif', {type: 'str', dest: 'gif_filename'});
+  parser.add_argument('--save', {type: 'str', dest: 'save_filename'});
   parser.add_argument('--display', {type: 'str'});
   parser.add_argument('--colors', {type: 'str'});
   parser.add_argument('--zoom', {type: 'int'});
   let args = parser.parse_args();
-  if (args.gif_filename) {
-    args.display = new gifRenderer.GifRenderer(args.gif_filename,
-                                               args.num_frames);
+  if (args.save_filename) {
+    args.display = new saveRenderer.SaveRenderer(args.save_filename,
+                                                 args.num_frames);
   }
   return args;
 }

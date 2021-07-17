@@ -121,11 +121,29 @@ When running from a node.js script, you can pass command-line parameters to modi
 The number of frames to display, then quit.
 
 ```
---gif [output-filename]
+--save [output-filename]
 ```
 
-Save a gif instead of using the default display.
+Save an image (png or gif) instead of using the default display.
+
+```
+--display [display]
+```
+
+Change the display. See `useDisplay` in the docs for supported displays.
+
+```
+--zoom [zoom]
+```
+
+Change the zoom level.
+
+```
+--colors [colorSet]
+```
+
+Use a specific colorSet. See `useColors` in the docs for supported colorSets.
 
 # API
 
-See docs.md for the full documentation of the methods avaiable in raster.js.
+See [the docs](docs.md) for the full documentation of the methods avaiable in raster.js.

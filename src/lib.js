@@ -234,7 +234,6 @@ if (typeof window === 'undefined') {
 }
 
 var singleton = new Raster(env);
-singleton.resetState();
 if (typeof window === 'undefined') {
   // Node.js
   module.exports = singleton;

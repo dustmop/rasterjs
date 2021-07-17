@@ -23,8 +23,10 @@ function getOptions() {
   const parser = new argparse.ArgumentParser({});
   parser.add_argument('--num-frames', {type: 'int'});
   parser.add_argument('--gif', {type: 'str', dest: 'gif_filename'});
+  parser.add_argument('--display', {type: 'str'});
+  parser.add_argument('--colors', {type: 'str'});
+  parser.add_argument('--zoom', {type: 'int'});
   let args = parser.parse_args();
-  args.display = null;
   if (args.gif_filename) {
     args.display = new gifRenderer.GifRenderer(args.gif_filename,
                                                args.num_frames);

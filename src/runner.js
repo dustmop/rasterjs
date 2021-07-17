@@ -34,9 +34,15 @@ Runner.prototype.initialize = function () {
   let options = this.env.getOptions();
   this.numFrames = options.num_frames || -1;
   if (options.display) {
-    this.display = options.display;
+    this.useDisplay(options.display);
   }
   this.display.initialize();
+  if (options.colors) {
+    this.useColors(options.colors);
+  }
+  if (options.zoom) {
+    this.setZoom(options.zoom);
+  }
 }
 
 Runner.prototype.resetState = function() {
@@ -97,7 +103,7 @@ Runner.prototype.useColors = function(obj) {
     } else if (text == 'grey') {
       this.aPlane.assignRgbMap(rgbMap.rgb_map_grey);
     } else {
-      throw 'Unknown system: ' + text;
+      throw 'Unknown color set: ' + text;
     }
   } else if (Array.isArray(obj)) {
     let list = obj;

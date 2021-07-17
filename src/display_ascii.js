@@ -34,39 +34,13 @@ DisplayAscii.prototype.renderLoop = function(nextFrame) {
   }
 }
 
+let alphabet = (
+  ' ._-=/|!^*%&' +
+  'abcdefghijklmnopqrstuvwxyz' +
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZ');
+
 function byteToAscii(b) {
-  if (b == 0) {
-    return ' ';
-  } else if (b == 1) {
-    return '.';
-  } else if (b == 2) {
-    return '_';
-  } else if (b == 3) {
-    return '-';
-  } else if (b == 4) {
-    return '=';
-  } else if (b == 5) {
-    return '/';
-  } else if (b == 6) {
-    return '|';
-  } else if (b == 20) {
-    return 'v';
-  } else if (b == 24) {
-    return 'x';
-  } else if (b == 25) {
-    return '*';
-  } else if (b == 26) {
-    return 'X';
-  } else if (b == 28) {
-    return 'A';
-  } else if (b == 29) {
-    return '%';
-  } else if (b == 30) {
-    return 'y';
-  } else if (b == 31) {
-    return 'Y';
-  }
-  return '?';
+  return alphabet[b % 64];
 }
 
 module.exports.DisplayAscii = DisplayAscii;

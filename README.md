@@ -22,13 +22,15 @@ ra.fillFlood(22, 8);
 ra.show();
 ```
 
+![](asset/example.png)
+
 # Installation
 
 ```
 npm install raster
 ```
 
-Building requires the SDL2 source files.
+Building requires [installing SDL2](https://www.libsdl.org/download-2.0.php).
 
 # Environments
 

@@ -4,6 +4,15 @@ raster.js is a graphics library for javascript that is designed for pixel art, 2
 
 It aims to serve as a tool for prototyping, experimentation, and learning about how old school graphics worked. It provides precise pixel control, and portability across multiple javascript environments and rendering contexts.
 
+# Features
+
+* Pixel based, hard edges, no anti-aliasing
+* Limited palette, default 64 colors, expandable to 256
+* Runs in multiple places: in browser, in sdl, on raspberry pi
+* Easy utilities for saving gifs and pngs
+* Colors presets for machines such as the NES, ZX Spectrum, Pico-8, Gameboy, DOS
+* Handy algorithms for immitating classic rendering routines
+
 # Example Usage
 
 ```

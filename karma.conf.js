@@ -4,7 +4,7 @@ module.exports = function(config) {
     files: [
       'test/web/**/*.js',
       {pattern: 'test/testdata/*.png', watched: false, included: false, served: true},
-      'dist/main.js'
+      'dist/raster.min.js'
     ],
     plugins: [
       'karma-mocha',

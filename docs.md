@@ -43,7 +43,9 @@ Names of pre-existing color sets:
 
 `gameboy`: Colors used by the Gameboy handheld console.
 
-`zx-spectrum`: Colors used by the ZX Spectrum 8-bit console.
+`zx-spectrum`: Colors used by the ZX Spectrum 8-bit computer.
+
+`c64`: Colors used by the Commodore 64 8-bit computer.
 
 `pico8`: Colors used by the Pico-8 fantasy console.
 

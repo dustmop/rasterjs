@@ -96,6 +96,25 @@ const rgb_map_zx_spectrum = [
   0xffffff, // bright white
 ];
 
+const rgb_map_c64 = [
+  0x000000,
+  0xffffff,
+  0x880000,
+  0xaaffee,
+  0xcc44cc,
+  0x00cc55,
+  0x0000aa,
+  0xeeee77,
+  0xdd8855,
+  0x664400,
+  0xff7777,
+  0x333333,
+  0x777777,
+  0xaaff66,
+  0x0088ff,
+  0xbbbbbb,
+];
+
 const rgb_map_grey = function() {
   let colors = [];
   for (let k = 0; k < 0x100; k++) {
@@ -112,3 +131,4 @@ module.exports.rgb_map_grey    = rgb_map_grey;
 module.exports.rgb_map_gameboy = rgb_map_gameboy;
 module.exports.rgb_map_pico8   = rgb_map_pico8;
 module.exports.rgb_map_zx_spectrum = rgb_map_zx_spectrum;
+module.exports.rgb_map_c64     = rgb_map_c64;

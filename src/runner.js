@@ -100,6 +100,8 @@ Runner.prototype.useColors = function(obj) {
       this.aPlane.assignRgbMap(rgbMap.rgb_map_pico8);
     } else if (text == 'zx-spectrum') {
       this.aPlane.assignRgbMap(rgbMap.rgb_map_zx_spectrum);
+    } else if (text == 'c64') {
+      this.aPlane.assignRgbMap(rgbMap.rgb_map_c64);
     } else if (text == 'grey') {
       this.aPlane.assignRgbMap(rgbMap.rgb_map_grey);
     } else {

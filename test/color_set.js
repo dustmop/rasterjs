@@ -43,6 +43,14 @@ describe('Color set', function() {
     util.saveTmpCompareTo(ra, 'test/testdata/colors_zx_spectrum.png');
   });
 
+  it('c64', function() {
+    ra.resetState();
+    ra.setSize({w: 8, h: 8})
+    ra.useColors('c64');
+    ra.fillDot([[1,2],[3,4]]);
+    util.saveTmpCompareTo(ra, 'test/testdata/colors_c64.png');
+  });
+
   it('grey', function() {
     ra.resetState();
     ra.setSize({w: 8, h: 8})

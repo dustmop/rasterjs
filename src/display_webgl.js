@@ -198,13 +198,19 @@ Display.prototype.renderLoop = function(nextFrame, num, exitAfter, finalFunc) {
       gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, pl.width, pl.height, gl.RGBA,
                        gl.UNSIGNED_BYTE, frontBuffer);
       gl.drawArrays(gl.TRIANGLES, 0, 6);
+      if (num > 0) {
+        num--;
+      }
     }
 
     // Create the next frame.
     nextFrame();
 
-    if (finalFunc) {
-      finalFunc();
+    if (num == 0) {
+      if (finalFunc) {
+        finalFunc();
+      }
+      return;
     }
 
     // Wait for next frame.

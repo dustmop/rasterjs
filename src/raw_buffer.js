@@ -90,6 +90,15 @@ RawBuffer.prototype.putSequence = function(seq) {
       }
       // Range only goes straight horizontal or straight vertical
       if (x0 == x1) {
+        if (x0 < 0 || x1 >= this.width) {
+          return;
+        }
+        if (y0 < 0) {
+          y0 = 0;
+        }
+        if (y1 >= this.height) {
+          y1 = this.height - 1;
+        }
         let x = x0;
         for (let y = y0; y <= y1; y++) {
           let k = y * this.pitch + x;
@@ -98,6 +107,15 @@ RawBuffer.prototype.putSequence = function(seq) {
           this.data[k*4+2] = b;
         }
       } else if (y0 == y1) {
+        if (y0 < 0 || y1 >= this.height) {
+          return;
+        }
+        if (x0 < 0) {
+          x0 = 0;
+        }
+        if (x1 >= this.width) {
+          x1 = this.width - 1;
+        }
         let y = y0;
         for (let x = x0; x <= x1; x++) {
           let k = y * this.pitch + x;

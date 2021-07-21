@@ -71,13 +71,19 @@ Display.prototype.renderLoop = function(nextFrame, num, exitAfter, finalFunc) {
       let buff = Uint8ClampedArray.from(frontBuffer);
       let image = new ImageData(buff, pl.width, pl.height);
       ctx.putImageData(image, 0, 0);
+      if (num > 0) {
+        num--;
+      }
     }
 
     // Create the next frame.
     nextFrame();
 
-    if (finalFunc) {
-      finalFunc();
+    if (num == 0) {
+      if (finalFunc) {
+        finalFunc();
+      }
+      return;
     }
 
     // Wait for next frame.

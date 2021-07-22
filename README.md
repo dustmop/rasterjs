@@ -73,7 +73,7 @@ ra.setZoom(8);
 
 ## Drawing pixels
 
-Clearing the display can be done using the `fillBackground` method. Raster.js uses a limited color palette, just like many retro computer systems, limited to at most 256 colors. The default palette can be found in the "colors" section. Functions that require a color parameter, such as `fillBackground`, therefore only require a single numerical parameter, which uses that color from the palette.
+Clearing the display can be done using the `fillBackground` method. Raster.js uses a limited color palette, just like many retro computer systems, limited to at most 256 colors. The default palette can be found in the "colors" section below. Functions that require a color parameter, such as `fillBackground`, therefore only require a single numerical parameter, which uses that color from the palette.
 
 ```
 ra.fillBackground(12);
@@ -154,6 +154,14 @@ Change the zoom level.
 ```
 
 Use a specific colorSet. See `useColors` in the docs for supported colorSets.
+
+# Colors
+
+The current default colorset for raster.js is the "quick" palette, shown here:
+
+![](asset/quick-colorset.png)
+
+This is likely to change in a future version. Users should either add `ra.useColors('quick')` to their code, or be prepared to update the colors they use once this change happens.
 
 # API
 

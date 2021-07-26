@@ -174,10 +174,10 @@ Raster.prototype.run = function(renderFunc) {
 
 Raster.prototype.show = function(renderFunc, finalFunc) {
   var runner = this.runner;
-  if (renderFunc) {
-    renderFunc();
-  }
   runner.then(function() {
+    if (renderFunc) {
+      renderFunc();
+    }
     runner.show(finalFunc);
   });
 }

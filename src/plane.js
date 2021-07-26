@@ -312,6 +312,9 @@ Plane.prototype.fillFrame = function(options, fillerFunc) {
 }
 
 Plane.prototype.drawImage = function(img, x, y) {
+  if (!img.data) {
+    throw 'drawImage: image has been opened, but not yet read';
+  }
   let [tx, ty] = this._getTranslation();
   // TODO: Not just dirty, after drawImage we're not sure if the image
   // is 8-bit safe, or if it now needs trueColor

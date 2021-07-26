@@ -32,7 +32,7 @@ Resources.prototype.openImage = function(filename, imgPlane) {
 }
 
 Resources.prototype.allImagesLoaded = function() {
-  return self.numLoadDone == self.numToLoad;
+  return this.numLoadDone == this.numToLoad;
 }
 
 module.exports.Resources = Resources;

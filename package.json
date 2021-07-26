@@ -5,6 +5,10 @@
   "author": "Dustin Long <me@dustmop.io> (dustmop.io)",
   "gypfile": true,
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dustmop/rasterjs.git"
+  },
   "scripts": {
     "test": "mocha",
     "web-test": "karma start --single-run --browsers FirefoxHeadless karma.conf.js",

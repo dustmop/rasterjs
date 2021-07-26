@@ -1,6 +1,6 @@
+const cppmodule = require('../build/Release/native');
 const GIFEncoder = require('gifencoder');
 const pngFileStream = require('png-file-stream');
-const PNG = require("pngjs").PNG;
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
@@ -43,56 +43,28 @@ SaveRenderer.prototype.renderLoop = function(nextFrame) {
   for (let count = 0; count < numFrames; count++) {
     nextFrame();
     let frameNum = leftPad(count, 3, '0');
-    let imgData = this.plane.trueBuffer();
-    // TODO: Somewhat of a hack.
-    let type = imgData.constructor.name;
-    if (type == 'ArrayBuffer') {
-      imgData = new Uint8Array(imgData);
-    }
-    let makePng = new PNG({width: width, height: height});
-    for (let y = 0; y < height; y++) {
-      for (let x = 0; x < width; x++) {
-        let i = (width*y + x) * 4;
-        // PNG are stored in reverse byte order.
-        makePng.data[i+0] = imgData[i+3];
-        makePng.data[i+1] = imgData[i+2];
-        makePng.data[i+2] = imgData[i+1];
-        makePng.data[i+3] = imgData[i+0];
-      }
-    }
-    let filename = `${this.tmpdir}/${frameNum}.png`;
-    makePng.pack().pipe(fs.createWriteStream(filename))
-      .on('finish', function() {
-        doneCount++;
-      });
+    let outFile = `${this.tmpdir}/${frameNum}.png`;
+    this.plane.save(outFile);
   }
 
   // Wait for each frame to render.
-  let self = this;
-  let waitToComplete = function() {
-    if (doneCount < numFrames) {
-      setImmediate(waitToComplete);
-      return;
-    }
-    if (self.isGif) {
-      // Actually write the gif.
-      const gifOpt = {repeat: 0, delay: 16, quality: 4};
-      const encoder = new GIFEncoder(width, height);
-      const stream = pngFileStream(self.tmpdir + '/*.png')
-            .pipe(encoder.createWriteStream(gifOpt))
-            .pipe(fs.createWriteStream(self.targetPath));
-      stream.on('finish', function () {
-        console.log(`wrote ${self.targetPath}`);
-      });
-      return;
-    } else {
-      // Copy the first frame to our target path.
-      let infile = `${self.tmpdir}/000.png`;
-      let outfile = self.targetPath;
-      fs.copyFileSync(infile, outfile);
-    }
+  if (this.isGif) {
+    // Actually write the gif.
+    const gifOpt = {repeat: 0, delay: 16, quality: 4};
+    const encoder = new GIFEncoder(width, height);
+    const stream = pngFileStream(this.tmpdir + '/*.png')
+          .pipe(encoder.createWriteStream(gifOpt))
+          .pipe(fs.createWriteStream(this.targetPath));
+    stream.on('finish', function () {
+      console.log(`wrote ${this.targetPath}`);
+    });
+    return;
+  } else {
+    // Copy the first frame to our target path.
+    let infile = `${this.tmpdir}/000.png`;
+    let outfile = this.targetPath;
+    fs.copyFileSync(infile, outfile);
   }
-  waitToComplete();
 }
 
 function leftPad(value, size, fill) {

@@ -28,7 +28,7 @@ describe('Gif', function() {
       if (error) {
         throw error;
       }
-      let goldenPath = 'test/testdata/fill_keep2.png';
+      let goldenPath = 'test/testdata/fill_keep.png';
       assert.ok(util.compareFiles(goldenPath, tmpout), `Failed file comparison, expect: ${goldenPath}, actual: ${tmpout}`);
     });
   });

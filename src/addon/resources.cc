@@ -1,3 +1,7 @@
+#include <string>
+#include <fstream>
+#include <streambuf>
+
 #include "resources.h"
 
 #include "image_load_save.h"
@@ -10,8 +14,9 @@ void Resources::InitClass(Napi::Env env, Napi::Object exports) {
       "Resources",
       {InstanceMethod("clear", &Resources::Clear),
        InstanceMethod("openImage", &Resources::OpenImage),
+       InstanceMethod("openText", &Resources::OpenText),
        InstanceMethod("saveTo", &Resources::SaveTo),
-       InstanceMethod("allImagesLoaded", &Resources::AllImagesLoaded),
+       InstanceMethod("allLoaded", &Resources::AllLoaded),
   });
   g_resourcesConstructor = Napi::Persistent(func);
   g_resourcesConstructor.SuppressDestruct();
@@ -71,6 +76,26 @@ Napi::Value Resources::OpenImage(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, 0);
 }
 
+Napi::Value Resources::OpenText(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+
+  Napi::Value fileVal = info[0];
+  Napi::String fileStr = fileVal.ToString();
+  std::string filename = fileStr.Utf8Value();
+
+  std::ifstream reader(filename.c_str());
+  std::string content((std::istreambuf_iterator<char>(reader)),
+                       std::istreambuf_iterator<char>());
+
+  Napi::Object result = Napi::Object::New(env);
+  result.Set("src", fileStr);
+
+  Napi::String str = Napi::String::New(env, content);
+  result.Set("content", str);
+
+  return result;
+}
+
 Napi::Value Resources::SaveTo(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
@@ -95,7 +120,7 @@ Napi::Value Resources::SaveTo(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, 0);
 }
 
-Napi::Value Resources::AllImagesLoaded(const Napi::CallbackInfo& info) {
+Napi::Value Resources::AllLoaded(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   return Napi::Number::New(env, 1);
 }

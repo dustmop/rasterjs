@@ -79,6 +79,10 @@ Raster.prototype.getPaletteAll = function(opt) {
   return this.runner.getPaletteAll(opt);
 }
 
+Raster.prototype.setFont = function(filename) {
+  this.runner.setFont(filename);
+}
+
 ////////////////////////////////////////
 // Rendering functionality
 
@@ -156,6 +160,10 @@ Raster.prototype.fillFrame = function() {
   runner.then(function() {
     runner.dispatch(['fillFrame', args]);
   });
+}
+
+Raster.prototype.drawText = function() {
+  this.runner.dispatch(['drawText', arguments]);
 }
 
 ////////////////////////////////////////

@@ -322,6 +322,46 @@ Plane.prototype.drawImage = function(img, x, y) {
   this.rawBuffer.putImage(img, tx + x, ty + y);
 }
 
+Plane.prototype.drawText = function(text, x, y) {
+  if (!this.font) {
+    throw 'drawText: no font has been assigned';
+  }
+  if (!this.font.glyphs) {
+    throw 'drawText: font has been opened, but not yet read';
+  }
+
+  let put = [];
+  let cursor = 0;
+
+  for (let i = 0; i < text.length; i++) {
+    let ch = text[i];
+    let num = ch.charCodeAt(0);
+    let name = num.toString(16);
+    let glyph = this.font.glyphs[name];
+
+    if (!glyph) {
+      console.log(`glyph for '${name}' not found`);
+      continue;
+    }
+
+    let len = 0;
+    for (let a = 0; a < glyph.length; a++) {
+      let row = glyph[a];
+      if (row.length > len) {
+        len = row.length;
+      }
+      for (let b = 0; b < row.length; b++) {
+        if (row[b] == '#') {
+          put.push([x + cursor + b, y + a]);
+        }
+      }
+    }
+    cursor += len;
+  }
+  this.dirtyState = D_DIRTY;
+  this.rawBuffer.putSequence(put);
+}
+
 Plane.prototype.nextFrame = function() {
   let old = this.dirtyState;
   if (this.dirtyState == D_DID_FILL || this.dirtyState == D_CLEAN) {

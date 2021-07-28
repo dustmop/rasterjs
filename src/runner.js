@@ -5,6 +5,7 @@ const frameMemory = require('./frame_memory.js');
 const paletteEntry = require('./palette_entry.js');
 const geometry = require('./geometry.js');
 const imageLoader = require('./image_loader.js');
+const textLoader = require('./text_loader.js');
 const displayAscii = require('./display_ascii.js');
 const plane = require('./plane.js');
 
@@ -31,6 +32,7 @@ Runner.prototype.initialize = function () {
   this._config.titleText = '';
   this.aPlane.assignRgbMap(rgbMap.rgb_map_default);
   this.imgLoader = new imageLoader.Loader(this.resources);
+  this.textLoader = new textLoader.TextLoader(this.resources);
   let options = this.env.getOptions();
   this.numFrames = options.num_frames || -1;
   if (options.display) {
@@ -211,6 +213,11 @@ Runner.prototype.drawImage = function(img, x, y) {
   this.aPlane.drawImage(img, x, y);
 }
 
+Runner.prototype.drawText_params = ['text:s', 'x:i', 'y:i'];
+Runner.prototype.drawText = function(text, x, y) {
+  this.aPlane.drawText(text, x, y);
+}
+
 Runner.prototype._doRender = function(num, exitAfter, renderFunc, betweenFunc, finalFunc) {
   let plane = this.aPlane;
   let self = this;
@@ -279,6 +286,12 @@ Runner.prototype.makeShape = function(method, params) {
     let [filepath] = params;
     return this.loadImage(filepath);
   }
+}
+
+Runner.prototype.setFont = function(filename) {
+  let font = this.textLoader.loadFont(filename);
+  // TODO: Similar to rgbMap, put this as part of `scene` object.
+  this.aPlane.font = font;
 }
 
 Runner.prototype.handleEvent = function(eventName, callback) {

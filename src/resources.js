@@ -31,7 +31,20 @@ Resources.prototype.openImage = function(filename, imgPlane) {
   imgElem.src = '/' + filename;
 }
 
-Resources.prototype.allImagesLoaded = function() {
+Resources.prototype.openText = function(filename) {
+  let self = this;
+  let file = {src: filename};
+  self.numToLoad++;
+  fetch(filename).then(function(res) {
+    res.text().then(function(text) {
+      file.handleFileRead(text);
+      self.numLoadDone++;
+    });
+  });
+  return file;
+}
+
+Resources.prototype.allLoaded = function() {
   return this.numLoadDone == this.numToLoad;
 }
 

@@ -4,6 +4,7 @@ module.exports = function(config) {
     files: [
       'test/web/**/*.js',
       {pattern: 'test/testdata/*.png', watched: false, included: false, served: true},
+      {pattern: 'test/testdata/*.yaff', watched: false, included: false, served: true},
       'dist/raster.min.js'
     ],
     plugins: [
@@ -28,7 +29,8 @@ module.exports = function(config) {
       },
     },
     proxies: {
-      '/img/': '/base/test/testdata/'
+      '/img/': '/base/test/testdata/',
+      '/asset/': '/base/test/testdata/',
     },
     webpack: {
     }

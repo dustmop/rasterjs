@@ -1,0 +1,5 @@
+Name: Romulus
+Copyright: Pix3M, hosted by OpenGameArt.org
+URL: https://opengameart.org/content/pixel-fonts-by-pix3m
+License: CC-BY 3.0
+Link: https://creativecommons.org/licenses/by/3.0/

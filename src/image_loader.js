@@ -34,7 +34,7 @@ Loader.prototype.loadImage = function(filename) {
 Loader.prototype.resolveAll = function(cb) {
   let self = this;
   function waitForImageLoad() {
-    if (self.resources.allImagesLoaded()) {
+    if (self.resources.allLoaded()) {
       return cb();
     }
     setTimeout(waitForImageLoad, 0);

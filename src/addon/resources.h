@@ -14,8 +14,9 @@ class Resources : public Napi::ObjectWrap<Resources> {
 
   Napi::Value Clear(const Napi::CallbackInfo& info);
   Napi::Value OpenImage(const Napi::CallbackInfo& info);
+  Napi::Value OpenText(const Napi::CallbackInfo& info);
   Napi::Value SaveTo(const Napi::CallbackInfo& info);
-  Napi::Value AllImagesLoaded(const Napi::CallbackInfo& info);
+  Napi::Value AllLoaded(const Napi::CallbackInfo& info);
 
 };
 

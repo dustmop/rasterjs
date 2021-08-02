@@ -208,7 +208,7 @@ Runner.prototype.loadImage = function(filepath) {
   return this.imgLoader.loadImage(filepath);
 }
 
-Runner.prototype.drawImage_params = ['img:a', 'x:i', 'y:i'];
+Runner.prototype.drawImage_params = ['img:a', 'x?i', 'y?i'];
 Runner.prototype.drawImage = function(img, x, y) {
   this.aPlane.drawImage(img, x, y);
 }

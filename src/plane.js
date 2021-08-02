@@ -315,6 +315,14 @@ Plane.prototype.drawImage = function(img, x, y) {
   if (!img.data) {
     throw 'drawImage: image has been opened, but not yet read';
   }
+  x = x || 0;
+  y = y || 0;
+  if (this.width == 100 && this.height == 100) {
+    // TODO: Hack, should use a real sentinel value.
+    // TODO: Set the colorset as well.
+    // TOOD: Don't do this if any draw/fill methods were called.
+    this.setSize(img.width, img.height);
+  }
   let [tx, ty] = this._getTranslation();
   // TODO: Not just dirty, after drawImage we're not sure if the image
   // is 8-bit safe, or if it now needs trueColor

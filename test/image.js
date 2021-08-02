@@ -20,4 +20,14 @@ describe('Image', function() {
 
     util.saveTmpCompareTo(ra, 'test/testdata/composite.png');
   });
+
+  it('draw without size', function() {
+    ra.resetState();
+
+    let img = ra.loadImage('test/testdata/fill_oscil.png');
+    ra.drawImage(img);
+
+    util.saveTmpCompareTo(ra, 'test/testdata/fill_oscil.png');
+  });
+
 });

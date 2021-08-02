@@ -7,7 +7,7 @@ describe('Gif', function() {
     let tmpdir = util.mkTmpDir();
     let tmpout = tmpdir + '/actual.gif';
     let script = 'test/testdata/scripts/spin.js';
-    let cmd = `node ${script} --save ${tmpout} --num-frames 48`;
+    let cmd = `node ${script} --save ${tmpout} --num-frames 45`;
     let cwd = process.cwd();
     child_process.exec(cmd, function(error, stdout, stderr) {
       if (error) {

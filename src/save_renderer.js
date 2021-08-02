@@ -50,13 +50,14 @@ SaveRenderer.prototype.renderLoop = function(nextFrame) {
   // Wait for each frame to render.
   if (this.isGif) {
     // Actually write the gif.
+    const self = this;
     const gifOpt = {repeat: 0, delay: 16, quality: 4};
     const encoder = new GIFEncoder(width, height);
     const stream = pngFileStream(this.tmpdir + '/*.png')
           .pipe(encoder.createWriteStream(gifOpt))
           .pipe(fs.createWriteStream(this.targetPath));
     stream.on('finish', function () {
-      console.log(`wrote ${this.targetPath}`);
+      console.log(`wrote ${self.targetPath}`);
     });
     return;
   } else {

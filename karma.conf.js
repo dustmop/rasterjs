@@ -1,5 +1,8 @@
 module.exports = function(config) {
   config.set({
+    client: {
+      args: parseTestPattern(process.argv)
+    },
     frameworks: ['mocha', 'webpack'],
     files: [
       'test/web/**/*.js',
@@ -35,4 +38,19 @@ module.exports = function(config) {
     webpack: {
     }
   })
+}
+
+// Ability to run tests 1 at a time, by name.
+// Source: https://medium.com/@bebraw/running-individual-tests-with-karma-mocha-89aece8ba18b
+function parseTestPattern(argv) {
+  var found = false;
+  var pattern = argv.map(function(v) {
+    if (found) {
+      return v;
+    }
+    if (v === '--') {
+      found = true;
+    }
+  }).filter(function(a) {return a}).join(' ');
+  return pattern ? ['--grep', pattern] : [];
 }

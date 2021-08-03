@@ -11,7 +11,7 @@
   },
   "scripts": {
     "test": "mocha",
-    "web-test": "karma start --single-run --browsers FirefoxHeadless karma.conf.js",
+    "web-test": "karma start --single-run --browsers FirefoxHeadless karma.conf.js --",
     "build": "webpack"
   },
   "dependencies": {

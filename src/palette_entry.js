@@ -47,9 +47,7 @@ PaletteEntry.prototype.hex = function() {
   return '0x' + val;
 }
 
-function PaletteCollection(env, res, items) {
-  this.env = env;
-  this.res = res;
+function PaletteCollection(items) {
   this.items = items;
   // Let the collection be used like an Array.
   for (let i = 0; i < this.items.length; i++) {
@@ -62,7 +60,17 @@ function PaletteCollection(env, res, items) {
 }
 
 PaletteCollection.prototype.save = function(filename) {
-  return savePaletteCollection(this.env, this.res, this, filename);
+  let target = new plane.Plane();
+  target.setSize(40, 20 * this.items.length);
+  target.useColors([]);
+  target.fillTrueBackground(0x606060);
+  for (let i = 0; i < this.items.length; i++) {
+    let rgb = this.items[i].rgb;
+    let y = i * 20;
+    target.setTrueColor(rgb);
+    target.fillRect(2, 2 + y, 36, 16);
+  }
+  target.save(filename);
 }
 
 PaletteCollection.prototype.toString = function() {
@@ -76,21 +84,6 @@ PaletteCollection.prototype._stringify = function(depth, opts) {
     elems.push(`${i}: ${val}`);
   }
   return 'PaletteCollection{' + elems.join(', ') + '}';
-}
-
-function savePaletteCollection(env, resources, pc, filename) {
-  let rawBuffer = env.makeRawBuffer(resources);
-  let target = new plane.Plane(rawBuffer, {saveService: resources});
-  target.setSize(40, 20 * pc.length);
-  target.assignRgbMap([]);
-  target.fillTrueBackground(0x606060);
-  for (let i = 0; i < pc.length; i++) {
-    let rgb = pc[i].rgb;
-    let y = i * 20;
-    target.setTrueColor(rgb);
-    target.fillRect(2, 2 + y, 36, 16);
-  }
-  target.save(filename);
 }
 
 module.exports.PaletteEntry = PaletteEntry;

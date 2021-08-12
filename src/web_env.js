@@ -15,8 +15,7 @@ function makeDisplay() {
   return new display2dCanvas.Display();
 }
 
-function makeRawBuffer(res) {
-  // TODO: raw_buffer constructor should accept resources
+function makeRawBuffer() {
   return new rawBuffer.RawBuffer();
 }
 

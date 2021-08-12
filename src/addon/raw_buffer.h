@@ -29,18 +29,16 @@ class RawBuffer : public Napi::ObjectWrap<RawBuffer> {
   Napi::Value PutImage(const Napi::CallbackInfo& info);
   Napi::Value PutFrameMemory(const Napi::CallbackInfo& info);
   Napi::Value PutColorChange(const Napi::CallbackInfo& info);
+  Napi::Value UseColors(const Napi::CallbackInfo& info);
 
   void prepare(const Napi::Env& env);
   void putRange(int x0, int y0, int x1, int y1, uint32_t color);
+  void loadRgbMap(const Napi::CallbackInfo &info, int* outSize);
 
-  // Configuration, safe defaults.
-  int rgbMapIndex;
-  int rgbMapSize;
   int rgbMap[256];
   uint32_t frontColor;
   uint32_t backColor;
  public:
-  // lazy allocation of buffer
   int rowSize;
   int numElems;
   uint32_t* rawBuff;
@@ -50,7 +48,8 @@ class RawBuffer : public Napi::ObjectWrap<RawBuffer> {
   int width;
   int height;
   int needErase;
-  Resources* res;
+  // The color set to translate 8-bit values to rgb
+  napi_ref colors;
 };
 
 #endif

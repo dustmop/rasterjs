@@ -8,6 +8,7 @@ const imageLoader = require('./image_loader.js');
 const textLoader = require('./text_loader.js');
 const displayAscii = require('./display_ascii.js');
 const plane = require('./plane.js');
+const scene = require('./scene.js');
 
 ////////////////////////////////////////
 
@@ -16,8 +17,9 @@ const FRAMES_LOOP_FOREVER = -1;
 function Runner(env) {
   this.resources = env.makeResources();
   this.display = env.makeDisplay();
-  let rawBuffer = env.makeRawBuffer(this.resources);
-  this.aPlane = new plane.Plane(rawBuffer, {saveService: this.resources});
+  this.scene = new scene.Scene(this.resources, env, rgbMap.rgb_map_default);
+  plane.setGlobalScene(this.scene);
+  this.aPlane = new plane.Plane();
   this.env = env;
   this._config = {};
   this.numFrames = FRAMES_LOOP_FOREVER;
@@ -30,7 +32,7 @@ Runner.prototype.initialize = function () {
   this._config.screenHeight = 100;
   this._config.zoomScale = 1;
   this._config.titleText = '';
-  this.aPlane.assignRgbMap(rgbMap.rgb_map_default);
+  this.scene.colorSet.assignRgbMap(rgbMap.rgb_map_default);
   this.imgLoader = new imageLoader.Loader(this.resources);
   this.textLoader = new textLoader.TextLoader(this.resources);
   let options = this.env.getOptions();
@@ -48,8 +50,8 @@ Runner.prototype.initialize = function () {
 }
 
 Runner.prototype.resetState = function() {
-  this.aPlane.clear();
-  this.aPlane.assignRgbMap(rgbMap.rgb_map_default);
+  this.scene.colorSet.assignRgbMap(rgbMap.rgb_map_default);
+  this.scene.clearPlane(this.aPlane);
 }
 
 Runner.prototype.then = function(cb) {
@@ -91,29 +93,29 @@ Runner.prototype.useColors = function(obj) {
   if (typeof obj == 'string') {
     let text = obj;
     if (text == 'quick') {
-      this.aPlane.assignRgbMap(rgbMap.rgb_map_default);
+      this.scene.colorSet.assignRgbMap(rgbMap.rgb_map_default);
     } else if (text == 'dos') {
-      this.aPlane.assignRgbMap(rgbMap.rgb_map_dos);
+      this.scene.colorSet.assignRgbMap(rgbMap.rgb_map_dos);
     } else if (text == 'nes') {
-      this.aPlane.assignRgbMap(rgbMap.rgb_map_nes);
+      this.scene.colorSet.assignRgbMap(rgbMap.rgb_map_nes);
     } else if (text == 'gameboy') {
-      this.aPlane.assignRgbMap(rgbMap.rgb_map_gameboy);
+      this.scene.colorSet.assignRgbMap(rgbMap.rgb_map_gameboy);
     } else if (text == 'pico8') {
-      this.aPlane.assignRgbMap(rgbMap.rgb_map_pico8);
+      this.scene.colorSet.assignRgbMap(rgbMap.rgb_map_pico8);
     } else if (text == 'zx-spectrum') {
-      this.aPlane.assignRgbMap(rgbMap.rgb_map_zx_spectrum);
+      this.scene.colorSet.assignRgbMap(rgbMap.rgb_map_zx_spectrum);
     } else if (text == 'c64') {
-      this.aPlane.assignRgbMap(rgbMap.rgb_map_c64);
+      this.scene.colorSet.assignRgbMap(rgbMap.rgb_map_c64);
     } else if (text == 'grey') {
-      this.aPlane.assignRgbMap(rgbMap.rgb_map_grey);
+      this.scene.colorSet.assignRgbMap(rgbMap.rgb_map_grey);
     } else {
       throw 'Unknown color set: ' + text;
     }
   } else if (Array.isArray(obj)) {
     let list = obj;
-    this.aPlane.assignRgbMap(list);
+    this.scene.colorSet.assignRgbMap(list);
   } else if (!obj) {
-    this.aPlane.assignRgbMap([]);
+    this.scene.colorSet.assignRgbMap([]);
   }
 }
 
@@ -290,8 +292,7 @@ Runner.prototype.makeShape = function(method, params) {
 
 Runner.prototype.setFont = function(filename) {
   let font = this.textLoader.loadFont(filename);
-  // TODO: Similar to rgbMap, put this as part of `scene` object.
-  this.aPlane.font = font;
+  this.scene.font = font;
 }
 
 Runner.prototype.handleEvent = function(eventName, callback) {
@@ -368,7 +369,7 @@ Runner.prototype.getPaletteAll = function(opt) {
     all.push(ent);
   }
 
-  return new paletteEntry.PaletteCollection(this.env, this.resources, all);
+  return new paletteEntry.PaletteCollection(all);
 }
 
 module.exports.Runner = Runner;

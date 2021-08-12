@@ -25,8 +25,7 @@ void RawBuffer::InitClass(Napi::Env env, Napi::Object exports) {
        InstanceMethod("setColor", &RawBuffer::SetColor),
        InstanceMethod("fillBackground", &RawBuffer::FillBackground),
        InstanceMethod("retrieveTrueContent", &RawBuffer::RetrieveTrueContent),
-       InstanceMethod("assignRgbMap", &RawBuffer::AssignRgbMap),
-       InstanceMethod("addRgbMapEntry", &RawBuffer::AddRgbMapEntry),
+       InstanceMethod("useColors", &RawBuffer::UseColors),
        InstanceMethod("putSequence", &RawBuffer::PutSequence),
        InstanceMethod("putImage", &RawBuffer::PutImage),
        InstanceMethod("putFrameMemory", &RawBuffer::PutFrameMemory),
@@ -43,11 +42,6 @@ RawBuffer::RawBuffer(const Napi::CallbackInfo& info) : Napi::ObjectWrap<RawBuffe
   Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
 
-  Napi::Object resObj = info[0].As<Napi::Object>();
-  Resources* res = Napi::ObjectWrap<Resources>::Unwrap(resObj);
-
-  this->rgbMapIndex = 0;
-  this->rgbMapSize = 0;
   this->frontColor = WHITE_32BIT;
   this->backColor = BLACK_32BIT;
   this->rowSize = 0;
@@ -56,7 +50,6 @@ RawBuffer::RawBuffer(const Napi::CallbackInfo& info) : Napi::ObjectWrap<RawBuffe
   this->width = 0;
   this->height = 0;
   this->needErase = true;
-  this->res = res;
 };
 
 Napi::Object RawBuffer::NewInstance(Napi::Env env, Napi::Value arg) {
@@ -138,44 +131,16 @@ Napi::Value RawBuffer::Clear(const Napi::CallbackInfo& info) {
 
 #define OPAQUE 255
 
-Napi::Value RawBuffer::AssignRgbMap(const Napi::CallbackInfo& info) {
-  Napi::Value elem = info[0];
-  Napi::Object list = elem.ToObject();
-  Napi::Value list_length = list.Get("length");
-
-  int num = list_length.As<Napi::Number>().Int32Value();
-  this->rgbMapIndex = num;
-  this->rgbMapSize = num;
-
-  for (int i = 0; i < num; i++) {
-    elem = list[uint32_t(i)];
-    int val = elem.As<Napi::Number>().Int32Value();
-    // Store values as little-endian RGBA.
-    this->rgbMap[i] = val * 0x100 + 0xff;
-  }
-
-  return info.Env().Null();
-}
-
-Napi::Value RawBuffer::AddRgbMapEntry(const Napi::CallbackInfo& info) {
+Napi::Value RawBuffer::UseColors(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   Napi::Value val = info[0];
-  int num = val.As<Napi::Number>().Int32Value();
-  int size = this->rgbMapSize;
-  int rgb = num * 0x100 + 0xff;
-  for (int i = 0; i < size; i++) {
-    if (this->rgbMap[i] == rgb) {
-      return Napi::Number::New(env, i);
-    }
-  }
-  // Add it to the map
-  int index = this->rgbMapIndex;
-  this->rgbMap[index] = rgb;
-  if (size < 0x100) {
-    this->rgbMapSize++;
-  }
-  this->rgbMapIndex = (this->rgbMapIndex + 1) % 0x100;
-  return Napi::Number::New(env, index);
+
+  Napi::Object colorSet = val.ToObject();
+  Napi::Value rgbMapVal = colorSet.Get("rgbMap");
+
+  Napi::Value colorSetVal(env, val);
+  napi_create_reference(env, colorSetVal, 1, &this->colors);
+  return info.Env().Null();
 }
 
 Napi::Value RawBuffer::RetrieveTrueContent(const Napi::CallbackInfo& info) {
@@ -194,8 +159,11 @@ Napi::Value RawBuffer::RetrieveTrueContent(const Napi::CallbackInfo& info) {
   // match the buffer
   pixel_data.resize(y_size * x_size);
 
+  int rgbMapSize;
+  this->loadRgbMap(info, &rgbMapSize);
+
   // Read the already existing color set.
-  for (int i = 0; i < this->rgbMapSize; i++) {
+  for (int i = 0; i < rgbMapSize; i++) {
     rgb_val = this->rgbMap[i];
     color_use_lookup[rgb_val] = i;
     num_colors++;
@@ -251,7 +219,10 @@ Napi::Value RawBuffer::SetColor(const Napi::CallbackInfo& info) {
   Napi::Value val = info[0];
   int color = val.As<Napi::Number>().Int32Value();
 
-  uint32_t rgb = this->rgbMap[color % this->rgbMapSize];
+  int rgbMapSize;
+  this->loadRgbMap(info, &rgbMapSize);
+
+  uint32_t rgb = this->rgbMap[color % rgbMapSize];
   this->frontColor = rgb;
 
   return info.Env().Null();
@@ -303,7 +274,9 @@ Napi::Value RawBuffer::FillBackground(const Napi::CallbackInfo& info) {
   Napi::Value val = info[0];
   int color = round(val.As<Napi::Number>().FloatValue());
 
-  uint32_t rgb = this->rgbMap[color % this->rgbMapSize];
+  int rgbMapSize;
+  this->loadRgbMap(info, &rgbMapSize);
+  uint32_t rgb = this->rgbMap[color % rgbMapSize];
   this->backColor = rgb;
 
   // Don't allocate just now, because maybe the size hasn't been set yet.
@@ -372,10 +345,13 @@ Napi::Value RawBuffer::PutFrameMemory(const Napi::CallbackInfo& info) {
   Napi::ArrayBuffer buffer = info[0].As<Napi::TypedArray>().ArrayBuffer();
   unsigned char* data = (unsigned char*)buffer.Data();
 
+  int rgbMapSize;
+  this->loadRgbMap(info, &rgbMapSize);
+
   for (int y = 0; y < this->height; y++) {
     for (int x = 0; x < this->width; x++) {
       unsigned char color = data[x + y*this->rowSize];
-      uint32_t rgb = this->rgbMap[color % this->rgbMapSize];
+      uint32_t rgb = this->rgbMap[color % rgbMapSize];
       this->rawBuff[x + y*this->rowSize] = rgb;
     }
   }
@@ -470,3 +446,25 @@ void RawBuffer::putRange(int x0, int y0, int x1, int y1, uint32_t color) {
   }
 }
 
+void RawBuffer::loadRgbMap(const Napi::CallbackInfo &info, int* outSize) {
+  Napi::Env env = info.Env();
+
+  napi_value result;
+  napi_get_reference_value(env, this->colors, &result);
+  Napi::Value colorsVal(env, result);
+
+  Napi::Object colorsObj = colorsVal.ToObject();
+  Napi::Value rgbMapVal = colorsObj.Get("rgbMap");
+  Napi::Object rgbMapList = rgbMapVal.ToObject();
+  Napi::Value length = rgbMapList.Get("length");
+
+  int size = length.As<Napi::Number>().Int32Value();
+  *outSize = size;
+
+  for (int i = 0; i < size; i++) {
+    Napi::Value elem = rgbMapList[uint32_t(i)];
+    int val = elem.As<Napi::Number>().Int32Value();
+    // Store values as little-endian RGBA.
+    this->rgbMap[i] = val * 0x100 + 0xff;
+  }
+}

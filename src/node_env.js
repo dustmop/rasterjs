@@ -10,8 +10,8 @@ function makeDisplay() {
   return cppmodule.display();
 }
 
-function makeRawBuffer(res) {
-  return cppmodule.rawBuffer(res);
+function makeRawBuffer() {
+  return cppmodule.rawBuffer();
 }
 
 function getOptions() {

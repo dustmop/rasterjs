@@ -9,7 +9,6 @@ RawBuffer.prototype.clear = function() {
   this.width = 0;
   this.height = 0;
   this.pitch = 0;
-  this.rgbMap = [];
   this.data = null;
   this._needErase = true;
 }
@@ -21,8 +20,8 @@ RawBuffer.prototype.setSize = function(width, height) {
   this.pitch = width;
 }
 
-RawBuffer.prototype.assignRgbMap = function(rgbMap) {
-  this.rgbMap = rgbMap;
+RawBuffer.prototype.useColors = function(colors) {
+  this.colors = colors;
 }
 
 RawBuffer.prototype.fillBackground = function(color) {
@@ -39,8 +38,8 @@ RawBuffer.prototype.retrieveTrueContent = function(imageContent) {
   let buffer = [];
 
   let colorLookup = {};
-  for (let i = 0; i < this.rgbMap.length; i++) {
-    let rgb = this.rgbMap[i];
+  for (let i = 0; i < this.colors.rgbMap.length; i++) {
+    let rgb = this.colors.rgbMap[i];
     colorLookup[rgb] = i;
     palette.push(rgb);
   }
@@ -199,7 +198,7 @@ RawBuffer.prototype.rawData = function() {
 }
 
 RawBuffer.prototype._toColor = function(color) {
-  let rgb = this.rgbMap[color];
+  let rgb = this.colors.rgbMap[color];
   let r = (rgb / 0x10000) % 0x100;
   let g = (rgb / 0x100) % 0x100;
   let b = (rgb / 0x1) % 0x100;

@@ -10,14 +10,20 @@ const D_DID_FILL   = 4;
 const D_DRAWN      = 5;
 const MAX_DOTS_DRAWN = 36;
 
-function Plane(rawBuffer, options) {
-  this.rawBuffer = rawBuffer;
-  this.saveService = null;
-  if (options && options.saveService) {
-    this.saveService = options.saveService;
-  }
+var _g_scene = null;
+
+function Plane() {
+  let rawBuff = _g_scene.env.makeRawBuffer();
+  this.rawBuffer = rawBuff;
+  this.colorSet = _g_scene.colorSet;
+  this.rawBuffer.useColors(this.colorSet);
   this.clear();
+  this.scene = _g_scene;
   return this;
+}
+
+function setGlobalScene(scene) {
+  _g_scene = scene;
 }
 
 Plane.prototype.clear = function() {
@@ -45,20 +51,22 @@ Plane.prototype.setSize = function(width, height) {
   this.rawBuffer.setSize(width, height);
 }
 
+Plane.prototype.useColors = function(rgbList) {
+  if (rgbList.length > 0) {
+    throw 'plane.useColors only supports empty list'
+  }
+  this.colorSet.assignRgbMap([]);
+  this.rawBuffer.useColors(this.colorSet);
+}
+
 Plane.prototype.setColor = function(color) {
   this.frontColor = color;
   this.rawBuffer.setColor(color);
 }
 
 Plane.prototype.setTrueColor = function(rgb) {
-  let color = this.rawBuffer.addRgbMapEntry(rgb);
+  let color = this.colorSet.addEntry(rgb);
   this.setColor(color);
-}
-
-Plane.prototype.assignRgbMap = function(rgbMap) {
-  // TODO: Keep colorSet in a separate object. Let rawBuffer have
-  // a reference to it.
-  this.rawBuffer.assignRgbMap(rgbMap);
 }
 
 Plane.prototype.fillBackground = function(color) {
@@ -69,7 +77,7 @@ Plane.prototype.fillBackground = function(color) {
 
 Plane.prototype.fillTrueBackground = function(rgb) {
   this.dirtyState = D_FILL_SOLID;
-  let color = this.rawBuffer.addRgbMapEntry(rgb);
+  let color = this.colorSet.addEntry(rgb);
   this.fillBackground(color);
 }
 
@@ -331,10 +339,11 @@ Plane.prototype.drawImage = function(img, x, y) {
 }
 
 Plane.prototype.drawText = function(text, x, y) {
-  if (!this.font) {
+  let font = this.scene.font;
+  if (!font) {
     throw 'drawText: no font has been assigned';
   }
-  if (!this.font.glyphs) {
+  if (!font.glyphs) {
     throw 'drawText: font has been opened, but not yet read';
   }
 
@@ -345,7 +354,7 @@ Plane.prototype.drawText = function(text, x, y) {
     let ch = text[i];
     let num = ch.charCodeAt(0);
     let name = num.toString(16);
-    let glyph = this.font.glyphs[name];
+    let glyph = font.glyphs[name];
 
     if (!glyph) {
       console.log(`glyph for '${name}' not found`);
@@ -386,10 +395,12 @@ Plane.prototype.save = function(savepath) {
   let buffer = this.trueBuffer();
   // TODO: fix definition of pitch
   let pitch = this.width * 4;
-  if (!this.saveService) {
+  let saveService = this.scene.saveService;
+  if (!saveService) {
     throw new Error('cannot save plane without save service');
   }
-  this.saveService.saveTo(savepath, buffer, this.width, this.height, pitch);
+  saveService.saveTo(savepath, buffer, this.width, this.height, pitch);
 }
 
 module.exports.Plane = Plane;
+module.exports.setGlobalScene = setGlobalScene;

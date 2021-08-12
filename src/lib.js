@@ -34,30 +34,24 @@ Raster.prototype.timeClick = 0;
 ////////////////////////////////////////
 // Setup the draw target
 
-Raster.prototype.setSize = function() {
-  // TODO: Stop using dispatch
-  // TODO: Move this and other functions into drawing?
-  this.runner.dispatch(['setSize', arguments]);
+Raster.prototype.setZoom = function(zoomLevel) {
+  this.runner.setZoom(zoomLevel);
 }
 
-Raster.prototype.setZoom = function() {
-  this.runner.dispatch(['setZoom', arguments]);
-}
-
-Raster.prototype.setTitle = function() {
-  this.runner.dispatch(['setTitle', arguments]);
+Raster.prototype.setTitle = function(text) {
+  this.runner.setTitle(text);
 }
 
 Raster.prototype.originAtCenter = function() {
-  this.runner.dispatch(['originAtCenter', []]);
+  this.runner.originAtCenter();
 }
 
-Raster.prototype.useColors = function() {
-  this.runner.dispatch(['useColors', arguments]);
+Raster.prototype.useColors = function(rep) {
+  this.runner.useColors(rep);
 }
 
-Raster.prototype.useDisplay = function() {
-  this.runner.dispatch(['useDisplay', arguments]);
+Raster.prototype.useDisplay = function(disp) {
+  this.runner.useDisplay(disp);
 }
 
 ////////////////////////////////////////
@@ -98,25 +92,6 @@ Raster.prototype.getPaletteAll = function(opt) {
 
 Raster.prototype.setFont = function(filename) {
   this.runner.setFont(filename);
-}
-
-////////////////////////////////////////
-// Rendering functionality
-
-Raster.prototype.fillBackground = function() {
-  this.runner.dispatch(['fillBackground', arguments]);
-}
-
-Raster.prototype.fillTrueBackground = function() {
-  this.runner.dispatch(['fillTrueBackground', arguments]);
-}
-
-Raster.prototype.setColor = function() {
-  this.runner.dispatch(['setColor', arguments]);
-}
-
-Raster.prototype.setTrueColor = function() {
-  this.runner.dispatch(['setTrueColor', arguments]);
 }
 
 ////////////////////////////////////////

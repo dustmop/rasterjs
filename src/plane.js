@@ -56,38 +56,9 @@ Plane.prototype.trueBuffer = function() {
   return this.rawBuffer.rawData();
 }
 
-Plane.prototype.setSize = function(width, height) {
-  // TODO: destructure
-  this.width = width;
-  this.height = height;
-  this.rawBuffer.setSize(width, height);
-}
-
 Plane.prototype.useColors = function(rep) {
   this.colorSet.use(rep);
   this.rawBuffer.useColors(this.colorSet);
-}
-
-Plane.prototype.setColor = function(color) {
-  this.frontColor = color;
-  this.rawBuffer.setColor(color);
-}
-
-Plane.prototype.setTrueColor = function(rgb) {
-  let color = this.colorSet.addEntry(rgb);
-  this.setColor(color);
-}
-
-Plane.prototype.fillBackground = function(color) {
-  this.dirtyState = D_FILL_SOLID;
-  this.bgColor = color;
-  this.rawBuffer.fillBackground(color);
-}
-
-Plane.prototype.fillTrueBackground = function(rgb) {
-  this.dirtyState = D_FILL_SOLID;
-  let color = this.colorSet.addEntry(rgb);
-  this.fillBackground(color);
 }
 
 Plane.prototype.setTranslation = function(relPos) {

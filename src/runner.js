@@ -75,42 +75,22 @@ Runner.prototype.then = function(cb) {
   this.imgLoader.resolveAll(cb);
 }
 
-Runner.prototype.setSize_params = ['w:i', 'h:i'];
-Runner.prototype.setSize = function(w, h) {
-  this.aPlane.setSize(w, h);
-}
-
-Runner.prototype.setColor_params = ['color:i'];
-Runner.prototype.setColor = function(color) {
-  this.aPlane.setColor(color);
-}
-
-Runner.prototype.setTrueColor_params = ['rgb:i'];
-Runner.prototype.setTrueColor = function(rgb) {
-  this.aPlane.setTrueColor(rgb);
-}
-
-Runner.prototype.setZoom_params = ['scale:i'];
 Runner.prototype.setZoom = function(scale) {
   this._config.zoomScale = scale;
 }
 
-Runner.prototype.setTitle_params = ['title:i'];
 Runner.prototype.setTitle = function(title) {
   this._config.titleText = title;
 }
 
-Runner.prototype.originAtCenter_params = [];
 Runner.prototype.originAtCenter = function() {
   this.aPlane.setTranslation(0.5);
 }
 
-Runner.prototype.useColors_params = ['obj:any'];
 Runner.prototype.useColors = function(obj) {
   this.scene.colorSet.use(obj);
 }
 
-Runner.prototype.useDisplay_params = ['name:s'];
 Runner.prototype.useDisplay = function(nameOrDisplay) {
   if (nameOrDisplay == 'ascii') {
     this.display = new displayAscii.DisplayAscii();
@@ -120,16 +100,6 @@ Runner.prototype.useDisplay = function(nameOrDisplay) {
     throw `Invalid display "${nameOrDisplay}"`;
   }
   this.display.initialize();
-}
-
-Runner.prototype.fillBackground_params = ['color:i'];
-Runner.prototype.fillBackground = function(color) {
-  this.aPlane.fillBackground(color);
-}
-
-Runner.prototype.fillTrueBackground_params = ['rgb:i'];
-Runner.prototype.fillTrueBackground = function(rgb) {
-  this.aPlane.fillTrueBackground(rgb);
 }
 
 Runner.prototype.loadImage = function(filepath) {
@@ -155,21 +125,6 @@ Runner.prototype._doRender = function(num, exitAfter, renderFunc, betweenFunc, f
       }
     }, num, exitAfter, finalFunc);
   });
-}
-
-// TODO: Get rid of me
-Runner.prototype.dispatch = function(row) {
-  let fname = row[0];
-  let fn = this[fname]
-  let param_spec = this[fname + '_params'];
-  if (fn === undefined) {
-    throw new Error(`function ${fname} is not defined`);
-  }
-  if (param_spec === undefined) {
-    throw new Error(`function ${fname} does not have parameter spec`);
-  }
-  let args = destructure(param_spec, row);
-  fn.apply(this, args);
 }
 
 Runner.prototype.show = function(finalFunc) {

@@ -27,6 +27,39 @@ const D_DID_FILL   = 4;
 const D_DRAWN      = 5;
 const MAX_DOTS_DRAWN = 36;
 
+Drawing.prototype.setSize_params = ['w:i', 'h:i'];
+Drawing.prototype.setSize = function(width, height) {
+  this.width = width;
+  this.height = height;
+  this.rawBuffer.setSize(width, height);
+}
+
+Drawing.prototype.setColor_params = ['color:i'];
+Drawing.prototype.setColor = function(color) {
+  this.frontColor = color;
+  this.rawBuffer.setColor(color);
+}
+
+Drawing.prototype.setTrueColor_params = ['rgb:i'];
+Drawing.prototype.setTrueColor = function(rgb) {
+  let color = this.colorSet.addEntry(rgb);
+  this.setColor(color);
+}
+
+Drawing.prototype.fillBackground_params = ['color:i'];
+Drawing.prototype.fillBackground = function(color) {
+  this.dirtyState = D_FILL_SOLID;
+  this.bgColor = color;
+  this.rawBuffer.fillBackground(color);
+}
+
+Drawing.prototype.fillTrueBackground_params = ['rgb:i'];
+Drawing.prototype.fillTrueBackground = function(rgb) {
+  this.dirtyState = D_FILL_SOLID;
+  let color = this.colorSet.addEntry(rgb);
+  this.fillBackground(color);
+}
+
 Drawing.prototype.drawLine_params = ['x0:i', 'y0:i', 'x1:i', 'y1:i', 'cc?b'];
 Drawing.prototype.drawLine = function(x0, y0, x1, y1, cc) {
   cc = cc ? 1 : 0;

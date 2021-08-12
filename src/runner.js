@@ -1,5 +1,4 @@
 const destructure = require('./destructure.js');
-const rgbMap = require('./rgb_map.js');
 const algorithm = require('./algorithm.js');
 const frameMemory = require('./frame_memory.js');
 const paletteEntry = require('./palette_entry.js');
@@ -17,7 +16,7 @@ const FRAMES_LOOP_FOREVER = -1;
 function Runner(env) {
   this.resources = env.makeResources();
   this.display = env.makeDisplay();
-  this.scene = new scene.Scene(this.resources, env, rgbMap.rgb_map_default);
+  this.scene = new scene.Scene(this.resources, env);
   plane.setGlobalScene(this.scene);
   this.aPlane = new plane.Plane();
   this.env = env;
@@ -32,7 +31,7 @@ Runner.prototype.initialize = function () {
   this._config.screenHeight = 100;
   this._config.zoomScale = 1;
   this._config.titleText = '';
-  this.scene.colorSet.assignRgbMap(rgbMap.rgb_map_default);
+  this.scene.colorSet.clear();
   this.imgLoader = new imageLoader.Loader(this.resources);
   this.textLoader = new textLoader.TextLoader(this.resources);
   let options = this.env.getOptions();
@@ -50,7 +49,7 @@ Runner.prototype.initialize = function () {
 }
 
 Runner.prototype.resetState = function() {
-  this.scene.colorSet.assignRgbMap(rgbMap.rgb_map_default);
+  this.scene.colorSet.clear();
   this.scene.clearPlane(this.aPlane);
 }
 
@@ -90,33 +89,7 @@ Runner.prototype.originAtCenter = function() {
 
 Runner.prototype.useColors_params = ['obj:any'];
 Runner.prototype.useColors = function(obj) {
-  if (typeof obj == 'string') {
-    let text = obj;
-    if (text == 'quick') {
-      this.scene.colorSet.assignRgbMap(rgbMap.rgb_map_default);
-    } else if (text == 'dos') {
-      this.scene.colorSet.assignRgbMap(rgbMap.rgb_map_dos);
-    } else if (text == 'nes') {
-      this.scene.colorSet.assignRgbMap(rgbMap.rgb_map_nes);
-    } else if (text == 'gameboy') {
-      this.scene.colorSet.assignRgbMap(rgbMap.rgb_map_gameboy);
-    } else if (text == 'pico8') {
-      this.scene.colorSet.assignRgbMap(rgbMap.rgb_map_pico8);
-    } else if (text == 'zx-spectrum') {
-      this.scene.colorSet.assignRgbMap(rgbMap.rgb_map_zx_spectrum);
-    } else if (text == 'c64') {
-      this.scene.colorSet.assignRgbMap(rgbMap.rgb_map_c64);
-    } else if (text == 'grey') {
-      this.scene.colorSet.assignRgbMap(rgbMap.rgb_map_grey);
-    } else {
-      throw 'Unknown color set: ' + text;
-    }
-  } else if (Array.isArray(obj)) {
-    let list = obj;
-    this.scene.colorSet.assignRgbMap(list);
-  } else if (!obj) {
-    this.scene.colorSet.assignRgbMap([]);
-  }
+  this.scene.colorSet.use(obj);
 }
 
 Runner.prototype.useDisplay_params = ['name:s'];

@@ -51,11 +51,8 @@ Plane.prototype.setSize = function(width, height) {
   this.rawBuffer.setSize(width, height);
 }
 
-Plane.prototype.useColors = function(rgbList) {
-  if (rgbList.length > 0) {
-    throw 'plane.useColors only supports empty list'
-  }
-  this.colorSet.assignRgbMap([]);
+Plane.prototype.useColors = function(rep) {
+  this.colorSet.use(rep);
   this.rawBuffer.useColors(this.colorSet);
 }
 

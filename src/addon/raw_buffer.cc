@@ -448,13 +448,12 @@ void RawBuffer::putRange(int x0, int y0, int x1, int y1, uint32_t color) {
 
 void RawBuffer::loadRgbMap(const Napi::CallbackInfo &info, int* outSize) {
   Napi::Env env = info.Env();
-
   napi_value result;
   napi_get_reference_value(env, this->colors, &result);
   Napi::Value colorsVal(env, result);
 
   Napi::Object colorsObj = colorsVal.ToObject();
-  Napi::Value rgbMapVal = colorsObj.Get("rgbMap");
+  Napi::Value rgbMapVal = colorsObj.Get("vals");
   Napi::Object rgbMapList = rgbMapVal.ToObject();
   Napi::Value length = rgbMapList.Get("length");
 

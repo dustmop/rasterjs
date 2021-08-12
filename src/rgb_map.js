@@ -1,4 +1,4 @@
-const rgb_map_default = [
+const rgb_map_quick = [
   0x000000,0x202020,0x404040,0x606060,0x808080,0xa0a0a0,0xc0c0c0,0xffffff,
   0x331414,0x332414,0x303314,0x1c3314,0x143325,0x142833,0x1e1433,0x33142a,
   0x661919,0x664019,0x5e6619,0x2b6619,0x196642,0x194a66,0x301966,0x66194f,
@@ -124,7 +124,7 @@ const rgb_map_grey = function() {
   return colors;
 }();
 
-module.exports.rgb_map_default = rgb_map_default;
+module.exports.rgb_map_quick   = rgb_map_quick;
 module.exports.rgb_map_nes     = rgb_map_nes;
 module.exports.rgb_map_dos     = rgb_map_dos;
 module.exports.rgb_map_grey    = rgb_map_grey;

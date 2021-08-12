@@ -37,8 +37,8 @@ describe('Palette entry', function() {
       }
     }
 
-    assert.deepEqual(result, rgb_map.rgb_map_default);
-    util.saveTmpCompareTo(ra, 'test/testdata/pal_default.png');
+    assert.deepEqual(result, rgb_map.rgb_map_quick);
+    util.saveTmpCompareTo(ra, 'test/testdata/pal_quick.png');
   });
 
   it('palette save', function() {

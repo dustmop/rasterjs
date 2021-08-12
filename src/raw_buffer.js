@@ -38,8 +38,8 @@ RawBuffer.prototype.retrieveTrueContent = function(imageContent) {
   let buffer = [];
 
   let colorLookup = {};
-  for (let i = 0; i < this.colors.rgbMap.length; i++) {
-    let rgb = this.colors.rgbMap[i];
+  for (let i = 0; i < this.colors.size(); i++) {
+    let rgb = this.colors.get(i);
     colorLookup[rgb] = i;
     palette.push(rgb);
   }
@@ -198,7 +198,7 @@ RawBuffer.prototype.rawData = function() {
 }
 
 RawBuffer.prototype._toColor = function(color) {
-  let rgb = this.colors.rgbMap[color];
+  let rgb = this.colors.get(color);
   let r = (rgb / 0x10000) % 0x100;
   let g = (rgb / 0x100) % 0x100;
   let b = (rgb / 0x1) % 0x100;

@@ -1,7 +1,7 @@
 const colorSet = require('./color_set.js');
 
-function Scene(resources, env, rgbMap) {
-  this.colorSet = new colorSet.Set(rgbMap);
+function Scene(resources, env) {
+  this.colorSet = new colorSet.Set();
   this.resources = resources;
   this.saveService = resources;
   this.env = env;

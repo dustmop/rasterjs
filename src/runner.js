@@ -1,6 +1,6 @@
+const drawing = require('./drawing.js');
 const destructure = require('./destructure.js');
 const algorithm = require('./algorithm.js');
-const frameMemory = require('./frame_memory.js');
 const paletteEntry = require('./palette_entry.js');
 const geometry = require('./geometry.js');
 const imageLoader = require('./image_loader.js');
@@ -14,6 +14,7 @@ const scene = require('./scene.js');
 const FRAMES_LOOP_FOREVER = -1;
 
 function Runner(env) {
+  this._addMethods();
   this.resources = env.makeResources();
   this.display = env.makeDisplay();
   this.scene = new scene.Scene(this.resources, env);
@@ -45,6 +46,23 @@ Runner.prototype.initialize = function () {
   }
   if (options.zoom) {
     this.setZoom(options.zoom);
+  }
+}
+
+Runner.prototype._addMethods = function() {
+  let self = this;
+  let d = new drawing.Drawing();
+  let methods = d.getMethods();
+  for (let i = 0; i < methods.length; i++) {
+    let [fname, paramSpec, impl] = methods[i];
+    this[fname] = function() {
+      let args = Array.from(arguments);
+      if (paramSpec === undefined) {
+        throw new Error(`function ${fname} does not have parameter spec`);
+      }
+      let realArgs = destructure(paramSpec, [fname, args]);
+      self.aPlane[fname].apply(self.aPlane, realArgs);
+    }
   }
 }
 
@@ -114,83 +132,8 @@ Runner.prototype.fillTrueBackground = function(rgb) {
   this.aPlane.fillTrueBackground(rgb);
 }
 
-Runner.prototype.drawLine_params = ['x0:i', 'y0:i', 'x1:i', 'y1:i', 'cc?b'];
-Runner.prototype.drawLine = function(x0, y0, x1, y1, cc) {
-  this.aPlane.drawLine(x0, y0, x1, y1, cc);
-}
-
-Runner.prototype.drawDot_params = ['x:i', 'y:i'];
-Runner.prototype.drawDot = function(x, y) {
-  this.aPlane.drawDot(x, y);
-}
-
-Runner.prototype.fillDot_params = ['dots:any'];
-Runner.prototype.fillDot = function(dots) {
-  this.aPlane.fillDot(dots);
-}
-
-Runner.prototype.fillSquare_params = ['x:i', 'y:i', 'size:i'];
-Runner.prototype.fillSquare = function(x, y, size) {
-  this.aPlane.fillSquare(x, y, size);
-}
-
-Runner.prototype.drawSquare_params = ['x:i', 'y:i', 'size:i'];
-Runner.prototype.drawSquare = function(x, y, size) {
-  this.aPlane.drawSquare(x, y, size);
-}
-
-Runner.prototype.fillRect_params = ['x:i', 'y:i', 'w:i', 'h:i'];
-Runner.prototype.fillRect = function(x, y, w, h) {
-  this.aPlane.fillRect(x, y, w, h);
-}
-
-Runner.prototype.drawRect_params = ['x:i', 'y:i', 'w:i', 'h:i'];
-Runner.prototype.drawRect = function(x, y, w, h) {
-  this.aPlane.drawRect(x, y, w, h);
-}
-
-Runner.prototype.fillCircle_params = ['x:i', 'y:i', 'r:i'];
-Runner.prototype.fillCircle = function(x, y, r) {
-  this.aPlane.fillCircle(x, y, r);
-}
-
-Runner.prototype.drawCircle_params = ['x:i', 'y:i', 'r:i', 'width?i'];
-Runner.prototype.drawCircle = function(x, y, r, width) {
-  this.aPlane.drawCircle(x, y, r, width);
-}
-
-Runner.prototype.fillPolygon_params = ['points:ps', 'x?i', 'y?i'];
-Runner.prototype.fillPolygon = function(polygon, x, y) {
-  this.aPlane.fillPolygon(polygon, x, y);
-}
-
-Runner.prototype.drawPolygon_params = ['points:ps', 'x?i', 'y?i'];
-Runner.prototype.drawPolygon = function(polygon, x, y) {
-  this.aPlane.drawPolygon(polygon, x, y);
-}
-
-Runner.prototype.fillFlood_params = ['x:i', 'y:i'];
-Runner.prototype.fillFlood = function(x, y) {
-  this.aPlane.fillFlood(x, y);
-}
-
-Runner.prototype.fillFrame_params = ['options?o', 'fillerFunc:f'];
-Runner.prototype.fillFrame = function(options, fillerFunc) {
-  this.aPlane.fillFrame(options, fillerFunc);
-}
-
 Runner.prototype.loadImage = function(filepath) {
   return this.imgLoader.loadImage(filepath);
-}
-
-Runner.prototype.drawImage_params = ['img:a', 'x?i', 'y?i'];
-Runner.prototype.drawImage = function(img, x, y) {
-  this.aPlane.drawImage(img, x, y);
-}
-
-Runner.prototype.drawText_params = ['text:s', 'x:i', 'y:i'];
-Runner.prototype.drawText = function(text, x, y) {
-  this.aPlane.drawText(text, x, y);
 }
 
 Runner.prototype._doRender = function(num, exitAfter, renderFunc, betweenFunc, finalFunc) {
@@ -214,6 +157,7 @@ Runner.prototype._doRender = function(num, exitAfter, renderFunc, betweenFunc, f
   });
 }
 
+// TODO: Get rid of me
 Runner.prototype.dispatch = function(row) {
   let fname = row[0];
   let fn = this[fname]

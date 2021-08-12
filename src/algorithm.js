@@ -2,6 +2,9 @@ const geometry = require('./geometry.js');
 const isInt = geometry.isInt;
 
 function midpointCircleRasterize(r) {
+  if (!r) {
+    return [];
+  }
   // Only allow radius to be a whole number, or 0.5 more than a whole number.
   r = Math.round(r * 2) / 2;
   // Special case for some small circles, to make them look better.

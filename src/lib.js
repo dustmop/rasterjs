@@ -1,9 +1,24 @@
 
 const runner = require('./runner.js');
+const drawing = require('./drawing.js');
 
 function Raster(env) {
   this.runner = new runner.Runner(env);
+  this._addMethods();
   return this;
+}
+
+Raster.prototype._addMethods = function() {
+  let self = this;
+  let d = new drawing.Drawing();
+  let methods = d.getMethods();
+  for (let i = 0; i < methods.length; i++) {
+    let [fname, params, impl] = methods[i];
+    this[fname] = function() {
+      let args = Array.from(arguments);
+      self.runner[fname].apply(self.runner, args);
+    }
+  }
 }
 
 Raster.prototype.resetState = function() {
@@ -20,6 +35,8 @@ Raster.prototype.timeClick = 0;
 // Setup the draw target
 
 Raster.prototype.setSize = function() {
+  // TODO: Stop using dispatch
+  // TODO: Move this and other functions into drawing?
   this.runner.dispatch(['setSize', arguments]);
 }
 
@@ -100,70 +117,6 @@ Raster.prototype.setColor = function() {
 
 Raster.prototype.setTrueColor = function() {
   this.runner.dispatch(['setTrueColor', arguments]);
-}
-
-Raster.prototype.fillSquare = function() {
-  this.runner.dispatch(['fillSquare', arguments]);
-}
-
-Raster.prototype.drawSquare = function() {
-  this.runner.dispatch(['drawSquare', arguments]);
-}
-
-Raster.prototype.fillRect = function() {
-  this.runner.dispatch(['fillRect', arguments]);
-}
-
-Raster.prototype.drawRect = function() {
-  this.runner.dispatch(['drawRect', arguments]);
-}
-
-Raster.prototype.fillDot = function() {
-  this.runner.dispatch(['fillDot', arguments]);
-}
-
-Raster.prototype.drawDot = function() {
-  this.runner.dispatch(['drawDot', arguments]);
-}
-
-Raster.prototype.fillPolygon = function() {
-  this.runner.dispatch(['fillPolygon', arguments]);
-}
-
-Raster.prototype.drawPolygon = function() {
-  this.runner.dispatch(['drawPolygon', arguments]);
-}
-
-Raster.prototype.drawLine = function() {
-  this.runner.dispatch(['drawLine', arguments]);
-}
-
-Raster.prototype.drawImage = function() {
-  this.runner.dispatch(['drawImage', arguments]);
-}
-
-Raster.prototype.fillCircle = function() {
-  this.runner.dispatch(['fillCircle', arguments]);
-}
-
-Raster.prototype.drawCircle = function() {
-  this.runner.dispatch(['drawCircle', arguments]);
-}
-
-Raster.prototype.fillFlood = function() {
-  this.runner.dispatch(['fillFlood', arguments]);
-}
-
-Raster.prototype.fillFrame = function() {
-  var runner = this.runner;
-  var args = arguments;
-  runner.then(function() {
-    runner.dispatch(['fillFrame', args]);
-  });
-}
-
-Raster.prototype.drawText = function() {
-  this.runner.dispatch(['drawText', arguments]);
 }
 
 ////////////////////////////////////////

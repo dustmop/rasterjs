@@ -129,7 +129,7 @@ Raster.prototype.showFrame = function() {
   var runner = this.runner;
   var args = arguments;
   runner.then(function() {
-    runner.dispatch(['fillFrame', args]);
+    runner.fillFrame.apply(runner, args);
     runner.show();
   });
 }

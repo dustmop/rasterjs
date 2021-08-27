@@ -2,7 +2,16 @@
   "targets": [
     {
       "target_name": "native",
-      "cflags!": [ "-fno-exceptions" ],
+      "dependencies" : [
+        "./deps/libpng.gyp:libpng"
+      ],
+      "cflags!": [
+        "-fno-exceptions"
+        "-Wall",
+        "-Wno-unused-parameter",
+        "-Wno-missing-field-initializers",
+        "-Wextra",
+      ],
       "cflags_cc!": [ "-fno-exceptions" ],
       "sources": [
         "src/addon/display_sdl.cc",
@@ -14,17 +23,17 @@
       "include_dirs": [
         "<!@(node -p \"require('node-addon-api').include\")",
         "<!(node ./tools/locate_sdl include)",
+        "./deps/libpng",
       ],
       "libraries": [
         "<!@(node ./tools/locate_sdl lib)",
-        "<!(pkg-config libpng --libs)",
       ],
       "defines": [
-        '_THREAD_SAFE',
-        'ENABLE_ARG_CHECKING',
-        'ENABLE_IMAGE',
-        'ENABLE_TTF',
-        'NAPI_DISABLE_CPP_EXCEPTIONS'
+        "_THREAD_SAFE",
+        "ENABLE_ARG_CHECKING",
+        "ENABLE_IMAGE",
+        "ENABLE_TTF",
+        "NAPI_DISABLE_CPP_EXCEPTIONS",
       ]
     }
   ]

@@ -9,7 +9,7 @@ function makeResources() {
 }
 
 function makeDisplay() {
-  if (detectFeatureWebGL()) {
+  if (!runningUnderKarma() && detectFeatureWebGL()) {
     return new displayWebGL.Display();
   }
   return new display2dCanvas.Display();
@@ -30,6 +30,10 @@ function detectFeatureWebGL() {
     return true;
   }
   return false;
+}
+
+function runningUnderKarma() {
+  return window.__karma__ !== undefined;
 }
 
 module.exports.makeDisplay = makeDisplay;

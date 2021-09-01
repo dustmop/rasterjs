@@ -10,7 +10,8 @@
     "url": "https://github.com/dustmop/rasterjs.git"
   },
   "scripts": {
-    "test": "mocha",
+    "test": "npm run node-test && npm run web-test",
+    "node-test": "mocha",
     "web-test": "karma start --single-run --browsers FirefoxHeadless karma.conf.js --",
     "build": "webpack"
   },

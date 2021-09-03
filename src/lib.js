@@ -1,4 +1,4 @@
-
+const rgbColor = require('./rgb_color.js');
 const runner = require('./runner.js');
 const drawing = require('./drawing.js');
 
@@ -92,6 +92,30 @@ Raster.prototype.getPaletteAll = function(opt) {
 
 Raster.prototype.setFont = function(filename) {
   this.runner.setFont(filename);
+}
+
+Raster.prototype.mixColors = function(spec) {
+  let result = [];
+  let cursor = 0;
+  let leftColor = spec[cursor + 1];
+  let rightColor = spec[cursor + 3];
+  let startIndex = spec[0];
+  let targetIndex = spec[2];
+  let endIndex = spec[spec.length - 2];
+  for (let i = 0; i < endIndex; i++) {
+    if (i == targetIndex) {
+      cursor += 2;
+      startIndex = targetIndex;
+      leftColor = spec[cursor + 1];
+      rightColor = spec[cursor + 3];
+      targetIndex = spec[cursor + 2];
+    }
+    let L = new rgbColor.RGBColor(leftColor);
+    let R = new rgbColor.RGBColor(rightColor);
+    let rgb = L.interpolate(R, i, {min: startIndex, max: targetIndex});
+    result.push(rgb.toInt());
+  }
+  return result;
 }
 
 ////////////////////////////////////////

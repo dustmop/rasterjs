@@ -18,7 +18,7 @@ Set.prototype.size = function() {
 }
 
 Set.prototype.get = function(i) {
-  return this.vals[i];
+  return this.vals[i % this.vals.length];
 }
 
 Set.prototype.assign = function(vals) {

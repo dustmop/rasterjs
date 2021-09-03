@@ -1,4 +1,5 @@
 const drawing = require('./drawing.js');
+const rawBuff = require('./raw_buffer.js');
 
 const D_CLEAN      = 0;
 const D_FILL_SOLID = 1;
@@ -11,8 +12,7 @@ const MAX_DOTS_DRAWN = 36;
 var _g_scene = null;
 
 function Plane() {
-  let rawBuff = _g_scene.env.makeRawBuffer();
-  this.rawBuffer = rawBuff;
+  this.rawBuffer = new rawBuff.RawBuffer();
   this.colorSet = _g_scene.colorSet;
   this.rawBuffer.useColors(this.colorSet);
   this.clear();

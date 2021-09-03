@@ -104,7 +104,17 @@ Napi::Value Resources::SaveTo(const Napi::CallbackInfo& info) {
   std::string savepath = str.Utf8Value();
 
   val = info[1];
-  Napi::ArrayBuffer arrBuff = val.As<Napi::ArrayBuffer>();
+
+  Napi::Value bufferObj = Napi::Value(env, val);
+  if (!bufferObj.IsTypedArray()) {
+    printf("plane.trueBuffer expected a TypedArray, did not get one!\n");
+    printf("got: \"%s\"\n", bufferObj.ToString().Utf8Value().c_str());
+    exit(1);
+  }
+
+  Napi::TypedArray typeArr = bufferObj.As<Napi::TypedArray>();
+  Napi::ArrayBuffer arrBuff = typeArr.ArrayBuffer();
+
   void* untypedData = arrBuff.Data();
   unsigned char* rawBuff = (unsigned char*)untypedData;
 

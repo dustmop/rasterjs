@@ -22,6 +22,7 @@ Resources.prototype.openImage = function(filename, imgPlane) {
     let pixels = ctx.getImageData(0, 0, imgElem.width, imgElem.height);
     imgPlane.data = pixels.data;
     imgPlane.width = pixels.width;
+    imgPlane.pitch = pixels.width;
     imgPlane.height = pixels.height;
     // TODO: Process the pixel data so it matches the colorSet
     // Mark the load as completed.

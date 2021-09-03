@@ -10,10 +10,6 @@ function makeDisplay() {
   return cppmodule.display();
 }
 
-function makeRawBuffer() {
-  return cppmodule.rawBuffer();
-}
-
 function getOptions() {
   // If running as a test, don't parse command-line arguments. This allows
   // the test runner to process it's own arguments instead.
@@ -40,6 +36,5 @@ function runningAsTest() {
 }
 
 module.exports.makeDisplay = makeDisplay;
-module.exports.makeRawBuffer = makeRawBuffer;
 module.exports.makeResources = makeResources;
 module.exports.getOptions = getOptions;

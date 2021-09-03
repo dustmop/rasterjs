@@ -58,6 +58,11 @@ Drawing.prototype.fillTrueBackground = function(rgb) {
   this.dirtyState = D_FILL_SOLID;
   let color = this.colorSet.addEntry(rgb);
   this.fillBackground(color);
+  // NOTE: Bit of a hack. If the background color is assigned
+  // lazily, it's possible that more rgb values will be added to
+  // the color set, eventually overwriting this entry, and using
+  // the wrong rgb value. This sets the color immediately instead.
+  this.rawBuffer.forceTrueBgcolor(rgb);
 }
 
 Drawing.prototype.drawLine_params = ['x0:i', 'y0:i', 'x1:i', 'y1:i', 'cc?b'];

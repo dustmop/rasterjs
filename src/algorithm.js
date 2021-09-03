@@ -50,9 +50,17 @@ function midpointCircleRasterize(r) {
 
 function color32BitToRGB(val) {
   let rgb = Math.floor(val / 0x100);
-  let r = Math.floor(rgb / 0x10000);
+  let r = Math.floor(rgb / 0x10000) % 0x100;
   let g = Math.floor(rgb / 0x100) % 0x100;
-  let b = rgb % 0x100;
+  let b = Math.floor(rgb / 0x1) % 0x100;
+  return [r, g, b];
+}
+
+function color24BitToRGB(val) {
+  let rgb = val;
+  let r = Math.floor(rgb / 0x10000) % 0x100;
+  let g = Math.floor(rgb / 0x100) % 0x100;
+  let b = Math.floor(rgb / 1) % 0x100;
   return [r, g, b];
 }
 
@@ -86,7 +94,7 @@ function sortByHSV(image) {
   // Get first element, treat as the background color, skip it in the loop
   let bgColor = Math.floor(image.palette[0]);
   for (let i = 1; i < image.palette.length; i++) {
-    let [r, g, b] = color32BitToRGB(image.palette[i]);
+    let [r, g, b] = color24BitToRGB(image.palette[i]);
     let [h, s, v] = rgbToHSV(r, g, b);
     let k = Math.floor(h * 10) * 10000 + Math.floor(v * 1000) + s;
     colors.push([k, r, g, b, h, s, v, i]);
@@ -105,10 +113,8 @@ function sortByHSV(image) {
     let from = colors[i][7];
     // Add 1 because we start with the bgColor in position 0
     remap[from] = i+1;
-    let r = colors[i][1];
-    let g = colors[i][2];
-    let b = colors[i][3];
-    palette.push((r * 0x10000 + g * 0x100 + b) * 0x100 + 0xff);
+    let rgb = image.palette[colors[i][7]];
+    palette.push(rgb);
   }
 
   // Fix up the buffer values

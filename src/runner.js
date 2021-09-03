@@ -235,7 +235,7 @@ Runner.prototype.getPaletteAll = function(opt) {
 
   let all = [];
   for (let k = 0; k < image.palette.length; k++) {
-    let rgb = Math.floor(image.palette[k] / 0x100);
+    let rgb = Math.floor(image.palette[k]);
     let ent = new paletteEntry.PaletteEntry(this.aPlane, image.pitch,
                                             index, k, rgb);
     all.push(ent);

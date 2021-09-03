@@ -1,5 +1,4 @@
 #include "display_sdl.h"
-#include "raw_buffer.h"
 #include "resources.h"
 #include "type.h"
 
@@ -116,12 +115,15 @@ Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
     printf("failed to get plane.trueBuffer!\n");
     exit(1);
   }
-  Napi::Value buffObj = Napi::Value(env, buffVal);
-  if (!buffObj.IsArrayBuffer()) {
-    printf("plane.trueBuffer did not return an ArrayBuffer\n!");
+  Napi::Value bufferObj = Napi::Value(env, buffVal);
+  if (!bufferObj.IsTypedArray()) {
+    printf("plane.trueBuffer expected a TypedArray, did not get one!\n");
+    printf("got: \"%s\"\n", bufferObj.ToString().Utf8Value().c_str());
     exit(1);
   }
-  Napi::ArrayBuffer arrBuff = buffObj.As<Napi::ArrayBuffer>();
+
+  Napi::TypedArray typeArr = bufferObj.As<Napi::TypedArray>();
+  Napi::ArrayBuffer arrBuff = typeArr.ArrayBuffer();
 
   // Calculate texture and window size.
   int viewWidth = widthNum.As<Napi::Number>().Int32Value();
@@ -156,7 +158,7 @@ Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
   // Create the texture that the plane is mapped to
   this->textureHandle = SDL_CreateTexture(
       this->rendererHandle,
-      SDL_PIXELFORMAT_RGBA8888,
+      SDL_PIXELFORMAT_ABGR8888,
       SDL_TEXTUREACCESS_STREAMING,
       viewWidth,
       viewHeight);

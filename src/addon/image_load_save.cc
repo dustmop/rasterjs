@@ -115,7 +115,6 @@ int LoadPng(const char* filename, Image* img) {
 int WritePng(const char* savepath, uint8* buffer, int width, int height, int pitch) {
   int code = 0;
   int y = 0;
-  int transform = PNG_TRANSFORM_IDENTITY;
   FILE *fp = NULL;
   png_structp png_ptr = NULL;
   png_infop info_ptr = NULL;
@@ -161,14 +160,12 @@ int WritePng(const char* savepath, uint8* buffer, int width, int height, int pit
 
   png_write_info(png_ptr, info_ptr);
 
-  // Quick graphics has the buffer as little-endian RGBA. Fix that up for png.
-  transform = PNG_TRANSFORM_BGR | PNG_TRANSFORM_SWAP_ALPHA;
   rows = (png_bytep*)malloc(sizeof(png_bytep)*height);
   for (y=0 ; y<height; y++) {
     rows[y] = buffer+(y*pitch);
   }
   png_set_rows(png_ptr, info_ptr, rows);
-  png_write_png(png_ptr, info_ptr, transform, NULL);
+  png_write_png(png_ptr, info_ptr, 0, NULL);
 
   finalise:
   if (fp != NULL) fclose(fp);

@@ -17,7 +17,6 @@
         "src/addon/display_sdl.cc",
         "src/addon/image_load_save.cc",
         "src/addon/native.cc",
-        "src/addon/raw_buffer.cc",
         "src/addon/resources.cc",
       ],
       "include_dirs": [

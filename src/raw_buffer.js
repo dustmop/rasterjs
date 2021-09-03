@@ -6,6 +6,7 @@ RawBuffer.prototype.clear = function() {
   this._ = 'raw_buffer.js';
   this.frontColor = 7;
   this.backColor = 0;
+  this.trueBgColor = null;
   this.width = 0;
   this.height = 0;
   this.pitch = 0;
@@ -33,11 +34,18 @@ RawBuffer.prototype.setColor = function(color) {
   this.frontColor = color;
 }
 
+RawBuffer.prototype.forceTrueBgcolor = function(rgb) {
+  this.trueBgColor = rgb;
+}
+
 RawBuffer.prototype.retrieveTrueContent = function(imageContent) {
+  this._prepare();
+
   let palette = [];
   let buffer = [];
 
   let colorLookup = {};
+  // Read the already existing color set.
   for (let i = 0; i < this.colors.size(); i++) {
     let rgb = this.colors.get(i);
     colorLookup[rgb] = i;
@@ -47,6 +55,11 @@ RawBuffer.prototype.retrieveTrueContent = function(imageContent) {
   for (let i = 0; i < this.data.length / 4; i++) {
     let rgb = this._bytesToColor(this.data.slice(i*4, i*4+4));
     let v = colorLookup[rgb];
+    if (v === undefined) {
+      v = palette.length;
+      colorLookup[rgb] = v;
+      palette.push(rgb);
+    }
     buffer.push(v);
   }
 
@@ -64,18 +77,18 @@ RawBuffer.prototype.putSequence = function(seq) {
     let elem = seq[i];
     if (elem.length == 2) {
       // Sequence of length 2 is a single point
-      let x = elem[0];
-      let y = elem[1];
+      let x = Math.floor(elem[0]);
+      let y = Math.floor(elem[1]);
       let k = y * this.pitch + x;
       this.data[k*4+0] = r;
       this.data[k*4+1] = g;
       this.data[k*4+2] = b;
     } else if (elem.length == 4) {
       // Sequnce of length 4 is a range
-      let x0 = elem[0];
-      let x1 = elem[1];
-      let y0 = elem[2];
-      let y1 = elem[3];
+      let x0 = Math.floor(elem[0]);
+      let x1 = Math.floor(elem[1]);
+      let y0 = Math.floor(elem[2]);
+      let y1 = Math.floor(elem[3]);
       // Swap endpoints if needed
       if (x0 > x1) {
         let tmp = x0;
@@ -90,7 +103,7 @@ RawBuffer.prototype.putSequence = function(seq) {
       // Range only goes straight horizontal or straight vertical
       if (x0 == x1) {
         if (x0 < 0 || x1 >= this.width) {
-          return;
+          continue;
         }
         if (y0 < 0) {
           y0 = 0;
@@ -107,7 +120,7 @@ RawBuffer.prototype.putSequence = function(seq) {
         }
       } else if (y0 == y1) {
         if (y0 < 0 || y1 >= this.height) {
-          return;
+          continue;
         }
         if (x0 < 0) {
           x0 = 0;
@@ -133,6 +146,8 @@ RawBuffer.prototype.putImage = function(img, baseX, baseY) {
   let imageLeft = img.left;
   let imageHeight = img.height;
   let imageWidth = img.width;
+  let imagePitch = img.pitch;
+  let imageData = img.data;
   if (this.data == null) {
     return;
   }
@@ -140,7 +155,7 @@ RawBuffer.prototype.putImage = function(img, baseX, baseY) {
   baseY = Math.floor(baseY);
   for (let y = imageTop; y < imageHeight; y++) {
     for (let x = imageLeft; x < imageWidth; x++) {
-      let j = y*imageWidth + x;
+      let j = y*imagePitch + x;
       let putX = x + baseX;
       let putY = y + baseY;
       if (putX < 0 || putX >= this.width ||
@@ -148,13 +163,13 @@ RawBuffer.prototype.putImage = function(img, baseX, baseY) {
         continue;
       }
       let k = putY*this.pitch + putX;
-      let alpha = img.data[j*4+3];
+      let alpha = imageData[j*4+3];
       if (alpha < 0x80) {
         continue;
       }
-      this.data[k*4+0] = img.data[j*4+0];
-      this.data[k*4+1] = img.data[j*4+1];
-      this.data[k*4+2] = img.data[j*4+2];
+      this.data[k*4+0] = imageData[j*4+0];
+      this.data[k*4+1] = imageData[j*4+1];
+      this.data[k*4+2] = imageData[j*4+2];
       this.data[k*4+3] = 0xff;
     }
   }
@@ -166,7 +181,7 @@ RawBuffer.prototype.putFrameMemory = function(mem) {
     for (let x = 0; x < mem.width; x++) {
       let k = y * this.pitch + x;
       let v = mem[k];
-      let [r,g,b] = this._toColor(mem[k]);
+      let [r,g,b] = this._toColor(v);
       this.data[k*4+0] = r;
       this.data[k*4+1] = g;
       this.data[k*4+2] = b;
@@ -180,6 +195,11 @@ RawBuffer.prototype._prepare = function() {
   }
   let numPixels = this.height * this.pitch;
   let [r,g,b] = this._toColor(this.backColor);
+  if (this.trueBgColor !== null) {
+    r = Math.floor(this.trueBgColor / 0x10000) % 0x100;
+    g = Math.floor(this.trueBgColor / 0x100) % 0x100;
+    b = Math.floor(this.trueBgColor / 0x1) % 0x100;
+  }
   if (!this.data) {
     this.data = new Uint8Array(numPixels*4);
     this._needErase = true;
@@ -194,14 +214,15 @@ RawBuffer.prototype._prepare = function() {
 }
 
 RawBuffer.prototype.rawData = function() {
+  this._prepare();
   return this.data;
 }
 
 RawBuffer.prototype._toColor = function(color) {
   let rgb = this.colors.get(color);
-  let r = (rgb / 0x10000) % 0x100;
-  let g = (rgb / 0x100) % 0x100;
-  let b = (rgb / 0x1) % 0x100;
+  let r = Math.floor(rgb / 0x10000) % 0x100;
+  let g = Math.floor(rgb / 0x100) % 0x100;
+  let b = Math.floor(rgb / 0x1) % 0x100;
   return [r, g, b];
 }
 

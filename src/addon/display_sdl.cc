@@ -94,7 +94,7 @@ Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
     exit(1);
   }
 
-  Napi::Function renderFunc = info[0].As<Napi::Function>();
+  Napi::Function eachFrameFunc = info[0].As<Napi::Function>();
   int numRender = info[1].ToNumber().Int32Value();
   bool exitAfter = info[2].ToBoolean();
 
@@ -104,20 +104,45 @@ Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
   Napi::Object planeObj = Napi::Object(env, planeVal);
   Napi::Value widthNum = planeObj.Get("width");
   Napi::Value heightNum = planeObj.Get("height");
-  Napi::Value trueBufferVal = planeObj.Get("trueBuffer");
-  Napi::Function trueBufferFunc = trueBufferVal.As<Napi::Function>();
+  Napi::Value renderFuncVal = planeObj.Get("render");
 
-  // Get the buffer of raw data.
-  napi_status status;
-  napi_value buffVal;
-  status = napi_call_function(env, planeObj, trueBufferFunc, 0, NULL, &buffVal);
-  if (status != napi_ok) {
-    printf("failed to get plane.trueBuffer!\n");
+  if (!renderFuncVal.IsFunction()) {
+    printf("renderFunc not found\n");
     exit(1);
   }
+  Napi::Function renderFunc = renderFuncVal.As<Napi::Function>();
+
+  napi_status status;
+  napi_value buffVal;
+  status = napi_call_function(env, planeObj, renderFunc, 0, NULL, &buffVal);
+  if (status != napi_ok) {
+    if (status == napi_pending_exception) {
+      napi_value result;
+      // Function call failed.
+      napi_status s;
+      s = napi_get_and_clear_last_exception(env, &result);
+      napi_valuetype valuetype;
+      napi_typeof(env, result, &valuetype);
+      // Convert the error to a string, display it.
+      napi_value errval;
+      napi_coerce_to_string(env, result, &errval);
+      display_napi_value(env, errval);
+      exit(1);
+    }
+    napi_status err;
+    const napi_extended_error_info* errInfo = NULL;
+    err = napi_get_last_error_info(env, &errInfo);
+    if (err != napi_ok) {
+      printf("Encountered an error getting error code: %d\n", err);
+      exit(1);
+    }
+    printf("rendering failed: status code %d\n", status);
+    exit(1);
+  }
+
   Napi::Value bufferObj = Napi::Value(env, buffVal);
   if (!bufferObj.IsTypedArray()) {
-    printf("plane.trueBuffer expected a TypedArray, did not get one!\n");
+    printf("render() should return a TypedArray, did not get one!\n");
     printf("got: \"%s\"\n", bufferObj.ToString().Utf8Value().c_str());
     exit(1);
   }
@@ -221,7 +246,8 @@ Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
 
     // Call the render function.
     napi_value funcResult;
-    status = napi_call_function(env, self, renderFunc, 0, NULL, &funcResult);
+    status = napi_call_function(env, self, eachFrameFunc, 0, NULL, &funcResult);
+
     if (status != napi_ok) {
       if (status == napi_pending_exception) {
         // Function call failed.
@@ -244,6 +270,35 @@ Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
       }
       printf("Err code %d: %s\n", status, errInfo->error_message);
       break;
+    }
+
+    //
+    napi_status status;
+    napi_value buffVal;
+    status = napi_call_function(env, planeObj, renderFunc, 0, NULL, &buffVal);
+    if (status != napi_ok) {
+      if (status == napi_pending_exception) {
+        napi_value result;
+        // Function call failed.
+        napi_status s;
+        s = napi_get_and_clear_last_exception(env, &result);
+        napi_valuetype valuetype;
+        napi_typeof(env, result, &valuetype);
+        // Convert the error to a string, display it.
+        napi_value errval;
+        napi_coerce_to_string(env, result, &errval);
+        display_napi_value(env, errval);
+        exit(1);
+      }
+      napi_status err;
+      const napi_extended_error_info* errInfo = NULL;
+      err = napi_get_last_error_info(env, &errInfo);
+      if (err != napi_ok) {
+        printf("Encountered an error getting error code: %d\n", err);
+        exit(1);
+      }
+      printf("rendering failed: status code %d\n", status);
+      exit(1);
     }
 
     // Send the raw data from the plane's buffer to the texture

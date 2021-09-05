@@ -8,6 +8,7 @@ const textLoader = require('./text_loader.js');
 const displayAscii = require('./display_ascii.js');
 const plane = require('./plane.js');
 const scene = require('./scene.js');
+const rgbColor = require('./rgb_color.js');
 
 ////////////////////////////////////////
 
@@ -211,6 +212,7 @@ Runner.prototype.getPaletteEntry = function(x, y) {
                                        index, color, tr);
 }
 
+/*
 Runner.prototype.getPaletteAll = function(opt) {
   opt = opt || {};
   let image = {
@@ -232,12 +234,16 @@ Runner.prototype.getPaletteAll = function(opt) {
     }
     index[color].push(k);
   }
+*/
 
+Runner.prototype.getPaletteAll = function(opt) {
+  let colors = this.scene.colorSet;
+  let pitch = this.aPlane.pitch;
   let all = [];
-  for (let k = 0; k < image.palette.length; k++) {
-    let rgb = Math.floor(image.palette[k]);
-    let ent = new paletteEntry.PaletteEntry(this.aPlane, image.pitch,
-                                            index, k, rgb);
+  for (let k = 0; k < colors.size(); k++) {
+    let c = colors.get(k);
+    let rgb = new rgbColor.RGBColor(c);
+    let ent = new paletteEntry.PaletteEntry(null, pitch, null, k, rgb);
     all.push(ent);
   }
 

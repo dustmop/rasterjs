@@ -1,6 +1,17 @@
 const plane = require('./plane.js');
 
 function PaletteEntry(plane, pitch, index, color, rgb) {
+  // plane is nullable
+  if (typeof pitch != 'number') {
+    throw 'PaletteEntry parameter `pitch` must be a number';
+  }
+  // index is nullable
+  if (typeof color != 'number') {
+    throw 'PaletteEntry parameter `color` must be a number';
+  }
+  if (rgb.constructor.name !== 'RGBColor') {
+    throw 'PaletteEntry parameter `rgb` must be a RGBColor';
+  }
   this.plane = plane;
   this.pitch = pitch;
   this.index = index;
@@ -10,6 +21,7 @@ function PaletteEntry(plane, pitch, index, color, rgb) {
 }
 
 PaletteEntry.prototype.setColor = function(color) {
+/*
   this.plane.setColor(color);
   let elems = this.index[this.color];
   if (!elems) {
@@ -22,9 +34,11 @@ PaletteEntry.prototype.setColor = function(color) {
     let y = Math.floor(e / this.pitch);
     this.plane.drawDot(x, y);
   }
+*/
 }
 
 PaletteEntry.prototype.setTrueColor = function(rgb) {
+/*
   let keys = Object.keys(this.index);
   for (let i = 0; i < keys.length; i++) {
     let elemLen = this.index[keys[i]].length;
@@ -37,10 +51,11 @@ PaletteEntry.prototype.setTrueColor = function(rgb) {
   }
   // TODO: Fix this, add a test.
   this.plane.putColorChange(rgb, this.color, this.pitch, elems);
+*/
 }
 
 PaletteEntry.prototype.hex = function() {
-  let val = this.rgb.toString(16);
+  let val = this.rgb.toInt().toString(16);
   while (val.length < 6) {
     val = '0' + val;
   }
@@ -65,9 +80,9 @@ PaletteCollection.prototype.save = function(filename) {
   target.useColors([]);
   target.fillTrueBackground(0x606060);
   for (let i = 0; i < this.items.length; i++) {
-    let rgb = this.items[i].rgb;
+    let rgbInt = this.items[i].rgb.toInt();
     let y = i * 20;
-    target.setTrueColor(rgb);
+    target.setTrueColor(rgbInt);
     target.fillRect(2, 2 + y, 36, 16);
   }
   target.save(filename);

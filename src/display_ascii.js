@@ -11,22 +11,16 @@ DisplayAscii.prototype.setSource = function(plane, zoomLevel) {
 }
 
 DisplayAscii.prototype.renderLoop = function(nextFrame) {
-  let image = {
-    palette: [],
-    buffer: [],
-    pitch: null,
-  };
-  // TODO: Bad to access the rawBuffer directly. Plane should have
-  // a simpler method to get the 8-bit color data.
-  this.plane.rawBuffer.retrieveTrueContent(image);
+  let buffer = this.plane.data;
+  let pitch = this.plane.width;
   let line = '';
-  for (let k = 0; k < image.buffer.length; k++) {
-    if ((k > 0) && (k % image.pitch == 0)) {
+  for (let k = 0; k < buffer.length; k++) {
+    if ((k > 0) && (k % pitch == 0)) {
       line += '\n';
       process.stdout.write(line);
       line = '';
     }
-    line += byteToAscii(image.buffer[k]);
+    line += byteToAscii(buffer[k]);
   }
   if (line != '') {
     line += '\n';

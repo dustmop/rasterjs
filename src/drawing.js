@@ -19,81 +19,58 @@ Drawing.prototype.getMethods = function() {
   return result;
 }
 
-const D_CLEAN      = 0;
-const D_FILL_SOLID = 1;
-const D_FILL_DOTS  = 2;
-const D_DIRTY      = 3;
-const D_DID_FILL   = 4;
-const D_DRAWN      = 5;
-const MAX_DOTS_DRAWN = 36;
-
 Drawing.prototype.setSize_params = ['w:i', 'h:i'];
 Drawing.prototype.setSize = function(width, height) {
-  this.width = width;
-  this.height = height;
-  this.rawBuffer.setSize(width, height);
+  this._setSize(width, height);
 }
 
 Drawing.prototype.setColor_params = ['color:i'];
 Drawing.prototype.setColor = function(color) {
   this.frontColor = color;
-  this.rawBuffer.setColor(color);
 }
 
 Drawing.prototype.setTrueColor_params = ['rgb:i'];
 Drawing.prototype.setTrueColor = function(rgb) {
-  let color = this.colorSet.addEntry(rgb);
+  let color = this.scene.colorSet.addEntry(rgb);
   this.setColor(color);
 }
 
 Drawing.prototype.fillBackground_params = ['color:i'];
 Drawing.prototype.fillBackground = function(color) {
-  this.dirtyState = D_FILL_SOLID;
   this.bgColor = color;
-  this.rawBuffer.fillBackground(color);
+  this._needErase = true;
 }
 
 Drawing.prototype.fillTrueBackground_params = ['rgb:i'];
 Drawing.prototype.fillTrueBackground = function(rgb) {
-  this.dirtyState = D_FILL_SOLID;
-  let color = this.colorSet.addEntry(rgb);
+  let color = this.scene.colorSet.addEntry(rgb);
   this.fillBackground(color);
   // NOTE: Bit of a hack. If the background color is assigned
   // lazily, it's possible that more rgb values will be added to
   // the color set, eventually overwriting this entry, and using
   // the wrong rgb value. This sets the color immediately instead.
-  this.rawBuffer.forceTrueBgcolor(rgb);
 }
 
 Drawing.prototype.drawLine_params = ['x0:i', 'y0:i', 'x1:i', 'y1:i', 'cc?b'];
 Drawing.prototype.drawLine = function(x0, y0, x1, y1, cc) {
   cc = cc ? 1 : 0;
   let [tx, ty] = this._getTranslation();
-  this.dirtyState = D_DIRTY;
   let res = algorithm.renderLine(this, tx + x0, ty + y0, tx + x1, ty + y1, cc);
-  this.rawBuffer.putSequence(res);
+  this.putSequence(res);
 }
 
 Drawing.prototype.drawDot_params = ['x:i', 'y:i'];
 Drawing.prototype.drawDot = function(x, y) {
   let [tx, ty] = this._getTranslation();
-  if (this.dirtyState == D_CLEAN || D_FILL_SOLID) {
-    this.dirtyState = D_FILL_DOTS;
-  }
-  if (this.dirtyState == D_FILL_DOTS) {
-    this.dotsDrawn.push([tx + x, ty + y, this.frontColor]);
-  }
-  if (this.dotsDrawn.length > MAX_DOTS_DRAWN) {
-    this.dirtyState = D_DIRTY;
-    this.dotsDrawn.splice(0);
-  }
   let put = [[tx + x, ty + y]];
-  this.rawBuffer.putSequence(put);
+  this.putSequence(put);
 }
 
 Drawing.prototype.fillDot_params = ['dots:any'];
 Drawing.prototype.fillDot = function(dots) {
-  this.dirtyState = D_DIRTY;
+  this._prepare();
+  let buffer = this.data;
+
   let height = dots.length;
   let width = dots[0].length;
   let mem = frameMemory.NewFrameMemory(this.width, this.height);
@@ -104,34 +81,33 @@ Drawing.prototype.fillDot = function(dots) {
       mem[y*mem.pitch+x] = dots[i][j];
     }
   }
-  this.rawBuffer.putFrameMemory(mem);
+  // Copy back
+  for (let k = 0; k < buffer.length; k++) {
+    buffer[k] = mem[k];
+  }
 }
 
 Drawing.prototype.fillSquare_params = ['x:i', 'y:i', 'size:i'];
 Drawing.prototype.fillSquare = function(x, y, size) {
   let [tx, ty] = this._getTranslation();
-  this.dirtyState = D_DIRTY;
   _renderRect(this, tx + x, ty + y, size, size, true);
 }
 
 Drawing.prototype.drawSquare_params = ['x:i', 'y:i', 'size:i'];
 Drawing.prototype.drawSquare = function(x, y, size) {
   let [tx, ty] = this._getTranslation();
-  this.dirtyState = D_DIRTY;
   _renderRect(this, tx + x, ty + y, size, size, false);
 }
 
 Drawing.prototype.fillRect_params = ['x:i', 'y:i', 'w:i', 'h:i'];
 Drawing.prototype.fillRect = function(x, y, w, h) {
   let [tx, ty] = this._getTranslation();
-  this.dirtyState = D_DIRTY;
   _renderRect(this, tx + x, ty + y, w, h, true);
 }
 
 Drawing.prototype.drawRect_params = ['x:i', 'y:i', 'w:i', 'h:i'];
 Drawing.prototype.drawRect = function(x, y, w, h) {
   let [tx, ty] = this._getTranslation();
-  this.dirtyState = D_DIRTY;
   _renderRect(this, tx + x, ty + y, w, h, false);
 }
 
@@ -158,7 +134,7 @@ function _renderRect(self, x, y, w, h, fill) {
     for (let n = y; n <= y1; n++) {
       put.push([x, x + w - 1, n, n]);
     }
-    self.rawBuffer.putSequence(put);
+    self.putSequence(put);
     return;
   }
 
@@ -166,25 +142,23 @@ function _renderRect(self, x, y, w, h, fill) {
   put.push([ x, x1, y1, y1]); // bottom
   put.push([ x,  x,  y, y1]); // left
   put.push([x1, x1,  y, y1]); // right
-  self.rawBuffer.putSequence(put);
+  self.putSequence(put);
 }
 
 Drawing.prototype.fillCircle_params = ['x:i', 'y:i', 'r:i'];
 Drawing.prototype.fillCircle = function(x, y, r) {
   let [tx, ty] = this._getTranslation();
-  this.dirtyState = D_DIRTY;
   let centerX = tx + x + r;
   let centerY = ty + y + r;
   let arc = algorithm.midpointCircleRasterize(r);
   let half = algorithm.isHalfwayValue(r);
   let put = algorithm.renderCircle(centerX, centerY, arc, null, true, half);
-  this.rawBuffer.putSequence(put);
+  this.putSequence(put);
 }
 
 Drawing.prototype.drawCircle_params = ['x:i', 'y:i', 'r:i', 'width?i'];
 Drawing.prototype.drawCircle = function(x, y, r, width) {
   let [tx, ty] = this._getTranslation();
-  this.dirtyState = D_DIRTY;
   let centerX = tx + x + r;
   let centerY = ty + y + r;
   let arc = algorithm.midpointCircleRasterize(r);
@@ -194,7 +168,7 @@ Drawing.prototype.drawCircle = function(x, y, r, width) {
   }
   let half = algorithm.isHalfwayValue(r);
   let put = algorithm.renderCircle(centerX, centerY, arc, inner, false, half);
-  this.rawBuffer.putSequence(put);
+  this.putSequence(put);
 }
 
 Drawing.prototype.fillPolygon_params = ['points:ps', 'x?i', 'y?i'];
@@ -203,9 +177,8 @@ Drawing.prototype.fillPolygon = function(polygon, x, y) {
   y = y || 0;
   let [tx, ty] = this._getTranslation();
   let points = geometry.convertToPoints(polygon);
-  this.dirtyState = D_DIRTY;
   let res = algorithm.renderPolygon(this, tx + x, ty + y, points, true);
-  this.rawBuffer.putSequence(res);
+  this.putSequence(res);
 }
 
 Drawing.prototype.drawPolygon_params = ['points:ps', 'x?i', 'y?i'];
@@ -214,78 +187,55 @@ Drawing.prototype.drawPolygon = function(polygon, x, y) {
   y = y || 0;
   let [tx, ty] = this._getTranslation();
   let points = geometry.convertToPoints(polygon);
-  this.dirtyState = D_DIRTY;
   let res = algorithm.renderPolygon(this, tx + x, ty + y, points, false);
-  this.rawBuffer.putSequence(res);
+  this.putSequence(res);
 }
 
 Drawing.prototype.fillFlood_params = ['x:i', 'y:i'];
 Drawing.prototype.fillFlood = function(x, y) {
-  this.dirtyState = D_DIRTY;
-  let image = {
-    palette: [],
-    buffer: [],
-    pitch: null,
-  };
-  this.rawBuffer.retrieveTrueContent(image);
+  // NOTE: need prepare because we're not calling retrieve. Should
+  // there be some similar call to get the plane.data?
+  // Normally putSequence does what we need.
+  this._prepare();
+  let buffer = this.data;
+
   let mem = frameMemory.NewFrameMemory(this.width, this.height);
   for (let k = 0; k < image.buffer.length; k++) {
-    mem[k] = image.buffer[k];
+    mem[k] = buffer[k];
   }
+
   algorithm.flood(mem, x, y, this.frontColor);
-  this.rawBuffer.putFrameMemory(mem);
+
+  // Copy back
+  for (let k = 0; k < buffer.length; k++) {
+    buffer[k] = this.mem[k];
+  }
 }
 
 Drawing.prototype.fillFrame_params = ['options?o', 'fillerFunc:f'];
 Drawing.prototype.fillFrame = function(options, fillerFunc) {
+  // NOTE: need prepare because we're not calling retrieve. Should
+  // there be some similar call to get the plane.data?
+  // Normally putSequence does what we need.
+  this._prepare();
+  let buffer = this.data;
+
   if (this.mem == null) {
     this.mem = frameMemory.NewFrameMemory(this.width, this.height);
-    if (this.dirtyState == D_CLEAN) {
-      this.dirtyState = D_FILL_SOLID;
-    }
+  }
+
+  for (let k = 0; k < buffer.length; k++) {
+    this.mem[k] = buffer[k];
   }
 
   if (options && options.previous && !this.mem._didFrame) {
     this.mem.createBackBuffer();
     // If buffer is created from an unknown previous frame, load the contents
-    if (this.dirtyState == D_DRAWN) {
-      let image = {
-        palette: [],
-        buffer: [],
-        pitch: null,
-      };
-      this.rawBuffer.retrieveTrueContent(image);
-      for (let k = 0; k < image.buffer.length; k++) {
-        this.mem._backBuffer[k] = image.buffer[k];
-      }
+    for (let k = 0; k < buffer.length; k++) {
+      this.mem._backBuffer[k] = buffer[k];
     }
   }
 
-  // If background color was set, fill the memory
-  if (this.dirtyState == D_FILL_SOLID) {
-    this.mem.fill(this.bgColor);
-  }
-
-  // Update the frame memory based upon changes made to the plane.
-  if (this.dirtyState == D_FILL_DOTS) {
-    for (let i = 0; i < this.dotsDrawn.length; i++) {
-      let row = this.dotsDrawn[i];
-      let x = row[0];
-      let y = row[1];
-      this.mem[x + y*this.mem.pitch] = row[2];
-    }
-    this.dotsDrawn.splice(0);
-  } else if (this.dirtyState == D_DIRTY || this.dirtyState == D_DRAWN) {
-    let image = {
-      palette: [],
-      buffer: [],
-      pitch: null,
-    };
-    this.rawBuffer.retrieveTrueContent(image);
-    for (let k = 0; k < image.buffer.length; k++) {
-      this.mem[k] = image.buffer[k];
-    }
-  }
   // Invoke the callback
   if (fillerFunc.length == 1) {
     fillerFunc(this.mem);
@@ -301,9 +251,12 @@ Drawing.prototype.fillFrame = function(options, fillerFunc) {
   } else {
     throw 'Invalid arguments for fillFrame: length = ' + fillerFunc.length;
   }
-  // Render the frame memory into the plane
-  this.dirtyState = D_DID_FILL;
-  this.rawBuffer.putFrameMemory(this.mem);
+
+  // Copy back
+  for (let k = 0; k < buffer.length; k++) {
+    buffer[k] = this.mem[k];
+  }
+
   this.mem._didFrame = true;
 }
 
@@ -323,8 +276,9 @@ Drawing.prototype.drawImage = function(img, x, y) {
   let [tx, ty] = this._getTranslation();
   // TODO: Not just dirty, after drawImage we're not sure if the image
   // is 8-bit safe, or if it now needs trueColor
-  this.dirtyState = D_DIRTY;
-  this.rawBuffer.putImage(img, tx + x, ty + y);
+  // TODO
+  throw 'TODO FIX ME';
+  //this.rawBuffer.putImage(img, tx + x, ty + y);
 }
 
 Drawing.prototype.drawText_params = ['text:s', 'x:i', 'y:i'];
@@ -365,8 +319,7 @@ Drawing.prototype.drawText = function(text, x, y) {
     }
     cursor += len;
   }
-  this.dirtyState = D_DIRTY;
-  this.rawBuffer.putSequence(put);
+  this.putSequence(put);
 }
 
 module.exports.Drawing = Drawing;

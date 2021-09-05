@@ -26,23 +26,33 @@ function saveTmpCompareTo(client, goldenPath) {
   let tmpdir = mkTmpDir();
   let tmpout = tmpdir + '/actual.png';
   client.save(tmpout);
-  if (!compareFiles(goldenPath, tmpout)) {
+  ensureFilesMatch(goldenPath, tmpout);
+}
+
+function ensureFilesMatch(expectFile, gotFile) {
+  if (!compareFiles(expectFile, gotFile)) {
     let e = new Error();
     let lines = e.stack.split('\n');
     let callerLine = lines[2].split(' (')[1].slice(0, -1)
     console.log('');
     console.log(callerLine);
     console.log('mismatch (expect, actual):');
-    console.log('open ' + goldenPath);
-    console.log('open ' + tmpout);
+    console.log('open ' + expectFile);
+    console.log('open ' + gotFile);
     console.log('');
     console.log('to accept this change:');
-    console.log('cp ' + tmpout + ' ' + goldenPath);
+    console.log('cp ' + gotFile + ' ' + expectFile);
     console.log('');
   }
-  assert.ok(compareFiles(goldenPath, tmpout));
+  assert.ok(compareFiles(expectFile, gotFile));
+}
+
+function skipTest() {
+  console.log('--- SKIP ---');
 }
 
 module.exports.mkTmpDir = mkTmpDir;
 module.exports.compareFiles = compareFiles;
 module.exports.saveTmpCompareTo = saveTmpCompareTo;
+module.exports.ensureFilesMatch = ensureFilesMatch;
+module.exports.skipTest = skipTest;

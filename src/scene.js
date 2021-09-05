@@ -11,7 +11,7 @@ function Scene(resources, env) {
 
 Scene.prototype.clearPlane = function(plane) {
   plane.clear();
-  plane.rawBuffer.useColors(this.colorSet);
+  //plane.rawBuffer.useColors(this.colorSet);
 }
 
 module.exports.Scene = Scene;

@@ -3,6 +3,8 @@ var ra = require('../src/lib.js');
 
 describe('Image', function() {
   it('load and draw', function() {
+    return util.skipTest();
+
     ra.resetState();
     // Black background
     ra.fillBackground(0);
@@ -22,6 +24,8 @@ describe('Image', function() {
   });
 
   it('draw without size', function() {
+    return util.skipTest();
+
     ra.resetState();
 
     let img = ra.loadImage('test/testdata/fill_oscil.png');

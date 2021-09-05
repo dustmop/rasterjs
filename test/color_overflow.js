@@ -7,6 +7,9 @@ describe('Color overflow', function() {
     ra.resetState();
     ra.setSize({w: 3, h: 2});
 
+    // Although an explicit rgb color is set for the background,
+    // the calls to setTrueColor will overflow the colorset, leading
+    // to an arbitrary background color.
     ra.fillTrueBackground(0xcc66cc);
 
     for (let k = 0; k < 300; k++) {

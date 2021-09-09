@@ -5,8 +5,6 @@ var rgb_map = require('../src/rgb_map.js');
 
 describe('Palette entry', function() {
   it('set color', function() {
-    return util.skipTest();
-
     let tmpdir = util.mkTmpDir();
     let tmpout = tmpdir + '/actual.png';
     ra.resetState();
@@ -28,13 +26,13 @@ describe('Palette entry', function() {
     ra.setSize(8, 8);
 
     let result = [];
-    let colors = ra.getPaletteAll();
+    let palette = ra.getPaletteAll();
     let i = 0;
     for (let y = 0; y < 8; y++) {
       for (let x = 0; x < 8; x++) {
         ra.setColor(i);
         ra.fillRect({x:x, y:y, w:1, h:1});
-        result.push(colors[i].rgb.toInt());
+        result.push(palette.get(i).rgb.toInt());
         i++;
       }
     }
@@ -48,8 +46,8 @@ describe('Palette entry', function() {
     let tmpout = tmpdir + '/actual.png';
     ra.resetState();
 
-    let colors = ra.getPaletteAll();
-    colors.save(tmpout);
+    let palette = ra.getPaletteAll();
+    palette.save(tmpout);
 
     // TODO: Add palette numbers to the rendered palette.
     util.ensureFilesMatch(tmpout, 'test/testdata/pal_saved.png');
@@ -61,8 +59,8 @@ describe('Palette entry', function() {
     ra.resetState();
     ra.useColors('dos');
 
-    let colors = ra.getPaletteAll();
-    colors.save(tmpout);
+    let palette = ra.getPaletteAll();
+    palette.save(tmpout);
 
     assert.ok(util.compareFiles(tmpout, 'test/testdata/pal_dos_saved.png'));
   });
@@ -73,25 +71,29 @@ describe('Palette entry', function() {
     ra.resetState();
     ra.useColors('dos');
 
-    let colors = ra.getPaletteAll();
-    for (let i = 0; i < colors.length; i++) {
-      if (colors[i].rgb.toInt() != rgb_map.rgb_map_dos[i]) {
+    let palette = ra.getPaletteAll();
+    for (let i = 0; i < palette.length; i++) {
+      if (palette.get(i).rgb.toInt() != rgb_map.rgb_map_dos[i]) {
         assert.fail('Did not match!');
       }
     }
 
     let expect = 'PaletteCollection{0: 0x000000, 1: 0x0000aa, 2: 0x00aa00, 3: 0x00aaaa, 4: 0xaa0000, 5: 0xaa00aa, 6: 0xaa5500, 7: 0xaaaaaa, 8: 0x555555, 9: 0x5555ff, 10: 0x55ff55, 11: 0x55ffff, 12: 0xff5555, 13: 0xff55ff, 14: 0xffff55, 15: 0xffffff}';
-    let actual = colors.toString();
+    let actual = palette.toString();
     assert.equal(expect, actual);
   });
 
   it('get all', function() {
-    return util.skipTest();
-
     ra.resetState();
-    let img = ra.loadImage('test/testdata/boss_first_form.png');
     ra.useColors(null);
     ra.fillTrueBackground(0x444444);
+
+    // TODO: Currently, loading the image adds to the colorSet.
+    // It should really happen lazily, when the image plane gets
+    // applied to the target plane. This means either when the
+    // scene's `then` completes, or when the image is drawn.
+    let img = ra.loadImage('test/testdata/boss_first_form.png');
+
     ra.drawImage(img, 0, 0);
     let colors = ra.getPaletteAll({sort: true});
     let actual = [];

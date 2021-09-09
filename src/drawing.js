@@ -45,10 +45,6 @@ Drawing.prototype.fillTrueBackground_params = ['rgb:i'];
 Drawing.prototype.fillTrueBackground = function(rgb) {
   let color = this.scene.colorSet.addEntry(rgb);
   this.fillBackground(color);
-  // NOTE: Bit of a hack. If the background color is assigned
-  // lazily, it's possible that more rgb values will be added to
-  // the color set, eventually overwriting this entry, and using
-  // the wrong rgb value. This sets the color immediately instead.
 }
 
 Drawing.prototype.drawLine_params = ['x0:i', 'y0:i', 'x1:i', 'y1:i', 'cc?b'];
@@ -200,7 +196,7 @@ Drawing.prototype.fillFlood = function(x, y) {
   let buffer = this.data;
 
   let mem = frameMemory.NewFrameMemory(this.width, this.height);
-  for (let k = 0; k < image.buffer.length; k++) {
+  for (let k = 0; k < buffer.length; k++) {
     mem[k] = buffer[k];
   }
 
@@ -208,32 +204,27 @@ Drawing.prototype.fillFlood = function(x, y) {
 
   // Copy back
   for (let k = 0; k < buffer.length; k++) {
-    buffer[k] = this.mem[k];
+    buffer[k] = mem[k];
   }
 }
 
 Drawing.prototype.fillFrame_params = ['options?o', 'fillerFunc:f'];
 Drawing.prototype.fillFrame = function(options, fillerFunc) {
-  // NOTE: need prepare because we're not calling retrieve. Should
-  // there be some similar call to get the plane.data?
-  // Normally putSequence does what we need.
-  this._prepare();
-  let buffer = this.data;
-
   if (this.mem == null) {
     this.mem = frameMemory.NewFrameMemory(this.width, this.height);
   }
-
-  for (let k = 0; k < buffer.length; k++) {
-    this.mem[k] = buffer[k];
-  }
-
   if (options && options.previous && !this.mem._didFrame) {
     this.mem.createBackBuffer();
     // If buffer is created from an unknown previous frame, load the contents
-    for (let k = 0; k < buffer.length; k++) {
-      this.mem._backBuffer[k] = buffer[k];
+    for (let k = 0; k < this.data.length; k++) {
+      this.mem._backBuffer[k] = this.data[k];
     }
+  }
+
+  this._prepare();
+  let buffer = this.data;
+  for (let k = 0; k < buffer.length; k++) {
+    this.mem[k] = buffer[k];
   }
 
   // Invoke the callback
@@ -274,11 +265,7 @@ Drawing.prototype.drawImage = function(img, x, y) {
     this.setSize(img.width, img.height);
   }
   let [tx, ty] = this._getTranslation();
-  // TODO: Not just dirty, after drawImage we're not sure if the image
-  // is 8-bit safe, or if it now needs trueColor
-  // TODO
-  throw 'TODO FIX ME';
-  //this.rawBuffer.putImage(img, tx + x, ty + y);
+  this.putImage(img, tx + x, ty + y);
 }
 
 Drawing.prototype.drawText_params = ['text:s', 'x:i', 'y:i'];

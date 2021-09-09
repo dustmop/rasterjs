@@ -1,22 +1,14 @@
-const colorSet = require('./color_set.js');
+const colors = require('./color_set.js');
 
-function Scene(resources, env) {
-  this.colorSet = new colorSet.Set();
-  this.resources = resources;
-  this.saveService = resources;
-  this.env = env;
-  this.font = null;
+function Standalone() {
+  this.colorSet = new colors.Set([]);
   this.rgbBuffer = null;
   this.palette = null;
+  this.saveService = null;
   return this;
 }
 
-Scene.prototype.clearPlane = function(plane) {
-  plane.clear();
-  this.rgbBuffer = null;
-}
-
-Scene.prototype.render = function(pl) {
+Standalone.prototype.render = function(pl) {
   let numPixels = pl.height * pl.pitch;
   if (this.rgbBuffer == null) {
     this.rgbBuffer = new Uint8Array(numPixels*4);
@@ -34,7 +26,7 @@ Scene.prototype.render = function(pl) {
   return this.rgbBuffer;
 }
 
-Scene.prototype._toColor = function(c) {
+Standalone.prototype._toColor = function(c) {
   let rgb;
   if (this.palette) {
     let ent = this.palette.get(c);
@@ -51,4 +43,4 @@ Scene.prototype._toColor = function(c) {
   return [r, g, b];
 }
 
-module.exports.Scene = Scene;
+module.exports.Standalone = Standalone;

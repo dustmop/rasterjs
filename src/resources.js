@@ -20,13 +20,15 @@ Resources.prototype.openImage = function(filename, imgPlane) {
     let ctx = canvas.getContext('2d');
     ctx.drawImage(imgElem, 0, 0, imgElem.width, imgElem.height);
     let pixels = ctx.getImageData(0, 0, imgElem.width, imgElem.height);
-    imgPlane.data = pixels.data;
+    imgPlane.rgbBuff = pixels.data;
     imgPlane.width = pixels.width;
     imgPlane.pitch = pixels.width;
     imgPlane.height = pixels.height;
     // TODO: Process the pixel data so it matches the colorSet
     // Mark the load as completed.
     self.numLoadDone++;
+    //
+    imgPlane.fillData();
   }
   // TODO: Handle 404 not found for images
   imgElem.src = '/' + filename;

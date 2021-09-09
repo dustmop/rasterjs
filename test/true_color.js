@@ -30,7 +30,7 @@ describe('True Color', function() {
     assert.equal(pal[66].rgb.toInt(), 0x224488);
     assert.equal(pal[67].rgb.toInt(), 0xdd4444);
     for (let k = 0; k < pal.length; k++) {
-      assert.equal(pal[k].color, k);
+      assert.equal(pal[k].idx, k);
     }
   });
 });

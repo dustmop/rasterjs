@@ -1,12 +1,9 @@
 const drawing = require('./drawing.js');
-//const rawBuff = require('./raw_buffer.js');
+const standalone = require('./standalone.js');
 
 var _g_scene = null;
 
 function Plane() {
-  //this.rawBuffer = new rawBuff.RawBuffer();
-  //this.colorSet = _g_scene.colorSet;
-  //this.rawBuffer.useColors(this.colorSet);
   this.clear();
   this.scene = _g_scene;
   this._addMethods();
@@ -50,10 +47,6 @@ Plane.prototype._setSize = function(w, h) {
   this.pitch = w;
 }
 
-//Plane.prototype.trueBuffer = function() {
-//  return this.rawBuffer.rawData();
-//}
-
 Plane.prototype.useColors = function(rep) {
   // TODO: Plane doesn't use this at all, move to scene only?
   this.scene.colorSet.use(rep);
@@ -69,17 +62,9 @@ Plane.prototype._getTranslation = function() {
 }
 
 Plane.prototype.nextFrame = function() {
-/*
-  let old = this.dirtyState;
-  if (this.dirtyState == D_DID_FILL || this.dirtyState == D_CLEAN) {
-    this.dirtyState = D_CLEAN;
-  } else {
-    this.dirtyState = D_DRAWN;
-  }
   if (this.mem) {
     this.mem._didFrame = false;
   }
-*/
 }
 
 Plane.prototype._prepare = function() {
@@ -96,6 +81,12 @@ Plane.prototype._prepare = function() {
     this.data[k] = c;
   }
   this._needErase = false;
+}
+
+Plane.prototype.get = function(x, y) {
+  this._prepare();
+  let k = y * this.pitch + x;
+  return this.data[k];
 }
 
 Plane.prototype.putSequence = function(seq) {
@@ -164,32 +155,44 @@ Plane.prototype.putSequence = function(seq) {
   }
 }
 
-Plane.prototype.render = function() {
+Plane.prototype.putImage = function(img, baseX, baseY) {
   this._prepare();
-  let numPixels = this.height * this.pitch;
-  if (this.rgbBuffer == null) {
-    this.rgbBuffer = new Uint8Array(numPixels*4);
+  let imageTop = img.top;
+  let imageLeft = img.left;
+  let imageHeight = img.height;
+  let imageWidth = img.width;
+  let imagePitch = img.pitch;
+  let imageData = img.data;
+  let imageAlpha = img.alpha;
+  if (this.data == null) {
+    return;
   }
-  for (let y = 0; y < this.height; y++) {
-    for (let x = 0; x < this.width; x++) {
-      let k = y*this.pitch + x;
-      let [r,g,b] = this._toColor(this.data[k]);
-      this.rgbBuffer[k*4+0] = r;
-      this.rgbBuffer[k*4+1] = g;
-      this.rgbBuffer[k*4+2] = b;
-      this.rgbBuffer[k*4+3] = 0xff;
+  baseX = Math.floor(baseX);
+  baseY = Math.floor(baseY);
+  for (let y = imageTop; y < imageHeight; y++) {
+    for (let x = imageLeft; x < imageWidth; x++) {
+      let j = y*imagePitch + x;
+      let putX = x + baseX;
+      let putY = y + baseY;
+      if (putX < 0 || putX >= this.width ||
+          putY < 0 || putY >= this.height) {
+        continue;
+      }
+      let k = putY*this.pitch + putX;
+      if (imageAlpha && imageAlpha[j] >= 0x80) {
+        this.data[k] = imageData[j];
+      }
     }
   }
-  return this.rgbBuffer;
 }
 
-Plane.prototype._toColor = function(c) {
-  let colors = this.scene.colorSet;
-  let rgb = colors.get(c);
-  let r = Math.floor(rgb / 0x10000) % 0x100;
-  let g = Math.floor(rgb / 0x100) % 0x100;
-  let b = Math.floor(rgb / 0x1) % 0x100;
-  return [r, g, b];
+Plane.prototype.useStandalone = function() {
+  this.scene = new standalone.Standalone();
+}
+
+Plane.prototype.render = function() {
+  this._prepare();
+  return this.scene.render(this);
 }
 
 Plane.prototype.save = function(savepath) {

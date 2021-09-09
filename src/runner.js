@@ -1,7 +1,7 @@
 const drawing = require('./drawing.js');
 const destructure = require('./destructure.js');
 const algorithm = require('./algorithm.js');
-const paletteEntry = require('./palette_entry.js');
+const palette = require('./palette.js');
 const geometry = require('./geometry.js');
 const imageLoader = require('./image_loader.js');
 const textLoader = require('./text_loader.js');
@@ -34,7 +34,7 @@ Runner.prototype.initialize = function () {
   this._config.zoomScale = 1;
   this._config.titleText = '';
   this.scene.colorSet.clear();
-  this.imgLoader = new imageLoader.Loader(this.resources);
+  this.imgLoader = new imageLoader.Loader(this.resources, this.scene.colorSet);
   this.textLoader = new textLoader.TextLoader(this.resources);
   let options = this.env.getOptions();
   this.numFrames = options.num_frames || -1;
@@ -69,6 +69,7 @@ Runner.prototype._addMethods = function() {
 
 Runner.prototype.resetState = function() {
   this.scene.colorSet.clear();
+  this.scene.palette = null;
   this.scene.clearPlane(this.aPlane);
 }
 
@@ -184,70 +185,34 @@ Runner.prototype.isDisplayObject = function(obj) {
 }
 
 Runner.prototype.getPaletteEntry = function(x, y) {
-  let image = {
-    palette: [],
-    buffer: [],
-    pitch: null,
-  };
-  this.aPlane.rawBuffer.retrieveTrueContent(image);
-  if (!image.buffer.length) {
-    throw 'cannot getPaletteEntry with an empty plane';
-  }
-
-  // Build index from each 8-bt color to where it is used in the plane
-  let index = {};
-  for (let k = 0; k < image.buffer.length; k++) {
-    let color = image.buffer[k];
-    if (index[color] === undefined) {
-      index[color] = [];
-    }
-    index[color].push(k);
-  }
-
-  let pitch = image.pitch;
-  let color = image.buffer[x + y*pitch];
-  let tr = image.palette[color];
-
-  return new paletteEntry.PaletteEntry(this.aPlane, pitch,
-                                       index, color, tr);
+  let c = this.aPlane.get(x, y);
+  this._ensurePalette();
+  return this.scene.palette.get(c);
 }
 
-/*
 Runner.prototype.getPaletteAll = function(opt) {
-  opt = opt || {};
-  let image = {
-    palette: [],
-    buffer: [],
-    pitch: null,
-  };
-  this.aPlane.rawBuffer.retrieveTrueContent(image);
-
+  this._ensurePalette();
   if (opt.sort) {
+    let image = {palette: this.scene.palette};
     algorithm.sortByHSV(image);
+    this.scene.palette = image.palette;
   }
+  return this.scene.palette;
+}
 
-  let index = {};
-  for (let k = 0; k < image.buffer.length; k++) {
-    let color = image.buffer[k];
-    if (index[color] === undefined) {
-      index[color] = [];
+Runner.prototype._ensurePalette = function() {
+  if (this.scene.palette == null) {
+    let colors = this.scene.colorSet;
+    let saveService = this.scene.saveService;
+    let all = [];
+    for (let i = 0; i < colors.size(); i++) {
+      let c = colors.get(i);
+      let rgb = new rgbColor.RGBColor(c);
+      let ent = new palette.PaletteEntry(rgb, i, colors);
+      all.push(ent);
     }
-    index[color].push(k);
+    this.scene.palette = new palette.PaletteCollection(all, saveService);
   }
-*/
-
-Runner.prototype.getPaletteAll = function(opt) {
-  let colors = this.scene.colorSet;
-  let pitch = this.aPlane.pitch;
-  let all = [];
-  for (let k = 0; k < colors.size(); k++) {
-    let c = colors.get(k);
-    let rgb = new rgbColor.RGBColor(c);
-    let ent = new paletteEntry.PaletteEntry(null, pitch, null, k, rgb);
-    all.push(ent);
-  }
-
-  return new paletteEntry.PaletteCollection(all);
 }
 
 module.exports.Runner = Runner;

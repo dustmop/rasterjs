@@ -1,7 +1,7 @@
 #include "type.h"
 
 struct Image {
-  uint8* data;
+  uint8* buff;
   int top;
   int left;
   int width;

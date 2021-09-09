@@ -50,7 +50,7 @@ Napi::Value Resources::OpenImage(const Napi::CallbackInfo& info) {
 
   // TODO: Other formats
   Image img;
-  img.data = NULL;
+  img.buff = NULL;
   int err = LoadPng(filename.c_str(), &img);
   if (err != 0) {
     // TODO: Throw an error
@@ -63,11 +63,11 @@ Napi::Value Resources::OpenImage(const Napi::CallbackInfo& info) {
 
   int byteLength = img.width * img.height * 4;
   Napi::ArrayBuffer arrayBuff = Napi::ArrayBuffer::New(env, byteLength);
-  uint8* arrayData = (uint8*)arrayBuff.Data();
+  uint8* buffData = (uint8*)arrayBuff.Data();
   for (int k = 0; k < byteLength; k++) {
-    arrayData[k] = img.data[k];
+    buffData[k] = img.buff[k];
   }
-  imgObj.Set("data", arrayBuff);
+  imgObj.Set("rgbBuff", arrayBuff);
 
   // TODO: Return value should be uint8array, not ArrayBuffer
   //Napi::Value arr = Napi::TypedArrayOf<uint8_t>::New(env, 1, arrayBuff, 0, napi_uint8_array);

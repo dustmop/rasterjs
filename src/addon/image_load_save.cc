@@ -98,14 +98,14 @@ int loadPngFile(const char* filename, int *outWidth, int *outHeight, int *outPit
 
 int LoadPng(const char* filename, Image* img) {
   int width, height, pitch;
-  uint8* data = NULL;
-  int ret = loadPngFile(filename, &width, &height, &pitch, &data, false);
+  uint8* buff = NULL;
+  int ret = loadPngFile(filename, &width, &height, &pitch, &buff, false);
   if (ret != 0) {
     return ret;
   }
   img->top = 0;
   img->left = 0;
-  img->data = data;
+  img->buff = buff;
   img->width = width;
   img->height = height;
   img->pitch = pitch;

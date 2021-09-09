@@ -63,9 +63,7 @@ Display.prototype.renderLoop = function(nextFrame, num, exitAfter, finalFunc) {
 
   let renderIt = function() {
     // Get the data buffer from the plane.
-    if (!frontBuffer) {
-      frontBuffer = pl.trueBuffer();
-    }
+    frontBuffer = pl.render();
 
     if (frontBuffer) {
       let buff = Uint8ClampedArray.from(frontBuffer);

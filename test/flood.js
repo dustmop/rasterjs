@@ -4,8 +4,6 @@ var ra = require('../src/lib.js');
 
 describe('Flood', function() {
   it('maze', function() {
-    return util.skipTest();
-
     ra.resetState();
     ra.setSize({w: 16, h: 16});
     let img = ra.loadImage('test/testdata/maze_mini.png');
@@ -17,8 +15,6 @@ describe('Flood', function() {
   });
 
   it('odd shape', function() {
-    return util.skipTest();
-
     ra.resetState();
     ra.setSize({w: 16, h: 16});
     let img = ra.loadImage('test/testdata/odd_shape.png');

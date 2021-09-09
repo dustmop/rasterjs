@@ -102,8 +102,6 @@ describe('Fill', function() {
   });
 
   it('from previous memory', function() {
-    return util.skipTest();
-
     ra.resetState();
 
     ra.setSize({w: 7, h: 7});

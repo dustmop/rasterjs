@@ -89,19 +89,19 @@ function rgbToHSV(r, g, b) {
   return [h, s, v]
 }
 
-function sortByHSV(image) {
+function sortByHSV(param) {
   let colors = [];
   // Get first element, treat as the background color, skip it in the loop
-  let bgColor = Math.floor(image.palette[0]);
-  for (let i = 1; i < image.palette.length; i++) {
-    let [r, g, b] = color24BitToRGB(image.palette[i]);
-    let [h, s, v] = rgbToHSV(r, g, b);
+  let bgColor = param.palette[0];
+  for (let i = 1; i < param.palette.length; i++) {
+    let rgb = param.palette[i].rgb;
+    let [h, s, v] = rgbToHSV(rgb.r, rgb.g, rgb.b);
     let k = Math.floor(h * 10) * 10000 + Math.floor(v * 1000) + s;
-    colors.push([k, r, g, b, h, s, v, i]);
+    colors.push({key: k, from: i});
   }
   colors.sort(function(a, b) {
-    if (a[0] < b[0]) { return -1; }
-    if (a[0] > b[0]) { return 1; }
+    if (a.key < b.key) { return -1; }
+    if (a.key > b.key) { return 1; }
     return 0;
   });
 
@@ -109,19 +109,13 @@ function sortByHSV(image) {
   let palette = [];
   // Put the bgColor at the front
   palette.push(bgColor);
-  for (let i = 0; i < colors.length; i++) {
-    let from = colors[i][7];
-    // Add 1 because we start with the bgColor in position 0
-    remap[from] = i+1;
-    let rgb = image.palette[colors[i][7]];
+  for (let j = 0; j < colors.length; j++) {
+    let from = colors[j].from;
+    let rgb = param.palette[from];
     palette.push(rgb);
   }
 
-  // Fix up the buffer values
-  for (let i = 0; i < image.buffer.length; i++) {
-    image.buffer[i] = remap[image.buffer[i]];
-  }
-  image.palette = palette;
+  param.palette = palette;
 }
 
 function flood(mem, initX, initY, color) {

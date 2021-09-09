@@ -33,4 +33,23 @@ describe('Gif', function() {
     });
   });
 
+  it('save multiple frames', function() {
+    let tmpdir = util.mkTmpDir();
+    let tmpout = tmpdir + '/actual%02d.png';
+    let script = 'test/testdata/scripts/spin.js';
+    let cmd = `node ${script} --save ${tmpout} --num-frames 4`;
+    let cwd = process.cwd();
+    child_process.exec(cmd, function(error, stdout, stderr) {
+      if (error) {
+        throw error;
+      }
+      let goldenPath = 'test/testdata/spin-frame00.png';
+      let actual = tmpdir + '/actual00.png';
+      assert.ok(util.compareFiles(goldenPath, actual), `Failed file comparison, expect: ${goldenPath}, actual: ${actual}`);
+      goldenPath = 'test/testdata/spin-frame03.png';
+      actual = tmpdir + '/actual03.png';
+      assert.ok(util.compareFiles(goldenPath, actual), `Failed file comparison, expect: ${goldenPath}, actual: ${actual}`);
+    });
+  });
+
 });

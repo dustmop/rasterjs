@@ -30,12 +30,21 @@ SaveRenderer.prototype.renderLoop = function(nextFrame) {
   } catch (e) {
   }
 
+  let hasTemplate = false;
+
   let numFrames = this.numFrames;
   if (!numFrames || numFrames < 0) {
     numFrames = 64;
   }
   if (!this.isGif) {
-    numFrames = 1;
+    if (this.numFrames) {
+      if (!this.targetPath.includes('%02d')) {
+        throw new Error(`saving a png to multiple frames requires template string, use "%02d" for --save`)
+      }
+      hasTemplate = true;
+    } else {
+      numFrames = 1;
+    }
   }
 
   // Render each frame, and write to a file in a tmp directory.
@@ -60,11 +69,20 @@ SaveRenderer.prototype.renderLoop = function(nextFrame) {
       console.log(`wrote ${self.targetPath}`);
     });
     return;
-  } else {
+  } else if (!hasTemplate) {
     // Copy the first frame to our target path.
     let infile = `${this.tmpdir}/000.png`;
     let outfile = this.targetPath;
     fs.copyFileSync(infile, outfile);
+  } else {
+    // Multiple frames
+    for (let count = 0; count < numFrames; count++) {
+      let frameNum = leftPad(count, 3, '0');
+      let param = leftPad(count, 2, '0');
+      let infile = `${this.tmpdir}/${frameNum}.png`;
+      let outfile = this.targetPath.replace('%02d', param);
+      fs.copyFileSync(infile, outfile);
+    }
   }
 }
 

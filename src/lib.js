@@ -90,6 +90,10 @@ Raster.prototype.getPaletteAll = function(opt) {
   return this.runner.getPaletteAll(opt);
 }
 
+Raster.prototype.usePalette = function(vals) {
+  return this.runner.usePalette(vals);
+}
+
 Raster.prototype.setFont = function(filename) {
   this.runner.setFont(filename);
 }
@@ -116,6 +120,10 @@ Raster.prototype.mixColors = function(spec) {
     result.push(rgb.toInt());
   }
   return result;
+}
+
+Raster.prototype.getPlaneData = function() {
+  return this.runner.aPlane.data;
 }
 
 ////////////////////////////////////////

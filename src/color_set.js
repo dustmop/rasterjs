@@ -4,6 +4,7 @@ function Set(vals) {
   if (!vals) {
     vals = rgbMap.rgb_map_quick;
   }
+  // TODO: vals should hold RGBColor objects
   this.vals = vals;
   this.newIndex = this.vals.length;
   return this;
@@ -29,7 +30,7 @@ Set.prototype.assign = function(vals) {
 Set.prototype.addEntry = function(rgb) {
   for (let i = 0; i < this.vals.length; i++) {
     let c = this.vals[i];
-    if (c == rgb) {
+    if (c === rgb) {
       return i;
     }
   }
@@ -38,6 +39,16 @@ Set.prototype.addEntry = function(rgb) {
   this.vals[i] = rgb;
   this.newIndex = (i + 1) % 0x100;
   return i;
+}
+
+Set.prototype.find = function(rgb) {
+  for (let i = 0; i < this.vals.length; i++) {
+    let c = this.vals[i];
+    if (c === rgb) {
+      return i;
+    }
+  }
+  return -1;
 }
 
 Set.prototype.use = function(rep) {

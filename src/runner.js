@@ -34,7 +34,7 @@ Runner.prototype.initialize = function () {
   this._config.zoomScale = 1;
   this._config.titleText = '';
   this.scene.colorSet.clear();
-  this.imgLoader = new imageLoader.Loader(this.resources, this.scene.colorSet);
+  this.imgLoader = new imageLoader.Loader(this.resources, this.scene);
   this.textLoader = new textLoader.TextLoader(this.resources);
   let options = this.env.getOptions();
   this.numFrames = options.num_frames || -1;
@@ -213,6 +213,31 @@ Runner.prototype._ensurePalette = function() {
     }
     this.scene.palette = new palette.PaletteCollection(all, saveService);
   }
+}
+
+Runner.prototype.usePalette = function(vals) {
+  let colors = this.scene.colorSet;
+  let saveService = this.scene.saveService;
+  let all = [];
+  let ent;
+  for (let i = 0; i < vals.length; i++) {
+    let cval = vals[i];
+    if (cval === null) {
+      let rgb = new rgbColor.RGBColor(0);
+      ent = new palette.PaletteEntry(rgb, -1, colors);
+      ent.isAvail = true;
+      all.push(ent);
+      continue;
+    }
+    if (cval >= colors.size()) {
+      throw new Error(`illegal color value ${cval}, colorSet only has ${colors.size()}`);
+    }
+    let rgbval = colors.get(cval);
+    let rgb = new rgbColor.RGBColor(rgbval);
+    ent = new palette.PaletteEntry(rgb, cval, colors);
+    all.push(ent);
+  }
+  this.scene.palette = new palette.PaletteCollection(all, saveService);
 }
 
 module.exports.Runner = Runner;

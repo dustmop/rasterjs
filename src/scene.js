@@ -39,9 +39,10 @@ Scene.prototype._toColor = function(c) {
   if (this.palette) {
     let ent = this.palette.get(c);
     if (!ent) {
-      console.log(`color not found: ${c}`);
+      rgb = 0;
+    } else {
+      rgb = ent.rgb.toInt();
     }
-    rgb = ent.rgb.toInt();
   } else {
     rgb = this.colorSet.get(c);
   }

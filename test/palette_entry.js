@@ -78,7 +78,7 @@ describe('Palette entry', function() {
       }
     }
 
-    let expect = 'PaletteCollection{0: 0x000000, 1: 0x0000aa, 2: 0x00aa00, 3: 0x00aaaa, 4: 0xaa0000, 5: 0xaa00aa, 6: 0xaa5500, 7: 0xaaaaaa, 8: 0x555555, 9: 0x5555ff, 10: 0x55ff55, 11: 0x55ffff, 12: 0xff5555, 13: 0xff55ff, 14: 0xffff55, 15: 0xffffff}';
+    let expect = 'PaletteCollection{0:[0]=0x000000, 1:[1]=0x0000aa, 2:[2]=0x00aa00, 3:[3]=0x00aaaa, 4:[4]=0xaa0000, 5:[5]=0xaa00aa, 6:[6]=0xaa5500, 7:[7]=0xaaaaaa, 8:[8]=0x555555, 9:[9]=0x5555ff, 10:[10]=0x55ff55, 11:[11]=0x55ffff, 12:[12]=0xff5555, 13:[13]=0xff55ff, 14:[14]=0xffff55, 15:[15]=0xffffff}';
     let actual = palette.toString();
     assert.equal(expect, actual);
   });

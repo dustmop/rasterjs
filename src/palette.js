@@ -2,8 +2,8 @@ const rgbColor = require('./rgb_color.js');
 const plane = require('./plane.js');
 
 function PaletteCollection(items, saveService) {
-  if (saveService == null) {
-    throw new Error('PaletteCollection requires a saveService');
+  if (saveService != null && !saveService.saveTo) {
+    throw new Error('PaletteCollection given invalid saveService');
   }
   this.items = items;
   // length
@@ -45,10 +45,33 @@ PaletteCollection.prototype.toString = function() {
 PaletteCollection.prototype._stringify = function(depth, opts) {
   let elems = [];
   for (let i = 0; i < this.items.length; i++) {
-    let val = this.items[i].hex();
-    elems.push(`${i}: ${val}`);
+    let it = this.items[i];
+    elems.push(`${i}:[${it.cval}]=${it.hex()}`);
   }
   return 'PaletteCollection{' + elems.join(', ') + '}';
+}
+
+PaletteCollection.prototype.find = function(cval) {
+  for (let n = 0; n < this.items.length; n++) {
+    let ent = this.items[n];
+    if (cval === ent.cval) {
+      return n;
+    }
+  }
+  return null;
+}
+
+PaletteCollection.prototype.insertWhereAvail = function(rgbval) {
+  for (let n = 0; n < this.items.length; n++) {
+    let ent = this.items[n];
+    if (ent.isAvail) {
+      ent.cval = 0;
+      ent.isAvail = false;
+      ent.drop = rgbval;
+      return n;
+    }
+  }
+  return null;
 }
 
 function PaletteEntry(rgb, idx, colors) {
@@ -65,6 +88,7 @@ function PaletteEntry(rgb, idx, colors) {
   this.idx = idx;
   this.cval = idx;
   this.colors = colors;
+  this.isAvail = false;
   return this;
 }
 
@@ -75,8 +99,14 @@ PaletteEntry.prototype.setColor = function(n) {
 
 PaletteEntry.prototype.hex = function() {
   let text = this.rgb.toInt().toString(16);
+  if (this.drop) {
+    text = this.drop.toString(16);
+  }
   while (text.length < 6) {
     text = '0' + text;
+  }
+  if (this.drop) {
+    return '(0x' + text + ')';
   }
   return '0x' + text;
 }

@@ -1,7 +1,9 @@
-function Loader(resources, colorSet) {
+const rgbColor = require('./rgb_color.js');
+
+function Loader(resources, scene) {
   this.list = [];
   this.resources = resources;
-  this.colorSet = colorSet;
+  this.scene = scene;
   return this;
 }
 
@@ -17,7 +19,8 @@ Loader.prototype.loadImage = function(filename) {
   img.height = 0;
   img.pitch = 0;
   img.data = null;
-  img.colorSet = this.colorSet;
+  img.colorSet = this.scene.colorSet;
+  img.palette = this.scene.palette;
 
   let ret = this.resources.openImage(filename, img);
   if (ret == -1) {
@@ -62,6 +65,7 @@ function ImagePlane() {
   this.rgbBuff = null;
   this.data = null;
   this.colorSet = null;
+  this.palette = null;
   return this;
 }
 
@@ -78,6 +82,7 @@ ImagePlane.prototype.copy = function(x, y, w, h) {
   make.alpha = this.alpha;
   make.rgbBuff = this.rgbBuff;
   make.colorSet = this.colorSet;
+  make.palette = this.palette;
   return make;
 }
 
@@ -87,6 +92,8 @@ ImagePlane.prototype.fillData = function() {
     this.data = new Uint8Array(numPixels);
     this.alpha = new Uint8Array(numPixels);
   }
+  let palette = this.palette;
+  let remap = {};
   for (let y = 0; y < this.height; y++) {
     for (let x = 0; x < this.width; x++) {
       let k = y * this.pitch + x;
@@ -95,9 +102,33 @@ ImagePlane.prototype.fillData = function() {
       let b = this.rgbBuff[k*4+2];
       let c = 0;
       this.alpha[k] = this.rgbBuff[k*4+3];
+      // Transparent pixels are not added to the colorSet.
       if (this.alpha[k] >= 0x80) {
-        // Transparent pixels are not added to the colorSet.
-        c = this.colorSet.addEntry(r * 0x10000 + g * 0x100 + b);
+        // Map rgb values to the colorSet and palette
+        let rgbval = r * 0x10000 + g * 0x100 + b;
+        c = remap[rgbval];
+        if (c === undefined) {
+          if (palette) {
+            let cval = this.colorSet.find(rgbval);
+            if (cval == -1) {
+              c = palette.insertWhereAvail(rgbval);
+              if (c == null) {
+                throw new Error(`TODO: fix this error, add a test`);
+              }
+            } else {
+              c = palette.find(cval);
+              if (c == null) {
+                throw new Error(`image uses valid colors, but palette is full. color=0x${rgbval.toString(16)}`);
+              }
+            }
+          } else {
+            c = this.colorSet.addEntry(rgbval);
+          }
+          if (c == undefined) {
+            throw new Error(`unknown color: 0x${rgbval.toString(16)}`);
+          }
+          remap[rgbval] = c;
+        }
         this.data[k] = c;
       }
     }

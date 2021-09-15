@@ -1,7 +1,9 @@
+var assert = require('assert');
 var util = require('./util.js');
 var ra = require('../src/lib.js');
 
 describe('Image', function() {
+
   it('load and draw', function() {
     ra.resetState();
     // Black background
@@ -21,6 +23,8 @@ describe('Image', function() {
     util.saveTmpCompareTo(ra, 'test/testdata/composite.png');
   });
 
+
+  // Drawing an image without setting the size will use that image's size
   it('draw without size', function() {
     ra.resetState();
 
@@ -30,4 +34,58 @@ describe('Image', function() {
     util.saveTmpCompareTo(ra, 'test/testdata/fill_oscil.png');
   });
 
+
+  // If a colorSet exists, image uses it to convert rgb to 8-bit.
+  it('draw using colorset', function() {
+    ra.resetState();
+    ra.useColors('pico8');
+
+    let img = ra.loadImage('test/testdata/small-fruit.png');
+    ra.drawImage(img);
+
+    util.saveTmpCompareTo(ra, 'test/testdata/small-fruit.png');
+
+    // 8-bit data array is using pico8 values
+    let expect = new Uint8Array([
+      0, 0, 0, 0, 4, 0, 0, 0,
+      0, 0, 0, 0, 0, 4, 0, 0,
+      0, 2, 8, 8, 8, 4, 2, 0,
+      2, 8,14, 8, 4, 8, 8, 2,
+      8,14,14, 8, 8, 8, 8, 8,
+      8, 8, 8, 8, 8, 8, 8, 8,
+      0, 8, 8, 8, 8, 8, 8, 0,
+      0, 0, 8, 8, 8, 8, 0, 0
+    ]);
+    assert.deepEqual(expect, ra.getPlaneData());
+  });
+
+
+  // Colors that didn't exist in the colorSet are added to it
+  it('draw adds colors', function() {
+    ra.resetState();
+    ra.useColors([0x000000, 0xab5236, 0xff004d, 0x29adff]);
+
+    let img = ra.loadImage('test/testdata/small-fruit.png');
+    ra.drawImage(img);
+
+    util.saveTmpCompareTo(ra, 'test/testdata/small-fruit.png');
+
+    let expect = new Uint8Array([
+      0, 0, 0, 0, 1, 0, 0, 0,
+      0, 0, 0, 0, 0, 1, 0, 0,
+      0, 4, 2, 2, 2, 1, 4, 0,
+      4, 2, 5, 2, 1, 2, 2, 4,
+      2, 5, 5, 2, 2, 2, 2, 2,
+      2, 2, 2, 2, 2, 2, 2, 2,
+      0, 2, 2, 2, 2, 2, 2, 0,
+      0, 0, 2, 2, 2, 2, 0, 0
+    ]);
+    assert.deepEqual(expect, ra.getPlaneData());
+
+    // Compare the palette
+    let palette = ra.getPaletteAll();
+    expect = 'PaletteCollection{0:[0]=0x000000, 1:[1]=0xab5236, 2:[2]=0xff004d, 3:[3]=0x29adff, 4:[4]=0x7e2553, 5:[5]=0xff77a8}';
+    let actual = palette.toString();
+    assert.equal(expect, actual);
+  });
 });

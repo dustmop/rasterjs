@@ -51,4 +51,8 @@ Resources.prototype.allLoaded = function() {
   return this.numLoadDone == this.numToLoad;
 }
 
+Resources.prototype.saveTo = function() {
+  throw new Error('cannot save image');
+}
+
 module.exports.Resources = Resources;

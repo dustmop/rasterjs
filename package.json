@@ -13,7 +13,8 @@
     "test": "npm run node-test && npm run web-test",
     "node-test": "mocha",
     "web-test": "karma start --single-run --browsers FirefoxHeadless karma.conf.js --",
-    "build": "webpack"
+    "build": "webpack",
+    "dev": "webpack --config webpack.dev.js"
   },
   "dependencies": {
     "argparse": "^2.0.1",

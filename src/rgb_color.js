@@ -42,7 +42,7 @@ function RGBColor(val) {
     return this;
   }
 
-  if (val.constructor.name == 'RGBColor') {
+  if (val.constructor == RGBColor) {
     this.r = val.r;
     this.g = val.g;
     this.b = val.b;

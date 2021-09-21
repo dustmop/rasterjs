@@ -1,4 +1,5 @@
 const palette = require('./palette.js');
+const rgbColor = require('./rgb_color.js');
 const geometry = require('./geometry.js');
 const isInt = geometry.isInt;
 
@@ -93,7 +94,7 @@ function rgbToHSV(r, g, b) {
 function sortByHSV(items) {
   for (let i = 0; i < items.length; i++) {
     let it = items[i];
-    if (it.constructor.name != 'RGBColor') {
+    if (it.constructor != rgbColor.RGBColor) {
       throw new Error('sortByHSV got invalid item[${i}] must be RGBColor');
     }
   }

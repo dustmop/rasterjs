@@ -1,5 +1,7 @@
 const rgbColor = require('./rgb_color.js');
+const colorSet = require('./color_set.js');
 const plane = require('./plane.js');
+const palette = require('./palette.js');
 
 function PaletteCollection(items, saveService) {
   if (saveService != null && !saveService.saveTo) {
@@ -7,7 +9,7 @@ function PaletteCollection(items, saveService) {
   }
   this.items = items;
   for (let i = 0; i < items.length; i++) {
-    if (items[i].constructor.name != 'PaletteEntry') {
+    if (items[i].constructor != palette.PaletteEntry) {
       throw new Error('PaletteCollection got invalid item[${i}], should be PaletteEntry');
     }
   }
@@ -88,13 +90,13 @@ PaletteCollection.prototype.insertWhereAvail = function(rgbval) {
 }
 
 function PaletteEntry(rgb, idx, colors) {
-  if (rgb.constructor.name != 'RGBColor') {
+  if (rgb.constructor != rgbColor.RGBColor) {
     throw new Error(`PaletteEntry: rgb must be a RGBColor`);
   }
   if (typeof idx != 'number') {
     throw new Error(`PaletteEntry: idx must be a number`);
   }
-  if (colors.constructor.name != 'Set') {
+  if (colors.constructor != colorSet.Set) {
     throw new Error(`PaletteEntry: colors must be a color.Set`);
   }
   this.rgb = rgb;

@@ -47,7 +47,15 @@ Raster.prototype.originAtCenter = function() {
 }
 
 Raster.prototype.useColors = function(rep) {
-  this.runner.useColors(rep);
+  return this.runner.useColors(rep);
+}
+
+Raster.prototype.appendColors = function(rep) {
+  return this.runner.appendColors(rep);
+}
+
+Raster.prototype.numColors = function() {
+  return this.runner.numColors();
 }
 
 Raster.prototype.useDisplay = function(disp) {
@@ -57,8 +65,8 @@ Raster.prototype.useDisplay = function(disp) {
 ////////////////////////////////////////
 // Methods with interesting return values
 
-Raster.prototype.loadImage = function(filepath) {
-  return this.runner.makeShape('load', [filepath]);
+Raster.prototype.loadImage = function(filepath, opt) {
+  return this.runner.makeShape('load', [filepath, opt]);
 }
 
 Raster.prototype.makePolygon = function(shape, angle) {

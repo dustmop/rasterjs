@@ -90,7 +90,15 @@ Runner.prototype.originAtCenter = function() {
 }
 
 Runner.prototype.useColors = function(obj) {
-  this.scene.colorSet.use(obj);
+  return this.scene.colorSet.use(obj);
+}
+
+Runner.prototype.appendColors = function(obj) {
+  return this.scene.colorSet.append(obj);
+}
+
+Runner.prototype.numColors = function() {
+  return this.scene.colorSet.size();
 }
 
 Runner.prototype.useDisplay = function(nameOrDisplay) {
@@ -104,8 +112,8 @@ Runner.prototype.useDisplay = function(nameOrDisplay) {
   this.display.initialize();
 }
 
-Runner.prototype.loadImage = function(filepath) {
-  return this.imgLoader.loadImage(filepath);
+Runner.prototype.loadImage = function(filepath, opt) {
+  return this.imgLoader.loadImage(filepath, opt);
 }
 
 Runner.prototype._doRender = function(num, exitAfter, renderFunc, betweenFunc, finalFunc) {
@@ -159,8 +167,9 @@ Runner.prototype.makeShape = function(method, params) {
     polygon.rotate(angle);
     return polygon;
   } else if (method == 'load') {
-    let [filepath] = params;
-    return this.loadImage(filepath);
+    let [filepath, opt] = params;
+    opt = opt || {};
+    return this.loadImage(filepath, opt);
   }
 }
 
@@ -193,9 +202,45 @@ Runner.prototype.getPaletteEntry = function(x, y) {
 Runner.prototype.getPaletteAll = function(opt) {
   this._ensurePalette();
   if (opt.sort) {
-    let image = {palette: this.scene.palette};
-    algorithm.sortByHSV(image);
-    this.scene.palette = image.palette;
+    let remap = {};
+    let vals = [];
+    for (let i = 0; i < this.scene.palette.length; i++) {
+      let rgb = this.scene.palette[i].rgb;
+      remap[rgb.toInt()] = i;
+      vals.push(rgb);
+    }
+    // Remove the first color, treat it as the background
+    let bgColor = vals[0];
+    vals = vals.slice(1);
+    // Sort by HSV
+    vals = algorithm.sortByHSV(vals);
+    // Put the background color in front
+    vals = [bgColor].concat(vals);
+    // Build the palette items
+    let recolor = {};
+    let items = [];
+    for (let i = 0; i < vals.length; i++) {
+      let orig = remap[vals[i].toInt()];
+      let ent = new palette.PaletteEntry(vals[i], i, this.scene.colorSet);
+      ent.cval = orig;
+      let reset = new rgbColor.RGBColor(this.scene.colorSet.get(ent.cval));
+      ent.rgb = reset;
+      recolor[orig] = i;
+      items.push(ent);
+    }
+    // Remap the colors in the data buffer
+    let pl = this.aPlane;
+    for (let y = 0; y < pl.height; y++) {
+      for (let x = 0; x < pl.width; x++) {
+        let k = pl.pitch * y + x;
+        let c = pl.data[k];
+        pl.data[k] = recolor[c];
+      }
+    }
+    // Assigin the palette to the scene
+    let saveService = this.scene.saveService;
+    let pal = new palette.PaletteCollection(items, saveService);
+    this.scene.palette = pal;
   }
   return this.scene.palette;
 }

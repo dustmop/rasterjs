@@ -6,6 +6,11 @@ function PaletteCollection(items, saveService) {
     throw new Error('PaletteCollection given invalid saveService');
   }
   this.items = items;
+  for (let i = 0; i < items.length; i++) {
+    if (items[i].constructor.name != 'PaletteEntry') {
+      throw new Error('PaletteCollection got invalid item[${i}], should be PaletteEntry');
+    }
+  }
   // length
   this.length = this.items.length;
   // items are directly indexable
@@ -20,6 +25,14 @@ function PaletteCollection(items, saveService) {
 
 PaletteCollection.prototype.get = function(c) {
   return this.items[c];
+}
+
+PaletteCollection.prototype.reset = function() {
+  for (let i = 0; i < this.items.length; i++) {
+    let it = this.items[i];
+    it.cval = it.idx;
+    it.rgb = new rgbColor.RGBColor(it.colors.get(it.cval));
+  }
 }
 
 PaletteCollection.prototype.save = function(filename) {

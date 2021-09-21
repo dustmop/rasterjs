@@ -33,7 +33,12 @@ function ensureFilesMatch(expectFile, gotFile) {
   if (!compareFiles(expectFile, gotFile)) {
     let e = new Error();
     let lines = e.stack.split('\n');
-    let callerLine = lines[2].split(' (')[1].slice(0, -1)
+    let callerLine;
+    try {
+      callerLine = lines[2].split(' (')[1].slice(0, -1);
+    } catch (e) {
+      callerLine = 'Could not locate callsite';
+    }
     console.log('');
     console.log(callerLine);
     console.log('mismatch (expect, actual):');

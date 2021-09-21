@@ -42,6 +42,9 @@ Set.prototype.addEntry = function(rgb) {
 }
 
 Set.prototype.find = function(rgb) {
+  if (typeof rgb != 'number') {
+    throw new Error('colorSet needs rgb as a number');
+  }
   for (let i = 0; i < this.vals.length; i++) {
     let c = this.vals[i];
     if (c === rgb) {
@@ -71,7 +74,7 @@ Set.prototype.use = function(rep) {
     } else if (text == 'grey') {
       this.assign(rgbMap.rgb_map_grey);
     } else {
-      throw 'Unknown color set: ' + text;
+      throw new Error('Unknown color set: ' + text);
     }
   } else if (Array.isArray(rep)) {
     let list = rep;
@@ -79,6 +82,16 @@ Set.prototype.use = function(rep) {
   } else if (!rep) {
     this.assign([]);
   }
+  return this.vals.length;
+}
+
+Set.prototype.append = function(list) {
+  if (!Array.isArray(list)) {
+    throw new Error('can only append to colorSet using a list of rgb values');
+  }
+  this.vals = this.vals.concat(list);
+  // TODO: this.newIndex?
+  return this.vals.length;
 }
 
 module.exports.Set = Set;

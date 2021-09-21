@@ -67,6 +67,18 @@ describe('Color set', function() {
     util.saveTmpCompareTo(ra, 'test/testdata/colors_custom.png');
   });
 
+  it('append', function() {
+    ra.resetState();
+    ra.setSize({w: 8, h: 8})
+    let first = ra.useColors([0x404040, 0xff0000, 0x00ff00, 0x0000ff]);
+    let second = ra.appendColors([0xff80ff]);
+    ra.fillDot([[1,2],[3,4]]);
+    util.saveTmpCompareTo(ra, 'test/testdata/colors_append.png');
+    assert.equal(first, 4);
+    assert.equal(second, 5);
+    assert.equal(ra.numColors(), 5);
+  });
+
   // TODO: useColors(null) crash
   // TODO: useColors(null) -> drawImage
   // TODO: useColors(null) -> setTrueColor

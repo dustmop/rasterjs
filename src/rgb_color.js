@@ -112,4 +112,8 @@ RGBColor.prototype.toHexStr = function() {
   return `#${rtxt}${gtxt}${btxt}`;
 }
 
+RGBColor.prototype.toString = function() {
+  return 'RGBColor{' + this.toHexStr() + '}';
+}
+
 module.exports.RGBColor = RGBColor;

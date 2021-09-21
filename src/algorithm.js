@@ -1,3 +1,4 @@
+const palette = require('./palette.js');
 const geometry = require('./geometry.js');
 const isInt = geometry.isInt;
 
@@ -89,33 +90,35 @@ function rgbToHSV(r, g, b) {
   return [h, s, v]
 }
 
-function sortByHSV(param) {
+function sortByHSV(items) {
+  for (let i = 0; i < items.length; i++) {
+    let it = items[i];
+    if (it.constructor.name != 'RGBColor') {
+      throw new Error('sortByHSV got invalid item[${i}] must be RGBColor');
+    }
+  }
+  // Build a list of colors, weighted by HSV
   let colors = [];
-  // Get first element, treat as the background color, skip it in the loop
-  let bgColor = param.palette[0];
-  for (let i = 1; i < param.palette.length; i++) {
-    let rgb = param.palette[i].rgb;
+  for (let i = 0; i < items.length; i++) {
+    let rgb = items[i];
     let [h, s, v] = rgbToHSV(rgb.r, rgb.g, rgb.b);
     let k = Math.floor(h * 10) * 10000 + Math.floor(v * 1000) + s;
-    colors.push({key: k, from: i});
+    colors.push({key: k, rgb: rgb});
   }
+  // Sort those colors
   colors.sort(function(a, b) {
     if (a.key < b.key) { return -1; }
     if (a.key > b.key) { return 1; }
     return 0;
   });
 
-  let remap = {};
-  let palette = [];
-  // Put the bgColor at the front
-  palette.push(bgColor);
+  // Convert back to just rgb values
+  let build = [];
   for (let j = 0; j < colors.length; j++) {
-    let from = colors[j].from;
-    let rgb = param.palette[from];
-    palette.push(rgb);
+    let rgb = colors[j].rgb;
+    build.push(rgb);
   }
-
-  param.palette = palette;
+  return build;
 }
 
 function flood(mem, initX, initY, color) {

@@ -19,8 +19,9 @@ Drawing.prototype.getMethods = function() {
   return result;
 }
 
-Drawing.prototype.setSize_params = ['w:i', 'h:i'];
+Drawing.prototype.setSize_params = ['w:i', 'h?i'];
 Drawing.prototype.setSize = function(width, height) {
+  if (height === undefined) { height = width; }
   this._setSize(width, height);
 }
 

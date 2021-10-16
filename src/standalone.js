@@ -1,4 +1,5 @@
 const colors = require('./color_set.js');
+const rgbColor = require('./rgb_color.js');
 
 function Standalone() {
   this.colorSet = new colors.Set([]);
@@ -16,10 +17,10 @@ Standalone.prototype.render = function(pl) {
   for (let y = 0; y < pl.height; y++) {
     for (let x = 0; x < pl.width; x++) {
       let k = y*pl.pitch + x;
-      let [r,g,b] = this._toColor(pl.data[k]);
-      this.rgbBuffer[k*4+0] = r;
-      this.rgbBuffer[k*4+1] = g;
-      this.rgbBuffer[k*4+2] = b;
+      let rgb = this._toColor(pl.data[k]);
+      this.rgbBuffer[k*4+0] = rgb.r;
+      this.rgbBuffer[k*4+1] = rgb.g;
+      this.rgbBuffer[k*4+2] = rgb.b;
       this.rgbBuffer[k*4+3] = 0xff;
     }
   }
@@ -33,14 +34,12 @@ Standalone.prototype._toColor = function(c) {
     if (!ent) {
       console.log(`color not found: ${c}`);
     }
-    rgb = ent.rgb.toInt();
+    rgb = ent.rgb;
   } else {
     rgb = this.colorSet.get(c);
   }
-  let r = Math.floor(rgb / 0x10000) % 0x100;
-  let g = Math.floor(rgb / 0x100) % 0x100;
-  let b = Math.floor(rgb / 0x1) % 0x100;
-  return [r, g, b];
+  rgbColor.ensureIs(rgb);
+  return rgb;
 }
 
 module.exports.Standalone = Standalone;

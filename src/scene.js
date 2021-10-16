@@ -1,4 +1,5 @@
 const colorSet = require('./color_set.js');
+const rgbColor = require('./rgb_color.js');
 
 function Scene(resources, env) {
   this.colorSet = new colorSet.Set();
@@ -24,10 +25,10 @@ Scene.prototype.render = function(pl) {
   for (let y = 0; y < pl.height; y++) {
     for (let x = 0; x < pl.width; x++) {
       let k = y*pl.pitch + x;
-      let [r,g,b] = this._toColor(pl.data[k]);
-      this.rgbBuffer[k*4+0] = r;
-      this.rgbBuffer[k*4+1] = g;
-      this.rgbBuffer[k*4+2] = b;
+      let rgb = this._toColor(pl.data[k]);
+      this.rgbBuffer[k*4+0] = rgb.r;
+      this.rgbBuffer[k*4+1] = rgb.g;
+      this.rgbBuffer[k*4+2] = rgb.b;
       this.rgbBuffer[k*4+3] = 0xff;
     }
   }
@@ -39,17 +40,15 @@ Scene.prototype._toColor = function(c) {
   if (this.palette) {
     let ent = this.palette.get(c);
     if (!ent) {
-      rgb = 0;
+      rgb = rgbColor.BLACK;
     } else {
-      rgb = ent.rgb.toInt();
+      rgb = ent.rgb;
     }
   } else {
     rgb = this.colorSet.get(c);
   }
-  let r = Math.floor(rgb / 0x10000) % 0x100;
-  let g = Math.floor(rgb / 0x100) % 0x100;
-  let b = Math.floor(rgb / 0x1) % 0x100;
-  return [r, g, b];
+  rgbColor.ensureIs(rgb);
+  return rgb
 }
 
 module.exports.Scene = Scene;

@@ -223,7 +223,8 @@ Runner.prototype.getPaletteAll = function(opt) {
       let orig = remap[vals[i].toInt()];
       let ent = new palette.PaletteEntry(vals[i], i, this.scene.colorSet);
       ent.cval = orig;
-      let reset = new rgbColor.RGBColor(this.scene.colorSet.get(ent.cval));
+      let reset = this.scene.colorSet.get(ent.cval);
+      rgbColor.ensureIs(reset);
       ent.rgb = reset;
       recolor[orig] = i;
       items.push(ent);
@@ -251,8 +252,8 @@ Runner.prototype._ensurePalette = function() {
     let saveService = this.scene.saveService;
     let all = [];
     for (let i = 0; i < colors.size(); i++) {
-      let c = colors.get(i);
-      let rgb = new rgbColor.RGBColor(c);
+      let rgb = colors.get(i);
+      rgbColor.ensureIs(rgb);
       let ent = new palette.PaletteEntry(rgb, i, colors);
       all.push(ent);
     }
@@ -277,8 +278,8 @@ Runner.prototype.usePalette = function(vals) {
     if (cval >= colors.size()) {
       throw new Error(`illegal color value ${cval}, colorSet only has ${colors.size()}`);
     }
-    let rgbval = colors.get(cval);
-    let rgb = new rgbColor.RGBColor(rgbval);
+    let rgb = colors.get(cval);
+    rgbColor.ensureIs(rgb);
     ent = new palette.PaletteEntry(rgb, cval, colors);
     all.push(ent);
   }

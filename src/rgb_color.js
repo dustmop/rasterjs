@@ -60,6 +60,13 @@ RGBColor.prototype.copy = function() {
   return res;
 }
 
+RGBColor.prototype.equals = function(other) {
+  if (other.constructor !== RGBColor) {
+    throw new Error('RGBColor.equals can only compare to RGBColor');
+  }
+  return (this.r == other.r && this.g == other.g && this.b == other.b);
+}
+
 RGBColor.prototype.interpolate = function(other, val, inp) {
   if (inp === undefined || inp.min === undefined || !inp.max) {
     throw 'interpolate needs range like {min: min, max: max}';
@@ -116,4 +123,14 @@ RGBColor.prototype.toString = function() {
   return 'RGBColor{' + this.toHexStr() + '}';
 }
 
+function ensureIs(rgb) {
+  if (rgb.constructor !== RGBColor) {
+    throw new Error(`rgb value invalid, is ${rgb}`);
+  }
+}
+
+var BLACK = new RGBColor();
+
 module.exports.RGBColor = RGBColor;
+module.exports.BLACK = BLACK;
+module.exports.ensureIs = ensureIs;

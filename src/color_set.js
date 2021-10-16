@@ -1,13 +1,29 @@
 const rgbMap = require('./rgb_map.js');
+const rgbColor = require('./rgb_color.js');
 
 function Set(vals) {
   if (!vals) {
     vals = rgbMap.rgb_map_quick;
   }
-  // TODO: vals should hold RGBColor objects
-  this.vals = vals;
-  this.newIndex = this.vals.length;
+  let [collect, lookup] = colorIntValsToRGBs(vals);
+  this.collect = collect;
+  this.lookup = lookup;
+  this.newIndex = this.collect.length;
   return this;
+}
+
+function colorIntValsToRGBs(vals) {
+  let collect = [];
+  let lookup = {};
+  for (let i = 0; i < vals.length; i++) {
+    if (typeof vals[i] != 'number') {
+      throw new Error(`type err: wanted number, got ${vals[i]}`);
+    }
+    let rgb = new rgbColor.RGBColor(vals[i]);
+    lookup[rgb] = collect.length;
+    collect.push(rgb);
+  }
+  return [collect, lookup];
 }
 
 Set.prototype.clear = function() {
@@ -15,28 +31,35 @@ Set.prototype.clear = function() {
 }
 
 Set.prototype.size = function() {
-  return this.vals.length;
+  return this.collect.length;
 }
 
 Set.prototype.get = function(i) {
-  return this.vals[i % this.vals.length];
+  return this.collect[i % this.collect.length];
 }
 
 Set.prototype.assign = function(vals) {
-  this.vals = vals.slice();
-  this.newIndex = vals.length;
+  vals = vals.slice();
+  let [collect, lookup] = colorIntValsToRGBs(vals);
+  this.collect = collect;
+  this.lookup = lookup;
+  this.newIndex = this.collect.length;
 }
 
 Set.prototype.addEntry = function(rgb) {
-  for (let i = 0; i < this.vals.length; i++) {
-    let c = this.vals[i];
-    if (c === rgb) {
-      return i;
-    }
+  if (typeof rgb == 'number') {
+    rgb = new rgbColor.RGBColor(rgb);
+  }
+  rgbColor.ensureIs(rgb);
+  // Find if it already exists
+  let i = this.lookup[rgb];
+  if (i !== undefined) {
+    return i;
   }
   // Add it to the map
-  let i = this.newIndex % 0x100;
-  this.vals[i] = rgb;
+  i = this.newIndex % 0x100;
+  this.lookup[rgb] = this.collect.length;
+  this.collect[i] = rgb;
   this.newIndex = (i + 1) % 0x100;
   return i;
 }
@@ -45,11 +68,10 @@ Set.prototype.find = function(rgb) {
   if (typeof rgb != 'number') {
     throw new Error('colorSet needs rgb as a number');
   }
-  for (let i = 0; i < this.vals.length; i++) {
-    let c = this.vals[i];
-    if (c === rgb) {
-      return i;
-    }
+  rgb = new rgbColor.RGBColor(rgb);
+  let i = this.lookup[rgb];
+  if (i !== undefined) {
+    return i;
   }
   return -1;
 }
@@ -82,16 +104,24 @@ Set.prototype.use = function(rep) {
   } else if (!rep) {
     this.assign([]);
   }
-  return this.vals.length;
+  return this.collect.length;
 }
 
 Set.prototype.append = function(list) {
   if (!Array.isArray(list)) {
     throw new Error('can only append to colorSet using a list of rgb values');
   }
-  this.vals = this.vals.concat(list);
+  for (let i = 0; i < list.length; i++) {
+    let v = list[i];
+    if (typeof v != 'number') {
+      throw new Error(`TODO: number err, got ${v}`);
+    }
+    let rgb = new rgbColor.RGBColor(v);
+    this.lookup[rgb] = this.collect.length;
+    this.collect.push(rgb);
+  }
   // TODO: this.newIndex?
-  return this.vals.length;
+  return this.collect.length;
 }
 
 module.exports.Set = Set;

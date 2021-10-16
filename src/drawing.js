@@ -32,6 +32,9 @@ Drawing.prototype.setColor = function(color) {
 
 Drawing.prototype.setTrueColor_params = ['rgb:i'];
 Drawing.prototype.setTrueColor = function(rgb) {
+  if (typeof rgb !== 'number') {
+    throw new Error('setTrueColor needs rgb as a number');
+  }
   let color = this.scene.colorSet.addEntry(rgb);
   this.setColor(color);
 }

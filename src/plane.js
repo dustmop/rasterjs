@@ -89,6 +89,12 @@ Plane.prototype.get = function(x, y) {
   return this.data[k];
 }
 
+Plane.prototype.put = function(x, y, v) {
+  this._prepare();
+  let k = y * this.pitch + x;
+  this.data[k] = v;
+}
+
 Plane.prototype.putSequence = function(seq) {
   this._prepare();
   // Get the current color
@@ -197,13 +203,19 @@ Plane.prototype.render = function() {
 
 Plane.prototype.save = function(savepath) {
   let buffer = this.render();
-  // TODO: fix definition of pitch
+  let width = this.width;
+  let height = this.height;
   let pitch = this.width * 4;
+  if (buffer.width) {
+    width = buffer.width;
+    height = buffer.height;
+    pitch = buffer.pitch;
+  }
   let saveService = this.scene.saveService;
   if (!saveService) {
     throw new Error('cannot save plane without save service');
   }
-  saveService.saveTo(savepath, buffer, this.width, this.height, pitch);
+  saveService.saveTo(savepath, buffer, width, height, pitch);
 }
 
 module.exports.Plane = Plane;

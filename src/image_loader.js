@@ -79,7 +79,6 @@ function ImagePlane() {
   this.data = null;
   this.alpha = null;
   this.rgbBuff = null;
-  this.data = null;
   this.colorSet = null;
   this.palette = null;
   this.sortUsingHSV = false;

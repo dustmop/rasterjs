@@ -1,6 +1,7 @@
 const rgbColor = require('./rgb_color.js');
 const runner = require('./runner.js');
 const drawing = require('./drawing.js');
+const plane = require('./plane.js');
 
 function Raster(env) {
   this.runner = new runner.Runner(env);
@@ -61,6 +62,8 @@ Raster.prototype.numColors = function() {
 Raster.prototype.useDisplay = function(disp) {
   this.runner.useDisplay(disp);
 }
+
+Raster.prototype.Plane = plane.Plane;
 
 ////////////////////////////////////////
 // Methods with interesting return values
@@ -132,6 +135,18 @@ Raster.prototype.mixColors = function(spec) {
 
 Raster.prototype.getPlaneData = function() {
   return this.runner.aPlane.data;
+}
+
+////////////////////////////////////////
+
+Raster.prototype.useTileset = function(img, sizeInfo) {
+  // TODO: remove the draw_methods from ra
+  this.runner.useTileset(img, sizeInfo);
+}
+
+Raster.prototype.usePlane = function(pl) {
+  // TODO: remove the draw_methods from ra
+  this.runner.aPlane = pl;
 }
 
 ////////////////////////////////////////

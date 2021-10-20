@@ -8,6 +8,7 @@ const textLoader = require('./text_loader.js');
 const displayAscii = require('./display_ascii.js');
 const plane = require('./plane.js');
 const scene = require('./scene.js');
+const tiles = require('./tiles.js');
 const rgbColor = require('./rgb_color.js');
 
 ////////////////////////////////////////
@@ -70,6 +71,7 @@ Runner.prototype._addMethods = function() {
 Runner.prototype.resetState = function() {
   this.scene.colorSet.clear();
   this.scene.palette = null;
+  this.scene.tiles = null;
   this.scene.clearPlane(this.aPlane);
 }
 
@@ -284,6 +286,11 @@ Runner.prototype.usePalette = function(vals) {
     all.push(ent);
   }
   this.scene.palette = new palette.PaletteCollection(all, saveService);
+}
+
+Runner.prototype.useTileset = function(img, sizeInfo) {
+  let saveService = this.scene.saveService;
+  this.scene.tiles = new tiles.TileSet(img, sizeInfo, saveService);
 }
 
 module.exports.Runner = Runner;

@@ -25,6 +25,8 @@ SaveRenderer.prototype.setSource = function(plane, zoomLevel) {
 SaveRenderer.prototype.renderLoop = function(nextFrame) {
   let width = this.plane.width;
   let height = this.plane.height;
+  // TODO: Saving a gif using a tileset does not work.
+
   try {
     fs.mkdirSync(this.tmpdir);
   } catch (e) {

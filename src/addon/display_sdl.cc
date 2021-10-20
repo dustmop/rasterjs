@@ -113,8 +113,8 @@ Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
   Napi::Function renderFunc = renderFuncVal.As<Napi::Function>();
 
   napi_status status;
-  napi_value buffVal;
-  status = napi_call_function(env, planeObj, renderFunc, 0, NULL, &buffVal);
+  napi_value buffData;
+  status = napi_call_function(env, planeObj, renderFunc, 0, NULL, &buffData);
   if (status != napi_ok) {
     if (status == napi_pending_exception) {
       napi_value result;
@@ -140,19 +140,28 @@ Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
     exit(1);
   }
 
-  Napi::Value bufferObj = Napi::Value(env, buffVal);
-  if (!bufferObj.IsTypedArray()) {
+  Napi::Object bufferObj = Napi::Object(env, buffData);
+  Napi::Value bufferVal = Napi::Value(env, buffData);
+  if (!bufferVal.IsTypedArray()) {
     printf("render() should return a TypedArray, did not get one!\n");
     printf("got: \"%s\"\n", bufferObj.ToString().Utf8Value().c_str());
     exit(1);
   }
 
-  Napi::TypedArray typeArr = bufferObj.As<Napi::TypedArray>();
+  Napi::TypedArray typeArr = bufferVal.As<Napi::TypedArray>();
   Napi::ArrayBuffer arrBuff = typeArr.ArrayBuffer();
 
   // Calculate texture and window size.
   int viewWidth = widthNum.As<Napi::Number>().Int32Value();
   int viewHeight = heightNum.As<Napi::Number>().Int32Value();
+
+  Napi::Value realWidthNum = bufferObj.Get("width");
+  Napi::Value realHeightNum = bufferObj.Get("height");
+  if (realWidthNum.IsNumber()) {
+    viewWidth = realWidthNum.As<Napi::Number>().Int32Value();
+    viewHeight = realHeightNum.As<Napi::Number>().Int32Value();
+  }
+
   // TODO: Fix this
   int pitch = viewWidth*4;
   int zoomLevel = this->zoomLevel;

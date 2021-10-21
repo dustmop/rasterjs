@@ -123,10 +123,11 @@ Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
       s = napi_get_and_clear_last_exception(env, &result);
       napi_valuetype valuetype;
       napi_typeof(env, result, &valuetype);
-      // Convert the error to a string, display it.
-      napi_value errval;
-      napi_coerce_to_string(env, result, &errval);
-      display_napi_value(env, errval);
+      // Display error with stack trace.
+      Napi::Object errObj = Napi::Object(env, result);
+      Napi::Value stackVal = errObj.Get("stack");
+      Napi::String stackStr = stackVal.ToString();
+      printf("%s\n", stackStr.Utf8Value().c_str());
       exit(1);
     }
     napi_status err;

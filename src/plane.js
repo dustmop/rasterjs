@@ -6,6 +6,7 @@ var _g_scene = null;
 function Plane() {
   this.clear();
   this.scene = _g_scene;
+  // TODO: Don't do this for every plane.
   this._addMethods();
   return this;
 }
@@ -18,6 +19,7 @@ Plane.prototype.clear = function() {
   this.width = 100;
   this.height = 100;
   this.pitch = this.width;
+  // TODO: Move to scene or runner (drawMethods wrapper)
   this.translateX = 0;
   this.translateY = 0;
   this.data = null;
@@ -26,6 +28,22 @@ Plane.prototype.clear = function() {
   this._backBuffer = null;
   this.bgColor = 0;
   this.frontColor = 7;
+}
+
+Plane.prototype.clone = function() {
+  let make = new Plane();
+  make.width = this.width;
+  make.height = this.height;
+  make.pitch = this.pitch;
+  make.translateX = this.translateX;
+  make.translateY = this.translateY;
+  make.data = this.data;
+  make.mem = this.mem;
+  // rgbBuffer
+  // _backBuffer
+  // bgColor
+  // frontColor
+  return make;
 }
 
 Plane.prototype._addMethods = function() {
@@ -44,7 +62,8 @@ Plane.prototype._addMethods = function() {
 Plane.prototype._setSize = function(w, h) {
   this.width = w;
   this.height = h;
-  this.pitch = w;
+  // TODO: Make this adjustment be semi-random instead
+  this.pitch = w + 2;
 }
 
 Plane.prototype.useColors = function(rep) {

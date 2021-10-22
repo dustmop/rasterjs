@@ -21,7 +21,7 @@ Scene.prototype.clearPlane = function(plane) {
 Scene.prototype.render = function(pl) {
   //
   let source = pl.data;
-  let numPoints = pl.height * pl.pitch;
+  let numPoints = pl.height * pl.width;
 
   if (this.tiles != null) {
     // TODO: pl.width?
@@ -59,14 +59,17 @@ Scene.prototype.render = function(pl) {
   if (this.rgbBuffer == null) {
     this.rgbBuffer = new Uint8Array(numPoints*4);
   }
+  let targetPitch = pl.width*4;
+
   for (let y = 0; y < pl.height; y++) {
     for (let x = 0; x < pl.width; x++) {
       let k = y*pl.pitch + x;
+      let j = y*targetPitch + x*4;
       let rgb = this._toColor(source[k]);
-      this.rgbBuffer[k*4+0] = rgb.r;
-      this.rgbBuffer[k*4+1] = rgb.g;
-      this.rgbBuffer[k*4+2] = rgb.b;
-      this.rgbBuffer[k*4+3] = 0xff;
+      this.rgbBuffer[j+0] = rgb.r;
+      this.rgbBuffer[j+1] = rgb.g;
+      this.rgbBuffer[j+2] = rgb.b;
+      this.rgbBuffer[j+3] = 0xff;
     }
   }
   return this.rgbBuffer;

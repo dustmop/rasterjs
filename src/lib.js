@@ -133,8 +133,21 @@ Raster.prototype.mixColors = function(spec) {
   return result;
 }
 
-Raster.prototype.getPlaneData = function() {
-  return this.runner.aPlane.data;
+Raster.prototype.clonePlane = function() {
+  let s = this.runner.aPlane;
+  let p = s.clone();
+  p.pitch = p.width;
+  let numPixels = p.height * p.pitch;
+  let newBuff = new Uint8Array(numPixels);
+  for (let y = 0; y < p.height; y++) {
+    for (let x = 0; x < p.width; x++) {
+      let k = y*s.pitch + x;
+      let j = y*p.pitch + x;
+      newBuff[j] = s.data[k];
+    }
+  }
+  p.data = newBuff;
+  return p;
 }
 
 ////////////////////////////////////////

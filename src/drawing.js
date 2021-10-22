@@ -81,10 +81,7 @@ Drawing.prototype.fillDot = function(dots) {
       mem[y*mem.pitch+x] = dots[i][j];
     }
   }
-  // Copy back
-  for (let k = 0; k < buffer.length; k++) {
-    buffer[k] = mem[k];
-  }
+  mem.copyTo(buffer, this);
 }
 
 Drawing.prototype.fillSquare_params = ['x:i', 'y:i', 'size:i'];
@@ -200,16 +197,9 @@ Drawing.prototype.fillFlood = function(x, y) {
   let buffer = this.data;
 
   let mem = frameMemory.NewFrameMemory(this.width, this.height);
-  for (let k = 0; k < buffer.length; k++) {
-    mem[k] = buffer[k];
-  }
-
+  mem.from(buffer, this);
   algorithm.flood(mem, x, y, this.frontColor);
-
-  // Copy back
-  for (let k = 0; k < buffer.length; k++) {
-    buffer[k] = mem[k];
-  }
+  mem.copyTo(buffer, this);
 }
 
 Drawing.prototype.fillFrame_params = ['options?o', 'fillerFunc:f'];
@@ -220,16 +210,18 @@ Drawing.prototype.fillFrame = function(options, fillerFunc) {
   if (options && options.previous && !this.mem._didFrame) {
     this.mem.createBackBuffer();
     // If buffer is created from an unknown previous frame, load the contents
-    for (let k = 0; k < this.data.length; k++) {
-      this.mem._backBuffer[k] = this.data[k];
+    for (let y = 0; y < this.height; y++) {
+      for (let x = 0; x < this.width; x++) {
+        let k = y*this.width + x;
+        let j = y*this.pitch + x;
+        this.mem._backBuffer[k] = this.data[j];
+      }
     }
   }
 
   this._prepare();
   let buffer = this.data;
-  for (let k = 0; k < buffer.length; k++) {
-    this.mem[k] = buffer[k];
-  }
+  this.mem.from(buffer, this);
 
   // Invoke the callback
   if (fillerFunc.length == 1) {
@@ -247,11 +239,7 @@ Drawing.prototype.fillFrame = function(options, fillerFunc) {
     throw 'Invalid arguments for fillFrame: length = ' + fillerFunc.length;
   }
 
-  // Copy back
-  for (let k = 0; k < buffer.length; k++) {
-    buffer[k] = this.mem[k];
-  }
-
+  this.mem.copyTo(buffer, this);
   this.mem._didFrame = true;
 }
 

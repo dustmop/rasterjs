@@ -37,7 +37,7 @@ describe('Cycle palette', function() {
       0, 8, 8, 8, 8, 8, 8, 0,
       0, 0, 8, 8, 8, 8, 0, 0
     ]);
-    assert.deepEqual(expect, ra.getPlaneData());
+    assert.deepEqual(expect, ra.clonePlane().data);
 
     // Compare the palette
     palette = ra.getPaletteAll();
@@ -99,7 +99,7 @@ describe('Cycle palette', function() {
       1, 0, 0, 0, 0, 0, 0, 1,
       1, 1, 0, 0, 0, 0, 1, 1
     ]);
-    assert.deepEqual(expect, ra.getPlaneData());
+    assert.deepEqual(expect, ra.clonePlane().data);
 
     // Compare the palette, which has aliased color. Dropped rgb is shown in
     // parenthesis.
@@ -129,7 +129,7 @@ describe('Cycle palette', function() {
       1, 0, 0, 0, 0, 0, 0, 1,
       1, 1, 0, 0, 0, 0, 1, 1
     ]);
-    assert.deepEqual(expect, ra.getPlaneData());
+    assert.deepEqual(expect, ra.clonePlane().data);
 
     // Compare the palette
     palette = ra.getPaletteAll();

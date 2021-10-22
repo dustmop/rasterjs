@@ -23,11 +23,14 @@ describe('HSV sort', function() {
       util.ensureFilesMatch(tmpout, 'test/testdata/pal_sphere.png');
 
       // Compare the plane data buffer
-      let data = ra.getPlaneData();
+      let target = ra.clonePlane();
+      let data = target.data;
+      let pitch = target.pitch;
+
       let actual = '';
       for (let y = 0; y < 16; y++) {
         for (let x = 0; x < 16; x++) {
-          let k = y*16+x;
+          let k = y*pitch+x;
           actual += `${data[k]} `;
         }
         actual += '\n';
@@ -76,12 +79,15 @@ describe('HSV sort', function() {
       pal.save(tmpout);
       util.ensureFilesMatch(tmpout, 'test/testdata/pal_sphere_sort.png');
 
+      let target = ra.clonePlane();
+
       // Compare the plane data buffer
-      let data = ra.getPlaneData();
+      let data = target.data;
+      let pitch = target.pitch;
       let actual = '';
       for (let y = 0; y < 16; y++) {
         for (let x = 0; x < 16; x++) {
-          let k = y*16+x;
+          let k = y*pitch+x;
           actual += `${data[k]} `;
         }
         actual += '\n';
@@ -131,11 +137,14 @@ describe('HSV sort', function() {
       util.ensureFilesMatch(tmpout, 'test/testdata/pal_sphere_all.png');
 
       // Compare the plane data buffer
-      let data = ra.getPlaneData();
+      let target = ra.clonePlane();
+      let data = target.data;
+      let pitch = target.pitch;
+
       let actual = '';
       for (let y = 0; y < 16; y++) {
         for (let x = 0; x < 16; x++) {
-          let k = y*16+x;
+          let k = y*pitch+x;
           actual += `${data[k]} `;
         }
         actual += '\n';

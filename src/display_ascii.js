@@ -12,17 +12,13 @@ DisplayAscii.prototype.setSource = function(plane, zoomLevel) {
 
 DisplayAscii.prototype.renderLoop = function(nextFrame) {
   let buffer = this.plane.data;
-  let pitch = this.plane.width;
-  let line = '';
-  for (let k = 0; k < buffer.length; k++) {
-    if ((k > 0) && (k % pitch == 0)) {
-      line += '\n';
-      process.stdout.write(line);
-      line = '';
+  let pitch = this.plane.pitch;
+  for (let y = 0; y < this.plane.height; y++) {
+    let line = '';
+    for (let x = 0; x < this.plane.width; x++) {
+      let k = y * this.plane.pitch + x;
+      line += byteToAscii(buffer[k]);
     }
-    line += byteToAscii(buffer[k]);
-  }
-  if (line != '') {
     line += '\n';
     process.stdout.write(line);
   }

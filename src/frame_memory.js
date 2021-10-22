@@ -33,6 +33,24 @@ function NewFrameMemory(w, h) {
     }
     self._backBuffer.set(self);
   }
+  make.copyTo = function(buffer, info) {
+    for (let y = 0; y < info.height; y++) {
+      for (let x = 0; x < info.width; x++) {
+        let k = y*this.pitch + x;
+        let j = y*info.pitch + x;
+        buffer[j] = this[k];
+      }
+    }
+  }
+  make.from = function(buffer, info) {
+    for (let y = 0; y < info.height; y++) {
+      for (let x = 0; x < info.width; x++) {
+        let k = y*this.pitch + x;
+        let j = y*info.pitch + x;
+        this[k] = buffer[j];
+      }
+    }
+  }
   return make;
 }
 

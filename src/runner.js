@@ -63,7 +63,31 @@ Runner.prototype._addMethods = function() {
         throw new Error(`function ${fname} does not have parameter spec`);
       }
       let realArgs = destructure(paramSpec, [fname, args]);
+      if (self._config.translateCenter) {
+        self._translateArguments(paramSpec, realArgs);
+      }
       self.aPlane[fname].apply(self.aPlane, realArgs);
+    }
+  }
+}
+
+Runner.prototype._translateArguments = function(params, args) {
+  let midX = this.aPlane.width / 2;
+  let midY = this.aPlane.height / 2;
+  for (let i = 0; i < params.length; i++) {
+    let param = params[i];
+    let arg = args[i];
+    if (param.startsWith('x')) {
+      if (args[i] === undefined) {
+        args[i] = 0;
+      }
+      args[i] += midX;
+    }
+    if (param.startsWith('y')) {
+      if (args[i] === undefined) {
+        args[i] = 0;
+      }
+      args[i] += midY;
     }
   }
 }
@@ -72,6 +96,7 @@ Runner.prototype.resetState = function() {
   this.scene.colorSet.clear();
   this.scene.palette = null;
   this.scene.tiles = null;
+  this._config = {};
   this.scene.clearPlane(this.aPlane);
 }
 
@@ -88,7 +113,7 @@ Runner.prototype.setTitle = function(title) {
 }
 
 Runner.prototype.originAtCenter = function() {
-  this.aPlane.setTranslation(0.5);
+  this._config.translateCenter = true;
 }
 
 Runner.prototype.useColors = function(obj) {

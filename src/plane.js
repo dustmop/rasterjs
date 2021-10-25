@@ -19,9 +19,6 @@ Plane.prototype.clear = function() {
   this.width = 100;
   this.height = 100;
   this.pitch = this.width;
-  // TODO: Move to scene or runner (drawMethods wrapper)
-  this.translateX = 0;
-  this.translateY = 0;
   this.data = null;
   this.mem = null;
   this.rgbBuffer = null;
@@ -35,8 +32,6 @@ Plane.prototype.clone = function() {
   make.width = this.width;
   make.height = this.height;
   make.pitch = this.pitch;
-  make.translateX = this.translateX;
-  make.translateY = this.translateY;
   make.data = this.data;
   make.mem = this.mem;
   // rgbBuffer
@@ -69,15 +64,6 @@ Plane.prototype._setSize = function(w, h) {
 Plane.prototype.useColors = function(rep) {
   // TODO: Plane doesn't use this at all, move to scene only?
   this.scene.colorSet.use(rep);
-}
-
-Plane.prototype.setTranslation = function(relPos) {
-  this.translateX = Math.floor(this.width * relPos);
-  this.translateY = Math.floor(this.height * relPos);
-}
-
-Plane.prototype._getTranslation = function() {
-  return [this.translateX, this.translateY];
 }
 
 Plane.prototype.nextFrame = function() {

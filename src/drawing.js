@@ -54,15 +54,13 @@ Drawing.prototype.fillTrueBackground = function(rgb) {
 Drawing.prototype.drawLine_params = ['x0:i', 'y0:i', 'x1:i', 'y1:i', 'cc?b'];
 Drawing.prototype.drawLine = function(x0, y0, x1, y1, cc) {
   cc = cc ? 1 : 0;
-  let [tx, ty] = this._getTranslation();
-  let res = algorithm.renderLine(this, tx + x0, ty + y0, tx + x1, ty + y1, cc);
+  let res = algorithm.renderLine(this, x0, y0, x1, y1, cc);
   this.putSequence(res);
 }
 
 Drawing.prototype.drawDot_params = ['x:i', 'y:i'];
 Drawing.prototype.drawDot = function(x, y) {
-  let [tx, ty] = this._getTranslation();
-  let put = [[tx + x, ty + y]];
+  let put = [[x, y]];
   this.putSequence(put);
 }
 
@@ -86,26 +84,22 @@ Drawing.prototype.fillDot = function(dots) {
 
 Drawing.prototype.fillSquare_params = ['x:i', 'y:i', 'size:i'];
 Drawing.prototype.fillSquare = function(x, y, size) {
-  let [tx, ty] = this._getTranslation();
-  _renderRect(this, tx + x, ty + y, size, size, true);
+  _renderRect(this, x, y, size, size, true);
 }
 
 Drawing.prototype.drawSquare_params = ['x:i', 'y:i', 'size:i'];
 Drawing.prototype.drawSquare = function(x, y, size) {
-  let [tx, ty] = this._getTranslation();
-  _renderRect(this, tx + x, ty + y, size, size, false);
+  _renderRect(this, x, y, size, size, false);
 }
 
 Drawing.prototype.fillRect_params = ['x:i', 'y:i', 'w:i', 'h:i'];
 Drawing.prototype.fillRect = function(x, y, w, h) {
-  let [tx, ty] = this._getTranslation();
-  _renderRect(this, tx + x, ty + y, w, h, true);
+  _renderRect(this, x, y, w, h, true);
 }
 
 Drawing.prototype.drawRect_params = ['x:i', 'y:i', 'w:i', 'h:i'];
 Drawing.prototype.drawRect = function(x, y, w, h) {
-  let [tx, ty] = this._getTranslation();
-  _renderRect(this, tx + x, ty + y, w, h, false);
+  _renderRect(this, x, y, w, h, false);
 }
 
 function _renderRect(self, x, y, w, h, fill) {
@@ -144,9 +138,8 @@ function _renderRect(self, x, y, w, h, fill) {
 
 Drawing.prototype.fillCircle_params = ['x:i', 'y:i', 'r:i'];
 Drawing.prototype.fillCircle = function(x, y, r) {
-  let [tx, ty] = this._getTranslation();
-  let centerX = tx + x + r;
-  let centerY = ty + y + r;
+  let centerX = x + r;
+  let centerY = y + r;
   let arc = algorithm.midpointCircleRasterize(r);
   let half = algorithm.isHalfwayValue(r);
   let put = algorithm.renderCircle(centerX, centerY, arc, null, true, half);
@@ -155,9 +148,8 @@ Drawing.prototype.fillCircle = function(x, y, r) {
 
 Drawing.prototype.drawCircle_params = ['x:i', 'y:i', 'r:i', 'width?i'];
 Drawing.prototype.drawCircle = function(x, y, r, width) {
-  let [tx, ty] = this._getTranslation();
-  let centerX = tx + x + r;
-  let centerY = ty + y + r;
+  let centerX = x + r;
+  let centerY = y + r;
   let arc = algorithm.midpointCircleRasterize(r);
   let inner = null;
   if (width) {
@@ -172,9 +164,8 @@ Drawing.prototype.fillPolygon_params = ['points:ps', 'x?i', 'y?i'];
 Drawing.prototype.fillPolygon = function(polygon, x, y) {
   x = x || 0;
   y = y || 0;
-  let [tx, ty] = this._getTranslation();
   let points = geometry.convertToPoints(polygon);
-  let res = algorithm.renderPolygon(this, tx + x, ty + y, points, true);
+  let res = algorithm.renderPolygon(this, x, y, points, true);
   this.putSequence(res);
 }
 
@@ -182,9 +173,8 @@ Drawing.prototype.drawPolygon_params = ['points:ps', 'x?i', 'y?i'];
 Drawing.prototype.drawPolygon = function(polygon, x, y) {
   x = x || 0;
   y = y || 0;
-  let [tx, ty] = this._getTranslation();
   let points = geometry.convertToPoints(polygon);
-  let res = algorithm.renderPolygon(this, tx + x, ty + y, points, false);
+  let res = algorithm.renderPolygon(this, x, y, points, false);
   this.putSequence(res);
 }
 
@@ -256,8 +246,7 @@ Drawing.prototype.drawImage = function(img, x, y) {
     // TOOD: Don't do this if any draw/fill methods were called.
     this.setSize(img.width, img.height);
   }
-  let [tx, ty] = this._getTranslation();
-  this.putImage(img, tx + x, ty + y);
+  this.putImage(img, x, y);
 }
 
 Drawing.prototype.drawText_params = ['text:s', 'x:i', 'y:i'];

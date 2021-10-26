@@ -61,11 +61,6 @@ Plane.prototype._setSize = function(w, h) {
   this.pitch = w + 2;
 }
 
-Plane.prototype.useColors = function(rep) {
-  // TODO: Plane doesn't use this at all, move to scene only?
-  this.scene.colorSet.use(rep);
-}
-
 Plane.prototype.nextFrame = function() {
   if (this.mem) {
     this.mem._didFrame = false;

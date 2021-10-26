@@ -1,10 +1,10 @@
 const rgbColor = require('./rgb_color.js');
-const runner = require('./runner.js');
+const scene = require('./scene.js');
 const drawing = require('./drawing.js');
 const plane = require('./plane.js');
 
 function Raster(env) {
-  this.runner = new runner.Runner(env);
+  this.scene = new scene.Scene(env);
   this._addMethods();
   return this;
 }
@@ -17,13 +17,13 @@ Raster.prototype._addMethods = function() {
     let [fname, params, impl] = methods[i];
     this[fname] = function() {
       let args = Array.from(arguments);
-      self.runner[fname].apply(self.runner, args);
+      self.scene[fname].apply(self.scene, args);
     }
   }
 }
 
 Raster.prototype.resetState = function() {
-  this.runner.resetState();
+  this.scene.resetState();
   this.time = 0.0;
   this.timeClick = 0;
 }
@@ -36,31 +36,31 @@ Raster.prototype.timeClick = 0;
 // Setup the draw target
 
 Raster.prototype.setZoom = function(zoomLevel) {
-  this.runner.setZoom(zoomLevel);
+  this.scene.setZoom(zoomLevel);
 }
 
 Raster.prototype.setTitle = function(text) {
-  this.runner.setTitle(text);
+  this.scene.setTitle(text);
 }
 
 Raster.prototype.originAtCenter = function() {
-  this.runner.originAtCenter();
+  this.scene.originAtCenter();
 }
 
 Raster.prototype.useColors = function(rep) {
-  return this.runner.useColors(rep);
+  return this.scene.useColors(rep);
 }
 
 Raster.prototype.appendColors = function(rep) {
-  return this.runner.appendColors(rep);
+  return this.scene.appendColors(rep);
 }
 
 Raster.prototype.numColors = function() {
-  return this.runner.numColors();
+  return this.scene.numColors();
 }
 
 Raster.prototype.useDisplay = function(disp) {
-  this.runner.useDisplay(disp);
+  this.scene.useDisplay(disp);
 }
 
 Raster.prototype.Plane = plane.Plane;
@@ -69,15 +69,15 @@ Raster.prototype.Plane = plane.Plane;
 // Methods with interesting return values
 
 Raster.prototype.loadImage = function(filepath, opt) {
-  return this.runner.makeShape('load', [filepath, opt]);
+  return this.scene.makeShape('load', [filepath, opt]);
 }
 
 Raster.prototype.makePolygon = function(shape, angle) {
-  return this.runner.makeShape('polygon', [shape]);
+  return this.scene.makeShape('polygon', [shape]);
 }
 
 Raster.prototype.rotatePolygon = function(shape, angle) {
-  return this.runner.makeShape('rotate', [shape, angle]);
+  return this.scene.makeShape('rotate', [shape, angle]);
 }
 
 Raster.prototype.oscil = function(period, fracOffset, click) {
@@ -93,20 +93,20 @@ Raster.prototype.oscil = function(period, fracOffset, click) {
 }
 
 Raster.prototype.getPaletteEntry = function(x, y) {
-  return this.runner.getPaletteEntry(x, y);
+  return this.scene.getPaletteEntry(x, y);
 }
 
 Raster.prototype.getPaletteAll = function(opt) {
   opt = opt || {};
-  return this.runner.getPaletteAll(opt);
+  return this.scene.getPaletteAll(opt);
 }
 
 Raster.prototype.usePalette = function(vals) {
-  return this.runner.usePalette(vals);
+  return this.scene.usePalette(vals);
 }
 
 Raster.prototype.setFont = function(filename) {
-  this.runner.setFont(filename);
+  this.scene.setFont(filename);
 }
 
 Raster.prototype.mixColors = function(spec) {
@@ -134,7 +134,7 @@ Raster.prototype.mixColors = function(spec) {
 }
 
 Raster.prototype.clonePlane = function() {
-  let s = this.runner.aPlane;
+  let s = this.scene.aPlane;
   let p = s.clone();
   p.pitch = p.width;
   let numPixels = p.height * p.pitch;
@@ -154,12 +154,12 @@ Raster.prototype.clonePlane = function() {
 
 Raster.prototype.useTileset = function(img, sizeInfo) {
   // TODO: remove the draw_methods from ra
-  this.runner.useTileset(img, sizeInfo);
+  this.scene.useTileset(img, sizeInfo);
 }
 
 Raster.prototype.usePlane = function(pl) {
   // TODO: remove the draw_methods from ra
-  this.runner.aPlane = pl;
+  this.scene.aPlane = pl;
 }
 
 ////////////////////////////////////////
@@ -167,7 +167,7 @@ Raster.prototype.usePlane = function(pl) {
 
 Raster.prototype.run = function(renderFunc) {
   var self = this;
-  var runner = this.runner;
+  var runner = this.scene;
   runner.then(function() {
     runner.run(
       renderFunc,
@@ -177,7 +177,7 @@ Raster.prototype.run = function(renderFunc) {
 }
 
 Raster.prototype.show = function(renderFunc, finalFunc) {
-  var runner = this.runner;
+  var runner = this.scene;
   runner.then(function() {
     if (renderFunc) {
       renderFunc();
@@ -187,14 +187,14 @@ Raster.prototype.show = function(renderFunc, finalFunc) {
 }
 
 Raster.prototype.save = function(savepath) {
-  var runner = this.runner
+  var runner = this.scene
   runner.then(function() {
     runner.save(savepath);
   });
 }
 
 Raster.prototype.showFrame = function() {
-  var runner = this.runner;
+  var runner = this.scene;
   var args = arguments;
   runner.then(function() {
     runner.fillFrame.apply(runner, args);
@@ -203,14 +203,14 @@ Raster.prototype.showFrame = function() {
 }
 
 Raster.prototype.quit = function() {
-  var runner = this.runner;
+  var runner = this.scene;
   runner.then(function() {
     runner.quit();
   });
 }
 
 Raster.prototype.nextFrame = function() {
-  var runner = this.runner;
+  var runner = this.scene;
   var self = this;
   runner.then(function() {
     self.timeClick++;
@@ -220,7 +220,7 @@ Raster.prototype.nextFrame = function() {
 }
 
 Raster.prototype.on = function(eventName, callback) {
-  this.runner.handleEvent(eventName, callback);
+  this.scene.handleEvent(eventName, callback);
 }
 
 ////////////////////////////////////////

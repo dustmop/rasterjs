@@ -150,6 +150,11 @@ Raster.prototype.clonePlane = function() {
   return p;
 }
 
+Raster.prototype.select = function(opt) {
+  // TODO: destructure
+  return this.scene.select(opt.x, opt.y, opt.w, opt.h);
+}
+
 ////////////////////////////////////////
 
 Raster.prototype.useTileset = function(img, sizeInfo) {

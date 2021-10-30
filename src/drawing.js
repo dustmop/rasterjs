@@ -71,7 +71,7 @@ Drawing.prototype.fillDot = function(dots) {
 
   let height = dots.length;
   let width = dots[0].length;
-  let mem = frameMemory.NewFrameMemory(this.width, this.height);
+  let mem = frameMemory.NewFrameMemory(this.offsetLeft, this.offsetTop, this.width, this.height);
   for (let y = 0; y < mem.y_dim; y++) {
     for (let x = 0; x < mem.x_dim; x++) {
       let i = y % height;
@@ -180,13 +180,10 @@ Drawing.prototype.drawPolygon = function(polygon, x, y) {
 
 Drawing.prototype.fillFlood_params = ['x:i', 'y:i'];
 Drawing.prototype.fillFlood = function(x, y) {
-  // NOTE: need prepare because we're not calling retrieve. Should
-  // there be some similar call to get the plane.data?
-  // Normally putSequence does what we need.
   this._prepare();
   let buffer = this.data;
 
-  let mem = frameMemory.NewFrameMemory(this.width, this.height);
+  let mem = frameMemory.NewFrameMemory(this.offsetLeft, this.offsetTop, this.width, this.height);
   mem.from(buffer, this);
   algorithm.flood(mem, x, y, this.frontColor);
   mem.copyTo(buffer, this);
@@ -195,7 +192,7 @@ Drawing.prototype.fillFlood = function(x, y) {
 Drawing.prototype.fillFrame_params = ['options?o', 'fillerFunc:f'];
 Drawing.prototype.fillFrame = function(options, fillerFunc) {
   if (this.mem == null) {
-    this.mem = frameMemory.NewFrameMemory(this.width, this.height);
+    this.mem = frameMemory.NewFrameMemory(this.offsetLeft, this.offsetTop, this.width, this.height);
   }
   if (options && options.previous && !this.mem._didFrame) {
     this.mem.createBackBuffer();

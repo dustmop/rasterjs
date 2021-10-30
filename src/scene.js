@@ -151,6 +151,16 @@ Scene.prototype.loadImage = function(filepath, opt) {
   return this.imgLoader.loadImage(filepath, opt);
 }
 
+Scene.prototype.select = function(x, y, w, h) {
+  let make = this.aPlane.clone();
+  make.offsetLeft = x;
+  make.offsetTop = y;
+  make.width = w;
+  make.height = h;
+  // TDOO: addMethods for destructure handling
+  return make;
+}
+
 Scene.prototype._doRender = function(num, exitAfter, renderFunc, betweenFunc, finalFunc) {
   let plane = this.aPlane;
   let self = this;

@@ -28,12 +28,15 @@ Plane.prototype.clear = function() {
 }
 
 Plane.prototype.clone = function() {
+  this._prepare();
   let make = new Plane();
   make.width = this.width;
   make.height = this.height;
   make.pitch = this.pitch;
   make.data = this.data;
   make.mem = this.mem;
+  make.bgColor = this.bgColor;
+  make.frontColor = this.frontColor;
   // rgbBuffer
   // _backBuffer
   // bgColor
@@ -85,18 +88,22 @@ Plane.prototype._prepare = function() {
 
 Plane.prototype.get = function(x, y) {
   this._prepare();
+  this._offs = this.offsetTop * this.pitch + this.offsetLeft || 0;
   let k = y * this.pitch + x;
-  return this.data[k];
+  return this.data[this._offs + k];
 }
 
 Plane.prototype.put = function(x, y, v) {
   this._prepare();
+  this._offs = this.offsetTop * this.pitch + this.offsetLeft || 0;
   let k = y * this.pitch + x;
-  this.data[k] = v;
+  // TODO: Check width and height
+  this.data[this._offs + k] = v;
 }
 
 Plane.prototype.putSequence = function(seq) {
   this._prepare();
+  this._offs = this.offsetTop * this.pitch + this.offsetLeft || 0;
   // Get the current color
   let c = this.frontColor;
   // Each sequence
@@ -107,7 +114,8 @@ Plane.prototype.putSequence = function(seq) {
       let x = Math.floor(elem[0]);
       let y = Math.floor(elem[1]);
       let k = y * this.pitch + x;
-      this.data[k] = c;
+      // TODO: Add offsets
+      this.data[this._offs + k] = c;
     } else if (elem.length == 4) {
       // Sequnce of length 4 is a range
       let x0 = Math.floor(elem[0]);
@@ -139,7 +147,8 @@ Plane.prototype.putSequence = function(seq) {
         let x = x0;
         for (let y = y0; y <= y1; y++) {
           let k = y * this.pitch + x;
-          this.data[k] = c;
+          // TODO: Add offsets
+          this.data[this._offs + k] = c;
         }
       } else if (y0 == y1) {
         if (y0 < 0 || y1 >= this.height) {
@@ -154,7 +163,8 @@ Plane.prototype.putSequence = function(seq) {
         let y = y0;
         for (let x = x0; x <= x1; x++) {
           let k = y * this.pitch + x;
-          this.data[k] = c;
+          // TODO: Add offsets
+          this.data[this._offs + k] = c;
         }
       }
     }
@@ -186,6 +196,7 @@ Plane.prototype.putImage = function(img, baseX, baseY) {
       }
       let k = putY*this.pitch + putX;
       if (imageAlpha && imageAlpha[j] >= 0x80) {
+        // TODO: this._offs
         this.data[k] = imageData[j];
       }
     }

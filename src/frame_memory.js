@@ -1,10 +1,13 @@
-function NewFrameMemory(w, h) {
+function NewFrameMemory(left, top, w, h) {
+  var pitch = w;
   var make = new Uint8Array(w * h);
+  make.left = left || 0;
+  make.top = top || 0;
   make.y_dim = h;
   make.x_dim = w;
   make.height = h;
   make.width = w;
-  make.pitch = w;
+  make.pitch = pitch;
   make._didFrame = false;
   make._backBuffer = null;
   make.put = function(x, y, v) {
@@ -34,19 +37,21 @@ function NewFrameMemory(w, h) {
     self._backBuffer.set(self);
   }
   make.copyTo = function(buffer, info) {
-    for (let y = 0; y < info.height; y++) {
-      for (let x = 0; x < info.width; x++) {
+    let offs = this.top*info.pitch + this.left;
+    for (let y = 0; y < this.height; y++) {
+      for (let x = 0; x < this.width; x++) {
         let k = y*this.pitch + x;
-        let j = y*info.pitch + x;
+        let j = y*info.pitch + x + offs;
         buffer[j] = this[k];
       }
     }
   }
   make.from = function(buffer, info) {
-    for (let y = 0; y < info.height; y++) {
-      for (let x = 0; x < info.width; x++) {
+    let offs = this.top*info.pitch + this.left;
+    for (let y = 0; y < this.height; y++) {
+      for (let x = 0; x < this.width; x++) {
         let k = y*this.pitch + x;
-        let j = y*info.pitch + x;
+        let j = y*info.pitch + x + offs;
         this[k] = buffer[j];
       }
     }

@@ -33,19 +33,35 @@ ra.show();
 
 ![](asset/example.png)
 
-# Installation
+# Building
+
+You can use raster.js either in the browser using canvas, or on the command-line using node.js (graphics will appear in a new SDL window).
+
+### Browser
+
+Either grab `raster.min.js` from the latest release, or clone this repo and run:
+
+```
+npm run build
+```
+
+which outputs `dist/raster.min.js`
+
+### Node.js
+
+Building requires SDL2 development libraries. See below for platform specific details. Once you have them properly setup, run
 
 ```
 npm install raster
 ```
 
-Building requires [installing SDL2](https://www.libsdl.org/download-2.0.php).
+### SDL2, macos
 
-# Environments
+On macos, run `brew install sdl2` to get SDL2.
 
-Running in a terminal using node.js, the scene will be displayed in an SDL window
+### SDL2, Windows
 
-Running in a web browser, the scene will be displayed in canvas element backed by WebGL
+For Windows, only [msys2](https://www.msys2.org/) is currently supported. Go to [this page](https://www.libsdl.org/download-2.0.php) and get `SDL2-devel-2.0.16-mingw.tar.gz`. Extract the `SDL2-2.0.16` folder and place it within the directory `c:/SDL/`, so that it ends up at `c:/SDL/SDL2-2.0.16/`. If you use to use a different location instead of `c:/SDL/`, assign that location to the environment variable `SDL_PATH`.
 
 # Getting started
 

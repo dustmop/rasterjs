@@ -34,6 +34,7 @@ Move the x,y coordinate system's origin to the center of the plane, instead of t
 Assigns the color set to use for displaying the scene. May either be the name of a pre-existing color set, or a list of rgb values.
 
 If not invoked, the current default colorset is this:
+
 ![](asset/quick-colorset.png)
 
 This will likely change in the future: call `useColors('quick')` unless you want to modify your scripts in the future.

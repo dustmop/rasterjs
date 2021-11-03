@@ -17,7 +17,7 @@ TileSet.prototype._loadTiles = function() {
   this.numTileX = this.img.width / this.tileWidth;
   this.numTileY = this.img.height / this.tileHeight;
   this.data = new Array(this.numTileX * this.numTileY);
-  // For each tile, load the rgb buffer and create a tile object
+  // For each tile, load the data and create a tile object
   for (let yTile = 0; yTile < this.numTileY; yTile++) {
     for (let xTile = 0; xTile < this.numTileX; xTile++) {
       let k = yTile * this.numTileX + xTile;
@@ -25,19 +25,17 @@ TileSet.prototype._loadTiles = function() {
       t.width = this.tileWidth;
       t.height = this.tileHeight;
       t.pitch = t.width * 4;
-      t.rgbBuff = new Uint8Array(t.width * t.height * 4);
+      t.data = new Uint8Array(t.width * t.height * 4);
       for (let i = 0; i < this.tileHeight; i++) {
         for (let j = 0; j < this.tileWidth; j++) {
           let y = yTile * this.tileHeight + i;
           let x = xTile * this.tileWidth + j;
-          //let s = y * this.tileWidth + x;
           let s = i * this.tileWidth + j;
           let n = y * this.numTileX * this.tileWidth + x;
-          //console.log(`i=${i} j=${j}, y=${y} x=${x} s=${s} n=${n}`);
-          t.rgbBuff[s*4+0] = this.img.rgbBuff[n*4+0];
-          t.rgbBuff[s*4+1] = this.img.rgbBuff[n*4+1];
-          t.rgbBuff[s*4+2] = this.img.rgbBuff[n*4+2];
-          t.rgbBuff[s*4+3] = this.img.rgbBuff[n*4+3];
+          t.data[s+0] = this.img.data[n+0];
+          t.data[s+1] = this.img.data[n+1];
+          t.data[s+2] = this.img.data[n+2];
+          t.data[s+3] = this.img.data[n+3];
         }
       }
       this.data[k] = t;
@@ -52,10 +50,9 @@ function Tile() {
   return this;
 }
 
-Tile.prototype.getRGB = function(x, y) {
+Tile.prototype.get = function(x, y) {
   let k = y * this.width + x;
-  let b = this.rgbBuff;
-  return [b[k*4+0], b[k*4+1], b[k*4+2]];
+  return this.data[k];
 }
 
 module.exports.TileSet = TileSet;

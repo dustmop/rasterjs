@@ -1,6 +1,5 @@
-function TileSet(img, sizeInfo, saveService) {
-  // TODO: type check here
-  this.img = img;
+function TileSet(source, sizeInfo, saveService) {
+  this.source = source;
   this.tileWidth = sizeInfo.tile_width;
   this.tileHeight = sizeInfo.tile_height;
   this.saveService = saveService;
@@ -13,9 +12,8 @@ TileSet.prototype.get = function(c) {
 }
 
 TileSet.prototype._loadTiles = function() {
-  let q = 0;
-  this.numTileX = this.img.width / this.tileWidth;
-  this.numTileY = this.img.height / this.tileHeight;
+  this.numTileX = this.source.width / this.tileWidth;
+  this.numTileY = this.source.height / this.tileHeight;
   this.data = new Array(this.numTileX * this.numTileY);
   // For each tile, load the data and create a tile object
   for (let yTile = 0; yTile < this.numTileY; yTile++) {
@@ -24,20 +22,9 @@ TileSet.prototype._loadTiles = function() {
       let t = new Tile();
       t.width = this.tileWidth;
       t.height = this.tileHeight;
-      t.pitch = t.width * 4;
-      t.data = new Uint8Array(t.width * t.height * 4);
-      for (let i = 0; i < this.tileHeight; i++) {
-        for (let j = 0; j < this.tileWidth; j++) {
-          let y = yTile * this.tileHeight + i;
-          let x = xTile * this.tileWidth + j;
-          let s = i * this.tileWidth + j;
-          let n = y * this.numTileX * this.tileWidth + x;
-          t.data[s+0] = this.img.data[n+0];
-          t.data[s+1] = this.img.data[n+1];
-          t.data[s+2] = this.img.data[n+2];
-          t.data[s+3] = this.img.data[n+3];
-        }
-      }
+      t.pitch = this.source.pitch;
+      let offset = xTile * this.tileWidth + t.pitch * yTile * this.tileHeight;
+      t.data = new Uint8Array(this.source.data.buffer, offset);
       this.data[k] = t;
     }
   }
@@ -46,12 +33,13 @@ TileSet.prototype._loadTiles = function() {
 function Tile() {
   this.width = null;
   this.height = null;
+  this.pitch = null;
   this.data = null;
   return this;
 }
 
 Tile.prototype.get = function(x, y) {
-  let k = y * this.width + x;
+  let k = y * this.pitch + x;
   return this.data[k];
 }
 

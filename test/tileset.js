@@ -2,7 +2,7 @@ var util = require('./util.js');
 var ra = require('../src/lib.js');
 
 describe('Tileset', function() {
-  it('renders', function() {
+  it('tiles from image', function() {
     ra.resetState();
 
     let plane = new ra.Plane();
@@ -18,5 +18,43 @@ describe('Tileset', function() {
                    [6, 4, 2, 2]]);
 
     util.saveTmpCompareTo(ra, 'test/testdata/map_of_tiles.png');
+  });
+
+  it('draw tiles', function() {
+    ra.resetState();
+
+    let plane = new ra.Plane();
+    plane.setSize(4);
+
+    let tiles = new ra.Plane();
+    tiles.setSize(16);
+
+    tiles.setColor(34);
+    tiles.drawDot(0, 0);
+    tiles.drawDot(8, 1);
+    tiles.drawDot(8, 2);
+    tiles.drawDot(9, 1);
+    tiles.drawDot(9, 2);
+    tiles.drawDot(1,  9);
+    tiles.drawDot(2, 10);
+    tiles.drawDot(3, 11);
+    tiles.drawDot(4, 12);
+    tiles.drawDot(5, 13);
+
+    ra.useTileset(tiles, {tile_width: 8, tile_height: 8});
+    ra.usePlane(plane);
+
+    ra.fillDot([[ 0, 0, 1, 0],
+                [ 0, 1, 0, 0],
+                [ 0, 0, 1, 2],
+                [ 0, 0, 0, 0],
+               ]);
+
+    util.saveTmpCompareTo(ra, 'test/testdata/drawn_tiles.png');
+
+    tiles.drawDot(2, 0);
+    tiles.drawDot(0, 2);
+    tiles.drawDot(2, 2);
+    util.saveTmpCompareTo(ra, 'test/testdata/modify_tiles.png');
   });
 });

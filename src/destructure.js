@@ -44,13 +44,16 @@ function toParam(paramText) {
   throw new Error(`could not convert param ${paramText}`);
 }
 
-function destructure(fname, paramSpec, args) {
+function destructure(fname, paramSpec, args, converter) {
   let err = null;
   let spec = build(paramSpec);
   for (let i = 0; i < spec.choices.length; i++) {
     let choice = spec.choices[i];
     let match = tryMatch(choice, args);
     if (match.values) {
+      if (converter) {
+        return converter(i, match.values);
+      }
       return match.values;
     }
     if (err == null) {

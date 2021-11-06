@@ -14,7 +14,7 @@ Raster.prototype._addMethods = function() {
   let d = new drawing.Drawing();
   let methods = d.getMethods();
   for (let i = 0; i < methods.length; i++) {
-    let [fname, params, impl] = methods[i];
+    let [fname, params, converter, impl] = methods[i];
     this[fname] = function() {
       let args = Array.from(arguments);
       self.scene[fname].apply(self.scene, args);

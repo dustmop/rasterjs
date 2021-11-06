@@ -11,7 +11,7 @@ describe('Select', function() {
     ra.setColor(43);
 
     let sel = ra.select({x: 1, y: 1, w: 6, h: 6});
-    sel.drawRect(/*x*/ 1, /*y*/ 2, /*w*/ 7, /*h*/ 4);
+    sel.drawRect(1, 2, 8, 6);
 
     sel.setColor(37);
     sel.fillFlood(3, 3);

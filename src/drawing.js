@@ -11,9 +11,9 @@ Drawing.prototype.getMethods = function() {
   for (let fname in this) {
     if (fname.endsWith('_params')) { continue; }
     let pname = fname + '_params';
+    let cname = fname + '_convert';
     if (this[pname]) {
-      let impl = this[fname];
-      result.push([fname, this[pname], impl]);
+      result.push([fname, this[pname], this[cname], this[fname]]);
     }
   }
   return result;
@@ -92,14 +92,24 @@ Drawing.prototype.drawSquare = function(x, y, size) {
   _renderRect(this, x, y, size, size, false);
 }
 
-Drawing.prototype.fillRect_params = ['x:i', 'y:i', 'w:i', 'h:i'];
-Drawing.prototype.fillRect = function(x, y, w, h) {
-  _renderRect(this, x, y, w, h, true);
+Drawing.prototype.fillRect_params = ['x:i', 'y:i', 'x1:i', 'y1:i', '||',
+                                     'x:i', 'y:i', 'w:i', 'h:i'];
+Drawing.prototype.fillRect_convert = function(choice, vals) {
+  if (choice == 0) { return vals; }
+  return [vals[0], vals[1], vals[0] + vals[2], vals[1] + vals[3]];
+}
+Drawing.prototype.fillRect = function(x, y, x1, y1) {
+  _renderRect(this, x, y, x1 - x, y1 - y, true);
 }
 
-Drawing.prototype.drawRect_params = ['x:i', 'y:i', 'w:i', 'h:i'];
-Drawing.prototype.drawRect = function(x, y, w, h) {
-  _renderRect(this, x, y, w, h, false);
+Drawing.prototype.drawRect_params = ['x:i', 'y:i', 'x1:i', 'y1:i', '||',
+                                     'x:i', 'y:i', 'w:i', 'h:i'];
+Drawing.prototype.drawRect_convert = function(choice, vals) {
+  if (choice == 0) { return vals; }
+  return [vals[0], vals[1], vals[0] + vals[2], vals[1] + vals[3]];
+}
+Drawing.prototype.drawRect = function(x, y, x1, y1) {
+  _renderRect(this, x, y, x1 - x, y1 - y, false);
 }
 
 function _renderRect(self, x, y, w, h, fill) {

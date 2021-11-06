@@ -63,13 +63,13 @@ Scene.prototype._addMethods = function() {
   let d = new drawing.Drawing();
   let methods = d.getMethods();
   for (let i = 0; i < methods.length; i++) {
-    let [fname, paramSpec, impl] = methods[i];
+    let [fname, paramSpec, converter, impl] = methods[i];
     this[fname] = function() {
       let args = Array.from(arguments);
       if (paramSpec === undefined) {
         throw new Error(`function ${fname} does not have parameter spec`);
       }
-      let realArgs = destructure.destructure(fname, paramSpec, args);
+      let realArgs = destructure.destructure(fname, paramSpec, args, converter);
       if (self._config.translateCenter) {
         self._translateArguments(paramSpec, realArgs);
       }

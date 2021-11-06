@@ -48,7 +48,7 @@ PaletteCollection.prototype.save = function(filename) {
     let rgbInt = this.items[i].rgb.toInt();
     let y = i * 20;
     target.setTrueColor(rgbInt);
-    target.fillRect(2, 2 + y, 36, 16);
+    target.fillRect(2, 2 + y, 38, 18 + y);
   }
   target.save(filename);
 }

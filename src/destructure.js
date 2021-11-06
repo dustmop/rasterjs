@@ -1,64 +1,136 @@
-function destructure(param_spec, row) {
-  let fname = row[0];
-  let values = row[1];
+function DescribeSpec(choices) {
+  this.choices = choices;
+  return this;
+}
 
-  // TODO: Handle optional parameters.
-  let want = param_spec.length;
-  let got = values.length;
-  // TODO: Handle empty arguments
-  let first_param = values[0];
+function build(spec) {
+  let choices = [];
+  let mapping = {};
+  let needed = 0;
+  let row = [];
+  for (k = 0; k < spec.length; k++) {
+    let p = spec[k];
+    if (p == '||') {
+      choices.push({row: row, mapping: mapping, needed: needed});
+      row = [];
+      mapping = {};
+      needed = 0;
+      continue;
+    }
+    let param = toParam(p);
+    mapping[param.name] = row.length;
+    row.push(param);
+    if (param.req) {
+      needed++;
+    }
+  }
+  if (row.length > 0) {
+    choices.push({row: row, mapping: mapping, needed: needed});
+  }
+  return new DescribeSpec(choices);
+}
 
-  if (got == 1 && isRawObject(first_param)) {
-    // Object containing named parameters.
-    let result = [];
-    let haveKeys = Object.keys(first_param);
-    for (let i = 0; i < param_spec.length; i++) {
-      let [n, t, required] = splitParam(param_spec[i]);
-      // TOOD: Split spec into name and type
-      let pos = haveKeys.indexOf(n);
-      if (pos == -1) {
-        if (!required) {
-          continue;
-        }
-        throw new Error(`function ${fname} missing parameter ${n}`);
+function toParam(paramText) {
+  let pos = paramText.indexOf(':');
+  if (pos != -1) {
+    let [name, type] = paramText.split(':');
+    return {name: name, type: type, req: true};
+  }
+  pos = paramText.indexOf('?');
+  if (pos != -1) {
+    let [name, type] = paramText.split('?');
+    return {name: name, type: type, req: false};
+  }
+  throw new Error(`could not convert param ${paramText}`);
+}
+
+function destructure(fname, paramSpec, args) {
+  let err = null;
+  let spec = build(paramSpec);
+  for (let i = 0; i < spec.choices.length; i++) {
+    let choice = spec.choices[i];
+    let match = tryMatch(choice, args);
+    if (match.values) {
+      return match.values;
+    }
+    if (err == null) {
+      err = match.err;
+    }
+  }
+  throw new Error(`function ${fname} ${err}`);
+}
+
+function tryMatch(choice, args) {
+  let row = choice.row;
+  let allowed = row.length;
+  let needed = choice.needed;
+  let mapping = choice.mapping;
+  if (args.length == 1 && isRawObject(args[0])) {
+    return tryMatchNamedParam(choice, args[0]);
+  }
+  return tryMatchPositionalParam(choice, args);
+}
+
+function tryMatchNamedParam(choice, argMap) {
+  let row = choice.row;
+  let allowed = row.length;
+  let needed = choice.needed;
+  let mapping = choice.mapping;
+
+  let haveArgKeys = Object.keys(argMap);
+  let values = [];
+  for (let i = 0; i < row.length; i++) {
+    let p = row[i];
+    let v = argMap[p.name];
+    if (v !== undefined) {
+      values.push(typeCoerce(v, p.type));
+      let pos = haveArgKeys.indexOf(p.name);
+      haveArgKeys.splice(pos, 1);
+    } else if (p.req) {
+      return {err: `missing parameter ${p.name}`};
+    }
+  }
+
+  // Validate there's no unknown parameters passed to the function.
+  if (haveArgKeys.length == 1) {
+    let f = haveArgKeys[0];
+    return {err: `unknown parameter ${f}`};
+  } else if (haveArgKeys.length > 1) {
+    return {err: `unknown parameters ${haveArgKeys}`};
+  }
+
+  return {values: values};
+}
+
+function tryMatchPositionalParam(choice, args) {
+  let row = choice.row;
+  let allowed = row.length;
+  let needed = choice.needed;
+  let mapping = choice.mapping;
+
+  if (args.length == 1 && needed == 1 && allowed == 2) {
+    // Short-cut to handle optional param[0]
+    if (!row[0].req) {
+      return {values: [null, args[0]]};
+    }
+  }
+
+  if (args.length < needed || args.length > allowed) {
+    return {err: `expected ${allowed} arguments, got ${args.length}`};
+  }
+
+  let values = [];
+  for (let i = 0; i < row.length; i++) {
+    let p = row[i];
+    if (i >= args.length) {
+      if (!p.req) {
+        continue;
       }
-      haveKeys.splice(pos, 1);
-      result.push(first_param[n]);
+      return {err: `argument ${i} not found`};
     }
-
-    // Validate there's no unknown parameters passed to the function.
-    if (haveKeys.length == 1) {
-      let f = haveKeys[0];
-      throw new Error(`function ${fname} unknown parameter ${f}`);
-    } else if (haveKeys.length > 1) {
-      throw new Error(`function ${fname} unknown parameters ${haveKeys}`);
-    }
-    return result;
+    values.push(typeCoerce(args[i], p.type));
   }
-
-  // Normal list of unnamed parameters passed to the function.
-  let need = 0;
-  for (let i = 0; i < param_spec.length; i++) {
-    let [n, t, required] = splitParam(param_spec[i]);
-    if (required) {
-      need++;
-    }
-  }
-
-  if (got == 1 && need == 1 && want == 2) {
-    let [n, t, required] = splitParam(param_spec[0]);
-    // HACK: Quick and dirty handling of optional options at [0]
-    if (!required) {
-      return [null, values[0]];
-    }
-  }
-
-  // TODO: Improve this check.
-  if ((got >= need) && (got <= want)) {
-    // TODO: Handle type conversions.
-    return values;
-  }
-  throw new Error(`function ${fname} expected ${want} arguments, got ${got}`);
+  return {values: values};
 }
 
 function isRawObject(thing) {
@@ -71,20 +143,32 @@ function isRawObject(thing) {
   return false;
 }
 
-function splitParam(spec) {
-  let i = spec.indexOf(':');
-  if (i != -1) {
-    let n = spec.slice(0, i);
-    let t = spec.slice(i + 1);
-    return [n, t, true];
+function typeCoerce(value, type) {
+  if (type == 'i') {
+    // int
+    return value;
+  } else if (type == 'f') {
+    // float
+    return value;
+  } else if (type == 'ps') {
+    // points
+    return value;
+  } else if (type == 'a' || type == 'any') {
+    // points
+    return value;
+  } else if (type == 's') {
+    // string
+    return value;
+  } else if (type == 'b') {
+    // string
+    return value;
+  } else if (type == 'o') {
+    // object
+    return value;
+  } else {
+    throw new Error(`unknown type: ${type}`);
   }
-  i = spec.indexOf('?');
-  if (i != -1) {
-    let n = spec.slice(0, i);
-    let t = spec.slice(i + 1);
-    return [n, t, false];
-  }
-  throw new Error(`IMPLEMENT ME: ${spec}`);
 }
 
-module.exports = destructure;
+module.exports.destructure = destructure;
+module.exports.build = build;

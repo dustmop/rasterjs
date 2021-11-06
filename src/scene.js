@@ -69,7 +69,7 @@ Scene.prototype._addMethods = function() {
       if (paramSpec === undefined) {
         throw new Error(`function ${fname} does not have parameter spec`);
       }
-      let realArgs = destructure(paramSpec, [fname, args]);
+      let realArgs = destructure.destructure(fname, paramSpec, args);
       if (self._config.translateCenter) {
         self._translateArguments(paramSpec, realArgs);
       }

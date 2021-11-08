@@ -96,34 +96,26 @@ describe('Rect and square', function() {
     ra.setColor(0x12);
     ra.fillRect({x: 15, y: 2, x1: 18, y1: 7});
     ra.setColor(0x13);
-    ra.drawRect(20, 2, 23, 7);
+    ra.drawRect(20, 2, 3, 5);
 
     ra.setColor(0x14);
     ra.fillRect({x: 25, y: 2, x1: 31, y1: 5});
 
     ra.setColor(0x15);
-    ra.drawRect(32, 2, 38, 5);
+    ra.drawRect(32, 2, 6, 3);
 
-    ra.setColor(0x07); // top white
-    ra.drawLine( 1, 0,  2, 0);
-    ra.drawLine( 4, 0,  5, 0);
-    ra.drawLine( 7, 0,  8, 0);
-    ra.drawLine(10, 0, 11, 0);
-    ra.setColor(0x03); // bottom medium grey
-    ra.drawLine( 1, 11,  2, 11);
-    ra.drawLine( 4, 11,  5, 11);
-    ra.drawLine( 7, 11,  8, 11);
-    ra.drawLine(10, 11, 11, 11);
-    ra.setColor(0x05); // right light grey
-    ra.drawLine(39,  1, 39,  2);
-    ra.drawLine(39,  4, 39,  5);
-    ra.drawLine(39,  7, 39,  8);
-    ra.drawLine(39, 10, 39, 11);
-    ra.setColor(0x01); // left dark grey
-    ra.drawLine( 0,  1,  0,  2);
-    ra.drawLine( 0,  4,  0,  5);
-    ra.drawLine( 0,  7,  0,  8);
-    ra.drawLine( 0, 10,  0, 11);
+    for (let k = 0; k < 4; k++) {
+      let a = k*3+1
+      let b = k*3+2
+      ra.setColor(0x07); // top white
+      ra.drawLine( a, 0,  b, 0);
+      ra.setColor(0x03); // bottom medium grey
+      ra.drawLine( a, 11,  b, 11);
+      ra.setColor(0x05); // right light grey
+      ra.drawLine(39,  a, 39,  b);
+      ra.setColor(0x01); // left dark grey
+      ra.drawLine( 0,  a,  0,  b);
+    }
 
     util.saveTmpCompareTo(ra, 'test/testdata/rect_square.png');
   });

@@ -51,7 +51,7 @@ function from(fname, paramSpec, args, converter) {
     let choice = spec.choices[i];
     let match = tryMatch(choice, args);
     if (match.values) {
-      if (converter) {
+      if (i > 0 && converter) {
         return converter(i, match.values);
       }
       return match.values;

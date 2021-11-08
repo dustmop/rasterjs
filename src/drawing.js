@@ -86,24 +86,22 @@ Drawing.prototype.drawSquare = function(x, y, size) {
   _renderRect(this, x, y, size, size, false);
 }
 
-Drawing.prototype.fillRect_params = ['x:i', 'y:i', 'x1:i', 'y1:i', '||',
-                                     'x:i', 'y:i', 'w:i', 'h:i'];
+Drawing.prototype.fillRect_params = ['x:i', 'y:i', 'w:i', 'h:i', '||',
+                                     'x:i', 'y:i', 'x1:i', 'y1:i'];
 Drawing.prototype.fillRect_convert = function(choice, vals) {
-  if (choice == 0) { return vals; }
-  return [vals[0], vals[1], vals[0] + vals[2], vals[1] + vals[3]];
+  return [vals[0], vals[1], vals[2] - vals[0], vals[3] - vals[1]];
 }
-Drawing.prototype.fillRect = function(x, y, x1, y1) {
-  _renderRect(this, x, y, x1 - x, y1 - y, true);
+Drawing.prototype.fillRect = function(x, y, w, h) {
+  _renderRect(this, x, y, w, h, true);
 }
 
-Drawing.prototype.drawRect_params = ['x:i', 'y:i', 'x1:i', 'y1:i', '||',
-                                     'x:i', 'y:i', 'w:i', 'h:i'];
+Drawing.prototype.drawRect_params = ['x:i', 'y:i', 'w:i', 'h:i', '||',
+                                     'x:i', 'y:i', 'x1:i', 'y1:i'];
 Drawing.prototype.drawRect_convert = function(choice, vals) {
-  if (choice == 0) { return vals; }
-  return [vals[0], vals[1], vals[0] + vals[2], vals[1] + vals[3]];
+  return [vals[0], vals[1], vals[2] - vals[0], vals[3] - vals[1]];
 }
-Drawing.prototype.drawRect = function(x, y, x1, y1) {
-  _renderRect(this, x, y, x1 - x, y1 - y, false);
+Drawing.prototype.drawRect = function(x, y, w, h) {
+  _renderRect(this, x, y, w, h, false);
 }
 
 function _renderRect(self, x, y, w, h, fill) {

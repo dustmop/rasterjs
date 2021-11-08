@@ -32,6 +32,10 @@ myDisplay.prototype.initialize = function() {
   this.count = 1000;
 }
 
+myDisplay.prototype.setSize = function(width, height) {
+  // pass
+}
+
 myDisplay.prototype.setSource = function(plane, zoomLevel) {
   this.plane = plane;
   this.count += zoomLevel;

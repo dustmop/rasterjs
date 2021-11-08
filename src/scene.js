@@ -69,7 +69,7 @@ Scene.prototype._addMethods = function() {
       if (paramSpec === undefined) {
         throw new Error(`function ${fname} does not have parameter spec`);
       }
-      let realArgs = destructure.destructure(fname, paramSpec, args, converter);
+      let realArgs = destructure.from(fname, paramSpec, args, converter);
       if (self._config.translateCenter) {
         self._translateArguments(paramSpec, realArgs);
       }
@@ -97,6 +97,22 @@ Scene.prototype._translateArguments = function(params, args) {
       args[i] += midY;
     }
   }
+}
+
+Scene.prototype.setSize = function(w, h) {
+  this._config.width = w;
+  this._config.height = h;
+  if (this.aPlane.width == 0 || this.aPlane.height == 0) {
+    this.aPlane.setSize(w, h);
+  }
+}
+
+Scene.prototype.setScrollX = function(x) {
+  this._config.scrollX = x;
+}
+
+Scene.prototype.setScrollY = function(y) {
+  this._config.scrollY = y;
 }
 
 Scene.prototype.resetState = function() {
@@ -142,7 +158,7 @@ Scene.prototype.useDisplay = function(nameOrDisplay) {
   } else if (this.isDisplayObject(nameOrDisplay)) {
     this.display = nameOrDisplay;
   } else {
-    throw `Invalid display "${nameOrDisplay}"`;
+    throw new Error(`Invalid display ${JSON.stringify(nameOrDisplay)}`);
   }
   this.display.initialize();
 }
@@ -165,6 +181,7 @@ Scene.prototype._doRender = function(num, exitAfter, renderFunc, betweenFunc, fi
   let plane = this.aPlane;
   let self = this;
   this.then(function() {
+    self.display.setSize(self._config.width, self._config.height);
     self.display.setSource(plane, self._config.zoomScale);
     self.display.renderLoop(function() {
       if (renderFunc) {
@@ -228,7 +245,7 @@ Scene.prototype.handleEvent = function(eventName, callback) {
 }
 
 Scene.prototype.isDisplayObject = function(obj) {
-  let needMethods = ['initialize', 'setSource', 'renderLoop'];
+  let needMethods = ['initialize', 'setSize', 'setSource', 'renderLoop'];
   for (let i = 0; i < needMethods.length; i++) {
     let method = obj[needMethods[i]];
     if (!method || typeof method != 'function') {
@@ -380,10 +397,20 @@ Scene.prototype.render = function(pl) {
     this.rgbBuffer = new Uint8Array(numPoints*4);
   }
 
+  let scrollY = this._config.scrollY || 0;
+  let scrollX = this._config.scrollX || 0;
+
   for (let y = 0; y < sourceHeight; y++) {
     for (let x = 0; x < sourceWidth; x++) {
-      let k = y*sourcePitch + x;
+      let k = (y+scrollY)*sourcePitch + x+scrollX;
       let j = y*targetPitch + x*4;
+      if (k < 0 || k >= source.length) {
+        this.rgbBuffer[j+0] = 0;
+        this.rgbBuffer[j+1] = 0;
+        this.rgbBuffer[j+2] = 0;
+        this.rgbBuffer[j+3] = 0xff;
+        continue;
+      }
       let rgb = this._toColor(source[k]);
       this.rgbBuffer[j+0] = rgb.r;
       this.rgbBuffer[j+1] = rgb.g;
@@ -395,6 +422,13 @@ Scene.prototype.render = function(pl) {
     this.rgbBuffer.width = sizeInfo.width;
     this.rgbBuffer.height = sizeInfo.height;
     this.rgbBuffer.pitch = sizeInfo.pitch;
+  }
+  if (this._config.width) {
+    this.rgbBuffer.width = this._config.width;
+    this.rgbBuffer.pitch = targetPitch;
+  }
+  if (this._config.height) {
+    this.rgbBuffer.height = this._config.height;
   }
   return this.rgbBuffer;
 }

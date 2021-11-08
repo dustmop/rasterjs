@@ -13,6 +13,7 @@ void DisplaySDL::InitClass(Napi::Env env, Napi::Object exports) {
       env,
       "Display",
       {InstanceMethod("initialize", &DisplaySDL::Initialize),
+       InstanceMethod("setSize", &DisplaySDL::SetSize),
        InstanceMethod("setSource", &DisplaySDL::SetSource),
        InstanceMethod("handleEvent", &DisplaySDL::HandleEvent),
        InstanceMethod("renderLoop", &DisplaySDL::RenderLoop),
@@ -44,6 +45,20 @@ Napi::Value DisplaySDL::Initialize(const Napi::CallbackInfo& info) {
   } else {
     this->sdlInitialized = 1;
   }
+  return Napi::Number::New(env, 0);
+}
+
+Napi::Value DisplaySDL::SetSize(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+
+  if (info.Length() < 2) {
+    printf("SetSize needs two parameters\n");
+    exit(1);
+  }
+
+  this->displayWidth = info[0].ToNumber().Int32Value();
+  this->displayHeight = info[1].ToNumber().Int32Value();
+
   return Napi::Number::New(env, 0);
 }
 
@@ -152,9 +167,11 @@ Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
   Napi::TypedArray typeArr = bufferVal.As<Napi::TypedArray>();
   Napi::ArrayBuffer arrBuff = typeArr.ArrayBuffer();
 
+  int viewPitch = widthNum.As<Napi::Number>().Int32Value() * 4;
+
   // Calculate texture and window size.
-  int viewWidth = widthNum.As<Napi::Number>().Int32Value();
-  int viewHeight = heightNum.As<Napi::Number>().Int32Value();
+  int viewWidth = this->displayWidth;
+  int viewHeight = this->displayHeight;
 
   Napi::Value realWidthNum = bufferObj.Get("width");
   Napi::Value realHeightNum = bufferObj.Get("height");
@@ -163,8 +180,7 @@ Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
     viewHeight = realHeightNum.As<Napi::Number>().Int32Value();
   }
 
-  // TODO: Fix this
-  int pitch = viewWidth*4;
+  int pitch = viewPitch;
   int zoomLevel = this->zoomLevel;
   int windowWidth = viewWidth * zoomLevel;
   int windowHeight = viewHeight * zoomLevel;

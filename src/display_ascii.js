@@ -6,6 +6,10 @@ function DisplayAscii() {
 DisplayAscii.prototype.initialize = function() {
 }
 
+DisplayAscii.prototype.setSize = function(width, height) {
+  // pass
+}
+
 DisplayAscii.prototype.setSource = function(plane, zoomLevel) {
   this.plane = plane;
 }

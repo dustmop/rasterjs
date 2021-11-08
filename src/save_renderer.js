@@ -18,13 +18,18 @@ SaveRenderer.prototype.initialize = function() {
   this.tmpdir = path.join(os.tmpdir(), 'raster-save-' + randstr.generate(8));
 }
 
+SaveRenderer.prototype.setSize = function(w, h) {
+  this.width = w;
+  this.height = h;
+}
+
 SaveRenderer.prototype.setSource = function(plane, zoomLevel) {
   this.plane = plane;
 }
 
 SaveRenderer.prototype.renderLoop = function(nextFrame) {
-  let width = this.plane.width;
-  let height = this.plane.height;
+  let width = this.width;
+  let height = this.height;
   // TODO: Saving a gif using a tileset does not work.
 
   try {

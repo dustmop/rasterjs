@@ -19,12 +19,6 @@ Drawing.prototype.getMethods = function() {
   return result;
 }
 
-Drawing.prototype.setSize_params = ['w:i', 'h?i'];
-Drawing.prototype.setSize = function(width, height) {
-  if (height === undefined) { height = width; }
-  this._setSize(width, height);
-}
-
 Drawing.prototype.setColor_params = ['color:i'];
 Drawing.prototype.setColor = function(color) {
   this.frontColor = color;
@@ -247,10 +241,8 @@ Drawing.prototype.drawImage = function(img, x, y) {
   }
   x = x || 0;
   y = y || 0;
-  if (this.width == 100 && this.height == 100) {
-    // TODO: Hack, should use a real sentinel value.
+  if (this.width == 0 && this.height == 0) {
     // TODO: Set the colorset as well.
-    // TOOD: Don't do this if any draw/fill methods were called.
     this.setSize(img.width, img.height);
   }
   this.putImage(img, x, y);

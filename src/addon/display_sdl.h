@@ -20,6 +20,7 @@ class DisplaySDL : public Napi::ObjectWrap<DisplaySDL> {
  private:
   Napi::Value Initialize(const Napi::CallbackInfo& info);
   Napi::Value SetSource(const Napi::CallbackInfo& info);
+  Napi::Value SetSize(const Napi::CallbackInfo& info);
   Napi::Value HandleEvent(const Napi::CallbackInfo& info);
   Napi::Value RenderLoop(const Napi::CallbackInfo& info);
   Napi::Value AppQuit(const Napi::CallbackInfo& info);
@@ -30,6 +31,9 @@ class DisplaySDL : public Napi::ObjectWrap<DisplaySDL> {
   int sdlInitialized;
   napi_ref planeRef;
   int zoomLevel;
+
+  int displayWidth;
+  int displayHeight;
 
   SDL_Window* windowHandle;
   SDL_Renderer* rendererHandle;

@@ -44,7 +44,7 @@ function toParam(paramText) {
   throw new Error(`could not convert param ${paramText}`);
 }
 
-function destructure(fname, paramSpec, args, converter) {
+function from(fname, paramSpec, args, converter) {
   let err = null;
   let spec = build(paramSpec);
   for (let i = 0; i < spec.choices.length; i++) {
@@ -173,5 +173,5 @@ function typeCoerce(value, type) {
   }
 }
 
-module.exports.destructure = destructure;
+module.exports.from = from;
 module.exports.build = build;

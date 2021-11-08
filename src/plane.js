@@ -16,9 +16,9 @@ function setGlobalScene(scene) {
 }
 
 Plane.prototype.clear = function() {
-  this.width = 100;
-  this.height = 100;
-  this.pitch = this.width;
+  this.width = 0;
+  this.height = 0;
+  this.pitch = 0;
   this.data = null;
   this.mem = null;
   this.rgbBuffer = null;
@@ -57,7 +57,11 @@ Plane.prototype._addMethods = function() {
   }
 }
 
-Plane.prototype._setSize = function(w, h) {
+Plane.prototype.setSize = function(w, h) {
+  // TODO: use destructure.from
+  if (h === undefined) {
+    h = w;
+  }
   this.width = w;
   this.height = h;
   // TODO: Make this adjustment be semi-random instead
@@ -73,6 +77,9 @@ Plane.prototype.nextFrame = function() {
 Plane.prototype._prepare = function() {
   if (this.data && !this._needErase) {
     return;
+  }
+  if (this.width == 0 || this.height == 0) {
+    this.setSize(100, 100);
   }
   let numPixels = this.height * this.pitch;
   if (!this.data) {

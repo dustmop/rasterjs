@@ -1,6 +1,7 @@
 const rgbColor = require('./rgb_color.js');
 const scene = require('./scene.js');
 const drawing = require('./drawing.js');
+const destructure = require('./destructure.js');
 const plane = require('./plane.js');
 
 function Raster(env) {
@@ -153,6 +154,21 @@ Raster.prototype.clonePlane = function() {
 Raster.prototype.select = function(opt) {
   // TODO: destructure
   return this.scene.select(opt.x, opt.y, opt.w, opt.h);
+}
+
+Raster.prototype.setSize = function(width, height) {
+  let spec = ['w:i', 'h?i'];
+  [width, height] = destructure.from('setSize', spec, arguments, null);
+  if (height === undefined) { height = width; }
+  this.scene.setSize(width, height);
+}
+
+Raster.prototype.setScrollX = function(v) {
+  this.scene.setScrollX(v);
+}
+
+Raster.prototype.setScrollY = function(v) {
+  this.scene.setScrollY(v);
 }
 
 ////////////////////////////////////////

@@ -179,8 +179,11 @@ Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
     viewWidth = realWidthNum.As<Napi::Number>().Int32Value();
     viewHeight = realHeightNum.As<Napi::Number>().Int32Value();
   }
+  Napi::Value realPitchNum = bufferObj.Get("pitch");
+  if (realPitchNum.IsNumber()) {
+    viewPitch = realPitchNum.As<Napi::Number>().Int32Value();
+  }
 
-  int pitch = viewPitch;
   int zoomLevel = this->zoomLevel;
   int windowWidth = viewWidth * zoomLevel;
   int windowHeight = viewHeight * zoomLevel;
@@ -329,7 +332,7 @@ Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
 
     // Send the raw data from the plane's buffer to the texture
     if (rawBuff) {
-      SDL_UpdateTexture(this->textureHandle, NULL, rawBuff, pitch);
+      SDL_UpdateTexture(this->textureHandle, NULL, rawBuff, viewPitch);
     } else {
       printf("no data buffer!\n");
       return Napi::Number::New(env, 0);

@@ -124,6 +124,9 @@ RGBColor.prototype.toString = function() {
 }
 
 function ensureIs(rgb) {
+  if (rgb == null) {
+    throw new Error(`rgb value invalid, is null`);
+  }
   if (rgb.constructor !== RGBColor) {
     throw new Error(`rgb value invalid, is ${rgb}`);
   }

@@ -108,11 +108,11 @@ Scene.prototype.setSize = function(w, h) {
 }
 
 Scene.prototype.setScrollX = function(x) {
-  this._config.scrollX = x;
+  this._config.scrollX = Math.floor(x);
 }
 
 Scene.prototype.setScrollY = function(y) {
-  this._config.scrollY = y;
+  this._config.scrollY = Math.floor(y);
 }
 
 Scene.prototype.resetState = function() {
@@ -397,8 +397,8 @@ Scene.prototype.render = function(pl) {
     this.rgbBuffer = new Uint8Array(numPoints*4);
   }
 
-  let scrollY = this._config.scrollY || 0;
-  let scrollX = this._config.scrollX || 0;
+  let scrollY = Math.floor(this._config.scrollY || 0);
+  let scrollX = Math.floor(this._config.scrollX || 0);
 
   for (let y = 0; y < sourceHeight; y++) {
     for (let x = 0; x < sourceWidth; x++) {

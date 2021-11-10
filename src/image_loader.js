@@ -104,6 +104,11 @@ ImagePlane.prototype.copy = function(x, y, w, h) {
   return make;
 }
 
+ImagePlane.prototype.get = function(x, y) {
+  let k = y*this.pitch + x;
+  return this.data[k];
+}
+
 ImagePlane.prototype.fillData = function() {
   if (this.data == null) {
     let numPixels = this.height * this.width;

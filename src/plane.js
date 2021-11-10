@@ -1,5 +1,4 @@
 const drawing = require('./drawing.js');
-const standalone = require('./standalone.js');
 
 var _g_scene = null;
 
@@ -208,10 +207,6 @@ Plane.prototype.putImage = function(img, baseX, baseY) {
       }
     }
   }
-}
-
-Plane.prototype.useStandalone = function() {
-  this.scene = new standalone.Standalone();
 }
 
 Plane.prototype.render = function() {

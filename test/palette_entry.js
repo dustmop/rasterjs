@@ -49,8 +49,7 @@ describe('Palette entry', function() {
     let palette = ra.getPaletteAll();
     palette.save(tmpout);
 
-    // TODO: Add palette numbers to the rendered palette.
-    util.ensureFilesMatch(tmpout, 'test/testdata/pal_saved.png');
+    util.ensureFilesMatch('test/testdata/pal_saved.png', tmpout);
   });
 
   it('palette alternate', function() {
@@ -62,7 +61,7 @@ describe('Palette entry', function() {
     let palette = ra.getPaletteAll();
     palette.save(tmpout);
 
-    assert.ok(util.compareFiles(tmpout, 'test/testdata/pal_dos_saved.png'));
+    util.ensureFilesMatch('test/testdata/pal_dos_saved.png', tmpout);
   });
 
   it('palette array', function() {

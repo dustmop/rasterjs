@@ -253,7 +253,7 @@ Drawing.prototype.drawText = function(text, x, y) {
     throw 'drawText: no font has been assigned';
   }
   if (!font.glyphs) {
-    throw 'drawText: font has been opened, but not yet read';
+    throw new Error('drawText: font has been opened, but not yet read');
   }
 
   let put = [];

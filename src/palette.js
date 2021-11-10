@@ -1,3 +1,4 @@
+const path = require('path');
 const rgbColor = require('./rgb_color.js');
 const colorSet = require('./color_set.js');
 const plane = require('./plane.js');
@@ -39,18 +40,69 @@ PaletteCollection.prototype.reset = function() {
 
 PaletteCollection.prototype.save = function(filename) {
   let target = new plane.Plane();
-  target.setSize(40, 20 * this.items.length);
-  // TODO: I don't really like this.
-  target.useStandalone();
+  // Preserve
+  let preservePalette = target.scene.palette;
+  let preserveFont = target.scene.font;
+  // Nullify
+  target.scene.palette = null;
+  target.scene.font = null;
+  this._saveTo(target, filename);
+  // Restore
+  target.scene.palette = preservePalette;
+  target.scene.font = preserveFont;
+}
+
+PaletteCollection.prototype._saveTo = function(target, filename) {
+  let numX = 8;
+  let numY = Math.ceil(this.items.length / 8);
+  // Parameterize
+  let showWidth = 7;
+  let showHeight = 5;
+  let showPad = 4;
+  let showBetween = 2;
+  let showOuter = 3;
+  // Calculate
+  let offsetLeft = showOuter;
+  let offsetTop = showOuter;
+  let gridX = showWidth + showPad * 2 + showBetween;
+  let gridY = showHeight + showPad * 2 + showBetween;
+  // Draw the palette
+  target.setSize(numX * gridX - showBetween + showOuter * 2,
+                 numY * gridY - showBetween + showOuter * 2);
   target.scene.saveService = this.saveService;
+  target.scene.setFont(this._findAsset('asset/tiny.yaff'));
   target.fillTrueBackground(0x606060);
-  for (let i = 0; i < this.items.length; i++) {
-    let rgbInt = this.items[i].rgb.toInt();
-    let y = i * 20;
+  for (let k = 0; k < this.items.length; k++) {
+    let rgbInt = this.items[k].rgb.toInt();
+    let j = k % 8;
+    let i = Math.floor(k / 8);
+    let y = i * gridY;
+    let x = j * gridX;
     target.setTrueColor(rgbInt);
-    target.fillRect(2, 2 + y, 36, 16);
+    target.fillRect(x + showOuter, y + showOuter,
+                    gridX - showBetween, gridY - showBetween);
+    let v = k.toString();
+    if (v.length < 2) {
+      v = '0' + v;
+    }
+    if (this._isLightColor(this.items[k].rgb)) {
+      target.setTrueColor(0);
+    } else {
+      target.setTrueColor(0xffffff);
+    }
+    target.drawText(`${v}`, x + showPad + showOuter, y + showPad + showOuter);
   }
   target.save(filename);
+}
+
+PaletteCollection.prototype._findAsset = function(filename) {
+  return path.posix.join(__dirname, '../', filename);
+}
+
+PaletteCollection.prototype._isLightColor = function(rgb) {
+  let total = rgb.r + rgb.g + rgb.b;
+  let avg = total / 3;
+  return avg > 0x80;
 }
 
 PaletteCollection.prototype.toString = function() {

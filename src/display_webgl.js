@@ -9,9 +9,16 @@ Display.prototype.initialize = function() {
   this.numToLoad = 0;
   this.numLoadDone = 0;
   this.imgAssets = [];
+  this.displayWidth = 0;
+  this.displayHeight = 0;
 }
 
 const SHARPEN = 2;
+
+Display.prototype.setSize = function(width, height) {
+  this.displayWidth = width;
+  this.displayHeight = height;
+}
 
 Display.prototype.setSource = function(plane, zoomLevel) {
   var canvasElems = document.getElementsByTagName('canvas');

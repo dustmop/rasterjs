@@ -2,12 +2,19 @@ function Display() {
   this.canvas = null;
   this.numToLoad = 0;
   this.numLoadDone = 0;
+  this.displayWidth = 0;
+  this.displayHeight = 0;
   return this;
 }
 
 const DONT_SHARPEN = 1;
 
 Display.prototype.initialize = function() {
+}
+
+Display.prototype.setSize = function(width, height) {
+  this.displayWidth = width;
+  this.displayHeight = height;
 }
 
 Display.prototype.setSource = function(plane, zoomLevel) {
@@ -27,6 +34,7 @@ Display.prototype.setSource = function(plane, zoomLevel) {
     }
   }
 
+  // NOTE: zoomLevel is ignored
   var elemWidth = plane.width;
   var elemHeight = plane.height;
 

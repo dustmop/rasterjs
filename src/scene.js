@@ -122,6 +122,7 @@ Scene.prototype.resetState = function() {
   this.tiles = null;
   this.rgbBuffer = null;
   this._config = {};
+  this._config.zoomScale = 1;
 }
 
 Scene.prototype.then = function(cb) {

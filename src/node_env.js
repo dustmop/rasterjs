@@ -1,9 +1,14 @@
 const cppmodule = require('../build/Release/native');
 const argparse = require('argparse');
+const path = require('path');
 const saveRenderer = require('./save_renderer.js');
 
 function makeResources() {
-  return cppmodule.resources();
+  let res = cppmodule.resources();
+  res.localAsset = function(filename) {
+    return path.posix.join(__dirname, '../', filename);
+  }
+  return res;
 }
 
 function makeDisplay() {

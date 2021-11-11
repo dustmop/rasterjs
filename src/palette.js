@@ -1,4 +1,3 @@
-const path = require('path');
 const rgbColor = require('./rgb_color.js');
 const colorSet = require('./color_set.js');
 const plane = require('./plane.js');
@@ -70,7 +69,7 @@ PaletteCollection.prototype._saveTo = function(target, filename) {
   target.setSize(numX * gridX - showBetween + showOuter * 2,
                  numY * gridY - showBetween + showOuter * 2);
   target.scene.saveService = this.saveService;
-  target.scene.setFont(this._findAsset('asset/tiny.yaff'));
+  target.scene.setFont(this.saveService.localAsset('asset/tiny.yaff'));
   target.fillTrueBackground(0x606060);
   for (let k = 0; k < this.items.length; k++) {
     let rgbInt = this.items[k].rgb.toInt();
@@ -93,10 +92,6 @@ PaletteCollection.prototype._saveTo = function(target, filename) {
     target.drawText(`${v}`, x + showPad + showOuter, y + showPad + showOuter);
   }
   target.save(filename);
-}
-
-PaletteCollection.prototype._findAsset = function(filename) {
-  return path.posix.join(__dirname, '../', filename);
 }
 
 PaletteCollection.prototype._isLightColor = function(rgb) {

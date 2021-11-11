@@ -47,6 +47,10 @@ Resources.prototype.openText = function(filename) {
   return file;
 }
 
+Resources.prototype.localAsset = function(relpath) {
+  throw new Error('cannot get local assets');
+}
+
 Resources.prototype.allLoaded = function() {
   return this.numLoadDone == this.numToLoad;
 }

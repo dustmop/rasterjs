@@ -24,9 +24,9 @@ describe('Text', function() {
     if (gotError == null) {
       throw 'Failed! Expected to get an error, did not get one'
     }
-    let expectError = 'drawText: font has been opened, but not yet read'
+    let expectError = 'Error: drawText: font has been opened, but not yet read'
     if (gotError != expectError) {
-      throw 'Mismatch!'
+      throw new Error('Mismatch!, error ' + gotError.toString());
     }
     success();
   });

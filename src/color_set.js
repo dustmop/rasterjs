@@ -12,7 +12,7 @@ function Set(vals) {
   return this;
 }
 
-function colorIntValsToRGBs(vals) {
+function colorIntValsToRGBs(vals, allowDups) {
   let collect = [];
   let lookup = {};
   for (let i = 0; i < vals.length; i++) {
@@ -20,6 +20,9 @@ function colorIntValsToRGBs(vals) {
       throw new Error(`type err: wanted number, got ${vals[i]}`);
     }
     let rgb = new rgbColor.RGBColor(vals[i]);
+    if (lookup[rgb] !== undefined && !allowDups) {
+      throw new Error(`duplicate color in set: ${rgb}`);
+    }
     lookup[rgb] = collect.length;
     collect.push(rgb);
   }
@@ -38,9 +41,10 @@ Set.prototype.get = function(i) {
   return this.collect[i % this.collect.length];
 }
 
-Set.prototype.assign = function(vals) {
+Set.prototype.assign = function(vals, opts) {
+  opts = opts || {};
   vals = vals.slice();
-  let [collect, lookup] = colorIntValsToRGBs(vals);
+  let [collect, lookup] = colorIntValsToRGBs(vals, opts.allowDups);
   this.collect = collect;
   this.lookup = lookup;
   this.newIndex = this.collect.length;
@@ -84,13 +88,13 @@ Set.prototype.use = function(rep) {
     } else if (text == 'dos') {
       this.assign(rgbMap.rgb_map_dos);
     } else if (text == 'nes') {
-      this.assign(rgbMap.rgb_map_nes);
+      this.assign(rgbMap.rgb_map_nes, {allowDups: true});
     } else if (text == 'gameboy') {
       this.assign(rgbMap.rgb_map_gameboy);
     } else if (text == 'pico8') {
       this.assign(rgbMap.rgb_map_pico8);
     } else if (text == 'zx-spectrum') {
-      this.assign(rgbMap.rgb_map_zx_spectrum);
+      this.assign(rgbMap.rgb_map_zx_spectrum, {allowDups: true});
     } else if (text == 'c64') {
       this.assign(rgbMap.rgb_map_c64);
     } else if (text == 'grey') {

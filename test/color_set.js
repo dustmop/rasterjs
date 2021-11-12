@@ -79,6 +79,14 @@ describe('Color set', function() {
     assert.equal(ra.numColors(), 5);
   });
 
+  it('no dups', function() {
+    ra.resetState();
+    ra.setSize({w: 8, h: 8})
+    assert.throws(function() {
+      ra.useColors([1, 2, 3, 3]);
+    }, /Error: duplicate color in set: RGBColor{#000003}/);
+  });
+
   // TODO: useColors(null) crash
   // TODO: useColors(null) -> drawImage
   // TODO: useColors(null) -> setTrueColor

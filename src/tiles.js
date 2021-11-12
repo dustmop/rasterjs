@@ -1,5 +1,29 @@
 function TileSet(source, sizeInfo, saveService) {
   this.source = source;
+  if (!sizeInfo.tile_width) {
+    throw new Error(`invalid tileSet detail: missing tile_width`);
+  }
+  if (!sizeInfo.tile_height) {
+    throw new Error(`invalid tileSet detail: missing tile_height`);
+  }
+  if (!Math.trunc(sizeInfo.tile_width) != 0) {
+    throw new Error(`tileSet's tile_width must be integer`);
+  }
+  if (!Math.trunc(sizeInfo.tile_height) != 0) {
+    throw new Error(`tileSet's tile_height must be integer`);
+  }
+  if (sizeInfo.tile_width <= 0) {
+    throw new Error(`tileSet's tile_width must be > 0`);
+  }
+  if (sizeInfo.tile_height <= 0) {
+    throw new Error(`tileSet's tile_height must be > 0`);
+  }
+  if (sizeInfo.tile_width > source.width) {
+    throw new Error(`tileSet's tile_width is larger than source data`);
+  }
+  if (sizeInfo.tile_height > source.height) {
+    throw new Error(`tileSet's tile_height is too larger than source data`);
+  }
   this.tileWidth = sizeInfo.tile_width;
   this.tileHeight = sizeInfo.tile_height;
   this.saveService = saveService;

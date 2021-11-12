@@ -1,3 +1,4 @@
+var assert = require('assert');
 var util = require('./util.js');
 var ra = require('../src/lib.js');
 
@@ -57,4 +58,29 @@ describe('Tileset', function() {
     tiles.drawDot(2, 2);
     util.saveTmpCompareTo(ra, 'test/testdata/modify_tiles.png');
   });
+
+  it('missing dimension', function() {
+    ra.resetState();
+
+    let plane = new ra.Plane();
+    plane.setSize(4);
+
+    let tiles = ra.loadImage('test/testdata/tiles.png');
+    assert.throws(function() {
+      ra.useTileset(tiles, {tile_height: 8});
+    }, /Error: invalid tileSet detail: missing tile_width/);
+  });
+
+  it('invalid dimension', function() {
+    ra.resetState();
+
+    let plane = new ra.Plane();
+    plane.setSize(4);
+
+    let tiles = ra.loadImage('test/testdata/tiles.png');
+    assert.throws(function() {
+      ra.useTileset(tiles, {tile_width: 4, tile_height: 10});
+    }, /Error: tileSet's tile_height is too larger than source data/);
+  });
+
 });

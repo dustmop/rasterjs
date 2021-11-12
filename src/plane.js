@@ -1,12 +1,11 @@
 const drawing = require('./drawing.js');
+const destructure = require('./destructure.js');
 
 var _g_scene = null;
 
 function Plane() {
   this.clear();
   this.scene = _g_scene;
-  // TODO: Don't do this for every plane.
-  this._addMethods();
   return this;
 }
 
@@ -24,6 +23,7 @@ Plane.prototype.clear = function() {
   this._backBuffer = null;
   this.bgColor = 0;
   this.frontColor = 7;
+  this._addMethods();
 }
 
 Plane.prototype.clone = function() {
@@ -43,15 +43,22 @@ Plane.prototype.clone = function() {
   return make;
 }
 
-Plane.prototype._addMethods = function() {
+Plane.prototype._addMethods = function(shouldDestruct) {
   let self = this;
   let d = new drawing.Drawing();
   let methods = d.getMethods();
   for (let i = 0; i < methods.length; i++) {
-    let [fname, params, converter, impl] = methods[i];
+    let [fname, paramSpec, converter, impl] = methods[i];
     this[fname] = function() {
       let args = Array.from(arguments);
-      impl.apply(this, args);
+      if (paramSpec === undefined) {
+        throw new Error(`function ${fname} does not have parameter spec`);
+      }
+      let realArgs = args;
+      if (shouldDestruct) {
+        realArgs = destructure.from(fname, paramSpec, args, converter);
+      }
+      impl.bind(self).apply(self.aPlane, realArgs);
     }
   }
 }

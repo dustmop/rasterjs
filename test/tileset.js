@@ -44,11 +44,11 @@ describe('Tileset', function() {
     ra.useTileset(tiles, {tile_width: 8, tile_height: 8});
     ra.usePlane(plane);
 
-    ra.fillDot([[ 0, 0, 1, 0],
-                [ 0, 1, 0, 0],
-                [ 0, 0, 1, 2],
-                [ 0, 0, 0, 0],
-               ]);
+    plane.fillDot([[ 0, 0, 1, 0],
+                   [ 0, 1, 0, 0],
+                   [ 0, 0, 1, 2],
+                   [ 0, 0, 0, 0],
+                  ]);
 
     util.saveTmpCompareTo(ra, 'test/testdata/drawn_tiles.png');
 

@@ -6,6 +6,7 @@ const plane = require('./plane.js');
 
 function Raster(env) {
   this.scene = new scene.Scene(env);
+  this._usingNonPrimaryPlane = false;
   this._addMethods();
   return this;
 }
@@ -23,10 +24,21 @@ Raster.prototype._addMethods = function() {
   }
 }
 
+Raster.prototype._removeMethods = function() {
+  let self = this;
+  let d = new drawing.Drawing();
+  let methods = d.getMethods();
+  for (let i = 0; i < methods.length; i++) {
+    let [fname, params, converter, impl] = methods[i];
+    delete this[fname];
+  }
+}
 Raster.prototype.resetState = function() {
   this.scene.resetState();
   this.time = 0.0;
   this.timeClick = 0;
+  this._usingNonPrimaryPlane = false;
+  this._addMethods();
 }
 
 Raster.prototype.TAU = 6.283185307179586;
@@ -64,7 +76,14 @@ Raster.prototype.useDisplay = function(disp) {
   this.scene.useDisplay(disp);
 }
 
-Raster.prototype.Plane = plane.Plane;
+Raster.prototype.Plane = function() {
+  if (new.target === undefined) {
+    throw new Error('Plane constructor must be called with `new`');
+  }
+  let p = new plane.Plane();
+  p._addMethods(true);
+  return p;
+}
 
 ////////////////////////////////////////
 // Methods with interesting return values
@@ -174,13 +193,14 @@ Raster.prototype.setScrollY = function(v) {
 ////////////////////////////////////////
 
 Raster.prototype.useTileset = function(img, sizeInfo) {
-  // TODO: remove the draw_methods from ra
   this.scene.useTileset(img, sizeInfo);
 }
 
 Raster.prototype.usePlane = function(pl) {
-  // TODO: remove the draw_methods from ra
   this.scene.aPlane = pl;
+  this._removeMethods();
+  this.scene._removeMethods();
+  this.scene._config.usingNonPrimaryPlane = true;
 }
 
 ////////////////////////////////////////

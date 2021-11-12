@@ -78,6 +78,16 @@ Scene.prototype._addMethods = function() {
   }
 }
 
+Scene.prototype._removeMethods = function() {
+  let self = this;
+  let d = new drawing.Drawing();
+  let methods = d.getMethods();
+  for (let i = 0; i < methods.length; i++) {
+    let [fname, paramSpec, converter, impl] = methods[i];
+    delete this[fname];
+  }
+}
+
 Scene.prototype._translateArguments = function(params, args) {
   let midX = this.aPlane.width / 2;
   let midY = this.aPlane.height / 2;
@@ -123,6 +133,8 @@ Scene.prototype.resetState = function() {
   this.rgbBuffer = null;
   this._config = {};
   this._config.zoomScale = 1;
+  this._config.usingNonPrimaryPlane = false;
+  this._addMethods();
 }
 
 Scene.prototype.then = function(cb) {
@@ -364,6 +376,11 @@ Scene.prototype.render = function(pl) {
   let sizeInfo = null;
 
   if (this.tiles != null) {
+    // Assert that useTileset requires usePlane
+    if (!this._config.usingNonPrimaryPlane) {
+      throw new Error('cannot use tileset without also using plane');
+    }
+    // Calculate the size
     let tileSize = this.tiles.tileWidth * this.tiles.tileHeight;
     sourceWidth = pl.width * this.tiles.tileWidth;
     sourceHeight = pl.height * this.tiles.tileHeight;

@@ -254,6 +254,21 @@ For this version, the callback will be invoked per each pixel in the plane. Code
 
 Fill a region of contiguous color, by replacing it with the current set color. Starts at the given x,y coordinate and floods from there.
 
+## Scrolling
+
+```
+setScrollX
+setScrollY
+```
+
+### setScrollX(x)
+
+Scroll the plane x pixels horizontally. Rendering will wrap-around when it reaches the edge of the plane.
+
+### setScrollY(y)
+
+Scroll the plane y pixels vertically. Rendering will wrap-around when it reaches the edge of the plane.
+
 ## Palette access
 
 ```
@@ -261,7 +276,13 @@ getPaletteEntry
 getPaletteAll
 ```
 
-TODO
+### getPaletteEntry(x, y)
+
+Gets a single palette entry, for the color found at position x,y. If no palette is in use, one is created that directly maps to the colorset.
+
+### getPaletteAll()
+
+Gets the palette as a list of palette entryies. If no palette is in use, one is created that directly maps to the colorset.
 
 ## Display
 

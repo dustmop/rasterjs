@@ -81,7 +81,7 @@ The size of the display (measured in pixels) can be set using the `setSize` meth
 ra.setSize(32, 30);
 ```
 
-The display can increase the size of its pixels, as it appears on your physical scene, using the `setZoom` method. Note that this does not change the number of the pixels themselves.
+The display can increase the size of its pixels, as it appears on your physical screen, using the `setZoom` method. Note that this does not change the number of the pixels themselves.
 
 ```
 ra.setZoom(8);
@@ -126,15 +126,15 @@ ra.show();
 
 ## Animation
 
-For animation, use `ra.run` instead of `ra.show`, and pass a render function that is used to update the display every frame.
+For animation, use `ra.run` instead of `ra.show`, and pass a draw function that is used to update the display every frame.
 
 ```
-function renderFrame() {
+function draw() {
   ra.setColor(8+ra.time/2);
   ra.drawLine(0, 0, ra.oscil()*80, ra.oscil(null, 0.5)*80);
 }
 
-ra.run(renderFrame);
+ra.run(draw);
 ```
 
 # Command-line options

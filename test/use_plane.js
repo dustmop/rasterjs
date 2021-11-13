@@ -33,6 +33,19 @@ describe('Use plane', function() {
     util.saveTmpCompareTo(ra, 'test/testdata/scroll_square.png');
   });
 
+  it('scroll same plane', function() {
+    ra.resetState();
+    ra.setSize(16);
+
+    let img = ra.loadImage('test/testdata/simple.png');
+    ra.drawImage(img);
+
+    ra.setScrollX(4);
+    ra.setScrollY(2);
+
+    util.saveTmpCompareTo(ra, 'test/testdata/scroll_simple.png');
+  });
+
   it('methods can destructure', function() {
     ra.resetState();
 

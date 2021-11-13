@@ -371,6 +371,8 @@ Scene.prototype.render = function(pl) {
   let sourcePitch = pl.pitch;
   let sourceWidth = pl.width;
   let sourceHeight = pl.height;
+  let targetWidth = pl.width;
+  let targetHeight = pl.height;
   let targetPitch = pl.width*4;
   let numPoints = pl.height * pl.width;
   let sizeInfo = null;
@@ -404,6 +406,8 @@ Scene.prototype.render = function(pl) {
 
     sourcePitch = this.tiles.tileWidth * pl.width;
     targetPitch = sourcePitch*4;
+    targetWidth = this.tiles.tileWidth * pl.width;
+    targetHeight = this.tiles.tileHeight * pl.height;
     numPoints = numPoints * tileSize;
     sizeInfo = {};
     sizeInfo.width = this.tiles.tileWidth * pl.width;
@@ -417,25 +421,42 @@ Scene.prototype.render = function(pl) {
 
   let scrollY = Math.floor(this._config.scrollY || 0);
   let scrollX = Math.floor(this._config.scrollX || 0);
+  scrollY = ((scrollY % sourceHeight) + sourceHeight) % sourceHeight;
+  scrollX = ((scrollX % sourceWidth) + sourceWidth) % sourceWidth;
 
-  for (let y = 0; y < sourceHeight; y++) {
-    for (let x = 0; x < sourceWidth; x++) {
-      let k = (y+scrollY)*sourcePitch + x+scrollX;
-      let j = y*targetPitch + x*4;
-      if (k < 0 || k >= source.length) {
-        this.rgbBuffer[j+0] = 0;
-        this.rgbBuffer[j+1] = 0;
-        this.rgbBuffer[j+2] = 0;
-        this.rgbBuffer[j+3] = 0xff;
-        continue;
+  for (let attempt = 0; attempt < 4; attempt++) {
+    for (let y = 0; y < sourceHeight; y++) {
+      for (let x = 0; x < sourceWidth; x++) {
+        let i, j;
+        if (attempt == 0) {
+          i = y - scrollY;
+          j = x - scrollX;
+        } else if (attempt == 1) {
+          i = y - scrollY;
+          j = x - scrollX + sourceWidth;
+        } else if (attempt == 2) {
+          i = y - scrollY + sourceHeight;
+          j = x - scrollX;
+        } else if (attempt == 3) {
+          i = y - scrollY + sourceHeight;
+          j = x - scrollX + sourceWidth;
+        } else {
+          continue;
+        }
+        if (i < 0 || i >= targetHeight || j < 0 || j >= targetWidth) {
+          continue;
+        }
+        let s = y*sourcePitch + x;
+        let t = i*targetPitch + j*4;
+        let rgb = this._toColor(source[s]);
+        this.rgbBuffer[t+0] = rgb.r;
+        this.rgbBuffer[t+1] = rgb.g;
+        this.rgbBuffer[t+2] = rgb.b;
+        this.rgbBuffer[t+3] = 0xff;
       }
-      let rgb = this._toColor(source[k]);
-      this.rgbBuffer[j+0] = rgb.r;
-      this.rgbBuffer[j+1] = rgb.g;
-      this.rgbBuffer[j+2] = rgb.b;
-      this.rgbBuffer[j+3] = 0xff;
     }
   }
+
   if (sizeInfo) {
     this.rgbBuffer.width = sizeInfo.width;
     this.rgbBuffer.height = sizeInfo.height;

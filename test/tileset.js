@@ -83,4 +83,26 @@ describe('Tileset', function() {
     }, /Error: tileSet's tile_height is too larger than source data/);
   });
 
+  it('bad tile number', function() {
+    ra.resetState();
+
+    let plane = new ra.Plane();
+    plane.setSize(4);
+
+    let tiles = ra.loadImage('test/testdata/tiles.png');
+    ra.useTileset(tiles, {tile_width: 4, tile_height: 4});
+    ra.usePlane(plane);
+
+    plane.fillDot([[2, 6, 1, 3],
+                   [6, 7,15, 7],
+                   [5, 5, 1, 0],
+                   [6, 4, 2, 2]]);
+
+    assert.throws(function() {
+      // TODO: Using private value
+      ra.scene.aPlane.render();
+    }, /Error: invalid tile number 15 at 2,1/);
+
+  });
+
 });

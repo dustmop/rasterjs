@@ -398,6 +398,9 @@ Scene.prototype.render = function(pl) {
         let k = yTile*pl.pitch + xTile;
         let c = pl.data[k];
         let t = this.tiles.get(c);
+        if (t === undefined) {
+          throw new Error(`invalid tile number ${c} at ${xTile},${yTile}`);
+        }
         for (let i = 0; i < t.height; i++) {
           for (let j = 0; j < t.width; j++) {
             let y = yTile * this.tiles.tileHeight + i;

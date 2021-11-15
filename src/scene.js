@@ -186,7 +186,7 @@ Scene.prototype.select = function(x, y, w, h) {
   make.offsetTop = y;
   make.width = w;
   make.height = h;
-  // TDOO: addMethods for destructure handling
+  make._addMethods(true);
   return make;
 }
 

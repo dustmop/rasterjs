@@ -171,8 +171,9 @@ Raster.prototype.clonePlane = function() {
 }
 
 Raster.prototype.select = function(opt) {
-  // TODO: destructure
-  return this.scene.select(opt.x, opt.y, opt.w, opt.h);
+  let spec = ['x:i', 'y:i', 'w:i', 'h:i'];
+  [x, y, w, h] = destructure.from('select', spec, arguments, null);
+  return this.scene.select(x, y, w, h);
 }
 
 Raster.prototype.setSize = function(width, height) {

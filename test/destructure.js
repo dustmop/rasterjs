@@ -13,8 +13,8 @@ describe('Destructure', function() {
     assert.deepEqual(values, [123, 456, 789]);
   });
   it('named parameters', function() {
-    let args = {'x': 123, 'y': 456, 'z': 789};
-    let values = destructure.from('fn2', ['x:i', 'y:i', 'z:i'], [args]);
+    let args = [{'x': 123, 'y': 456, 'z': 789}];
+    let values = destructure.from('fn2', ['x:i', 'y:i', 'z:i'], args);
     assert.deepEqual(values, [123, 456, 789]);
   });
   it('too few params', function() {
@@ -29,14 +29,14 @@ describe('Destructure', function() {
   });
   it('extra key', function() {
     assert.throws(function() {
-      let args = {'x': 123, 'y': 456, 'z': 789, 'a': 321};
-      destructure.from('fn5', ['x:i', 'y:i', 'z:i'], [args]);
+      let args = [{'x': 123, 'y': 456, 'z': 789, 'a': 321}];
+      destructure.from('fn5', ['x:i', 'y:i', 'z:i'], args);
     }, /function fn5 unknown parameter a/);
   });
   it('missing key', function() {
     assert.throws(function() {
-      let args = {'x': 123, 'y': 456};
-      destructure.from('fn6', ['x:i', 'y:i', 'z:i'], [args]);
+      let args = [{'x': 123, 'y': 456}];
+      destructure.from('fn6', ['x:i', 'y:i', 'z:i'], args);
     }, /function fn6 missing parameter z/);
   });
   it('optional param, missing', function() {

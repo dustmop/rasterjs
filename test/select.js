@@ -21,4 +21,25 @@ describe('Select', function() {
 
     util.saveTmpCompareTo(ra, 'test/testdata/selection.png');
   });
+
+  it('uses destructure for methods', function() {
+    ra.resetState();
+
+    ra.setSize(10);
+
+    ra.fillBackground(25);
+    ra.setColor(43);
+
+    let sel = ra.select({x: 1, y: 1, w: 6, h: 6});
+    sel.drawRect({x:1, y:2, w:7, h:4});
+
+    sel.setColor(37);
+    sel.fillFlood(3, 3);
+
+    sel.setColor(24);
+    sel.drawDot(1, 1);
+
+    util.saveTmpCompareTo(ra, 'test/testdata/selection.png');
+  });
+
 });

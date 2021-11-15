@@ -33,6 +33,12 @@ Drawing.prototype.setTrueColor = function(rgb) {
   this.setColor(color);
 }
 
+Drawing.prototype.fillColor_params = ['color:i'];
+Drawing.prototype.fillColor = function(color) {
+  this.bgColor = color;
+  this._needErase = true;
+}
+
 Drawing.prototype.fillBackground_params = ['color:i'];
 Drawing.prototype.fillBackground = function(color) {
   this.bgColor = color;

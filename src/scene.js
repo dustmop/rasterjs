@@ -248,9 +248,14 @@ Scene.prototype.makeShape = function(method, params) {
   }
 }
 
-Scene.prototype.setFont = function(filename) {
-  let font = this.textLoader.loadFont(filename);
-  this.font = font;
+Scene.prototype.setFont = function(spec) {
+  if (spec.startsWith('font:')) {
+    let name = spec.split(':')[1];
+    this.font = this.textLoader.createFontResource(name);
+    return;
+  }
+  let filename = spec;
+  this.font = this.textLoader.loadFont(filename);
 }
 
 Scene.prototype.handleEvent = function(eventName, callback) {

@@ -125,8 +125,8 @@ Raster.prototype.usePalette = function(vals) {
   return this.scene.usePalette(vals);
 }
 
-Raster.prototype.setFont = function(filename) {
-  this.scene.setFont(filename);
+Raster.prototype.setFont = function(spec) {
+  this.scene.setFont(spec);
 }
 
 Raster.prototype.mixColors = function(spec) {

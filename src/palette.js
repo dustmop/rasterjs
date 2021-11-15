@@ -69,7 +69,7 @@ PaletteCollection.prototype._saveTo = function(target, filename) {
   target.setSize(numX * gridX - showBetween + showOuter * 2,
                  numY * gridY - showBetween + showOuter * 2);
   target.scene.saveService = this.saveService;
-  target.scene.setFont(this.saveService.localAsset('asset/tiny.yaff'));
+  target.scene.setFont('font:tiny');
   target.fillTrueBackground(0x606060);
   for (let k = 0; k < this.items.length; k++) {
     let rgbInt = this.items[k].rgb.toInt();

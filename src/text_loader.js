@@ -1,3 +1,5 @@
+const tinyFont = require('./font/tiny.js');
+
 function TextLoader(resources) {
   this.resources = resources;
   return this;
@@ -16,6 +18,17 @@ TextLoader.prototype.loadFont = function(filename) {
   if (file.content) {
     file.handleFileRead(file.content);
   }
+  return font;
+}
+
+TextLoader.prototype.createFontResource = function(name) {
+  if (name != 'tiny') {
+    throw new Error(`only font:tiny is supported`);
+  }
+  let font = {
+    glyphs: null,
+  };
+  font.glyphs = this.parseFont(tinyFont.content);
   return font;
 }
 

@@ -131,7 +131,7 @@ ImagePlane.prototype.fillData = function() {
       if (cval == -1) {
         c = this.palette.insertWhereAvail(rgbval);
         if (c == null) {
-          throw new Error(`TODO: fix this error, add a test`);
+          throw new Error(`palette exists, and image ${this.filename} uses a color not found in the colorset: ${needs.rgbItems[i]}`);
         }
       } else {
         c = this.palette.find(cval);

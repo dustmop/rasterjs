@@ -138,4 +138,17 @@ describe('Cycle palette', function() {
     assert.equal(expect, actual);
   });
 
+  it('bad palette for image', function() {
+    ra.resetState();
+    ra.useColors([0x000000, 0xff0000, 0x00ff00, 0x0000ff]);
+
+    // Enable the palette
+    let palette = ra.getPaletteAll();
+
+    assert.throws(function() {
+      ra.loadImage('test/testdata/small-fruit.png');
+    }, /Error: palette exists, and image test\/testdata\/small-fruit.png uses a color not found in the colorset: RGBColor{#ab5236}/);
+
+  });
+
 });

@@ -59,6 +59,44 @@ describe('Tileset', function() {
     util.saveTmpCompareTo(ra, 'test/testdata/modify_tiles.png');
   });
 
+  it('tiles with palette', function() {
+    ra.resetState();
+
+    let plane = new ra.Plane();
+    plane.setSize(4);
+
+    let tiles = new ra.Plane();
+    tiles.setSize(16);
+
+    // tile 0
+    tiles.setColor(1);
+    tiles.drawDot(0, 0);
+    tiles.drawDot(4, 4);
+    // tile 1
+    tiles.setColor(2);
+    tiles.drawDot(10, 2);
+    tiles.drawDot(10, 3);
+    // tile 2
+    tiles.setColor(3);
+    tiles.drawDot(4, 12);
+    tiles.setColor(4);
+    tiles.drawDot(5, 13);
+
+    //              0   1   2   3   4
+    ra.usePalette([ 4, 31, 37, 34, 31]);
+
+    ra.useTileset(tiles, {tile_width: 8, tile_height: 8});
+    ra.usePlane(plane);
+
+    plane.fillDot([[ 0, 1, 2, 0],
+                   [ 0, 1, 0, 2],
+                   [ 1, 3, 1, 2],
+                   [ 2, 2, 0, 0],
+                  ]);
+
+    util.saveTmpCompareTo(ra, 'test/testdata/palette_tiles.png');
+  });
+
   it('missing dimension', function() {
     ra.resetState();
 

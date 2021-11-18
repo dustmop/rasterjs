@@ -220,8 +220,24 @@ Scene.prototype.run = function(renderFunc, betweenFrameFunc) {
   this._doRender(this.numFrames, true, renderFunc, betweenFrameFunc, null);
 }
 
-Scene.prototype.save = function(savepath) {
-  this.aPlane.save(savepath);
+Scene.prototype.save = function(savepath, pl) {
+  if (!pl) {
+    pl = this.aPlane;
+  }
+  let buffer = pl.render();
+  let width = pl.width;
+  let height = pl.height;
+  let pitch = pl.width * 4;
+  if (buffer.width) {
+    width = buffer.width;
+    height = buffer.height;
+    pitch = buffer.pitch;
+  }
+  let saveService = this.saveService;
+  if (!saveService) {
+    throw new Error('cannot save plane without save service');
+  }
+  saveService.saveTo(savepath, buffer, width, height, pitch);
 }
 
 Scene.prototype.quit = function() {

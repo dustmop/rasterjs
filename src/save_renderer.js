@@ -60,7 +60,8 @@ SaveRenderer.prototype.renderLoop = function(nextFrame) {
     nextFrame();
     let frameNum = leftPad(count, 3, '0');
     let outFile = `${this.tmpdir}/${frameNum}.png`;
-    this.plane.save(outFile);
+    let saver = this.plane.scene;
+    saver.save(outFile, this.plane);
   }
 
   // Wait for each frame to render.

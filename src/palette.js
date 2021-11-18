@@ -91,7 +91,8 @@ PaletteCollection.prototype._saveTo = function(target, filename) {
     }
     target.drawText(`${v}`, x + showPad + showOuter, y + showPad + showOuter);
   }
-  target.save(filename);
+  let saver = target.scene;
+  saver.save(filename, target);
 }
 
 PaletteCollection.prototype._isLightColor = function(rgb) {

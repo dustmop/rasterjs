@@ -221,22 +221,5 @@ Plane.prototype.render = function() {
   return this.scene.render(this);
 }
 
-Plane.prototype.save = function(savepath) {
-  let buffer = this.render();
-  let width = this.width;
-  let height = this.height;
-  let pitch = this.width * 4;
-  if (buffer.width) {
-    width = buffer.width;
-    height = buffer.height;
-    pitch = buffer.pitch;
-  }
-  let saveService = this.scene.saveService;
-  if (!saveService) {
-    throw new Error('cannot save plane without save service');
-  }
-  saveService.saveTo(savepath, buffer, width, height, pitch);
-}
-
 module.exports.Plane = Plane;
 module.exports.setGlobalScene = setGlobalScene;

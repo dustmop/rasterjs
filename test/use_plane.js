@@ -84,8 +84,7 @@ describe('Use plane', function() {
     ra.useTileset(tiles, {tile_width: 4, tile_height: 4});
 
     assert.throws(function() {
-      // TODO: Using private value
-      ra.scene.aPlane.render();
+      ra.scene.render();
     }, /Error: cannot use tileset without also using plane/);
   });
 

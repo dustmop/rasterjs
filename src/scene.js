@@ -3,6 +3,7 @@ const drawing = require('./drawing.js');
 const destructure = require('./destructure.js');
 const algorithm = require('./algorithm.js');
 const palette = require('./palette.js');
+const renderer = require('./renderer.js');
 const geometry = require('./geometry.js');
 const imageLoader = require('./image_loader.js');
 const textLoader = require('./text_loader.js');
@@ -24,8 +25,9 @@ function Scene(env) {
   this.saveService = this.resources;
 
   this.colorSet = new colorSet.Set();
+  this.renderer = new renderer.Renderer(this.colorSet);
+
   this.font = null;
-  this.rgbBuffer = null;
   this.palette = null;
   this.tiles = null;
 
@@ -128,9 +130,9 @@ Scene.prototype.setScrollY = function(y) {
 Scene.prototype.resetState = function() {
   this.colorSet.clear();
   this.aPlane.clear();
+  this.renderer.clear();
   this.palette = null;
   this.tiles = null;
-  this.rgbBuffer = null;
   this._config = {};
   this._config.zoomScale = 1;
   this._config.usingNonPrimaryPlane = false;
@@ -190,16 +192,16 @@ Scene.prototype.select = function(x, y, w, h) {
   return make;
 }
 
-Scene.prototype._doRender = function(num, exitAfter, renderFunc, betweenFunc, finalFunc) {
+Scene.prototype._doRender = function(num, exitAfter, drawFunc, betweenFunc, finalFunc) {
   let plane = this.aPlane;
   let self = this;
   this.then(function() {
     self.display.setSize(self._config.width, self._config.height);
     self.display.setSource(plane, self._config.zoomScale);
     self.display.renderLoop(function() {
-      if (renderFunc) {
+      if (drawFunc) {
         try {
-          renderFunc();
+          drawFunc();
         } catch(e) {
           console.log(e);
           throw e;
@@ -216,28 +218,42 @@ Scene.prototype.show = function(finalFunc) {
   this._doRender(1, false, null, null, finalFunc);
 }
 
-Scene.prototype.run = function(renderFunc, betweenFrameFunc) {
-  this._doRender(this.numFrames, true, renderFunc, betweenFrameFunc, null);
+Scene.prototype.run = function(drawFunc, betweenFrameFunc) {
+  this._doRender(this.numFrames, true, drawFunc, betweenFrameFunc, null);
 }
 
 Scene.prototype.save = function(savepath, pl) {
   if (!pl) {
     pl = this.aPlane;
   }
-  let buffer = pl.render();
-  let width = pl.width;
-  let height = pl.height;
-  let pitch = pl.width * 4;
-  if (buffer.width) {
-    width = buffer.width;
-    height = buffer.height;
-    pitch = buffer.pitch;
-  }
+  let res = this.render(pl);
   let saveService = this.saveService;
   if (!saveService) {
     throw new Error('cannot save plane without save service');
   }
-  saveService.saveTo(savepath, buffer, width, height, pitch);
+  saveService.saveTo(savepath, res.buff, res.width, res.height, res.pitch);
+}
+
+Scene.prototype.render = function(pl) {
+  if (!pl) {
+    pl = this.aPlane;
+  }
+  pl._prepare();
+  let buff = this.renderer.render(pl, this.tiles, this.palette, this._config);
+  let width = pl.width;
+  let height = pl.height;
+  let pitch = pl.width*4;
+  if (buff.width) {
+    width = buff.width;
+    height = buff.height;
+    pitch = buff.pitch;
+  }
+  return {
+    buff:   buff,
+    width:  width,
+    height: height,
+    pitch:  pitch,
+  };
 }
 
 Scene.prototype.quit = function() {
@@ -385,131 +401,6 @@ Scene.prototype.usePalette = function(vals) {
 Scene.prototype.useTileset = function(img, sizeInfo) {
   let saveService = this.saveService;
   this.tiles = new tiles.TileSet(img, sizeInfo, saveService);
-}
-
-Scene.prototype.render = function(pl) {
-  let source = pl.data;
-  let sourcePitch = pl.pitch;
-  let sourceWidth = pl.width;
-  let sourceHeight = pl.height;
-  let targetWidth = pl.width;
-  let targetHeight = pl.height;
-  let targetPitch = pl.width*4;
-  let numPoints = pl.height * pl.width;
-  let sizeInfo = null;
-
-  if (this.tiles != null) {
-    // Assert that useTileset requires usePlane
-    if (!this._config.usingNonPrimaryPlane) {
-      throw new Error('cannot use tileset without also using plane');
-    }
-    // Calculate the size
-    let tileSize = this.tiles.tileWidth * this.tiles.tileHeight;
-    sourceWidth = pl.width * this.tiles.tileWidth;
-    sourceHeight = pl.height * this.tiles.tileHeight;
-    source = new Uint8Array(numPoints * tileSize);
-
-    for (let yTile = 0; yTile < pl.height; yTile++) {
-      for (let xTile = 0; xTile < pl.width; xTile++) {
-        let k = yTile*pl.pitch + xTile;
-        let c = pl.data[k];
-        let t = this.tiles.get(c);
-        if (t === undefined) {
-          throw new Error(`invalid tile number ${c} at ${xTile},${yTile}`);
-        }
-        for (let i = 0; i < t.height; i++) {
-          for (let j = 0; j < t.width; j++) {
-            let y = yTile * this.tiles.tileHeight + i;
-            let x = xTile * this.tiles.tileWidth + j;
-            let n = y * sourceWidth + x;
-            source[n] = t.get(j, i);
-          }
-        }
-      }
-    }
-
-    sourcePitch = this.tiles.tileWidth * pl.width;
-    targetPitch = sourcePitch*4;
-    targetWidth = this.tiles.tileWidth * pl.width;
-    targetHeight = this.tiles.tileHeight * pl.height;
-    numPoints = numPoints * tileSize;
-    sizeInfo = {};
-    sizeInfo.width = this.tiles.tileWidth * pl.width;
-    sizeInfo.height = this.tiles.tileHeight * pl.height;
-    sizeInfo.pitch = targetPitch;
-  }
-
-  if (this.rgbBuffer == null) {
-    this.rgbBuffer = new Uint8Array(numPoints*4);
-  }
-
-  let scrollY = Math.floor(this._config.scrollY || 0);
-  let scrollX = Math.floor(this._config.scrollX || 0);
-  scrollY = ((scrollY % sourceHeight) + sourceHeight) % sourceHeight;
-  scrollX = ((scrollX % sourceWidth) + sourceWidth) % sourceWidth;
-
-  for (let attempt = 0; attempt < 4; attempt++) {
-    for (let y = 0; y < sourceHeight; y++) {
-      for (let x = 0; x < sourceWidth; x++) {
-        let i, j;
-        if (attempt == 0) {
-          i = y - scrollY;
-          j = x - scrollX;
-        } else if (attempt == 1) {
-          i = y - scrollY;
-          j = x - scrollX + sourceWidth;
-        } else if (attempt == 2) {
-          i = y - scrollY + sourceHeight;
-          j = x - scrollX;
-        } else if (attempt == 3) {
-          i = y - scrollY + sourceHeight;
-          j = x - scrollX + sourceWidth;
-        } else {
-          continue;
-        }
-        if (i < 0 || i >= targetHeight || j < 0 || j >= targetWidth) {
-          continue;
-        }
-        let s = y*sourcePitch + x;
-        let t = i*targetPitch + j*4;
-        let rgb = this._toColor(source[s]);
-        this.rgbBuffer[t+0] = rgb.r;
-        this.rgbBuffer[t+1] = rgb.g;
-        this.rgbBuffer[t+2] = rgb.b;
-        this.rgbBuffer[t+3] = 0xff;
-      }
-    }
-  }
-
-  if (sizeInfo) {
-    this.rgbBuffer.width = sizeInfo.width;
-    this.rgbBuffer.height = sizeInfo.height;
-    this.rgbBuffer.pitch = sizeInfo.pitch;
-  }
-  if (this._config.width) {
-    this.rgbBuffer.width = this._config.width;
-    this.rgbBuffer.pitch = targetPitch;
-  }
-  if (this._config.height) {
-    this.rgbBuffer.height = this._config.height;
-  }
-  return this.rgbBuffer;
-}
-
-Scene.prototype._toColor = function(c) {
-  let rgb;
-  if (this.palette) {
-    let ent = this.palette.get(c);
-    if (!ent) {
-      rgb = rgbColor.BLACK;
-    } else {
-      rgb = ent.rgb;
-    }
-  } else {
-    rgb = this.colorSet.get(c);
-  }
-  rgbColor.ensureIs(rgb);
-  return rgb
 }
 
 module.exports.Scene = Scene;

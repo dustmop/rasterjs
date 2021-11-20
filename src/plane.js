@@ -216,10 +216,5 @@ Plane.prototype.putImage = function(img, baseX, baseY) {
   }
 }
 
-Plane.prototype.render = function() {
-  this._prepare();
-  return this.scene.render(this);
-}
-
 module.exports.Plane = Plane;
 module.exports.setGlobalScene = setGlobalScene;

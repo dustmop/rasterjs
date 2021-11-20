@@ -6,7 +6,6 @@ const plane = require('./plane.js');
 
 function Raster(env) {
   this.scene = new scene.Scene(env);
-  this._usingNonPrimaryPlane = false;
   this._addMethods();
   return this;
 }
@@ -37,7 +36,6 @@ Raster.prototype.resetState = function() {
   this.scene.resetState();
   this.time = 0.0;
   this.timeClick = 0;
-  this._usingNonPrimaryPlane = false;
   this._addMethods();
 }
 
@@ -207,22 +205,22 @@ Raster.prototype.usePlane = function(pl) {
 ////////////////////////////////////////
 // Display endpoints
 
-Raster.prototype.run = function(renderFunc) {
+Raster.prototype.run = function(drawFunc) {
   var self = this;
   var runner = this.scene;
   runner.then(function() {
     runner.run(
-      renderFunc,
+      drawFunc,
       self.nextFrame.bind(self),
     );
   });
 }
 
-Raster.prototype.show = function(renderFunc, finalFunc) {
+Raster.prototype.show = function(drawFunc, finalFunc) {
   var runner = this.scene;
   runner.then(function() {
-    if (renderFunc) {
-      renderFunc();
+    if (drawFunc) {
+      drawFunc();
     }
     runner.show(finalFunc);
   });

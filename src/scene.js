@@ -194,10 +194,21 @@ Scene.prototype.select = function(x, y, w, h) {
 
 Scene.prototype._doRender = function(num, exitAfter, drawFunc, betweenFunc, finalFunc) {
   let plane = this.aPlane;
+  this.renderer.plane = plane;
+  this.renderer.configure(this);
   let self = this;
+  if (!self._config.width || !self._config.height) {
+    if (!this.tiles) {
+      self._config.width = plane.width;
+      self._config.height = plane.height;
+    } else {
+      self._config.width = plane.width * this.tiles.tileWidth;
+      self._config.height = plane.height * this.tiles.tileHeight;
+    }
+  }
   this.then(function() {
     self.display.setSize(self._config.width, self._config.height);
-    self.display.setSource(plane, self._config.zoomScale);
+    self.display.setSource(self.renderer, self._config.zoomScale);
     self.display.renderLoop(function() {
       if (drawFunc) {
         try {
@@ -226,6 +237,7 @@ Scene.prototype.save = function(savepath, pl) {
   if (!pl) {
     pl = this.aPlane;
   }
+  this.renderer.configure(this);
   let res = this.render(pl);
   let saveService = this.saveService;
   if (!saveService) {
@@ -239,7 +251,9 @@ Scene.prototype.render = function(pl) {
     pl = this.aPlane;
   }
   pl._prepare();
-  let buff = this.renderer.render(pl, this.tiles, this.palette, this._config);
+  this.renderer.plane = pl;
+  this.renderer.configure(this);
+  let buff = this.renderer.render();
   let width = pl.width;
   let height = pl.height;
   let pitch = pl.width*4;

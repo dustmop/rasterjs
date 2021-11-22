@@ -23,8 +23,8 @@ SaveRenderer.prototype.setSize = function(w, h) {
   this.height = h;
 }
 
-SaveRenderer.prototype.setSource = function(plane, zoomLevel) {
-  this.plane = plane;
+SaveRenderer.prototype.setSource = function(renderer, zoomLevel) {
+  this.renderer = renderer;
 }
 
 SaveRenderer.prototype.renderLoop = function(nextFrame) {
@@ -60,8 +60,8 @@ SaveRenderer.prototype.renderLoop = function(nextFrame) {
     nextFrame();
     let frameNum = leftPad(count, 3, '0');
     let outFile = `${this.tmpdir}/${frameNum}.png`;
-    let saver = this.plane.scene;
-    saver.save(outFile, this.plane);
+    let saver = this.renderer.plane.scene;
+    saver.save(outFile, this.renderer.plane);
   }
 
   // Wait for each frame to render.

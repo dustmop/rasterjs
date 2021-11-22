@@ -17,8 +17,8 @@ Display.prototype.setSize = function(width, height) {
   this.displayHeight = height;
 }
 
-Display.prototype.setSource = function(plane, zoomLevel) {
-  this.plane = plane;
+Display.prototype.setSource = function(renderer, zoomLevel) {
+  this.renderer = renderer;
 
   var canvasElems = document.getElementsByTagName('canvas');
   if (canvasElems.length >= 1) {
@@ -35,8 +35,8 @@ Display.prototype.setSource = function(plane, zoomLevel) {
   }
 
   // NOTE: zoomLevel is ignored
-  var elemWidth = plane.width;
-  var elemHeight = plane.height;
+  var elemWidth = renderer.plane.width;
+  var elemHeight = renderer.plane.height;
 
   // Canvas's coordinate system.
   this.canvas.width = elemWidth * DONT_SHARPEN;
@@ -63,18 +63,19 @@ Display.prototype.waitForImageLoads = function(cb) {
 }
 
 Display.prototype.renderLoop = function(nextFrame, num, exitAfter, finalFunc) {
-  let pl = this.plane;
   let frontBuffer = null;
   let ctx = this.canvas.getContext('2d');
   ctx.imageSmoothingEnabled = false;
   ctx.mozImageSmoothingEnabled = false;
+  let self = this;
 
   let renderIt = function() {
     // Get the data buffer from the plane.
-    frontBuffer = pl.render();
+    frontBuffer = self.renderer.render();
 
     if (frontBuffer) {
       let buff = Uint8ClampedArray.from(frontBuffer);
+      let pl = self.renderer.plane;
       let image = new ImageData(buff, pl.width, pl.height);
       ctx.putImageData(image, 0, 0);
       if (num > 0) {

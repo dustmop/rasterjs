@@ -20,7 +20,7 @@ Display.prototype.setSize = function(width, height) {
   this.displayHeight = height;
 }
 
-Display.prototype.setSource = function(plane, zoomLevel) {
+Display.prototype.setSource = function(renderer, zoomLevel) {
   var canvasElems = document.getElementsByTagName('canvas');
   if (canvasElems.length >= 1) {
     this.canvas = canvasElems[0];
@@ -40,6 +40,8 @@ Display.prototype.setSource = function(plane, zoomLevel) {
     return;
   }
 
+  this.renderer = renderer;
+  var plane = renderer.plane;
   var elemWidth = plane.width * zoomLevel;
   var elemHeight = plane.height * zoomLevel;
 
@@ -188,7 +190,7 @@ Display.prototype.waitForImageLoads = function(cb) {
 }
 
 Display.prototype.renderLoop = function(nextFrame, num, exitAfter, finalFunc) {
-  let pl = this.plane;
+  let pl = this.renderer.plane;
   let gl = this.gl;
   let frontBuffer = null;
 
@@ -196,7 +198,7 @@ Display.prototype.renderLoop = function(nextFrame, num, exitAfter, finalFunc) {
 
   let renderIt = function() {
     // Get the data buffer from the plane.
-    frontBuffer = pl.render();
+    frontBuffer = this.renderer.render();
 
     // Render to the display
     if (frontBuffer) {

@@ -74,8 +74,8 @@ Napi::Value DisplaySDL::SetSource(const Napi::CallbackInfo& info) {
     exit(1);
   }
 
-  Napi::Object planeObj = info[0].As<Napi::Object>();
-  napi_create_reference(env, planeObj, 1, &this->planeRef);
+  Napi::Object rendererObj = info[0].As<Napi::Object>();
+  napi_create_reference(env, rendererObj, 1, &this->rendererRef);
   this->zoomLevel = info[1].As<Napi::Number>().Int32Value();
 
   return Napi::Number::New(env, 0);
@@ -114,22 +114,20 @@ Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
   bool exitAfter = info[2].ToBoolean();
 
   // Get the stored plane object, retrieve its basic data.
-  napi_value planeVal;
-  napi_get_reference_value(env, this->planeRef, &planeVal);
-  Napi::Object planeObj = Napi::Object(env, planeVal);
-  Napi::Value widthNum = planeObj.Get("width");
-  Napi::Value heightNum = planeObj.Get("height");
-  Napi::Value renderFuncVal = planeObj.Get("render");
+  napi_value rendererVal;
+  napi_get_reference_value(env, this->rendererRef, &rendererVal);
+  Napi::Object rendererObj = Napi::Object(env, rendererVal);
+  Napi::Value renderFuncVal = rendererObj.Get("render");
 
   if (!renderFuncVal.IsFunction()) {
-    printf("renderFunc not found\n");
+    printf("renderer.render() not found\n");
     exit(1);
   }
   Napi::Function renderFunc = renderFuncVal.As<Napi::Function>();
 
   napi_status status;
   napi_value buffData;
-  status = napi_call_function(env, planeObj, renderFunc, 0, NULL, &buffData);
+  status = napi_call_function(env, rendererObj, renderFunc, 0, NULL, &buffData);
   if (status != napi_ok) {
     if (status == napi_pending_exception) {
       napi_value result;
@@ -167,18 +165,11 @@ Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
   Napi::TypedArray typeArr = bufferVal.As<Napi::TypedArray>();
   Napi::ArrayBuffer arrBuff = typeArr.ArrayBuffer();
 
-  int viewPitch = widthNum.As<Napi::Number>().Int32Value() * 4;
-
   // Calculate texture and window size.
   int viewWidth = this->displayWidth;
   int viewHeight = this->displayHeight;
 
-  Napi::Value realWidthNum = bufferObj.Get("width");
-  Napi::Value realHeightNum = bufferObj.Get("height");
-  if (realWidthNum.IsNumber()) {
-    viewWidth = realWidthNum.As<Napi::Number>().Int32Value();
-    viewHeight = realHeightNum.As<Napi::Number>().Int32Value();
-  }
+  int viewPitch = viewWidth * 4;
   Napi::Value realPitchNum = bufferObj.Get("pitch");
   if (realPitchNum.IsNumber()) {
     viewPitch = realPitchNum.As<Napi::Number>().Int32Value();
@@ -304,7 +295,7 @@ Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
     //
     napi_status status;
     napi_value buffVal;
-    status = napi_call_function(env, planeObj, renderFunc, 0, NULL, &buffVal);
+    status = napi_call_function(env, rendererObj, renderFunc, 0, NULL, &buffVal);
     if (status != napi_ok) {
       if (status == napi_pending_exception) {
         napi_value result;

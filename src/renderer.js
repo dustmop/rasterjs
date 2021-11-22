@@ -1,49 +1,64 @@
 const rgbColor = require('./rgb_color.js');
 
-function Renderer(colorSet) {
-  this.colorSet = colorSet;
+function Renderer() {
   this.rgbBuffer = null;
+  this.plane = null;
+  this.tiles = null;
+  this.colorSet = null;
+  this.palette = null;
+  this.config = null;
   return this;
 }
 
 Renderer.prototype.clear = function() {
   this.rgbBuffer = null;
+  this.tiles = null;
+  this.colorSet = null;
+  this.palette = null;
+  this.config = null;
 }
 
-Renderer.prototype.render = function(pl, tiles, palette, config) {
-  let source = pl.data;
-  let sourcePitch = pl.pitch;
-  let sourceWidth = pl.width;
-  let sourceHeight = pl.height;
-  let targetWidth = pl.width;
-  let targetHeight = pl.height;
-  let targetPitch = pl.width*4;
-  let numPoints = pl.height * pl.width;
+Renderer.prototype.configure = function(owner) {
+  this.tiles = owner.tiles;
+  this.colorSet = owner.colorSet;
+  this.palette = owner.palette;
+  this.config = owner._config;
+}
+
+Renderer.prototype.render = function() {
+  let source = this.plane.data;
+  let sourcePitch = this.plane.pitch;
+  let sourceWidth = this.plane.width;
+  let sourceHeight = this.plane.height;
+  let targetWidth = this.plane.width;
+  let targetHeight = this.plane.height;
+  let targetPitch = this.plane.width*4;
+  let numPoints = this.plane.height * this.plane.width;
   let sizeInfo = null;
 
-  if (tiles != null) {
+  if (this.tiles != null) {
     // Assert that useTileset requires usePlane
-    if (!config.usingNonPrimaryPlane) {
+    if (!this.config.usingNonPrimaryPlane) {
       throw new Error('cannot use tileset without also using plane');
     }
     // Calculate the size
-    let tileSize = tiles.tileWidth * tiles.tileHeight;
-    sourceWidth = pl.width * tiles.tileWidth;
-    sourceHeight = pl.height * tiles.tileHeight;
+    let tileSize = this.tiles.tileWidth * this.tiles.tileHeight;
+    sourceWidth = this.plane.width * this.tiles.tileWidth;
+    sourceHeight = this.plane.height * this.tiles.tileHeight;
     source = new Uint8Array(numPoints * tileSize);
 
-    for (let yTile = 0; yTile < pl.height; yTile++) {
-      for (let xTile = 0; xTile < pl.width; xTile++) {
-        let k = yTile*pl.pitch + xTile;
-        let c = pl.data[k];
-        let t = tiles.get(c);
+    for (let yTile = 0; yTile < this.plane.height; yTile++) {
+      for (let xTile = 0; xTile < this.plane.width; xTile++) {
+        let k = yTile*this.plane.pitch + xTile;
+        let c = this.plane.data[k];
+        let t = this.tiles.get(c);
         if (t === undefined) {
           throw new Error(`invalid tile number ${c} at ${xTile},${yTile}`);
         }
         for (let i = 0; i < t.height; i++) {
           for (let j = 0; j < t.width; j++) {
-            let y = yTile * tiles.tileHeight + i;
-            let x = xTile * tiles.tileWidth + j;
+            let y = yTile * this.tiles.tileHeight + i;
+            let x = xTile * this.tiles.tileWidth + j;
             let n = y * sourceWidth + x;
             source[n] = t.get(j, i);
           }
@@ -51,14 +66,14 @@ Renderer.prototype.render = function(pl, tiles, palette, config) {
       }
     }
 
-    sourcePitch = tiles.tileWidth * pl.width;
+    sourcePitch = this.tiles.tileWidth * this.plane.width;
     targetPitch = sourcePitch*4;
-    targetWidth = tiles.tileWidth * pl.width;
-    targetHeight = tiles.tileHeight * pl.height;
+    targetWidth = this.tiles.tileWidth * this.plane.width;
+    targetHeight = this.tiles.tileHeight * this.plane.height;
     numPoints = numPoints * tileSize;
     sizeInfo = {};
-    sizeInfo.width = tiles.tileWidth * pl.width;
-    sizeInfo.height = tiles.tileHeight * pl.height;
+    sizeInfo.width = this.tiles.tileWidth * this.plane.width;
+    sizeInfo.height = this.tiles.tileHeight * this.plane.height;
     sizeInfo.pitch = targetPitch;
   }
 
@@ -66,12 +81,10 @@ Renderer.prototype.render = function(pl, tiles, palette, config) {
     this.rgbBuffer = new Uint8Array(numPoints*4);
   }
 
-  let scrollY = Math.floor(config.scrollY || 0);
-  let scrollX = Math.floor(config.scrollX || 0);
+  let scrollY = Math.floor(this.config.scrollY || 0);
+  let scrollX = Math.floor(this.config.scrollX || 0);
   scrollY = ((scrollY % sourceHeight) + sourceHeight) % sourceHeight;
   scrollX = ((scrollX % sourceWidth) + sourceWidth) % sourceWidth;
-
-  this.palette = palette;
 
   for (let attempt = 0; attempt < 4; attempt++) {
     for (let y = 0; y < sourceHeight; y++) {
@@ -111,12 +124,12 @@ Renderer.prototype.render = function(pl, tiles, palette, config) {
     this.rgbBuffer.height = sizeInfo.height;
     this.rgbBuffer.pitch = sizeInfo.pitch;
   }
-  if (config.width) {
-    this.rgbBuffer.width = config.width;
-    this.rgbBuffer.pitch = targetPitch;
+  if (this.config.width) {
+    this.rgbBuffer.width = this.config.width;
   }
-  if (config.height) {
-    this.rgbBuffer.height = config.height;
+  this.rgbBuffer.pitch = targetPitch;
+  if (this.config.height) {
+    this.rgbBuffer.height = this.config.height;
   }
   return this.rgbBuffer;
 }

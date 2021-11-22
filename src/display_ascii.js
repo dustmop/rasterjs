@@ -1,5 +1,5 @@
 function DisplayAscii() {
-  this.plane = null;
+  this.renderer = null;
   return this;
 }
 
@@ -10,17 +10,18 @@ DisplayAscii.prototype.setSize = function(width, height) {
   // pass
 }
 
-DisplayAscii.prototype.setSource = function(plane, zoomLevel) {
-  this.plane = plane;
+DisplayAscii.prototype.setSource = function(renderer, zoomLevel) {
+  this.renderer = renderer;
 }
 
 DisplayAscii.prototype.renderLoop = function(nextFrame) {
-  let buffer = this.plane.data;
-  let pitch = this.plane.pitch;
-  for (let y = 0; y < this.plane.height; y++) {
+  let plane = this.renderer.plane;
+  let buffer = plane.data;
+  let pitch = plane.pitch;
+  for (let y = 0; y < plane.height; y++) {
     let line = '';
-    for (let x = 0; x < this.plane.width; x++) {
-      let k = y * this.plane.pitch + x;
+    for (let x = 0; x < plane.width; x++) {
+      let k = y * plane.pitch + x;
       line += byteToAscii(buffer[k]);
     }
     line += '\n';

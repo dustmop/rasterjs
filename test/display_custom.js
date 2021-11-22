@@ -36,14 +36,14 @@ myDisplay.prototype.setSize = function(width, height) {
   // pass
 }
 
-myDisplay.prototype.setSource = function(plane, zoomLevel) {
-  this.plane = plane;
+myDisplay.prototype.setSource = function(renderer, zoomLevel) {
+  this.renderer = renderer;
   this.count += zoomLevel;
   // NOTE: At this point, plane.width and plane.height have
   // *not* necessarily been assigned by setSize.
 }
 
 myDisplay.prototype.renderLoop = function(nextFrame) {
-  this.count += this.plane.width * 10;
-  this.count += this.plane.height * 100;
+  this.count += this.renderer.plane.width * 10;
+  this.count += this.renderer.plane.height * 100;
 }

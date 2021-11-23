@@ -7,6 +7,8 @@ function Renderer() {
   this.colorSet = null;
   this.palette = null;
   this.config = null;
+  this.width = null;
+  this.height = null;
   return this;
 }
 
@@ -16,6 +18,8 @@ Renderer.prototype.clear = function() {
   this.colorSet = null;
   this.palette = null;
   this.config = null;
+  this.width = null;
+  this.height = null;
 }
 
 Renderer.prototype.configure = function(owner) {
@@ -23,6 +27,11 @@ Renderer.prototype.configure = function(owner) {
   this.colorSet = owner.colorSet;
   this.palette = owner.palette;
   this.config = owner._config;
+}
+
+Renderer.prototype.setSize = function(x, y) {
+  this.width = x;
+  this.height = y;
 }
 
 Renderer.prototype.render = function() {
@@ -77,8 +86,20 @@ Renderer.prototype.render = function() {
     sizeInfo.pitch = targetPitch;
   }
 
+  if (this.width) {
+    targetWidth = this.width;
+  }
+  if (this.height) {
+    targetHeight = this.height;
+  }
+  numPoints = targetHeight * targetWidth;
+  targetPitch = targetWidth*4;
+
   if (this.rgbBuffer == null) {
     this.rgbBuffer = new Uint8Array(numPoints*4);
+  }
+  if (!source) {
+    return this.rgbBuffer;
   }
 
   let scrollY = Math.floor(this.config.scrollY || 0);

@@ -42,8 +42,8 @@ Display.prototype.setSource = function(renderer, zoomLevel) {
 
   this.renderer = renderer;
   var plane = renderer.plane;
-  var elemWidth = plane.width * zoomLevel;
-  var elemHeight = plane.height * zoomLevel;
+  var elemWidth = this.displayWidth * zoomLevel;
+  var elemHeight = this.displayHeight * zoomLevel;
 
   // Canvas's coordinate system.
   this.canvas.width = elemWidth * SHARPEN;
@@ -119,7 +119,8 @@ void main() {
 
   var texture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, texture);
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, plane.width, plane.height,
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA,
+                this.displayWidth, this.displayHeight,
                 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
 
   // let's assume all images are not a power of 2
@@ -193,17 +194,19 @@ Display.prototype.renderLoop = function(nextFrame, num, exitAfter, finalFunc) {
   let pl = this.renderer.plane;
   let gl = this.gl;
   let frontBuffer = null;
+  let self = this;
 
   // TODO: Use `num`
 
   let renderIt = function() {
     // Get the data buffer from the plane.
-    frontBuffer = this.renderer.render();
+    frontBuffer = self.renderer.render();
 
     // Render to the display
     if (frontBuffer) {
-      gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, pl.width, pl.height, gl.RGBA,
-                       gl.UNSIGNED_BYTE, frontBuffer);
+      gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0,
+                       self.displayWidth, self.displayHeight,
+                       gl.RGBA, gl.UNSIGNED_BYTE, frontBuffer);
       gl.drawArrays(gl.TRIANGLES, 0, 6);
       if (num > 0) {
         num--;

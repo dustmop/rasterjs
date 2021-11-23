@@ -206,6 +206,7 @@ Scene.prototype._doRender = function(num, exitAfter, drawFunc, betweenFunc, fina
       self._config.height = plane.height * this.tiles.tileHeight;
     }
   }
+  this.renderer.setSize(self._config.width, self._config.height);
   this.then(function() {
     self.display.setSize(self._config.width, self._config.height);
     self.display.setSource(self.renderer, self._config.zoomScale);

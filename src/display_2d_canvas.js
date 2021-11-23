@@ -35,8 +35,8 @@ Display.prototype.setSource = function(renderer, zoomLevel) {
   }
 
   // NOTE: zoomLevel is ignored
-  var elemWidth = renderer.plane.width;
-  var elemHeight = renderer.plane.height;
+  var elemWidth = this.displayWidth;
+  var elemHeight = this.displayHeight;
 
   // Canvas's coordinate system.
   this.canvas.width = elemWidth * DONT_SHARPEN;
@@ -76,7 +76,7 @@ Display.prototype.renderLoop = function(nextFrame, num, exitAfter, finalFunc) {
     if (frontBuffer) {
       let buff = Uint8ClampedArray.from(frontBuffer);
       let pl = self.renderer.plane;
-      let image = new ImageData(buff, pl.width, pl.height);
+      let image = new ImageData(buff, self.displayWidth, self.displayHeight);
       ctx.putImageData(image, 0, 0);
       if (num > 0) {
         num--;

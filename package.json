@@ -1,6 +1,6 @@
 {
   "name": "raster",
-  "version": "0.5.0",
+  "version": "0.6.1",
   "description": "raster.js is a graphics library for pixel based 2d demos",
   "author": "Dustin Long <me@dustmop.io> (dustmop.io)",
   "gypfile": true,

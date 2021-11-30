@@ -182,3 +182,7 @@ This is likely to change in a future version. Users should either add `ra.useCol
 # API
 
 See [the docs](docs.md) for the full documentation of the methods avaiable in raster.js.
+
+# Coming soon
+
+See the [upcoming plans](plan.md) of what's coming in the future.

@@ -7,10 +7,11 @@ const path = require('path');
 const util = require('util');
 const randstr = require('randomstring');
 
-function SaveRenderer(targetPath, numFrames) {
+function SaveRenderer(targetPath, numFrames, saveService) {
   this.targetPath = targetPath;
   this.numFrames = numFrames;
   this.isGif = this.targetPath.endsWith('gif');
+  this.saveService = saveService;
   return this;
 }
 
@@ -60,8 +61,16 @@ SaveRenderer.prototype.renderLoop = function(nextFrame) {
     nextFrame();
     let frameNum = leftPad(count, 3, '0');
     let outFile = `${this.tmpdir}/${frameNum}.png`;
-    let saver = this.renderer.plane.scene;
-    saver.save(outFile, this.renderer.plane);
+    let pl = this.renderer.plane;
+    pl._prepare();
+    this.renderer.configure(pl.scene);
+    let [width, height] = this.renderer.size();
+    let buff = this.renderer.render();
+    let pitch = pl.width*4;
+    if (buff.pitch) {
+      pitch = buff.pitch;
+    }
+    this.saveService.saveTo(outFile, buff, width, height, pitch);
   }
 
   // Wait for each frame to render.

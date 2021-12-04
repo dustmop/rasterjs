@@ -2,6 +2,8 @@ const rgbColor = require('./rgb_color.js');
 const colorSet = require('./color_set.js');
 const plane = require('./plane.js');
 const palette = require('./palette.js');
+const renderer = require('./renderer.js');
+const textLoader = require('./text_loader.js');
 
 function PaletteCollection(items, saveService) {
   if (saveService != null && !saveService.saveTo) {
@@ -40,18 +42,15 @@ PaletteCollection.prototype.reset = function() {
 PaletteCollection.prototype.save = function(filename) {
   let target = new plane.Plane();
   // Preserve
-  let preservePalette = target.scene.palette;
-  let preserveFont = target.scene.font;
-  // Nullify
-  target.scene.palette = null;
-  target.scene.font = null;
+  let preserveScene = target.scene;
+  // Save operation
+  target.scene = null;
   this._saveTo(target, filename);
   // Restore
-  target.scene.palette = preservePalette;
-  target.scene.font = preserveFont;
+  target.scene = preserveScene;
 }
 
-PaletteCollection.prototype._saveTo = function(target, filename) {
+PaletteCollection.prototype._saveTo = function(target, savepath) {
   let numX = 8;
   let numY = Math.ceil(this.items.length / 8);
   // Parameterize
@@ -68,8 +67,22 @@ PaletteCollection.prototype._saveTo = function(target, filename) {
   // Draw the palette
   target.setSize(numX * gridX - showBetween + showOuter * 2,
                  numY * gridY - showBetween + showOuter * 2);
-  target.scene.saveService = this.saveService;
-  target.scene.setFont('font:tiny');
+
+  // Create dependencies for drawing
+  let loader = new textLoader.TextLoader(this.saveService);
+  let font = loader.createFontResource('tiny');
+  let colors = new colorSet.Set([]);
+  colors.assign([]);
+  target.scene = {
+    _config: {
+      width: target.width,
+      height: target.height,
+    },
+    colorSet: colors,
+    font: font,
+  };
+
+  // Draw the palette format
   target.fillTrueBackground(0x606060);
   for (let k = 0; k < this.items.length; k++) {
     let rgbInt = this.items[k].rgb.toInt();
@@ -91,8 +104,18 @@ PaletteCollection.prototype._saveTo = function(target, filename) {
     }
     target.drawText(`${v}`, x + showPad + showOuter, y + showPad + showOuter);
   }
-  let saver = target.scene;
-  saver.save(filename, target);
+
+  // Render it and save
+  let rend = new renderer.Renderer(colorSet);
+  rend.plane = target;
+  rend.configure(target.scene);
+  let [width, height] = rend.size();
+  let buff = rend.render();
+  let pitch = target.width*4;
+  if (buff.pitch) {
+    pitch = buff.pitch;
+  }
+  this.saveService.saveTo(savepath, buff, width, height, pitch);
 }
 
 PaletteCollection.prototype._isLightColor = function(rgb) {

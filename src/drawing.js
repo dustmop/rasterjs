@@ -256,7 +256,7 @@ Drawing.prototype.drawText_params = ['text:s', 'x:i', 'y:i'];
 Drawing.prototype.drawText = function(text, x, y) {
   let font = this.scene.font;
   if (!font) {
-    throw 'drawText: no font has been assigned';
+    throw new Error('drawText: no font has been assigned');
   }
   if (!font.glyphs) {
     throw new Error('drawText: font has been opened, but not yet read');

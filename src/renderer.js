@@ -7,8 +7,6 @@ function Renderer() {
   this.colorSet = null;
   this.palette = null;
   this.config = null;
-  this.width = null;
-  this.height = null;
   return this;
 }
 
@@ -18,8 +16,6 @@ Renderer.prototype.clear = function() {
   this.colorSet = null;
   this.palette = null;
   this.config = null;
-  this.width = null;
-  this.height = null;
 }
 
 Renderer.prototype.configure = function(owner) {
@@ -29,9 +25,24 @@ Renderer.prototype.configure = function(owner) {
   this.config = owner._config;
 }
 
-Renderer.prototype.setSize = function(x, y) {
-  this.width = x;
-  this.height = y;
+Renderer.prototype.size = function () {
+  let width = this.config.width;
+  let height = this.config.height;
+  if (!width) {
+    if (this.tiles) {
+      width = this.plane.width * this.tiles.tileWidth;
+    } else {
+      width = this.plane.width;
+    }
+  }
+  if (!height) {
+    if (this.tiles) {
+      height = this.plane.height * this.tiles.tileHeight;
+    } else {
+      height = this.plane.height;
+    }
+  }
+  return [width, height];
 }
 
 Renderer.prototype.render = function() {
@@ -43,7 +54,6 @@ Renderer.prototype.render = function() {
   let targetHeight = this.plane.height;
   let targetPitch = this.plane.width*4;
   let numPoints = this.plane.height * this.plane.width;
-  let sizeInfo = null;
 
   if (this.tiles != null) {
     // Assert that useTileset requires usePlane
@@ -80,17 +90,13 @@ Renderer.prototype.render = function() {
     targetWidth = this.tiles.tileWidth * this.plane.width;
     targetHeight = this.tiles.tileHeight * this.plane.height;
     numPoints = numPoints * tileSize;
-    sizeInfo = {};
-    sizeInfo.width = this.tiles.tileWidth * this.plane.width;
-    sizeInfo.height = this.tiles.tileHeight * this.plane.height;
-    sizeInfo.pitch = targetPitch;
   }
 
-  if (this.width) {
-    targetWidth = this.width;
+  if (this.config.width) {
+    targetWidth = this.config.width;
   }
-  if (this.height) {
-    targetHeight = this.height;
+  if (this.config.height) {
+    targetHeight = this.config.height;
   }
   numPoints = targetHeight * targetWidth;
   targetPitch = targetWidth*4;
@@ -140,18 +146,7 @@ Renderer.prototype.render = function() {
     }
   }
 
-  if (sizeInfo) {
-    this.rgbBuffer.width = sizeInfo.width;
-    this.rgbBuffer.height = sizeInfo.height;
-    this.rgbBuffer.pitch = sizeInfo.pitch;
-  }
-  if (this.config.width) {
-    this.rgbBuffer.width = this.config.width;
-  }
   this.rgbBuffer.pitch = targetPitch;
-  if (this.config.height) {
-    this.rgbBuffer.height = this.config.height;
-  }
   return this.rgbBuffer;
 }
 

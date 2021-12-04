@@ -29,8 +29,9 @@ function getOptions() {
   parser.add_argument('--zoom', {type: 'int'});
   let args = parser.parse_args();
   if (args.save_filename) {
+    let res = cppmodule.resources();
     args.display = new saveRenderer.SaveRenderer(args.save_filename,
-                                                 args.num_frames);
+                                                 args.num_frames, res);
   }
   return args;
 }

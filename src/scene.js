@@ -206,7 +206,6 @@ Scene.prototype._doRender = function(num, exitAfter, drawFunc, betweenFunc, fina
       self._config.height = plane.height * this.tiles.tileHeight;
     }
   }
-  this.renderer.setSize(self._config.width, self._config.height);
   this.then(function() {
     self.display.setSize(self._config.width, self._config.height);
     self.display.setSource(self.renderer, self._config.zoomScale);
@@ -234,12 +233,8 @@ Scene.prototype.run = function(drawFunc, betweenFrameFunc) {
   this._doRender(this.numFrames, true, drawFunc, betweenFrameFunc, null);
 }
 
-Scene.prototype.save = function(savepath, pl) {
-  if (!pl) {
-    pl = this.aPlane;
-  }
-  this.renderer.configure(this);
-  let res = this.render(pl);
+Scene.prototype.save = function(savepath) {
+  let res = this.renderPrimaryPlane();
   let saveService = this.saveService;
   if (!saveService) {
     throw new Error('cannot save plane without save service');
@@ -247,20 +242,15 @@ Scene.prototype.save = function(savepath, pl) {
   saveService.saveTo(savepath, res.buff, res.width, res.height, res.pitch);
 }
 
-Scene.prototype.render = function(pl) {
-  if (!pl) {
-    pl = this.aPlane;
-  }
+Scene.prototype.renderPrimaryPlane = function() {
+  let pl = this.aPlane;
   pl._prepare();
   this.renderer.plane = pl;
   this.renderer.configure(this);
+  let [width, height] = this.renderer.size();
   let buff = this.renderer.render();
-  let width = pl.width;
-  let height = pl.height;
   let pitch = pl.width*4;
-  if (buff.width) {
-    width = buff.width;
-    height = buff.height;
+  if (buff.pitch) {
     pitch = buff.pitch;
   }
   return {

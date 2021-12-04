@@ -84,7 +84,7 @@ describe('Use plane', function() {
     ra.useTileset(tiles, {tile_width: 4, tile_height: 4});
 
     assert.throws(function() {
-      ra.scene.render();
+      ra.scene.renderPrimaryPlane();
     }, /Error: cannot use tileset without also using plane/);
   });
 

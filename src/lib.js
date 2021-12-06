@@ -127,6 +127,10 @@ Raster.prototype.setFont = function(spec) {
   this.scene.setFont(spec);
 }
 
+Raster.prototype.setTileset = function(which) {
+  this.scene.setTileset(which);
+}
+
 Raster.prototype.mixColors = function(spec) {
   let result = [];
   let cursor = 0;

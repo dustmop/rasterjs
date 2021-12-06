@@ -295,6 +295,14 @@ Scene.prototype.setFont = function(spec) {
   this.font = this.textLoader.loadFont(filename);
 }
 
+Scene.prototype.setTileset = function(which) {
+  if (which < 0 || which >= this.tileSetBanks.length) {
+    throw new Error(`invalid tileset number ${which}`);
+  }
+  this.tiles = this.tileSetBanks[which];
+  this.renderer.tiles = this.tiles;
+}
+
 Scene.prototype.handleEvent = function(eventName, callback) {
   this.display.handleEvent(eventName, callback);
 }
@@ -405,7 +413,18 @@ Scene.prototype.usePalette = function(vals) {
 
 Scene.prototype.useTileset = function(img, sizeInfo) {
   let saveService = this.saveService;
-  this.tiles = new tiles.TileSet(img, sizeInfo, saveService);
+  if (Array.isArray(img)) {
+    let imageList = img;
+    let allBanks = [];
+    for (let i = 0; i < imageList.length; i++) {
+      let tileset = new tiles.TileSet(imageList[i], sizeInfo, saveService);
+      allBanks.push(tileset);
+    }
+    this.tileSetBanks = allBanks;
+    this.tiles = allBanks[0];
+  } else {
+    this.tiles = new tiles.TileSet(img, sizeInfo, saveService);
+  }
 }
 
 module.exports.Scene = Scene;

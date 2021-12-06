@@ -52,4 +52,19 @@ describe('Gif', function() {
     });
   });
 
+  it('save animation tileset swap', function() {
+    let tmpdir = util.mkTmpDir();
+    let tmpout = tmpdir + '/actual.gif';
+    let script = 'test/testdata/scripts/animtile.js';
+    let cmd = `node ${script} --save ${tmpout} --num-frames 16`;
+    let cwd = process.cwd();
+    child_process.exec(cmd, function(error, stdout, stderr) {
+      if (error) {
+        throw error;
+      }
+      let goldenPath = 'test/testdata/animtile.gif';
+      util.ensureFilesMatch(goldenPath, tmpout);
+    });
+  });
+
 });

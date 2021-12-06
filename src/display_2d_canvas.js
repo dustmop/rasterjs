@@ -75,7 +75,6 @@ Display.prototype.renderLoop = function(nextFrame, num, exitAfter, finalFunc) {
 
     if (frontBuffer) {
       let buff = Uint8ClampedArray.from(frontBuffer);
-      let pl = self.renderer.plane;
       let image = new ImageData(buff, self.displayWidth, self.displayHeight);
       ctx.putImageData(image, 0, 0);
       if (num > 0) {

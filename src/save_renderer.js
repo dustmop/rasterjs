@@ -1,5 +1,7 @@
 const cppmodule = require('../build/Release/native');
-const GIFEncoder = require('gifencoder');
+const GIFEncoder = require('gif-encoder-2');
+const { createWriteStream, readdirSync } = require('fs');
+const { createCanvas, loadImage, ImageData } = require('canvas')
 const pngFileStream = require('png-file-stream');
 const fs = require('fs');
 const os = require('os');
@@ -56,6 +58,7 @@ SaveRenderer.prototype.renderLoop = function(nextFrame) {
   }
 
   // Render each frame, and write to a file in a tmp directory.
+  let bufferList = [];
   let doneCount = 0;
   for (let count = 0; count < numFrames; count++) {
     nextFrame();
@@ -71,21 +74,15 @@ SaveRenderer.prototype.renderLoop = function(nextFrame) {
       pitch = buff.pitch;
     }
     this.saveService.saveTo(outFile, buff, width, height, pitch);
+    bufferList.push(buff);
+    this.renderer.rgbBuffer = null;
   }
 
   // Wait for each frame to render.
   if (this.isGif) {
     // Actually write the gif.
     const self = this;
-    const gifOpt = {repeat: 0, delay: 16, quality: 4};
-    const encoder = new GIFEncoder(width, height);
-    const stream = pngFileStream(this.tmpdir + '/*.png')
-          .pipe(encoder.createWriteStream(gifOpt))
-          .pipe(fs.createWriteStream(this.targetPath));
-    stream.on('finish', function () {
-      console.log(`wrote ${self.targetPath}`);
-    });
-    return;
+    this.createGif(width, height, bufferList, this.targetPath);
   } else if (!hasTemplate) {
     // Copy the first frame to our target path.
     let infile = `${this.tmpdir}/000.png`;
@@ -101,6 +98,32 @@ SaveRenderer.prototype.renderLoop = function(nextFrame) {
       fs.copyFileSync(infile, outfile);
     }
   }
+}
+
+SaveRenderer.prototype.createGif = function(width, height, frames, outName) {
+  const encoder = new GIFEncoder(width, height, 'octree', true, frames.length);
+
+  const writeStream = createWriteStream(outName)
+  // when stream closes GIF is created so resolve promise
+  writeStream.on('close', () => {
+    console.log(`wrote ${outName}`);
+  })
+
+  encoder.createReadStream().pipe(writeStream);
+  encoder.setDelay(16);
+  encoder.start();
+
+  let canvas = createCanvas(width, height);
+  let ctx = canvas.getContext('2d');
+
+  for (let i = 0; i < frames.length; i++) {
+    let f = frames[i];
+    let carr = new Uint8ClampedArray(f);
+    let image = new ImageData(carr, width, height);
+    ctx.putImageData(image, 0, 0);
+    encoder.addFrame(ctx);
+  }
+  encoder.finish();
 }
 
 function leftPad(value, size, fill) {

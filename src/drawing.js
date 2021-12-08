@@ -66,6 +66,11 @@ Drawing.prototype.drawDot = function(x, y) {
 
 Drawing.prototype.fillDot_params = ['dots:any'];
 Drawing.prototype.fillDot = function(dots) {
+  return this.fillPattern(dots);
+}
+
+Drawing.prototype.fillPattern_params = ['dots:any'];
+Drawing.prototype.fillPattern = function(dots) {
   this._prepare();
   let buffer = this.data;
 

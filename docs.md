@@ -170,6 +170,7 @@ drawPolygon  fillPolygon
 drawImage    -
 -            fillFrame
 -            fillFlood
+-            fillPattern
 ```
 
 ### drawLine(x0, y0, x1, y1, cc)
@@ -186,7 +187,7 @@ Draw a dot at point x,y.
 
 ### fillDot(dots)
 
-Fill the entire plane by tiling the pattern represented by the dots parameter. Dots must be a 2-d square array, with each element representing a color.
+An alias for `fillPattern`.
 
 ### drawSquare(x, y, size)
 
@@ -253,6 +254,10 @@ For this version, the callback will be invoked per each pixel in the plane. Code
 ### fillFlood(x, y)
 
 Fill a region of contiguous color, by replacing it with the current set color. Starts at the given x,y coordinate and floods from there.
+
+### fillPattern(dots)
+
+Fill the entire plane by tiling the pattern represented by the dots parameter. Dots must be a 2-d square array, with each element representing a color.
 
 ## Scrolling
 

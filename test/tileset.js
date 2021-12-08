@@ -13,10 +13,10 @@ describe('Tileset', function() {
     ra.useTileset(tiles, {tile_width: 4, tile_height: 4});
     ra.usePlane(plane);
 
-    plane.fillDot([[2, 6, 1, 3],
-                   [6, 7, 7, 7],
-                   [5, 5, 1, 0],
-                   [6, 4, 2, 2]]);
+    plane.fillPattern([[2, 6, 1, 3],
+                       [6, 7, 7, 7],
+                       [5, 5, 1, 0],
+                       [6, 4, 2, 2]]);
 
     util.saveTmpCompareTo(ra, 'test/testdata/map_of_tiles.png');
   });
@@ -45,11 +45,11 @@ describe('Tileset', function() {
     ra.useTileset(tiles, {tile_width: 8, tile_height: 8});
     ra.usePlane(plane);
 
-    plane.fillDot([[ 0, 0, 1, 0],
-                   [ 0, 1, 0, 0],
-                   [ 0, 0, 1, 2],
-                   [ 0, 0, 0, 0],
-                  ]);
+    plane.fillPattern([[ 0, 0, 1, 0],
+                       [ 0, 1, 0, 0],
+                       [ 0, 0, 1, 2],
+                       [ 0, 0, 0, 0],
+                      ]);
 
     util.saveTmpCompareTo(ra, 'test/testdata/drawn_tiles.png');
 
@@ -88,11 +88,11 @@ describe('Tileset', function() {
     ra.useTileset(tiles, {tile_width: 8, tile_height: 8});
     ra.usePlane(plane);
 
-    plane.fillDot([[ 0, 1, 2, 0],
-                   [ 0, 1, 0, 2],
-                   [ 1, 3, 1, 2],
-                   [ 2, 2, 0, 0],
-                  ]);
+    plane.fillPattern([[ 0, 1, 2, 0],
+                       [ 0, 1, 0, 2],
+                       [ 1, 3, 1, 2],
+                       [ 2, 2, 0, 0],
+                      ]);
 
     util.saveTmpCompareTo(ra, 'test/testdata/palette_tiles.png');
   });
@@ -131,10 +131,10 @@ describe('Tileset', function() {
     ra.useTileset(tiles, {tile_width: 4, tile_height: 4});
     ra.usePlane(plane);
 
-    plane.fillDot([[2, 6, 1, 3],
-                   [6, 7,15, 7],
-                   [5, 5, 1, 0],
-                   [6, 4, 2, 2]]);
+    plane.fillPattern([[2, 6, 1, 3],
+                       [6, 7,15, 7],
+                       [5, 5, 1, 0],
+                       [6, 4, 2, 2]]);
 
     assert.throws(function() {
       ra.scene.renderPrimaryPlane();

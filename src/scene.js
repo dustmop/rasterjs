@@ -30,6 +30,7 @@ function Scene(env) {
   this.font = null;
   this.palette = null;
   this.tiles = null;
+  this.interrupts = null;
 
   plane.setGlobalScene(this);
   this.aPlane = new plane.Plane();
@@ -133,6 +134,7 @@ Scene.prototype.resetState = function() {
   this.renderer.clear();
   this.palette = null;
   this.tiles = null;
+  this.interrupts = null;
   this._config = {};
   this._config.zoomScale = 1;
   this._config.usingNonPrimaryPlane = false;
@@ -425,6 +427,33 @@ Scene.prototype.useTileset = function(img, sizeInfo) {
   } else {
     this.tiles = new tiles.TileSet(img, sizeInfo, saveService);
   }
+}
+
+Scene.prototype.useInterrupts = function(conf) {
+  if (!Array.isArray(conf)) {
+    throw new Error(`useInterrupts param must be an array`);
+  }
+  let renderPoint = -1;
+  for (let k = 0; k < conf.length; k++) {
+    let elem = conf[k];
+    if (elem.scanline === undefined) {
+      throw new Error(`useInterrupts element ${k} missing field 'scanline'`);
+    }
+    if (elem.scanline.constructor.name != 'Number') {
+      throw new Error(`useInterrupts element ${k}.scanline must be number`);
+    }
+    if (!elem.irq) {
+      throw new Error(`useInterrupts element ${k} missing field 'irq'`);
+    }
+    if (elem.irq.constructor.name != 'Function') {
+      throw new Error(`useInterrupts element ${k}.irq must be function`);
+    }
+    if (elem.scanline < renderPoint) {
+      throw new Error(`useInterrupts element ${k}.scanline larger than ${renderPoint}`);
+    }
+    renderPoint = elem.scanline;
+  }
+  this.interrupts = conf;
 }
 
 module.exports.Scene = Scene;

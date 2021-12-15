@@ -6,6 +6,7 @@ function Renderer() {
   this.tiles = null;
   this.colorSet = null;
   this.palette = null;
+  this.interrupts = null;
   this.config = null;
   return this;
 }
@@ -15,6 +16,7 @@ Renderer.prototype.clear = function() {
   this.tiles = null;
   this.colorSet = null;
   this.palette = null;
+  this.interrupts = null;
   this.config = null;
 }
 
@@ -22,6 +24,7 @@ Renderer.prototype.configure = function(owner) {
   this.tiles = owner.tiles;
   this.colorSet = owner.colorSet;
   this.palette = owner.palette;
+  this.interrupts = owner.interrupts;
   this.config = owner._config;
 }
 
@@ -46,14 +49,58 @@ Renderer.prototype.size = function () {
 }
 
 Renderer.prototype.render = function() {
+  // Calculate size of the buffer to render.
+  let width = this.config.width;
+  let height = this.config.height;
+  if (!width || !height) {
+    if (!this.tiles) {
+      width = this.plane.width;
+      height = this.plane.height;
+    } else {
+      width = this.plane.width * this.tiles.tileWidth;
+      height = this.plane.height * this.tiles.tileHeight;
+    }
+  }
+
+  // Allocate the buffer.
+  if (this.rgbBuffer == null) {
+    let numPoints = width * height;
+    this.rgbBuffer = new Uint8Array(numPoints*4);
+    this.rgbBuffer.pitch = width*4;
+  }
+  if (!this.plane.data) {
+    return this.rgbBuffer;
+  }
+
+  // If no interrupts, render everything at once.
+  if (!this.interrupts) {
+    return this._renderRegion(0, 0, width, height);
+  }
+
+  // Otherwise, render between each interrupt.
+  let renderPoint = 0;
+  for (let k = 0; k < this.interrupts.length + 1; k++) {
+    let scanLine;
+    if (k < this.interrupts.length) {
+      scanLine = this.interrupts[k].scanline;
+    } else {
+      scanline = height;
+    }
+    this._renderRegion(0, renderPoint, width, scanLine);
+    renderPoint = scanLine;
+    if (k < this.interrupts.length) {
+      this.interrupts[k].irq();
+    }
+  }
+
+  return this.rgbBuffer;
+}
+
+Renderer.prototype._renderRegion = function(left, top, right, bottom) {
   let source = this.plane.data;
   let sourcePitch = this.plane.pitch;
   let sourceWidth = this.plane.width;
   let sourceHeight = this.plane.height;
-  let targetWidth = this.plane.width;
-  let targetHeight = this.plane.height;
-  let targetPitch = this.plane.width*4;
-  let numPoints = this.plane.height * this.plane.width;
 
   if (this.tiles != null) {
     // Assert that useTileset requires usePlane
@@ -62,8 +109,10 @@ Renderer.prototype.render = function() {
     }
     // Calculate the size
     let tileSize = this.tiles.tileWidth * this.tiles.tileHeight;
+    let numPoints = this.plane.height * this.plane.width;
     sourceWidth = this.plane.width * this.tiles.tileWidth;
     sourceHeight = this.plane.height * this.tiles.tileHeight;
+    sourcePitch = this.tiles.tileWidth * this.plane.width;
     source = new Uint8Array(numPoints * tileSize);
 
     for (let yTile = 0; yTile < this.plane.height; yTile++) {
@@ -84,55 +133,35 @@ Renderer.prototype.render = function() {
         }
       }
     }
-
-    sourcePitch = this.tiles.tileWidth * this.plane.width;
-    targetPitch = sourcePitch*4;
-    targetWidth = this.tiles.tileWidth * this.plane.width;
-    targetHeight = this.tiles.tileHeight * this.plane.height;
-    numPoints = numPoints * tileSize;
   }
 
-  if (this.config.width) {
-    targetWidth = this.config.width;
-  }
-  if (this.config.height) {
-    targetHeight = this.config.height;
-  }
-  numPoints = targetHeight * targetWidth;
-  targetPitch = targetWidth*4;
-
-  if (this.rgbBuffer == null) {
-    this.rgbBuffer = new Uint8Array(numPoints*4);
-  }
-  if (!source) {
-    return this.rgbBuffer;
-  }
+  let targetPitch = this.rgbBuffer.pitch;
 
   let scrollY = Math.floor(this.config.scrollY || 0);
   let scrollX = Math.floor(this.config.scrollX || 0);
   scrollY = ((scrollY % sourceHeight) + sourceHeight) % sourceHeight;
   scrollX = ((scrollX % sourceWidth) + sourceWidth) % sourceWidth;
 
-  for (let attempt = 0; attempt < 4; attempt++) {
+  for (let placement = 0; placement < 4; placement++) {
     for (let y = 0; y < sourceHeight; y++) {
       for (let x = 0; x < sourceWidth; x++) {
         let i, j;
-        if (attempt == 0) {
+        if (placement == 0) {
           i = y - scrollY;
           j = x - scrollX;
-        } else if (attempt == 1) {
+        } else if (placement == 1) {
           i = y - scrollY;
           j = x - scrollX + sourceWidth;
-        } else if (attempt == 2) {
+        } else if (placement == 2) {
           i = y - scrollY + sourceHeight;
           j = x - scrollX;
-        } else if (attempt == 3) {
+        } else if (placement == 3) {
           i = y - scrollY + sourceHeight;
           j = x - scrollX + sourceWidth;
         } else {
           continue;
         }
-        if (i < 0 || i >= targetHeight || j < 0 || j >= targetWidth) {
+        if (i < top || i >= bottom || j < left || j >= right) {
           continue;
         }
         let s = y*sourcePitch + x;
@@ -146,7 +175,6 @@ Renderer.prototype.render = function() {
     }
   }
 
-  this.rgbBuffer.pitch = targetPitch;
   return this.rgbBuffer;
 }
 

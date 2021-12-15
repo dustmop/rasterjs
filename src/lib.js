@@ -206,6 +206,10 @@ Raster.prototype.usePlane = function(pl) {
   this.scene._config.usingNonPrimaryPlane = true;
 }
 
+Raster.prototype.useInterrupts = function(conf) {
+  this.scene.useInterrupts(conf);
+}
+
 ////////////////////////////////////////
 // Display endpoints
 

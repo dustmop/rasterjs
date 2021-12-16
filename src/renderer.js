@@ -84,7 +84,7 @@ Renderer.prototype.render = function() {
     if (k < this.interrupts.length) {
       scanLine = this.interrupts[k].scanline;
     } else {
-      scanline = height;
+      scanLine = height;
     }
     this._renderRegion(0, renderPoint, width, scanLine);
     renderPoint = scanLine;
@@ -143,8 +143,29 @@ Renderer.prototype._renderRegion = function(left, top, right, bottom) {
   scrollX = ((scrollX % sourceWidth) + sourceWidth) % sourceWidth;
 
   for (let placement = 0; placement < 4; placement++) {
-    for (let y = 0; y < sourceHeight; y++) {
-      for (let x = 0; x < sourceWidth; x++) {
+    let regL, regR, regU, regD;
+    if ((placement == 0) || (placement == 2)) {
+      // left half
+      regL = scrollX;
+      regR = Math.min(sourceWidth, right + scrollX);
+    } else {
+      // right half
+      regL = 0;
+      regR = scrollX - sourceWidth + right;
+    }
+
+    if ((placement == 0) || (placement == 1)) {
+      // top half
+      regU = Math.max(scrollY, top + scrollY);
+      regD = Math.min(sourceHeight, bottom + scrollY);
+    } else {
+      // bottom half
+      regU = Math.max(scrollY - sourceHeight + top, 0);
+      regD = scrollY - sourceHeight + bottom;
+    }
+
+    for (let y = regU; y < regD; y++) {
+      for (let x = regL; x < regR; x++) {
         let i, j;
         if (placement == 0) {
           i = y - scrollY;
@@ -162,6 +183,7 @@ Renderer.prototype._renderRegion = function(left, top, right, bottom) {
           continue;
         }
         if (i < top || i >= bottom || j < left || j >= right) {
+          // TODO: should never happen
           continue;
         }
         let s = y*sourcePitch + x;

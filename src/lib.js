@@ -3,6 +3,7 @@ const scene = require('./scene.js');
 const drawing = require('./drawing.js');
 const destructure = require('./destructure.js');
 const plane = require('./plane.js');
+const tiles = require('./tiles.js');
 
 function Raster(env) {
   this.scene = new scene.Scene(env);
@@ -81,6 +82,15 @@ Raster.prototype.Plane = function() {
   let p = new plane.Plane();
   p._addMethods(true);
   return p;
+}
+
+Raster.prototype.Tileset = function() {
+  if (new.target === undefined) {
+    throw new Error('Tileset constructor must be called with `new`');
+  }
+  let args = arguments;
+  // TODO: destructure?
+  return new tiles.Tileset(args[0], args[1]);
 }
 
 ////////////////////////////////////////

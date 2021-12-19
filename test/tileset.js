@@ -59,6 +59,49 @@ describe('Tileset', function() {
     util.saveTmpCompareTo(ra, 'test/testdata/modify_tiles.png');
   });
 
+  it('draw using tileset', function() {
+    ra.resetState();
+
+    let plane = new ra.Plane();
+    plane.setSize(4);
+
+    let tileset = new ra.Tileset(4, {tile_width: 8, tile_height: 8});
+
+    let t = tileset.get(0);
+    t.put(0, 0, 34);
+
+    t = tileset.get(1);
+    t.put(0, 1, 34);
+    t.put(0, 2, 34);
+    t.put(1, 1, 34);
+    t.put(1, 2, 34);
+
+    t = tileset.get(2);
+    t.put(1, 1, 34);
+    t.put(2, 2, 34);
+    t.put(3, 3, 34);
+    t.put(4, 4, 34);
+    t.put(5, 5, 34);
+
+    ra.useTileset(tileset);
+    ra.usePlane(plane);
+
+    plane.fillPattern([[ 0, 0, 1, 0],
+                       [ 0, 1, 0, 0],
+                       [ 0, 0, 1, 2],
+                       [ 0, 0, 0, 0],
+                      ]);
+
+    util.saveTmpCompareTo(ra, 'test/testdata/drawn_tiles.png');
+
+    t = tileset.get(0);
+    t.put(2, 0, 34);
+    t.put(0, 2, 34);
+    t.put(2, 2, 34);
+    util.saveTmpCompareTo(ra, 'test/testdata/modify_tiles.png');
+  });
+
+
   it('tiles with palette', function() {
     ra.resetState();
 
@@ -106,7 +149,7 @@ describe('Tileset', function() {
     let tiles = ra.loadImage('test/testdata/tiles.png');
     assert.throws(function() {
       ra.useTileset(tiles, {tile_height: 8});
-    }, /Error: invalid tileSet detail: missing tile_width/);
+    }, /Error: invalid Tileset detail: missing tile_width/);
   });
 
   it('invalid dimension', function() {
@@ -118,7 +161,7 @@ describe('Tileset', function() {
     let tiles = ra.loadImage('test/testdata/tiles.png');
     assert.throws(function() {
       ra.useTileset(tiles, {tile_width: 4, tile_height: 10});
-    }, /Error: tileSet's tile_height is too larger than source data/);
+    }, /Error: Tileset's tile_height is larger than source data/);
   });
 
   it('bad tile number', function() {

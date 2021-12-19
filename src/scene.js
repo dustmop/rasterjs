@@ -298,10 +298,10 @@ Scene.prototype.setFont = function(spec) {
 }
 
 Scene.prototype.setTileset = function(which) {
-  if (which < 0 || which >= this.tileSetBanks.length) {
+  if (which < 0 || which >= this.tilesetBanks.length) {
     throw new Error(`invalid tileset number ${which}`);
   }
-  this.tiles = this.tileSetBanks[which];
+  this.tiles = this.tilesetBanks[which];
   this.renderer.tiles = this.tiles;
 }
 
@@ -413,19 +413,23 @@ Scene.prototype.usePalette = function(vals) {
   this.palette = new palette.PaletteCollection(all, saveService);
 }
 
-Scene.prototype.useTileset = function(img, sizeInfo) {
-  let saveService = this.saveService;
-  if (Array.isArray(img)) {
-    let imageList = img;
+Scene.prototype.useTileset = function(imgOrTileset, sizeInfo) {
+  if (imgOrTileset.constructor.name == 'Tileset') {
+    this.tiles = imgOrTileset;
+  } else if (Array.isArray(imgOrTileset)) {
+    // TODO: list of Tileset objects
+    let imageList = imgOrTileset;
     let allBanks = [];
     for (let i = 0; i < imageList.length; i++) {
-      let tileset = new tiles.TileSet(imageList[i], sizeInfo, saveService);
+      let tileset = new tiles.Tileset(imageList[i], sizeInfo);
       allBanks.push(tileset);
     }
-    this.tileSetBanks = allBanks;
+    this.tilesetBanks = allBanks;
     this.tiles = allBanks[0];
   } else {
-    this.tiles = new tiles.TileSet(img, sizeInfo, saveService);
+    // TODO: assume this is a Plane
+    let img = imgOrTileset;
+    this.tiles = new tiles.Tileset(img, sizeInfo);
   }
 }
 

@@ -147,6 +147,10 @@ PaletteCollection.prototype.find = function(cval) {
   return null;
 }
 
+PaletteCollection.prototype.lookup = function(v) {
+  return this.items[v].cval;
+}
+
 PaletteCollection.prototype.insertWhereAvail = function(rgbval) {
   for (let n = 0; n < this.items.length; n++) {
     let ent = this.items[n];
@@ -154,6 +158,17 @@ PaletteCollection.prototype.insertWhereAvail = function(rgbval) {
       ent.cval = 0;
       ent.isAvail = false;
       ent.drop = rgbval;
+      return n;
+    }
+  }
+  return null;
+}
+
+PaletteCollection.prototype.relocateColorTo = function(c, pieceNum, optSize) {
+  let cval = this.items[c].cval;
+  for (let n = 0; n < this.items.length; n++) {
+    if (c == n) { continue; }
+    if (this.items[n].cval == cval) {
       return n;
     }
   }

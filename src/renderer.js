@@ -6,6 +6,7 @@ function Renderer() {
   this.tiles = null;
   this.colorSet = null;
   this.palette = null;
+  this.attrs = null;
   this.interrupts = null;
   this.config = null;
   return this;
@@ -16,6 +17,7 @@ Renderer.prototype.clear = function() {
   this.tiles = null;
   this.colorSet = null;
   this.palette = null;
+  this.attrs = null;
   this.interrupts = null;
   this.config = null;
 }
@@ -24,6 +26,7 @@ Renderer.prototype.configure = function(owner) {
   this.tiles = owner.tiles;
   this.colorSet = owner.colorSet;
   this.palette = owner.palette;
+  this.attrs = owner.attrs;
   this.interrupts = owner.interrupts;
   this.config = owner._config;
 }
@@ -188,7 +191,13 @@ Renderer.prototype._renderRegion = function(left, top, right, bottom) {
         }
         let s = y*sourcePitch + x;
         let t = i*targetPitch + j*4;
-        let rgb = this._toColor(source[s]);
+        let rgb;
+        if (this.attrs) {
+          let c = this.attrs.realizeIndexedColor(source[s], x, y);
+          rgb = this._toColor(c);
+        } else {
+          rgb = this._toColor(source[s]);
+        }
         this.rgbBuffer[t+0] = rgb.r;
         this.rgbBuffer[t+1] = rgb.g;
         this.rgbBuffer[t+2] = rgb.b;

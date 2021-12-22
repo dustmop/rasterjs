@@ -53,7 +53,8 @@ Tileset.prototype.get = function(c) {
 Tileset.prototype._loadTilesFromSource = function(source) {
   this.numTileX = source.width / this.tileWidth;
   this.numTileY = source.height / this.tileHeight;
-  this.data = new Array(this.numTileX * this.numTileY);
+  this.numTiles = this.numTileX * this.numTileY
+  this.data = new Array(this.numTiles);
   // For each tile, load the data and create a tile object
   for (let yTile = 0; yTile < this.numTileY; yTile++) {
     for (let xTile = 0; xTile < this.numTileX; xTile++) {
@@ -74,6 +75,7 @@ Tileset.prototype._constructTiles = function(num) {
   let pitch = this.tileWidth;
   this.numTileX = num;
   this.numTileY = 1;
+  this.numTiles = num;
   this.data = new Array(num);
   // For each tile, construct an empty buffer
   for (let yTile = 0; yTile < this.numTileY; yTile++) {
@@ -85,6 +87,28 @@ Tileset.prototype._constructTiles = function(num) {
       t.pitch = pitch;
       t.data = new Uint8Array(this.tileHeight * pitch);
       this.data[k] = t;
+    }
+  }
+}
+
+Tileset.prototype.display = function() {
+  for (let yTile = 0; yTile < this.numTileY; yTile++) {
+    for (let xTile = 0; xTile < this.numTileX; xTile++) {
+      let k = yTile * this.numTileX + xTile;
+      let t = this.data[k];
+      process.stdout.write(`Tile ${k}:\n`);
+      for (let j = 0; j < this.tileHeight; j++) {
+        for (let i = 0; i < this.tileWidth; i++) {
+          let k = j*t.pitch + i;
+          let v = t.data[k].toString(16);
+          if (v.length < 2) {
+            v = '0' + v;
+          }
+          process.stdout.write(`${v} `);
+        }
+        process.stdout.write('\n');
+      }
+      process.stdout.write('\n');
     }
   }
 }
@@ -106,6 +130,21 @@ Tile.prototype.put = function(x, y, v) {
   let k = y * this.pitch + x;
   this.data[k] = v;
 }
+
+Tile.prototype.display = function() {
+  for (let j = 0; j < this.height; j++) {
+    for (let i = 0; i < this.width; i++) {
+      let k = j*this.pitch + i;
+      let v = this.data[k].toString(16);
+      if (v.length < 2) {
+        v = '0' + v;
+      }
+      process.stdout.write(`${v} `);
+    }
+    process.stdout.write('\n');
+  }
+}
+
 
 function isPlane(obj) {
   return obj.constructor.name == 'Plane' || obj.constructor.name == 'ImagePlane';

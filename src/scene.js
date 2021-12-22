@@ -11,6 +11,7 @@ const displayAscii = require('./display_ascii.js');
 const plane = require('./plane.js');
 const scene = require('./scene.js');
 const tiles = require('./tiles.js');
+const attributes = require('./attributes.js');
 const rgbColor = require('./rgb_color.js');
 
 ////////////////////////////////////////
@@ -30,6 +31,7 @@ function Scene(env) {
   this.font = null;
   this.palette = null;
   this.tiles = null;
+  this.attrs = null;
   this.interrupts = null;
 
   plane.setGlobalScene(this);
@@ -134,7 +136,9 @@ Scene.prototype.resetState = function() {
   this.renderer.clear();
   this.palette = null;
   this.tiles = null;
+  this.attrs = null;
   this.interrupts = null;
+  this.rgbBuffer = null;
   this._config = {};
   this._config.zoomScale = 1;
   this._config.usingNonPrimaryPlane = false;
@@ -430,6 +434,20 @@ Scene.prototype.useTileset = function(imgOrTileset, sizeInfo) {
     // TODO: assume this is a Plane
     let img = imgOrTileset;
     this.tiles = new tiles.Tileset(img, sizeInfo);
+  }
+  if (this.attrs) {
+    this.attrs.ensureConsistentTileset(this.tiles, this.palette);
+  }
+}
+
+Scene.prototype.useAttributes = function(pl, sizeInfo) {
+  if (!this.palette) {
+    throw new Error('cannot useAttributes without a palette');
+  }
+  // TODO: validate sizeInfo
+  this.attrs = new attributes.Attributes(pl, sizeInfo);
+  if (this.tiles) {
+    this.attrs.ensureConsistentTileset(this.tiles, this.palette);
   }
 }
 

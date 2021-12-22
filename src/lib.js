@@ -205,8 +205,12 @@ Raster.prototype.setScrollY = function(v) {
 
 ////////////////////////////////////////
 
-Raster.prototype.useTileset = function(img, sizeInfo) {
-  this.scene.useTileset(img, sizeInfo);
+Raster.prototype.useTileset = function(pl, sizeInfo) {
+  this.scene.useTileset(pl, sizeInfo);
+}
+
+Raster.prototype.useAttributes = function(pl, sizeInfo) {
+  this.scene.useAttributes(pl, sizeInfo);
 }
 
 Raster.prototype.usePlane = function(pl) {

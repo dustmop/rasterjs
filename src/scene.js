@@ -189,13 +189,7 @@ Scene.prototype.loadImage = function(filepath, opt) {
 }
 
 Scene.prototype.select = function(x, y, w, h) {
-  let make = this.aPlane.clone();
-  make.offsetLeft = x;
-  make.offsetTop = y;
-  make.width = w;
-  make.height = h;
-  make._addMethods(true);
-  return make;
+  return this.aPlane.select(x, y, w, h);
 }
 
 Scene.prototype._doRender = function(num, exitAfter, drawFunc, betweenFunc, finalFunc) {

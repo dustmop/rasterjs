@@ -216,5 +216,19 @@ Plane.prototype.putImage = function(img, baseX, baseY) {
   }
 }
 
+Plane.prototype.select = function(x, y, w, h) {
+  let spec = ['x:i', 'y:i', 'w:i', 'h:i'];
+  [x, y, w, h] = destructure.from('select', spec, arguments, null);
+
+  let make = this.clone();
+  make.offsetLeft = (this.offsetLeft || 0) + x;
+  make.offsetTop  = (this.offsetTop || 0) + y;
+  make.width  = w;
+  make.height = h;
+  make._addMethods(true);
+
+  return make;
+}
+
 module.exports.Plane = Plane;
 module.exports.setGlobalScene = setGlobalScene;

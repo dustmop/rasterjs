@@ -10,10 +10,11 @@ describe('Interrupts', function() {
     ra.drawImage(img);
 
     ra.useInterrupts([
-      {scanline: 0, irq: () => { ra.setScrollX(0) }},
-      {scanline: 2, irq: () => { ra.setScrollX(1) }},
-      {scanline: 5, irq: () => { ra.setScrollX(3) }},
-      {scanline: 6, irq: () => { ra.setScrollX(5) }},
+      {scanline:  0, irq: () => { ra.setScrollX(0) }},
+      {scanline:  2, irq: () => { ra.setScrollX(1) }},
+      {scanline:  5, irq: () => { ra.setScrollX(3) }},
+      {scanline:  6, irq: () => { ra.setScrollX(5) }},
+      {scanline: 45, irq: () => { ra.setScrollX(0) }},
     ]);
 
     util.saveTmpCompareTo(ra, 'test/testdata/irq-fruit.png');

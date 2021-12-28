@@ -85,7 +85,7 @@ Renderer.prototype.render = function() {
   for (let k = 0; k < this.interrupts.length + 1; k++) {
     let scanLine;
     if (k < this.interrupts.length) {
-      scanLine = this.interrupts[k].scanline;
+      scanLine = Math.min(this.interrupts[k].scanline, height);
     } else {
       scanLine = height;
     }

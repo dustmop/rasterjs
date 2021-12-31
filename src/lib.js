@@ -249,7 +249,7 @@ Raster.prototype.show = function(drawFunc, finalFunc) {
 }
 
 Raster.prototype.save = function(savepath) {
-  var runner = this.scene
+  var runner = this.scene;
   runner.then(function() {
     runner.save(savepath);
   });

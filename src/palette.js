@@ -106,7 +106,7 @@ PaletteCollection.prototype._saveTo = function(target, savepath) {
   }
 
   // Render it and save
-  let rend = new renderer.Renderer(colorSet);
+  let rend = new renderer.Renderer();
   rend.plane = target;
   rend.configure(target.scene);
   let [width, height] = rend.size();

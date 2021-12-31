@@ -1,13 +1,6 @@
 * attributes
   * NES / C64 / zx-spectrum style color restrictions
   * IN PROGRESS
-* interrupts
-  * allow function to run at a given scanline to modify state
-  * needs the `renderer` to be refactored first
-  * examples: scroll, palette, tileset
-* tileset swapping
-  * allow multiple tilesets
-  * can cheaply switch the tileset for background animation
 * raspberry pi backend
   * output using dispmanx instead of SDL
   * IN PROGRESS
@@ -37,10 +30,10 @@
   * water level using palette change irq
   * Mother style animated backgrounds
 * sprites
-  * memory-mapped sprites
   * per-scanline limits like on NES and Mega Drive
   * flip bits
   * priority to render behind the primary plane
+  * IN PROGRESS
 * typescript
   * support for top-level APIs
   * may be hard due to flexible parameter passing?

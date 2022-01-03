@@ -1,4 +1,37 @@
 function Attributes(source, sizeInfo) {
+  if (!sizeInfo) {
+    throw new Error(`Attributes requires a detail object parameter`);
+  }
+  if (!sizeInfo.block_width) {
+    throw new Error(`invalid Attributes detail: missing block_width`);
+  }
+  if (!sizeInfo.block_height) {
+    throw new Error(`invalid Attributes detail: missing block_height`);
+  }
+  if (!sizeInfo.option_size) {
+    throw new Error(`invalid Attributes detail: missing option_size`);
+  }
+  if (!Math.trunc(sizeInfo.block_width) != 0) {
+    throw new Error(`Attributes's block_width must be integer`);
+  }
+  if (!Math.trunc(sizeInfo.block_height) != 0) {
+    throw new Error(`Attributes's block_height must be integer`);
+  }
+  if (!Math.trunc(sizeInfo.option_size) != 0) {
+    throw new Error(`Attributes's option_size must be integer`);
+  }
+  if (sizeInfo.block_width <= 0) {
+    throw new Error(`Attributes's block_width must be > 0`);
+  }
+  if (sizeInfo.block_height <= 0) {
+    throw new Error(`Attributes's block_height must be > 0`);
+  }
+  if (sizeInfo.option_size <= 0) {
+    throw new Error(`Attributes's option_size must be > 0`);
+  }
+  if (!source.data) {
+    throw new Error(`invalid source, data is null`);
+  }
   this.source = source;
   this.sizeInfo = sizeInfo;
   return this;

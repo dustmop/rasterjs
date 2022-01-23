@@ -8,6 +8,7 @@ const os = require('os');
 const path = require('path');
 const util = require('util');
 const randstr = require('randomstring');
+const algorithm = require('./algorithm');
 
 function SaveRenderer(targetPath, numFrames, saveService) {
   this.targetPath = targetPath;
@@ -28,12 +29,12 @@ SaveRenderer.prototype.setSize = function(w, h) {
 
 SaveRenderer.prototype.setSource = function(renderer, zoomLevel) {
   this.renderer = renderer;
+  this.zoomLevel = zoomLevel;
 }
 
 SaveRenderer.prototype.renderLoop = function(nextFrame) {
   let width = this.width;
   let height = this.height;
-  // TODO: Saving a gif using a tileset does not work.
 
   try {
     fs.mkdirSync(this.tmpdir);
@@ -70,6 +71,11 @@ SaveRenderer.prototype.renderLoop = function(nextFrame) {
     let [width, height] = this.renderer.size();
     let buff = this.renderer.render();
     let pitch = pl.width*4;
+    if (this.zoomLevel > 1) {
+      buff = algorithm.nearestNeighbor(buff, width, height, this.zoomLevel);
+      width = width * this.zoomLevel;
+      height = height * this.zoomLevel;
+    }
     if (buff.pitch) {
       pitch = buff.pitch;
     }

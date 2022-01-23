@@ -1,7 +1,6 @@
 const ra = require('../../../src/lib.js');
 
 ra.setSize({w: 20, h: 20});
-ra.setZoom(8);
 ra.originAtCenter();
 
 ra.run(function() {

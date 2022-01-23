@@ -153,6 +153,46 @@ function flood(mem, initX, initY, color) {
   }
 }
 
+function nearestNeighbor(buff, width, height, zoomLevel) {
+  let numPoints = width * height * zoomLevel * zoomLevel;
+  let pitch = width*4;
+  let make = new Uint8Array(numPoints*4);
+  make.pitch = pitch*zoomLevel;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      let rgb = readRGBColor(buff, x, y);
+      for (let i = 0; i < zoomLevel; i++) {
+        for (let j = 0; j < zoomLevel; j++) {
+          writeRGBColor(make, x*zoomLevel+j, y*zoomLevel+i, rgb);
+        }
+      }
+    }
+  }
+  return make;
+}
+
+
+function readRGBColor(buff, x, y) {
+  let k = y*buff.pitch + x*4;
+  let r = buff[k+0];
+  let g = buff[k+1];
+  let b = buff[k+2];
+  return r * 0x10000 + g * 0x100 + b;
+}
+
+
+function writeRGBColor(buff, x, y, rgb) {
+  let r = Math.floor(rgb / 0x10000) % 0x100;
+  let g = Math.floor(rgb / 0x100)   % 0x100;
+  let b = Math.floor(rgb / 0x1)     % 0x100;
+  let k = y*buff.pitch + x*4;
+  buff[k+0] = r;
+  buff[k+1] = g;
+  buff[k+2] = b;
+  buff[k+3] = 0xff;
+}
+
+
 function renderLine(plane, x0, y0, x1, y1, connectCorners) {
   if (!isInt(x0) || !isInt(y0) || !isInt(x1) || !isInt(y1)) {
     return renderLineFloat(plane, x0, y0, x1, y1);
@@ -625,3 +665,4 @@ module.exports.midpointCircleRasterize = midpointCircleRasterize;
 module.exports.sortByHSV = sortByHSV;
 module.exports.isHalfwayValue = isHalfwayValue;
 module.exports.flood = flood;
+module.exports.nearestNeighbor = nearestNeighbor;

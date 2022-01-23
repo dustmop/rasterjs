@@ -67,4 +67,20 @@ describe('Gif', function() {
     });
   });
 
+  // If a colorSet exists, image uses it to convert rgb to 8-bit.
+  it('save with zoom', function() {
+    let tmpdir = util.mkTmpDir();
+    let tmpout = tmpdir + '/actual.png';
+    let script = 'test/testdata/scripts/zoom_fruit.js';
+    let cmd = `node ${script} --save ${tmpout}`;
+    let cwd = process.cwd();
+    child_process.exec(cmd, function(error, stdout, stderr) {
+      if (error) {
+        throw error;
+      }
+      let goldenPath = 'test/testdata/big-fruit.png';
+      util.ensureFilesMatch(goldenPath, tmpout);
+    });
+  });
+
 });

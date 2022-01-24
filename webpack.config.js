@@ -11,12 +11,5 @@ module.exports = {
   mode: 'production',
   optimization: {
     minimizer: [new UglifyJsPlugin()],
-  },
-  plugins: [
-    new webpack.DefinePlugin({
-      "process.env": {
-        WEBPACK_COMPILE_FOR_BROWSER: JSON.stringify(true)
-      }
-    })
-  ]
+  }
 };

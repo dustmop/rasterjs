@@ -289,22 +289,23 @@ Raster.prototype.on = function(eventName, callback) {
 // Export
 
 var env = null;
-if (typeof window === 'undefined') {
+if (typeof window === 'undefined' && typeof process !== 'undefined') {
   // Node.js
-  if (!process.env.WEBPACK_COMPILE_FOR_BROWSER) {
-    env = require('./node_env.js');
-  }
-} else if (process.env.WEBPACK_COMPILE_FOR_BROWSER) {
-  // Web browser
+  env = require('./node_env.js');
+} else {
+  // Webpack or browserify
   env = require('./web_env.js');
 }
 
 var singleton = new Raster(env);
-if (typeof window === 'undefined') {
-  // Node.js
+
+if (typeof module !== 'undefined') {
+  // Node.js or browserify
   module.exports = singleton;
-} else {
-  // Web browser
+}
+
+if (typeof window !== 'undefined') {
+  // Webpack
   window['require'] = function(moduleName) {
     if (moduleName === 'raster') {
       return singleton;

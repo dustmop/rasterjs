@@ -8,12 +8,5 @@ module.exports = {
     filename: 'raster.dev.js',
     path: path.resolve(__dirname, 'dist'),
   },
-  mode: 'development',
-  plugins: [
-    new webpack.DefinePlugin({
-      "process.env": {
-        WEBPACK_COMPILE_FOR_BROWSER: JSON.stringify(true)
-      }
-    })
-  ]
+  mode: 'development'
 };

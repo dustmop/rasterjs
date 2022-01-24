@@ -17,9 +17,17 @@ Display.prototype.setSize = function(width, height) {
   this.displayHeight = height;
 }
 
-Display.prototype.setSource = function(renderer, zoomLevel) {
+Display.prototype.setSource = function(renderer, _zoomLevel) {
   this.renderer = renderer;
+  // NOTE: zoomLevel is ignored
+  this._hasDocumentBody = false;
+  let self = this;
+  window.addEventListener('DOMContentLoaded', function() {
+    self._hasDocumentBody = true;
+  });
+}
 
+Display.prototype._create2dCanvas = function() {
   var canvasElems = document.getElementsByTagName('canvas');
   if (canvasElems.length >= 1) {
     this.canvas = canvasElems[0];
@@ -34,7 +42,6 @@ Display.prototype.setSource = function(renderer, zoomLevel) {
     }
   }
 
-  // NOTE: zoomLevel is ignored
   var elemWidth = this.displayWidth;
   var elemHeight = this.displayHeight;
 
@@ -51,11 +58,11 @@ Display.prototype.setSource = function(renderer, zoomLevel) {
   document.body.appendChild(style);
 }
 
-Display.prototype.waitForImageLoads = function(cb) {
+Display.prototype.waitForContentLoad = function(cb) {
   let self = this;
   setTimeout(function() {
-    if (self.numToLoad > self.numLoadDone) {
-      self.waitForImageLoads(cb);
+    if (self.numToLoad > self.numLoadDone || !self._hasDocumentBody) {
+      self.waitForContentLoad(cb);
       return;
     }
     cb();
@@ -63,6 +70,14 @@ Display.prototype.waitForImageLoads = function(cb) {
 }
 
 Display.prototype.renderLoop = function(nextFrame, num, exitAfter, finalFunc) {
+  let self = this;
+  this.waitForContentLoad(function() {
+    self._create2dCanvas();
+    self._beginLoop(nextFrame, num, exitAfter, finalFunc);
+  });
+}
+
+Display.prototype._beginLoop = function(nextFrame, num, exitAfter, finalFunc) {
   let frontBuffer = null;
   let ctx = this.canvas.getContext('2d');
   ctx.imageSmoothingEnabled = false;
@@ -95,9 +110,8 @@ Display.prototype.renderLoop = function(nextFrame, num, exitAfter, finalFunc) {
     // Wait for next frame.
     requestAnimationFrame(renderIt);
   };
-  this.waitForImageLoads(function() {
-    requestAnimationFrame(renderIt);
-  });
+
+  renderIt();
 }
 
 module.exports.Display = Display;

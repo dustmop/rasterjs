@@ -21,6 +21,16 @@ Display.prototype.setSize = function(width, height) {
 }
 
 Display.prototype.setSource = function(renderer, zoomLevel) {
+  this.renderer = renderer;
+  this.zoomLevel = zoomLevel;
+  this._hasDocumentBody = false;
+  let self = this;
+  window.addEventListener('DOMContentLoaded', function() {
+    self._hasDocumentBody = true;
+  });
+}
+
+Display.prototype._createWebglCanvas = function() {
   var canvasElems = document.getElementsByTagName('canvas');
   if (canvasElems.length >= 1) {
     this.canvas = canvasElems[0];
@@ -40,10 +50,9 @@ Display.prototype.setSource = function(renderer, zoomLevel) {
     return;
   }
 
-  this.renderer = renderer;
-  var plane = renderer.plane;
-  var elemWidth = this.displayWidth * zoomLevel;
-  var elemHeight = this.displayHeight * zoomLevel;
+  var plane = this.renderer.plane;
+  var elemWidth = this.displayWidth * this.zoomLevel;
+  var elemHeight = this.displayHeight * this.zoomLevel;
 
   // Canvas's coordinate system.
   this.canvas.width = elemWidth * SHARPEN;
@@ -179,11 +188,11 @@ Display.prototype.getImagePixels = function(id) {
   return asset.pixels;
 }
 
-Display.prototype.waitForImageLoads = function(cb) {
+Display.prototype.waitForContentLoad = function(cb) {
   let self = this;
   setTimeout(function() {
-    if (self.numToLoad > self.numLoadDone) {
-      self.waitForImageLoads(cb);
+    if (self.numToLoad > self.numLoadDone || !self._hasDocumentBody) {
+      self.waitForContentLoad(cb);
       return;
     }
     cb();
@@ -191,6 +200,14 @@ Display.prototype.waitForImageLoads = function(cb) {
 }
 
 Display.prototype.renderLoop = function(nextFrame, num, exitAfter, finalFunc) {
+  let self = this;
+  this.waitForContentLoad(function() {
+    self._createWebglCanvas();
+    self._beginLoop(nextFrame, num, exitAfter, finalFunc);
+  });
+}
+
+Display.prototype._beginLoop = function(nextFrame, num, exitAfter, finalFunc) {
   let pl = this.renderer.plane;
   let gl = this.gl;
   let frontBuffer = null;
@@ -226,9 +243,8 @@ Display.prototype.renderLoop = function(nextFrame, num, exitAfter, finalFunc) {
     // Wait for next frame.
     requestAnimationFrame(renderIt);
   };
-  this.waitForImageLoads(function() {
-    requestAnimationFrame(renderIt);
-  });
+
+  renderIt();
 }
 
 module.exports.Display = Display;

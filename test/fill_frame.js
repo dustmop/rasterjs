@@ -9,7 +9,7 @@ describe('Fill', function() {
     ra.fillFrame(function(mem, x, y) {
       return x + y;
     });
-    util.saveTmpCompareTo(ra, 'test/testdata/fill_basic.png');
+    util.renderCompareTo(ra, 'test/testdata/fill_basic.png');
   });
 
   it('using oscil', function() {
@@ -21,7 +21,7 @@ describe('Fill', function() {
         return 0x22;
       }
     });
-    util.saveTmpCompareTo(ra, 'test/testdata/fill_oscil.png');
+    util.renderCompareTo(ra, 'test/testdata/fill_oscil.png');
   });
 
   it('twice, keep contents', function() {
@@ -39,7 +39,7 @@ describe('Fill', function() {
         return 0x22;
       }
     });
-    util.saveTmpCompareTo(ra, 'test/testdata/fill_keep.png');
+    util.renderCompareTo(ra, 'test/testdata/fill_keep.png');
   });
 
   it ('twice, clear contents', function() {
@@ -59,7 +59,7 @@ describe('Fill', function() {
         return 0x22;
       }
     });
-    util.saveTmpCompareTo(ra, 'test/testdata/fill_clear.png');
+    util.renderCompareTo(ra, 'test/testdata/fill_clear.png');
   });
 
   it ('drawDot to initialize', function() {
@@ -72,7 +72,7 @@ describe('Fill', function() {
     ra.fillFrame(function(mem, x, y) {
       return 1 + mem.get(x, (y + 7) % 8);
     });
-    util.saveTmpCompareTo(ra, 'test/testdata/fill_draw_dot.png');
+    util.renderCompareTo(ra, 'test/testdata/fill_draw_dot.png');
   });
 
   it ('drawLine to initialize', function() {
@@ -84,7 +84,7 @@ describe('Fill', function() {
       return 1 + mem.get(x, (y + 7) % 8);
     });
     // TODO: Test is broken
-    util.saveTmpCompareTo(ra, 'test/testdata/fill_draw_line.png');
+    util.renderCompareTo(ra, 'test/testdata/fill_draw_line.png');
   });
 
   it ('function(mem) with for loops', function() {
@@ -98,7 +98,7 @@ describe('Fill', function() {
         }
       }
     });
-    util.saveTmpCompareTo(ra, 'test/testdata/fill_for_loop.png');
+    util.renderCompareTo(ra, 'test/testdata/fill_for_loop.png');
   });
 
   it('from previous memory', function() {
@@ -133,7 +133,7 @@ describe('Fill', function() {
       mem.put(1, 3, avg);
     });
 
-    util.saveTmpCompareTo(ra, 'test/testdata/fill_prev.png');
+    util.renderCompareTo(ra, 'test/testdata/fill_prev.png');
 
     assert.equal(oldA, 0x30);
     assert.equal(newA, 0);

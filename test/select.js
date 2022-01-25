@@ -19,7 +19,7 @@ describe('Select', function() {
     sel.setColor(24);
     sel.drawDot(1, 1);
 
-    util.saveTmpCompareTo(ra, 'test/testdata/selection.png');
+    util.renderCompareTo(ra, 'test/testdata/selection.png');
   });
 
   it('uses destructure for methods', function() {
@@ -39,7 +39,7 @@ describe('Select', function() {
     sel.setColor(24);
     sel.drawDot(1, 1);
 
-    util.saveTmpCompareTo(ra, 'test/testdata/selection.png');
+    util.renderCompareTo(ra, 'test/testdata/selection.png');
   });
 
   it('can be called on selections', function() {
@@ -69,7 +69,7 @@ describe('Select', function() {
     right.setColor(45); // blue
     right.fillRect(0, 0, 100, 100);
 
-    util.saveTmpCompareTo(ra, 'test/testdata/select_on_select.png');
+    util.renderCompareTo(ra, 'test/testdata/select_on_select.png');
   });
 
 });

@@ -25,7 +25,7 @@ describe('Cycle palette', function() {
     palette[8].setColor(11);
     palette[14].setColor(10);
 
-    util.saveTmpCompareTo(ra, 'test/testdata/green-fruit.png');
+    util.renderCompareTo(ra, 'test/testdata/green-fruit.png');
 
     let expect = new Uint8Array([
       0, 0, 0, 0, 4, 0, 0, 0,
@@ -87,7 +87,7 @@ describe('Cycle palette', function() {
     let img = ra.loadImage('test/testdata/small-fruit.png');
     ra.drawImage(img);
 
-    util.saveTmpCompareTo(ra, 'test/testdata/rotten-fruit.png');
+    util.renderCompareTo(ra, 'test/testdata/rotten-fruit.png');
 
     let expect = new Uint8Array([
       1, 1, 1, 1, 2, 1, 1, 1,

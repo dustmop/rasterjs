@@ -55,7 +55,7 @@ describe('HSV sort', function() {
       assert.equal(expect, actual);
 
       // Compare the rendered image
-      util.saveTmpCompareTo(ra, 'test/testdata/dark_sphere_with_bg.png');
+      util.renderCompareTo(ra, 'test/testdata/dark_sphere_with_bg.png');
     });
 
   });
@@ -112,7 +112,7 @@ describe('HSV sort', function() {
       assert.equal(expect, actual);
 
       // Compare the rendered image
-      util.saveTmpCompareTo(ra, 'test/testdata/dark_sphere_with_bg.png');
+      util.renderCompareTo(ra, 'test/testdata/dark_sphere_with_bg.png');
     });
 
   });
@@ -169,7 +169,7 @@ describe('HSV sort', function() {
       assert.equal(expect, actual);
 
       // Compare the rendered image
-      util.saveTmpCompareTo(ra, 'test/testdata/dark_sphere_with_bg.png');
+      util.renderCompareTo(ra, 'test/testdata/dark_sphere_with_bg.png');
     });
 
   });
@@ -207,14 +207,14 @@ describe('HSV sort', function() {
         let p = pal[i + skip];
         pal[i + skip].setColor(numBaseColors + (cycle + i) % numCycleColors);
       }
-      util.saveTmpCompareTo(ra, 'test/testdata/cycle_color_sphere0.png');
+      util.renderCompareTo(ra, 'test/testdata/cycle_color_sphere0.png');
 
       cycle = 3;
       for (let i = 0; i < numBaseColors - skip; i++) {
         let p = pal[i + skip];
         pal[i + skip].setColor(numBaseColors + (cycle + i) % numCycleColors);
       }
-      util.saveTmpCompareTo(ra, 'test/testdata/cycle_color_sphere1.png');
+      util.renderCompareTo(ra, 'test/testdata/cycle_color_sphere1.png');
 
       let actual = pal.toString();
       let expect = 'PaletteCollection{0:[0]=0x40c060, 1:[10]=0xffc000, 2:[11]=0xffff00, 3:[12]=0xffff80, 4:[7]=0xff0000, 5:[8]=0xff4000, 6:[9]=0xff8000, 7:[11]=0xffff00, 8:[3]=0x231418, 9:[4]=0x2e1d23, 10:[2]=0x34292e, 11:[6]=0x493b43, 12:[5]=0x5b4951}';

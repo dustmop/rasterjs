@@ -26,6 +26,6 @@ describe('Simple', function() {
     ra.setColor(0x22);
     ra.drawLine(1, 12, 12, 14, true);
 
-    util.saveTmpCompareTo(ra, 'test/testdata/simple.png');
+    util.renderCompareTo(ra, 'test/testdata/simple.png');
   });
 });

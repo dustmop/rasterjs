@@ -38,7 +38,7 @@ describe('Circle', function() {
     ra.fillCircle({x: -4, y: 16, r: 3});
     ra.fillCircle({x: 12, y: 22, r: 3});
 
-    util.saveTmpCompareTo(ra, 'test/testdata/circle.png');
+    util.renderCompareTo(ra, 'test/testdata/circle.png');
   });
 
   it('circle small sizes', function() {
@@ -118,6 +118,6 @@ describe('Circle', function() {
     ra.setColor(0x30);
     ra.fillCircle({x: 24, y: 89, r: 9});
 
-    util.saveTmpCompareTo(ra, 'test/testdata/circle_sizes.png');
+    util.renderCompareTo(ra, 'test/testdata/circle_sizes.png');
   });
 });

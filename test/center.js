@@ -27,6 +27,6 @@ describe('Center', function() {
     ra.fillRect({x: -1, y: 16, w: 9, h: 5});
     ra.drawRect({x: 11, y: 16, w: 9, h: 5});
 
-    util.saveTmpCompareTo(ra, 'test/testdata/draw_all.png');
+    util.renderCompareTo(ra, 'test/testdata/draw_all.png');
   });
 });

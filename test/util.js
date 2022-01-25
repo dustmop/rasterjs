@@ -22,7 +22,7 @@ function compareFiles(left, right) {
   return true;
 }
 
-function saveTmpCompareTo(client, goldenPath) {
+function renderCompareTo(client, goldenPath) {
   let tmpdir = mkTmpDir();
   let tmpout = tmpdir + '/actual.png';
   client.save(tmpout);
@@ -58,6 +58,6 @@ function skipTest() {
 
 module.exports.mkTmpDir = mkTmpDir;
 module.exports.compareFiles = compareFiles;
-module.exports.saveTmpCompareTo = saveTmpCompareTo;
+module.exports.renderCompareTo = renderCompareTo;
 module.exports.ensureFilesMatch = ensureFilesMatch;
 module.exports.skipTest = skipTest;

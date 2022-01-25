@@ -18,7 +18,7 @@ describe('Tileset', function() {
                        [5, 5, 1, 0],
                        [6, 4, 2, 2]]);
 
-    util.saveTmpCompareTo(ra, 'test/testdata/map_of_tiles.png');
+    util.renderCompareTo(ra, 'test/testdata/map_of_tiles.png');
   });
 
   it('draw tiles', function() {
@@ -51,12 +51,12 @@ describe('Tileset', function() {
                        [ 0, 0, 0, 0],
                       ]);
 
-    util.saveTmpCompareTo(ra, 'test/testdata/drawn_tiles.png');
+    util.renderCompareTo(ra, 'test/testdata/drawn_tiles.png');
 
     tiles.drawDot(2, 0);
     tiles.drawDot(0, 2);
     tiles.drawDot(2, 2);
-    util.saveTmpCompareTo(ra, 'test/testdata/modify_tiles.png');
+    util.renderCompareTo(ra, 'test/testdata/modify_tiles.png');
   });
 
   it('draw using tileset', function() {
@@ -92,13 +92,13 @@ describe('Tileset', function() {
                        [ 0, 0, 0, 0],
                       ]);
 
-    util.saveTmpCompareTo(ra, 'test/testdata/drawn_tiles.png');
+    util.renderCompareTo(ra, 'test/testdata/drawn_tiles.png');
 
     t = tileset.get(0);
     t.put(2, 0, 34);
     t.put(0, 2, 34);
     t.put(2, 2, 34);
-    util.saveTmpCompareTo(ra, 'test/testdata/modify_tiles.png');
+    util.renderCompareTo(ra, 'test/testdata/modify_tiles.png');
   });
 
 
@@ -137,7 +137,7 @@ describe('Tileset', function() {
                        [ 2, 2, 0, 0],
                       ]);
 
-    util.saveTmpCompareTo(ra, 'test/testdata/palette_tiles.png');
+    util.renderCompareTo(ra, 'test/testdata/palette_tiles.png');
   });
 
   it('missing dimension', function() {
@@ -225,7 +225,7 @@ describe('Tileset', function() {
                    [5, 5, 1, 0],
                    [6, 4, 2, 2]]);
 
-    util.saveTmpCompareTo(ra, 'test/testdata/map_of_tiles.png');
+    util.renderCompareTo(ra, 'test/testdata/map_of_tiles.png');
   });
 
   it('tiles then change attributes', function() {
@@ -276,7 +276,7 @@ describe('Tileset', function() {
     attrs.put(2, 2, 2);
     attrs.put(2, 3, 1);
 
-    util.saveTmpCompareTo(ra, 'test/testdata/attr_change.png');
+    util.renderCompareTo(ra, 'test/testdata/attr_change.png');
   });
 
 });

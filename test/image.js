@@ -20,7 +20,7 @@ describe('Image', function() {
     let obj = sheet.copy(2, 2, 10, 10);
     ra.drawImage(obj, 11, 11);
 
-    util.saveTmpCompareTo(ra, 'test/testdata/composite.png');
+    util.renderCompareTo(ra, 'test/testdata/composite.png');
   });
 
 
@@ -31,7 +31,7 @@ describe('Image', function() {
     let img = ra.loadImage('test/testdata/fill_oscil.png');
     ra.drawImage(img);
 
-    util.saveTmpCompareTo(ra, 'test/testdata/fill_oscil.png');
+    util.renderCompareTo(ra, 'test/testdata/fill_oscil.png');
   });
 
 
@@ -43,7 +43,7 @@ describe('Image', function() {
     let img = ra.loadImage('test/testdata/small-fruit.png');
     ra.drawImage(img);
 
-    util.saveTmpCompareTo(ra, 'test/testdata/small-fruit.png');
+    util.renderCompareTo(ra, 'test/testdata/small-fruit.png');
 
     // 8-bit data array is using pico8 values
     let expect = new Uint8Array([
@@ -68,7 +68,7 @@ describe('Image', function() {
     let img = ra.loadImage('test/testdata/small-fruit.png');
     ra.drawImage(img);
 
-    util.saveTmpCompareTo(ra, 'test/testdata/small-fruit.png');
+    util.renderCompareTo(ra, 'test/testdata/small-fruit.png');
 
     let expect = new Uint8Array([
       0, 0, 0, 0, 1, 0, 0, 0,

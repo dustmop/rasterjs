@@ -51,7 +51,7 @@ describe('Polygon', function() {
     ra.fillPolygon(polygon, 16, 20);
     ra.drawPolygon(polygon, 24, 20);
 
-    util.saveTmpCompareTo(ra, 'test/testdata/polygon.png');
+    util.renderCompareTo(ra, 'test/testdata/polygon.png');
   });
 
   it('draw floats', function() {
@@ -93,6 +93,6 @@ describe('Polygon', function() {
     ra.drawPolygon(points);
     ra.fillPolygon(points, 0, 20);
 
-    util.saveTmpCompareTo(ra, 'test/testdata/polygon_float.png');
+    util.renderCompareTo(ra, 'test/testdata/polygon_float.png');
   });
 });

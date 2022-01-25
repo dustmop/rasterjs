@@ -13,7 +13,7 @@ describe('Use plane', function() {
     plane.setColor(28);
     plane.fillSquare(3, 5, 7);
 
-    util.saveTmpCompareTo(ra, 'test/testdata/green_square.png');
+    util.renderCompareTo(ra, 'test/testdata/green_square.png');
   });
 
   it('set scroll', function() {
@@ -30,7 +30,7 @@ describe('Use plane', function() {
     ra.setScrollX(4);
     ra.setScrollY(2);
 
-    util.saveTmpCompareTo(ra, 'test/testdata/scroll_square.png');
+    util.renderCompareTo(ra, 'test/testdata/scroll_square.png');
   });
 
   it('scroll same plane', function() {
@@ -43,7 +43,7 @@ describe('Use plane', function() {
     ra.setScrollX(4);
     ra.setScrollY(2);
 
-    util.saveTmpCompareTo(ra, 'test/testdata/scroll_simple.png');
+    util.renderCompareTo(ra, 'test/testdata/scroll_simple.png');
   });
 
   it('methods can destructure', function() {
@@ -56,7 +56,7 @@ describe('Use plane', function() {
     plane.setColor(28);
     plane.fillSquare({x: 3, y: 5, size: 7});
 
-    util.saveTmpCompareTo(ra, 'test/testdata/green_square.png');
+    util.renderCompareTo(ra, 'test/testdata/green_square.png');
   });
 
   it('ra loses methods', function() {

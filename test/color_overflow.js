@@ -20,6 +20,6 @@ describe('Color overflow', function() {
     ra.setTrueColor(2);
     ra.drawDot(2, 0);
 
-    util.saveTmpCompareTo(ra, 'test/testdata/color_overflow.png');
+    util.renderCompareTo(ra, 'test/testdata/color_overflow.png');
   });
 });

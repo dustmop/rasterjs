@@ -38,6 +38,6 @@ describe('Polygon Rotation', function() {
       assert(Math.abs(centers[i][1] - 5.5) < 0.00001);
     }
 
-    util.saveTmpCompareTo(ra, 'test/testdata/polygon_rotate.png');
+    util.renderCompareTo(ra, 'test/testdata/polygon_rotate.png');
   });
 });

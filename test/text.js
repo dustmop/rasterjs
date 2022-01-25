@@ -7,6 +7,6 @@ describe('Text', function() {
     ra.setSize({w: 24, h: 12});
     ra.setFont('test/testdata/romulus.yaff');
     ra.drawText('abc', 1, 2);
-    util.saveTmpCompareTo(ra, 'test/testdata/abc.png');
+    util.renderCompareTo(ra, 'test/testdata/abc.png');
   });
 });

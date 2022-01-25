@@ -75,7 +75,7 @@ describe('Rect and square', function() {
     ra.drawSquare({x: 40, y:  4, size: 4});
     ra.drawSquare({x:  4, y: 12, size: 4});
 
-    util.saveTmpCompareTo(ra, 'test/testdata/rect_square.png');
+    util.renderCompareTo(ra, 'test/testdata/rect_square.png');
   });
 
   it('alternate params', function() {
@@ -117,6 +117,6 @@ describe('Rect and square', function() {
       ra.drawLine( 0,  a,  0,  b);
     }
 
-    util.saveTmpCompareTo(ra, 'test/testdata/rect_square.png');
+    util.renderCompareTo(ra, 'test/testdata/rect_square.png');
   });
 });

@@ -20,7 +20,7 @@ describe('True Color', function() {
     ra.setTrueColor(0x44aa66);
     ra.fillSquare({x:4, y: 5, size: 3});
 
-    util.saveTmpCompareTo(ra, 'test/testdata/true_color.png');
+    util.renderCompareTo(ra, 'test/testdata/true_color.png');
 
     let pal = ra.getPaletteAll();
     assert.equal(pal.length, 68);

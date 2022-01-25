@@ -32,7 +32,7 @@ describe('Line', function() {
     ra.setColor(0x26);
     ra.drawLine(9, 12, 9, 15);
 
-    util.saveTmpCompareTo(ra, 'test/testdata/line.png');
+    util.renderCompareTo(ra, 'test/testdata/line.png');
   });
 
   it('draw float', function() {
@@ -77,6 +77,6 @@ describe('Line', function() {
     ra.setColor(0x5);
     ra.drawLine(7.0, 12.5, 9.5, 15.0);
 
-    util.saveTmpCompareTo(ra, 'test/testdata/line_float.png');
+    util.renderCompareTo(ra, 'test/testdata/line_float.png');
   });
 });

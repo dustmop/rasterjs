@@ -18,7 +18,7 @@ describe('Palette entry', function() {
     let entry = ra.getPaletteEntry(8, 4);
     entry.setColor(0x13);
 
-    util.saveTmpCompareTo(ra, 'test/testdata/pal_set.png');
+    util.renderCompareTo(ra, 'test/testdata/pal_set.png');
   });
 
   it('default palette', function() {
@@ -38,7 +38,7 @@ describe('Palette entry', function() {
     }
 
     assert.deepEqual(result, rgb_map.rgb_map_quick);
-    util.saveTmpCompareTo(ra, 'test/testdata/pal_quick.png');
+    util.renderCompareTo(ra, 'test/testdata/pal_quick.png');
   });
 
   it('palette save', function() {

@@ -11,7 +11,7 @@ describe('Flood', function() {
     ra.drawImage(img, 0, 0);
     ra.setColor(37);
     ra.fillFlood({x: 5, y: 7});
-    util.saveTmpCompareTo(ra, 'test/testdata/maze_filled.png');
+    util.renderCompareTo(ra, 'test/testdata/maze_filled.png');
   });
 
   it('odd shape', function() {
@@ -21,6 +21,6 @@ describe('Flood', function() {
     ra.drawImage(img, 0, 0);
     ra.setColor(33);
     ra.fillFlood({x: 8, y: 8});
-    util.saveTmpCompareTo(ra, 'test/testdata/odd_filled.png');
+    util.renderCompareTo(ra, 'test/testdata/odd_filled.png');
   });
 });

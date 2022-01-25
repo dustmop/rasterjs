@@ -16,6 +16,6 @@ describe('Size', function() {
     ra.drawDot(7, 6);
     ra.drawDot(7, 7);
 
-    util.saveTmpCompareTo(ra, 'test/testdata/fill_clear.png');
+    util.renderCompareTo(ra, 'test/testdata/fill_clear.png');
   });
 });

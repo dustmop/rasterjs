@@ -17,7 +17,7 @@ describe('Interrupts', function() {
       {scanline: 45, irq: () => { ra.setScrollX(0) }},
     ]);
 
-    util.saveTmpCompareTo(ra, 'test/testdata/irq-fruit.png');
+    util.renderCompareTo(ra, 'test/testdata/irq-fruit.png');
   });
 
 });

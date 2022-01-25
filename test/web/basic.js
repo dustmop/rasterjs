@@ -37,4 +37,12 @@ describe('basic', function () {
     util.renderCompareTo(ra, 'img/overflow.png', success);
   });
 
+  it('fill color orange', function(success) {
+    let require = window['require'];
+    let ra = require('raster');
+    ra.resetState();
+    ra.setSize(8, 8);
+    ra.fillBackground(25);
+    ra.show(null, ensureImageMatch('img/solid-orange.png', success));
+  });
 });

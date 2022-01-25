@@ -194,6 +194,7 @@ Scene.prototype.select = function(x, y, w, h) {
 
 Scene.prototype._doRender = function(num, exitAfter, drawFunc, betweenFunc, finalFunc) {
   let plane = this.aPlane;
+  plane._prepare();
   this.renderer.plane = plane;
   this.renderer.configure(this);
   let self = this;

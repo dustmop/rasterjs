@@ -12,4 +12,19 @@ describe('Basic', function() {
       util.renderCompareTo(ra, 'test/testdata/green_square.png');
     });
   });
+
+ it('fill color orange', function() {
+    ra.resetState();
+    ra.setSize(8, 8);
+    ra.fillBackground(25);
+    util.renderCompareTo(ra, 'test/testdata/solid-orange.png');
+  });
+
+  it('fill color blue', function() {
+    ra.resetState();
+    ra.setSize(8, 8);
+    ra.fillBackground(29);
+    util.renderCompareTo(ra, 'test/testdata/solid-blue.png');
+  });
+
 });

@@ -281,6 +281,13 @@ Raster.prototype.nextFrame = function() {
   });
 }
 
+Raster.prototype.then = function(callback) {
+  var runner = this.scene;
+  runner.then(function() {
+    callback();
+  });
+}
+
 Raster.prototype.on = function(eventName, callback) {
   this.scene.handleEvent(eventName, callback);
 }

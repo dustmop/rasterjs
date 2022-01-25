@@ -1,0 +1,15 @@
+var util = require('./util.js');
+var ra = require('../src/lib.js');
+
+describe('Basic', function() {
+  it('then draw', function() {
+    ra.resetState();
+    ra.setSize(16, 16);
+    ra.fillBackground(0);
+    ra.then(function() {
+      ra.setColor(28);
+      ra.fillSquare({x: 3, y: 5, size: 7});
+      util.renderCompareTo(ra, 'test/testdata/green_square.png');
+    });
+  });
+});

@@ -83,7 +83,6 @@ describe('Fill', function() {
     ra.fillFrame(function(mem, x, y) {
       return 1 + mem.get(x, (y + 7) % 8);
     });
-    // TODO: Test is broken
     util.renderCompareTo(ra, 'test/testdata/fill_draw_line.png');
   });
 

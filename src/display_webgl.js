@@ -6,8 +6,6 @@ function Display() {
 }
 
 Display.prototype.initialize = function() {
-  this.numToLoad = 0;
-  this.numLoadDone = 0;
   this.imgAssets = [];
   this.displayWidth = 0;
   this.displayHeight = 0;
@@ -162,39 +160,10 @@ void main() {
   gl.drawArrays(gl.TRIANGLES, 0, 6);
 }
 
-Display.prototype.readImage = function(filepath) {
-  let imgElem = new Image;
-  let self = this;
-  // Start the image load, count how many are pending
-  this.numToLoad++;
-  imgElem.onload = function() {
-    self.numLoadDone++;
-  }
-  imgElem.src = "/" + filepath;
-  // Keep track of the image being loaded, to retrieve later
-  let id = this.imgAssets.length;
-  this.imgAssets.push({imgElem: imgElem, pixels: null});
-  return id;
-}
-
-Display.prototype.getImagePixels = function(id) {
-  let asset = this.imgAssets[id];
-  let imgElem = asset.imgElem;
-  if (asset.pixels == null) {
-    let canvas = document.createElement('canvas');
-    canvas.width = imgElem.width;
-    canvas.height = imgElem.height;
-    let ctx = canvas.getContext('2d');
-    ctx.drawImage(imgElem, 0, 0, imgElem.width, imgElem.height);
-    asset.pixels = ctx.getImageData(0, 0, imgElem.width, imgElem.height);
-  }
-  return asset.pixels;
-}
-
 Display.prototype.waitForContentLoad = function(cb) {
   let self = this;
   setTimeout(function() {
-    if (self.numToLoad > self.numLoadDone || !self._hasDocumentBody) {
+    if (!self._hasDocumentBody) {
       self.waitForContentLoad(cb);
       return;
     }

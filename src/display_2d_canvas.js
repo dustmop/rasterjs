@@ -1,7 +1,5 @@
 function Display() {
   this.canvas = null;
-  this.numToLoad = 0;
-  this.numLoadDone = 0;
   this.displayWidth = 0;
   this.displayHeight = 0;
   return this;
@@ -64,7 +62,7 @@ Display.prototype._create2dCanvas = function() {
 Display.prototype.waitForContentLoad = function(cb) {
   let self = this;
   setTimeout(function() {
-    if (self.numToLoad > self.numLoadDone || !self._hasDocumentBody) {
+    if (!self._hasDocumentBody) {
       self.waitForContentLoad(cb);
       return;
     }

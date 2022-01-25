@@ -10,6 +10,7 @@ describe('basic', function () {
     ra.drawDot(5, 7);
     ra.fillRect(6, 6, 2, 2);
     ra.show(null, ensureImageMatch('img/fill_clear.png', success));
+    util.renderCompareTo(ra, 'img/fill_clear.png', success);
   });
 
   it('more drawing', function(success) {
@@ -22,7 +23,7 @@ describe('basic', function () {
     ra.drawCircle({x: 1, y: 2, r: 6});
     ra.setColor(0x31);
     ra.fillFlood(5, 6);
-    ra.show(null, ensureImageMatch('img/draw_more.png', success));
+    util.renderCompareTo(ra, 'img/draw_more.png', success);
   });
 
   it('overflow', function(success) {
@@ -33,7 +34,7 @@ describe('basic', function () {
     ra.fillBackground(2);
     ra.setColor(0x1b);
     ra.fillRect({x: 4, y: 6, w: 12, h: 3});
-    ra.show(null, ensureImageMatch('img/overflow.png', success));
+    util.renderCompareTo(ra, 'img/overflow.png', success);
   });
 
 });

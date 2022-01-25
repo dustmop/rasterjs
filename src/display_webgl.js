@@ -28,6 +28,9 @@ Display.prototype.setSource = function(renderer, zoomLevel) {
   window.addEventListener('DOMContentLoaded', function() {
     self._hasDocumentBody = true;
   });
+  if (document.readyState == 'complete' || document.readyState == 'loaded') {
+    self._hasDocumentBody = true;
+  }
 }
 
 Display.prototype._createWebglCanvas = function() {

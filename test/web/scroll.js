@@ -9,8 +9,7 @@ describe('scroll', function () {
       ra.drawImage(img, 0, 0);
       ra.setScrollX(4);
       ra.setScrollY(2);
-      ra.show(function() {
-      }, ensureImageMatch('img/scroll_simple.png', success));
+      util.renderCompareTo(ra, 'img/scroll_simple.png', success);
     });
   });
 });

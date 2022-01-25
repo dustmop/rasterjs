@@ -15,7 +15,6 @@ describe('plane size', function () {
     ra.setScrollX(4);
     ra.setScrollY(2);
 
-    ra.show(null,
-            ensureImageMatch('img/scroll_square.png', success));
+    util.renderCompareTo(ra, 'img/scroll_square.png', success);
   });
 });

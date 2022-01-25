@@ -25,6 +25,9 @@ Display.prototype.setSource = function(renderer, _zoomLevel) {
   window.addEventListener('DOMContentLoaded', function() {
     self._hasDocumentBody = true;
   });
+  if (document.readyState == 'complete' || document.readyState == 'loaded') {
+    self._hasDocumentBody = true;
+  }
 }
 
 Display.prototype._create2dCanvas = function() {

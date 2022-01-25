@@ -5,9 +5,10 @@ describe('Text', function() {
     ra.resetState();
     ra.setSize({w: 24, h: 12});
     ra.setFont('asset/romulus.yaff');
-    ra.show(function() {
+    ra.then(function() {
       ra.drawText('abc', 1, 2);
-    }, ensureImageMatch('img/abc.png', success));
+      util.renderCompareTo(ra, 'img/abc.png', success);
+    });
   });
 
   it('error if not async', function(success) {

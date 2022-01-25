@@ -5,9 +5,10 @@ describe('image', function () {
     ra.resetState();
     ra.setSize({w: 12, h: 12});
     let img = ra.loadImage('img/fill_clear.png');
-    ra.show(function() {
+    img.then(function() {
       ra.drawImage(img, 2, 2);
-    }, ensureImageMatch('img/draw_image.png', success));
+      util.renderCompareTo(ra, 'img/draw_image.png', success);
+    });
   });
 
   it('error if not async', function(success) {

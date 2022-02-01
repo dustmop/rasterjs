@@ -8,6 +8,8 @@ using namespace Napi;
 
 Napi::FunctionReference g_displayConstructor;
 
+typedef unsigned char u8;
+
 void DisplaySDL::InitClass(Napi::Env env, Napi::Object exports) {
   Napi::Function func = DefineClass(
       env,
@@ -27,9 +29,11 @@ DisplaySDL::DisplaySDL(const Napi::CallbackInfo& info)
     : Napi::ObjectWrap<DisplaySDL>(info) {
   this->sdlInitialized = 0;
   this->zoomLevel = 1;
+  this->gridUnit = 0;
   this->windowHandle = NULL;
   this->rendererHandle = NULL;
   this->textureHandle = NULL;
+  this->gridHandle = NULL;
 };
 
 Napi::Object DisplaySDL::NewInstance(Napi::Env env, Napi::Value arg) {
@@ -77,6 +81,11 @@ Napi::Value DisplaySDL::SetSource(const Napi::CallbackInfo& info) {
   Napi::Object rendererObj = info[0].As<Napi::Object>();
   napi_create_reference(env, rendererObj, 1, &this->rendererRef);
   this->zoomLevel = info[1].As<Napi::Number>().Int32Value();
+
+  this->gridUnit = 0;
+  if (info.Length() >= 3 && info[2].IsNumber()) {
+    this->gridUnit = info[2].As<Napi::Number>().Int32Value();
+  }
 
   return Napi::Number::New(env, 0);
 }
@@ -207,6 +216,43 @@ Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
       SDL_TEXTUREACCESS_STREAMING,
       viewWidth,
       viewHeight);
+  SDL_SetTextureBlendMode(this->textureHandle, SDL_BLENDMODE_BLEND);
+
+  // Grid is optional
+  if (this->gridUnit) {
+    int gridWidth = viewWidth*this->zoomLevel;
+    int gridHeight = viewHeight*this->zoomLevel;
+    this->gridHandle = SDL_CreateTexture(
+      this->rendererHandle,
+      SDL_PIXELFORMAT_ABGR8888,
+      SDL_TEXTUREACCESS_TARGET,
+      gridWidth,
+      gridHeight);
+
+    u8* gridBuff = (u8*)malloc(gridWidth*gridHeight*4);
+    int targPnt = this->gridUnit * this->zoomLevel;
+    int lastPnt = targPnt - 1;
+
+    // Fill the grid
+    for(int y = 0; y < gridHeight; y++) {
+      for(int x = 0; x < gridWidth; x++) {
+          int k = (y*gridWidth + x)*4;
+          if (((y % targPnt) == lastPnt) || ((x % targPnt) == lastPnt)) {
+            gridBuff[k+0] = 0x00;
+            gridBuff[k+1] = 0xe0;
+            gridBuff[k+2] = 0x00;
+            gridBuff[k+3] = 0xb0;
+          } else {
+            gridBuff[k+0] = 0x00;
+            gridBuff[k+1] = 0x00;
+            gridBuff[k+2] = 0x00;
+            gridBuff[k+3] = 0x00;
+          }
+      }
+    }
+    SDL_UpdateTexture(this->gridHandle, NULL, gridBuff, gridWidth*4);
+    SDL_SetTextureBlendMode(this->gridHandle, SDL_BLENDMODE_BLEND);
+  }
 
   // Create an empty object for js function calls
   napi_value result;
@@ -330,6 +376,9 @@ Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
     }
 
     SDL_RenderCopy(this->rendererHandle, this->textureHandle, NULL, NULL);
+    if (this->gridHandle) {
+      SDL_RenderCopy(this->rendererHandle, this->gridHandle, NULL, NULL);
+    }
     // Swap buffers to display
     SDL_RenderPresent(this->rendererHandle);
 

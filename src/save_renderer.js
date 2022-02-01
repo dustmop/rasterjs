@@ -15,6 +15,8 @@ function SaveRenderer(targetPath, numFrames, saveService) {
   this.numFrames = numFrames;
   this.isGif = this.targetPath.endsWith('gif');
   this.saveService = saveService;
+  this.zoomLevel = 1;
+  this.gridUnit = 0;
   return this;
 }
 
@@ -27,9 +29,10 @@ SaveRenderer.prototype.setSize = function(w, h) {
   this.height = h;
 }
 
-SaveRenderer.prototype.setSource = function(renderer, zoomLevel) {
+SaveRenderer.prototype.setSource = function(renderer, zoomLevel, gridUnit) {
   this.renderer = renderer;
-  this.zoomLevel = zoomLevel;
+  this.zoomLevel = zoomLevel || 1;
+  this.gridUnit = gridUnit || 0;
 }
 
 SaveRenderer.prototype.renderLoop = function(nextFrame) {
@@ -75,6 +78,10 @@ SaveRenderer.prototype.renderLoop = function(nextFrame) {
       buff = algorithm.nearestNeighbor(buff, width, height, this.zoomLevel);
       width = width * this.zoomLevel;
       height = height * this.zoomLevel;
+    }
+    if (this.gridUnit > 0) {
+      let spacing = this.zoomLevel * this.gridUnit;
+      this._overlayGrid(buff, width, height, spacing);
     }
     if (buff.pitch) {
       pitch = buff.pitch;
@@ -131,6 +138,28 @@ SaveRenderer.prototype.createGif = function(width, height, frames, outName) {
   }
   encoder.finish();
 }
+
+SaveRenderer.prototype._overlayGrid = function(buff, width, height, spacing) {
+  let pitch = buff.pitch;
+  let last = spacing - 1;
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (((y % spacing) == last) || ((x % spacing) == last)) {
+        let k = y*pitch + x*4;
+        buff[k+0] = this._blend(buff[k+0], 0x00, 0xb0);
+        buff[k+1] = this._blend(buff[k+1], 0xe0, 0xb0);
+        buff[k+2] = this._blend(buff[k+2], 0x00, 0xb0);
+      }
+    }
+  }
+}
+
+SaveRenderer.prototype._blend = function(mine, their, opacity) {
+  let left = mine * (0x100 - opacity);
+  let rite = their * opacity;
+  return Math.floor((left + rite) / 0x100);
+}
+
 
 function leftPad(value, size, fill) {
   fill = fill || ' ';

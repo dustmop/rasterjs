@@ -51,6 +51,10 @@ Raster.prototype.setZoom = function(zoomLevel) {
   this.scene.setZoom(zoomLevel);
 }
 
+Raster.prototype.setGrid = function(unit) {
+  this.scene.setGrid(unit);
+}
+
 Raster.prototype.setTitle = function(text) {
   this.scene.setTitle(text);
 }

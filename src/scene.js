@@ -153,6 +153,10 @@ Scene.prototype.setZoom = function(scale) {
   this._config.zoomScale = scale;
 }
 
+Scene.prototype.setGrid = function(unit) {
+  this._config.gridUnit = unit;
+}
+
 Scene.prototype.setTitle = function(title) {
   this._config.titleText = title;
 }
@@ -209,7 +213,8 @@ Scene.prototype._doRender = function(num, exitAfter, drawFunc, betweenFunc, fina
   }
   this.then(function() {
     self.display.setSize(self._config.width, self._config.height);
-    self.display.setSource(self.renderer, self._config.zoomScale);
+    self.display.setSource(self.renderer, self._config.zoomScale,
+                           self._config.gridUnit);
     self.display.renderLoop(function() {
       if (drawFunc) {
         try {

@@ -31,6 +31,7 @@ class DisplaySDL : public Napi::ObjectWrap<DisplaySDL> {
   int sdlInitialized;
   napi_ref rendererRef;
   int zoomLevel;
+  int gridUnit;
 
   int displayWidth;
   int displayHeight;
@@ -38,6 +39,7 @@ class DisplaySDL : public Napi::ObjectWrap<DisplaySDL> {
   SDL_Window* windowHandle;
   SDL_Renderer* rendererHandle;
   SDL_Texture* textureHandle;
+  SDL_Texture* gridHandle;
 };
 
 #endif

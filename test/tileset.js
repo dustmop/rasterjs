@@ -210,7 +210,7 @@ describe('Tileset', function() {
                    [2,2,1,0],
                    [1,3,0,0],
                   ]);
-    ra.useAttributes(attrs, {block_width: 4, block_height: 4, option_size: 6});
+    ra.useAttributes(attrs, {block_width: 4, block_height: 4, piece_size: 6});
 
     // Tileset / CHR
     let tiles = ra.loadImage('test/testdata/tiles.png');
@@ -254,7 +254,7 @@ describe('Tileset', function() {
                    [2,2,1,0],
                    [1,3,0,0],
                   ]);
-    ra.useAttributes(attrs, {block_width: 4, block_height: 4, option_size: 6});
+    ra.useAttributes(attrs, {block_width: 4, block_height: 4, piece_size: 6});
 
     // Tileset / CHR
     let tiles = ra.loadImage('test/testdata/tiles.png');

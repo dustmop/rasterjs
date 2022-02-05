@@ -36,11 +36,15 @@ myDisplay.prototype.setSize = function(width, height) {
   // pass
 }
 
-myDisplay.prototype.setSource = function(renderer, zoomLevel) {
+myDisplay.prototype.setRenderer = function(renderer) {
   this.renderer = renderer;
+}
+
+myDisplay.prototype.setZoom = function(zoomLevel) {
   this.count += zoomLevel;
-  // NOTE: At this point, plane.width and plane.height have
-  // *not* necessarily been assigned by setSize.
+}
+
+myDisplay.prototype.setGrid = function(unit) {
 }
 
 myDisplay.prototype.renderLoop = function(nextFrame) {

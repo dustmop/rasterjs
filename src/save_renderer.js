@@ -29,10 +29,16 @@ SaveRenderer.prototype.setSize = function(w, h) {
   this.height = h;
 }
 
-SaveRenderer.prototype.setSource = function(renderer, zoomLevel, gridUnit) {
+SaveRenderer.prototype.setRenderer = function(renderer) {
   this.renderer = renderer;
-  this.zoomLevel = zoomLevel || 1;
-  this.gridUnit = gridUnit || 0;
+}
+
+SaveRenderer.prototype.setZoom = function(zoomLevel) {
+  this.zoomLevel = zoomLevel;
+}
+
+SaveRenderer.prototype.setGrid = function(unit) {
+  this.gridUnit = unit;
 }
 
 SaveRenderer.prototype.renderLoop = function(nextFrame) {

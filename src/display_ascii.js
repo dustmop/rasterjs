@@ -10,8 +10,14 @@ DisplayAscii.prototype.setSize = function(width, height) {
   // pass
 }
 
-DisplayAscii.prototype.setSource = function(renderer, zoomLevel) {
+DisplayAscii.prototype.setRenderer = function(renderer) {
   this.renderer = renderer;
+}
+
+DisplayAscii.prototype.setZoom = function(zoom) {
+}
+
+DisplayAscii.prototype.setGrid = function(unit) {
 }
 
 DisplayAscii.prototype.renderLoop = function(nextFrame) {

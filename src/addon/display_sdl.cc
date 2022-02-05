@@ -16,7 +16,9 @@ void DisplaySDL::InitClass(Napi::Env env, Napi::Object exports) {
       "Display",
       {InstanceMethod("initialize", &DisplaySDL::Initialize),
        InstanceMethod("setSize", &DisplaySDL::SetSize),
-       InstanceMethod("setSource", &DisplaySDL::SetSource),
+       InstanceMethod("setRenderer", &DisplaySDL::SetRenderer),
+       InstanceMethod("setZoom", &DisplaySDL::SetZoom),
+       InstanceMethod("setGrid", &DisplaySDL::SetGrid),
        InstanceMethod("handleEvent", &DisplaySDL::HandleEvent),
        InstanceMethod("renderLoop", &DisplaySDL::RenderLoop),
        InstanceMethod("appQuit", &DisplaySDL::AppQuit),
@@ -66,27 +68,45 @@ Napi::Value DisplaySDL::SetSize(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, 0);
 }
 
-Napi::Value DisplaySDL::SetSource(const Napi::CallbackInfo& info) {
+Napi::Value DisplaySDL::SetRenderer(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   if (!this->sdlInitialized) {
     return Napi::Number::New(env, -1);
   }
 
-  if (info.Length() < 2) {
-    printf("SetSource needs two parameters\n");
+  if (info.Length() < 1) {
+    printf("SetRenderer needs renderer\n");
     exit(1);
   }
 
   Napi::Object rendererObj = info[0].As<Napi::Object>();
   napi_create_reference(env, rendererObj, 1, &this->rendererRef);
-  this->zoomLevel = info[1].As<Napi::Number>().Int32Value();
 
-  this->gridUnit = 0;
-  if (info.Length() >= 3 && info[2].IsNumber()) {
-    this->gridUnit = info[2].As<Napi::Number>().Int32Value();
+  return Napi::Number::New(env, 0);
+}
+
+Napi::Value DisplaySDL::SetZoom(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  if (info.Length() < 1) {
+    printf("SetZoom needs zoom\n");
+    exit(1);
   }
+  this->zoomLevel = info[0].As<Napi::Number>().Int32Value();
+  return Napi::Number::New(env, 0);
+}
 
+Napi::Value DisplaySDL::SetGrid(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  if (info.Length() < 1) {
+    printf("SetGrid needs grid\n");
+    exit(1);
+  }
+  Napi::Value arg = info[0];
+  if (!arg.IsNumber()) {
+    return Napi::Number::New(env, 0);
+  }
+  this->gridUnit = arg.As<Napi::Number>().Int32Value();
   return Napi::Number::New(env, 0);
 }
 

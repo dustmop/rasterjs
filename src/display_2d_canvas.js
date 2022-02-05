@@ -15,9 +15,8 @@ Display.prototype.setSize = function(width, height) {
   this.displayHeight = height;
 }
 
-Display.prototype.setSource = function(renderer, _zoomLevel) {
+Display.prototype.setRenderer = function(renderer) {
   this.renderer = renderer;
-  // NOTE: zoomLevel is ignored
   this._hasDocumentBody = false;
   let self = this;
   window.addEventListener('DOMContentLoaded', function() {
@@ -26,6 +25,14 @@ Display.prototype.setSource = function(renderer, _zoomLevel) {
   if (document.readyState == 'complete' || document.readyState == 'loaded') {
     self._hasDocumentBody = true;
   }
+}
+
+Display.prototype.setZoom = function(_zoomLevel) {
+  // NOTE: zoomLevel is ignored
+}
+
+Display.prototype.setGrid = function(unit) {
+  this.gridUnit = unit;
 }
 
 Display.prototype._create2dCanvas = function() {

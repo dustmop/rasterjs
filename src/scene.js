@@ -213,8 +213,9 @@ Scene.prototype._doRender = function(num, exitAfter, drawFunc, betweenFunc, fina
   }
   this.then(function() {
     self.display.setSize(self._config.width, self._config.height);
-    self.display.setSource(self.renderer, self._config.zoomScale,
-                           self._config.gridUnit);
+    self.display.setRenderer(self.renderer);
+    self.display.setZoom(self._config.zoomScale);
+    self.display.setGrid(self._config.gridUnit);
     self.display.renderLoop(function() {
       if (drawFunc) {
         try {
@@ -314,7 +315,12 @@ Scene.prototype.handleEvent = function(eventName, callback) {
 }
 
 Scene.prototype.isDisplayObject = function(obj) {
-  let needMethods = ['initialize', 'setSize', 'setSource', 'renderLoop'];
+  let needMethods = ['initialize',
+                     'setSize',
+                     'setRenderer',
+                     'setZoom',
+                     'setGrid',
+                     'renderLoop'];
   for (let i = 0; i < needMethods.length; i++) {
     let method = obj[needMethods[i]];
     if (!method || typeof method != 'function') {

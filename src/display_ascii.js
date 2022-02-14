@@ -21,7 +21,7 @@ DisplayAscii.prototype.setGrid = function(unit) {
 }
 
 DisplayAscii.prototype.renderLoop = function(nextFrame) {
-  let plane = this.renderer.plane;
+  let plane = this.renderer.getFirstPlane();
   let buffer = plane.data;
   let pitch = plane.pitch;
   for (let y = 0; y < plane.height; y++) {

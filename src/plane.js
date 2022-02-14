@@ -43,6 +43,16 @@ Plane.prototype.clone = function() {
   return make;
 }
 
+Plane.prototype.getComponents = function() {
+  return this.scene;
+}
+
+Plane.prototype.ensureReady = function() {
+  if (!this.data) {
+    this._prepare();
+  }
+}
+
 Plane.prototype._addMethods = function(shouldDestruct) {
   let self = this;
   let d = new drawing.Drawing();

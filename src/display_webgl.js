@@ -61,7 +61,6 @@ Display.prototype._createWebglCanvas = function() {
     return;
   }
 
-  var plane = this.renderer.plane;
   var elemWidth = this.displayWidth * this.zoomLevel;
   var elemHeight = this.displayHeight * this.zoomLevel;
 
@@ -136,9 +135,6 @@ void main() {
     0, 1,
   ];
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(texcoords), gl.STATIC_DRAW);
-
-  // Hold onto the plane.
-  this.plane = plane;
   this.gl = gl;
 
   // Tell WebGL to use our shader program pair
@@ -258,7 +254,6 @@ Display.prototype.renderLoop = function(nextFrame, num, exitAfter, finalFunc) {
 }
 
 Display.prototype._beginLoop = function(nextFrame, num, exitAfter, finalFunc) {
-  let pl = this.renderer.plane;
   let gl = this.gl;
   let frontBuffer = null;
   let self = this;
@@ -267,7 +262,10 @@ Display.prototype._beginLoop = function(nextFrame, num, exitAfter, finalFunc) {
 
   let renderIt = function() {
     // Get the data buffer from the plane.
-    frontBuffer = self.renderer.render();
+    let res = self.renderer.render();
+    if (!frontBuffer) {
+      frontBuffer = res[0].buff;
+    }
 
     // Render to the display
     if (frontBuffer) {

@@ -48,6 +48,7 @@ myDisplay.prototype.setGrid = function(unit) {
 }
 
 myDisplay.prototype.renderLoop = function(nextFrame) {
-  this.count += this.renderer.plane.width * 10;
-  this.count += this.renderer.plane.height * 100;
+  let layer = this.renderer._layers[0].plane;
+  this.count += layer.width * 10;
+  this.count += layer.height * 100;
 }

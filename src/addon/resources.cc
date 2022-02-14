@@ -103,27 +103,27 @@ Napi::Value Resources::SaveTo(const Napi::CallbackInfo& info) {
   Napi::String str = val.ToString();
   std::string savepath = str.Utf8Value();
 
-  val = info[1];
+  Napi::Array listObj = info[1].As<Napi::Array>();
+  Napi::Value surfaceVal = listObj[uint32_t(0)];
+  Napi::Object surfaceObj = surfaceVal.As<Napi::Object>();
 
-  Napi::Value bufferObj = Napi::Value(env, val);
-  if (!bufferObj.IsTypedArray()) {
-    printf("plane.trueBuffer expected a TypedArray, did not get one!\n");
-    printf("got: \"%s\"\n", bufferObj.ToString().Utf8Value().c_str());
+  Napi::Value bufferVal = surfaceObj.Get("buff");
+  if (!bufferVal.IsTypedArray()) {
+    printf("bufferVal expected a TypedArray, did not get one!\n");
     exit(1);
   }
-
-  Napi::TypedArray typeArr = bufferObj.As<Napi::TypedArray>();
+  Napi::TypedArray typeArr = bufferVal.As<Napi::TypedArray>();
   Napi::ArrayBuffer arrBuff = typeArr.ArrayBuffer();
-
   void* untypedData = arrBuff.Data();
   unsigned char* rawBuff = (unsigned char*)untypedData;
 
-  val = info[2];
-  int width = val.As<Napi::Number>().Int32Value();
-  val = info[3];
-  int height = val.As<Napi::Number>().Int32Value();
-  val = info[4];
-  int pitch = val.As<Napi::Number>().Int32Value();
+  Napi::Value widthVal = surfaceObj.Get("width");
+  Napi::Value heightVal = surfaceObj.Get("height");
+  Napi::Value pitchVal = surfaceObj.Get("pitch");
+
+  int width = widthVal.As<Napi::Number>().Int32Value();
+  int height = heightVal.As<Napi::Number>().Int32Value();
+  int pitch = pitchVal.As<Napi::Number>().Int32Value();
 
   WritePng(savepath.c_str(), rawBuff, width, height, pitch);
 

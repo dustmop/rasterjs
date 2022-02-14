@@ -218,10 +218,8 @@ Raster.prototype.useAttributes = function(pl, sizeInfo) {
 }
 
 Raster.prototype.usePlane = function(pl) {
-  this.scene.aPlane = pl;
+  this.scene.usePlane(pl);
   this._removeMethods();
-  this.scene._removeMethods();
-  this.scene._config.usingNonPrimaryPlane = true;
 }
 
 Raster.prototype.useInterrupts = function(conf) {

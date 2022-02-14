@@ -155,8 +155,8 @@ Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
   Napi::Function renderFunc = renderFuncVal.As<Napi::Function>();
 
   napi_status status;
-  napi_value buffData;
-  status = napi_call_function(env, rendererObj, renderFunc, 0, NULL, &buffData);
+  napi_value resVal;
+  status = napi_call_function(env, rendererObj, renderFunc, 0, NULL, &resVal);
   if (status != napi_ok) {
     if (status == napi_pending_exception) {
       napi_value result;
@@ -183,23 +183,26 @@ Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
     exit(1);
   }
 
-  Napi::Object bufferObj = Napi::Object(env, buffData);
-  Napi::Value bufferVal = Napi::Value(env, buffData);
+  Napi::Object resObj = Napi::Object(env, resVal);
+  Napi::Value surfaceVal = resObj.As<Napi::Array>()[uint32_t(0)];
+  Napi::Object surfaceObj = surfaceVal.As<Napi::Object>();
+
+  Napi::Value bufferVal = surfaceObj.Get("buff");
   if (!bufferVal.IsTypedArray()) {
-    printf("render() should return a TypedArray, did not get one!\n");
-    printf("got: \"%s\"\n", bufferObj.ToString().Utf8Value().c_str());
+    printf("bufferVal expected a TypedArray, did not get one!\n");
     exit(1);
   }
-
   Napi::TypedArray typeArr = bufferVal.As<Napi::TypedArray>();
   Napi::ArrayBuffer arrBuff = typeArr.ArrayBuffer();
+  void* untypedData = arrBuff.Data();
+  unsigned char* rawBuff = (unsigned char*)untypedData;
 
   // Calculate texture and window size.
   int viewWidth = this->displayWidth;
   int viewHeight = this->displayHeight;
 
   int viewPitch = viewWidth * 4;
-  Napi::Value realPitchNum = bufferObj.Get("pitch");
+  Napi::Value realPitchNum = surfaceObj.Get("pitch");
   if (realPitchNum.IsNumber()) {
     viewPitch = realPitchNum.As<Napi::Number>().Int32Value();
   }
@@ -282,10 +285,6 @@ Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
     printf("napi_create_object(self) failed to create\n");
     return Napi::Number::New(env, -1);
   }
-
-  // Raw data from the plane's buffer
-  void* untypedData = arrBuff.Data();
-  unsigned char* rawBuff = (unsigned char*)untypedData;
 
   // A basic main loop to handle events
   this->isRunning = true;

@@ -153,27 +153,32 @@ function flood(mem, initX, initY, color) {
   }
 }
 
-function nearestNeighbor(buff, width, height, zoomLevel) {
-  let numPoints = width * height * zoomLevel * zoomLevel;
-  let pitch = width*4;
+function nearestNeighbor(input, zoomLevel) {
+  let numPoints = input.width * input.height * zoomLevel * zoomLevel;
+  let oldPitch = input.pitch;
+  let newPitch = input.width*zoomLevel*4;
   let make = new Uint8Array(numPoints*4);
-  make.pitch = pitch*zoomLevel;
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      let rgb = readRGBColor(buff, x, y);
+  for (let y = 0; y < input.height; y++) {
+    for (let x = 0; x < input.width; x++) {
+      let rgb = readRGBColor(input.buff, oldPitch, x, y);
       for (let i = 0; i < zoomLevel; i++) {
         for (let j = 0; j < zoomLevel; j++) {
-          writeRGBColor(make, x*zoomLevel+j, y*zoomLevel+i, rgb);
+          writeRGBColor(make, newPitch, x*zoomLevel+j, y*zoomLevel+i, rgb);
         }
       }
     }
   }
-  return make;
+  return {
+    buff: make,
+    pitch: newPitch,
+    width: input.width*zoomLevel,
+    height: input.height*zoomLevel,
+  }
 }
 
 
-function readRGBColor(buff, x, y) {
-  let k = y*buff.pitch + x*4;
+function readRGBColor(buff, pitch, x, y) {
+  let k = y*pitch + x*4;
   let r = buff[k+0];
   let g = buff[k+1];
   let b = buff[k+2];
@@ -181,11 +186,11 @@ function readRGBColor(buff, x, y) {
 }
 
 
-function writeRGBColor(buff, x, y, rgb) {
+function writeRGBColor(buff, pitch, x, y, rgb) {
   let r = Math.floor(rgb / 0x10000) % 0x100;
   let g = Math.floor(rgb / 0x100)   % 0x100;
   let b = Math.floor(rgb / 0x1)     % 0x100;
-  let k = y*buff.pitch + x*4;
+  let k = y*pitch + x*4;
   buff[k+0] = r;
   buff[k+1] = g;
   buff[k+2] = b;

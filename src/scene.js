@@ -36,7 +36,6 @@ function Scene(env) {
 
   plane.setGlobalScene(this);
   this.aPlane = new plane.Plane();
-
   this._config = {};
   this.numFrames = FRAMES_LOOP_FOREVER;
   this.initialize();
@@ -198,20 +197,20 @@ Scene.prototype.select = function(x, y, w, h) {
 
 Scene.prototype._doRender = function(num, exitAfter, drawFunc, betweenFunc, finalFunc) {
   let plane = this.aPlane;
-  plane._prepare();
-  this.renderer.plane = plane;
-  this.renderer.configure(this);
-  let self = this;
-  if (!self._config.width || !self._config.height) {
+
+  if (!this._config.width || !this._config.height) {
     if (!this.tiles) {
-      self._config.width = plane.width;
-      self._config.height = plane.height;
+      this._config.width = plane.width;
+      this._config.height = plane.height;
     } else {
-      self._config.width = plane.width * this.tiles.tileWidth;
-      self._config.height = plane.height * this.tiles.tileHeight;
+      this._config.width = plane.width * this.tiles.tileWidth;
+      this._config.height = plane.height * this.tiles.tileHeight;
     }
   }
-  this.then(function() {
+  this.renderer.connect(this.provide());
+
+  let self = this;
+  self.then(function() {
     self.display.setSize(self._config.width, self._config.height);
     self.display.setRenderer(self.renderer);
     self.display.setZoom(self._config.zoomScale);
@@ -246,26 +245,12 @@ Scene.prototype.save = function(savepath) {
   if (!saveService) {
     throw new Error('cannot save plane without save service');
   }
-  saveService.saveTo(savepath, res.buff, res.width, res.height, res.pitch);
+  saveService.saveTo(savepath, res);
 }
 
 Scene.prototype.renderPrimaryPlane = function() {
-  let pl = this.aPlane;
-  pl._prepare();
-  this.renderer.plane = pl;
-  this.renderer.configure(this);
-  let [width, height] = this.renderer.size();
-  let buff = this.renderer.render();
-  let pitch = pl.width*4;
-  if (buff.pitch) {
-    pitch = buff.pitch;
-  }
-  return {
-    buff:   buff,
-    width:  width,
-    height: height,
-    pitch:  pitch,
-  };
+  this.renderer.connect(this.provide());
+  return this.renderer.render();
 }
 
 Scene.prototype.quit = function() {
@@ -307,7 +292,7 @@ Scene.prototype.setTileset = function(which) {
     throw new Error(`invalid tileset number ${which}`);
   }
   this.tiles = this.tilesetBanks[which];
-  this.renderer.tiles = this.tiles;
+  this.renderer.switchComponent(0, 'tiles', this.tiles);
 }
 
 Scene.prototype.handleEvent = function(eventName, callback) {
@@ -398,6 +383,15 @@ Scene.prototype._ensurePalette = function() {
   }
 }
 
+Scene.prototype.usePlane = function(pl) {
+  if (pl.constructor != plane.Plane) {
+    throw new Error(`usePlane requires a Plane`);
+  }
+  this.aPlane = pl;
+  this._removeMethods();
+  this._config.usingNonPrimaryPlane = true;
+}
+
 Scene.prototype.usePalette = function(vals) {
   let colors = this.colorSet;
   let saveService = this.saveService;
@@ -482,6 +476,26 @@ Scene.prototype.useInterrupts = function(conf) {
     renderPoint = elem.scanline;
   }
   this.interrupts = conf;
+}
+
+Scene.prototype.provide = function() {
+  let prov = {};
+  prov.plane = this.aPlane;
+  prov.colorSet = this.colorSet;
+  prov.conf = this._config;
+  if (this.tiles) {
+    prov.tiles = this.tiles;
+  }
+  if (this.palette) {
+    prov.palette = this.palette;
+  }
+  if (this.attrs) {
+    prov.attrs = this.attrs;
+  }
+  if (this.interrupts) {
+    prov.interrupts = this.interrupts;
+  }
+  return prov;
 }
 
 module.exports.Scene = Scene;

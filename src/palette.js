@@ -73,7 +73,12 @@ PaletteCollection.prototype._saveTo = function(target, savepath) {
   let font = loader.createFontResource('tiny');
   let colors = new colorSet.Set([]);
   colors.assign([]);
-  target.scene = {
+  let components = {
+    plane: target,
+    conf: {
+      width: target.width,
+      height: target.height,
+    },
     _config: {
       width: target.width,
       height: target.height,
@@ -81,6 +86,9 @@ PaletteCollection.prototype._saveTo = function(target, savepath) {
     colorSet: colors,
     font: font,
   };
+  target.getComponents = function() {
+    return components;
+  }
 
   // Draw the palette format
   target.fillTrueBackground(0x606060);
@@ -107,15 +115,10 @@ PaletteCollection.prototype._saveTo = function(target, savepath) {
 
   // Render it and save
   let rend = new renderer.Renderer();
-  rend.plane = target;
-  rend.configure(target.scene);
+  rend.connect(components);
   let [width, height] = rend.size();
-  let buff = rend.render();
-  let pitch = target.width*4;
-  if (buff.pitch) {
-    pitch = buff.pitch;
-  }
-  this.saveService.saveTo(savepath, buff, width, height, pitch);
+  let surfaces = rend.render();
+  this.saveService.saveTo(savepath, surfaces);
 }
 
 PaletteCollection.prototype._isLightColor = function(rgb) {

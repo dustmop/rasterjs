@@ -74,27 +74,19 @@ SaveRenderer.prototype.renderLoop = function(nextFrame) {
     nextFrame();
     let frameNum = leftPad(count, 3, '0');
     let outFile = `${this.tmpdir}/${frameNum}.png`;
-    let pl = this.renderer.plane;
-    pl._prepare();
-    this.renderer.configure(pl.scene);
-    let [width, height] = this.renderer.size();
-    let buff = this.renderer.render();
-    let pitch = pl.width*4;
+    let res = this.renderer.render();
+    let surface = res[0];
     if (this.zoomLevel > 1) {
-      buff = algorithm.nearestNeighbor(buff, width, height, this.zoomLevel);
-      width = width * this.zoomLevel;
-      height = height * this.zoomLevel;
+      surface = algorithm.nearestNeighbor(surface, this.zoomLevel);
+      res[0] = surface;
     }
     if (this.gridUnit > 0) {
       let spacing = this.zoomLevel * this.gridUnit;
-      this._overlayGrid(buff, width, height, spacing);
+      this._overlayGrid(surface, spacing);
     }
-    if (buff.pitch) {
-      pitch = buff.pitch;
-    }
-    this.saveService.saveTo(outFile, buff, width, height, pitch);
-    bufferList.push(buff);
-    this.renderer.rgbBuffer = null;
+    this.saveService.saveTo(outFile, res);
+    bufferList.push(surface.buff);
+    this.renderer.flushBuffer();
   }
 
   // Wait for each frame to render.
@@ -145,16 +137,16 @@ SaveRenderer.prototype.createGif = function(width, height, frames, outName) {
   encoder.finish();
 }
 
-SaveRenderer.prototype._overlayGrid = function(buff, width, height, spacing) {
-  let pitch = buff.pitch;
+SaveRenderer.prototype._overlayGrid = function(surface, spacing) {
+  let pitch = surface.pitch;
   let last = spacing - 1;
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
+  for (let y = 0; y < surface.height; y++) {
+    for (let x = 0; x < surface.width; x++) {
       if (((y % spacing) == last) || ((x % spacing) == last)) {
         let k = y*pitch + x*4;
-        buff[k+0] = this._blend(buff[k+0], 0x00, 0xb0);
-        buff[k+1] = this._blend(buff[k+1], 0xe0, 0xb0);
-        buff[k+2] = this._blend(buff[k+2], 0x00, 0xb0);
+        surface.buff[k+0] = this._blend(surface.buff[k+0], 0x00, 0xb0);
+        surface.buff[k+1] = this._blend(surface.buff[k+1], 0xe0, 0xb0);
+        surface.buff[k+2] = this._blend(surface.buff[k+2], 0x00, 0xb0);
       }
     }
   }

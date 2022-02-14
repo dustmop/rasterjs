@@ -29,7 +29,7 @@ Drawing.prototype.setTrueColor = function(rgb) {
   if (typeof rgb !== 'number') {
     throw new Error(`setTrueColor needs rgb as a number, got ${rgb}`);
   }
-  let color = this.scene.colorSet.addEntry(rgb);
+  let color = this.getComponents().colorSet.addEntry(rgb);
   this.setColor(color);
 }
 
@@ -47,7 +47,7 @@ Drawing.prototype.fillBackground = function(color) {
 
 Drawing.prototype.fillTrueBackground_params = ['rgb:i'];
 Drawing.prototype.fillTrueBackground = function(rgb) {
-  let color = this.scene.colorSet.addEntry(rgb);
+  let color = this.getComponents().colorSet.addEntry(rgb);
   this.fillBackground(color);
 }
 
@@ -259,7 +259,7 @@ Drawing.prototype.drawImage = function(img, x, y) {
 
 Drawing.prototype.drawText_params = ['text:s', 'x:i', 'y:i'];
 Drawing.prototype.drawText = function(text, x, y) {
-  let font = this.scene.font;
+  let font = this.getComponents().font;
   if (!font) {
     throw new Error('drawText: no font has been assigned');
   }

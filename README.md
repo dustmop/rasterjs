@@ -1,6 +1,6 @@
 # Raster.js
 
-raster.js is a graphics library for javascript that is designed for pixel art, 2d demo effects, and creative coding.
+raster.js is a retro style graphics library, for making pixel art, exploring 2d demo effects, and creative coding.
 
 It aims to serve as a tool for prototyping, experimentation, and learning about how old school graphics worked. It provides precise pixel control, and portability across multiple javascript environments and rendering contexts.
 
@@ -8,10 +8,10 @@ It aims to serve as a tool for prototyping, experimentation, and learning about 
 
 * Pixel based, hard edges, no anti-aliasing
 * Limited palette, default 64 colors, expandable to 256
-* Runs in multiple places: in browser, in sdl, on raspberry pi
+* Runs in multiple places: in browser, in node.js, on raspberry pi
 * Easy utilities for saving gifs and pngs
-* Colors presets for machines such as the NES, ZX Spectrum, Pico-8, Gameboy, DOS
-* Handy algorithms for immitating classic rendering routines
+* Colors presets for machines such as the NES, ZX Spectrum, Pico-8, Gameboy, DOS, and more
+* Features that immitate ancient hardware such as color attributes, and rasterization interrupts
 
 # Example Usage
 
@@ -20,7 +20,7 @@ const ra = require('raster');
 ra.setSize(32, 30);
 ra.setZoom(8);
 
-ra.fillBackground(19);
+ra.fillColor(19);
 ra.setColor(37);
 ra.fillCircle({x: 9, y: 16, r: 6});
 ra.drawPolygon([[22, 3], [30, 11], [17, 13]]);
@@ -89,10 +89,10 @@ ra.setZoom(8);
 
 ## Drawing pixels
 
-Clearing the display can be done using the `fillBackground` method. Raster.js uses a limited color palette, just like many retro computer systems, limited to at most 256 colors. The default palette can be found in the "colors" section below. Functions that require a color parameter, such as `fillBackground`, therefore only require a single numerical parameter, which uses that color from the palette.
+Clearing the display can be done using the `fillColor` method. Raster.js uses a limited color palette, just like many retro computer systems, limited to at most 256 colors. The default palette can be found in the "colors" section below. Functions that require a color parameter, such as `fillColor`, therefore only require a single numerical parameter, which uses that color from the palette.
 
 ```
-ra.fillBackground(12);
+ra.fillColor(12);
 ```
 
 For other drawing functions, use `setColor` to choose what color to draw with.

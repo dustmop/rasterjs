@@ -112,16 +112,20 @@ Raster.prototype.rotatePolygon = function(shape, angle) {
   return this.scene.makeShape('rotate', [shape, angle]);
 }
 
-Raster.prototype.oscil = function(period, fracOffset, click) {
+Raster.prototype.oscil = function(namedOnly) {
+  let spec = ['!name', 'period?i=60', 'begin?n', 'height?n=1.0', 'click?a'];
+  let [period, begin, height, click] = destructure.from(
+    'oscil', spec, arguments, null);
+
   period = period || 60;
-  if (fracOffset === undefined) {
-    fracOffset = 0.0;
+  if (begin === undefined) {
+    begin = 0.0;
   }
-  if (click === undefined) {
+  if (click === null) {
     click = this.timeClick;
   }
-  click = click + Math.round(period * fracOffset);
-  return (1.0 - Math.cos(click * this.TAU / period)) / 2.0000001;
+  click = click + Math.round(period * begin);
+  return height * ((1.0 - Math.cos(click * this.TAU / period)) / 2.0000001);
 }
 
 Raster.prototype.getPaletteEntry = function(x, y) {

@@ -51,7 +51,7 @@ Drawing.prototype.fillTrueBackground = function(rgb) {
   this.fillBackground(color);
 }
 
-Drawing.prototype.drawLine_params = ['x0:i', 'y0:i', 'x1:i', 'y1:i', 'cc?b'];
+Drawing.prototype.drawLine_params = ['x0:n', 'y0:n', 'x1:n', 'y1:n', 'cc?b'];
 Drawing.prototype.drawLine = function(x0, y0, x1, y1, cc) {
   cc = cc ? 1 : 0;
   let res = algorithm.renderLine(this, x0, y0, x1, y1, cc);
@@ -149,7 +149,7 @@ function _renderRect(self, x, y, w, h, fill) {
   self.putSequence(put);
 }
 
-Drawing.prototype.fillCircle_params = ['x:i', 'y:i', 'r:i'];
+Drawing.prototype.fillCircle_params = ['x:i', 'y:i', 'r:n'];
 Drawing.prototype.fillCircle = function(x, y, r) {
   let centerX = x + r;
   let centerY = y + r;
@@ -159,7 +159,7 @@ Drawing.prototype.fillCircle = function(x, y, r) {
   this.putSequence(put);
 }
 
-Drawing.prototype.drawCircle_params = ['x:i', 'y:i', 'r:i', 'width?i'];
+Drawing.prototype.drawCircle_params = ['x:i', 'y:i', 'r:n', 'width?i'];
 Drawing.prototype.drawCircle = function(x, y, r, width) {
   let centerX = x + r;
   let centerY = y + r;

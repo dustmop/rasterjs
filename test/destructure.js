@@ -47,6 +47,16 @@ describe('Destructure', function() {
     let values = destructure.from('fn8', ['x:i', 'width?i'], [123, 456]);
     assert.deepEqual(values, [123, 456]);
   });
+  it('second named parameters', function() {
+    let args = [{'y': 456}];
+    let values = destructure.from('fn2', ['x?i', 'y?i', 'z?i'], args);
+    assert.deepEqual(values, [0, 456, 0]);
+  });
+  it('third named parameters', function() {
+    let args = [{'z': 789}];
+    let values = destructure.from('fn2', ['x?i', 'y?i', 'z?i'], args);
+    assert.deepEqual(values, [0, 0, 789]);
+  });
   it('optional options object', function() {
     let values = destructure.from('fn9', ['o?o', 'func:f'], [function(){}]);
     assert(values[0] === null);
@@ -55,5 +65,28 @@ describe('Destructure', function() {
     values = destructure.from('fn9', ['o?o', 'func:f'], [{a:1}, function(){}]);
     assert.deepEqual(values[0], {a:1});
     assert(typeof values[1] == 'function');
+  });
+  it('convert to int or number', function() {
+    let values = destructure.from('fn1', ['w:i', 'x:i', 'y:n', 'z:n'],
+                                  [123.4, '456.7', 789.1, '234.5']);
+    assert.deepEqual(values, [123, 456, 789.1, 234.5]);
+  });
+  it('convert to string', function() {
+    let values = destructure.from('fn1', ['x:s', 'y:s', 'z:s'],
+                                  [123, 456.7, '789']);
+    assert.deepEqual(values, ['123', '456.7', '789']);
+  });
+  it('default values', function() {
+    let values = destructure.from('fn1', ['x?i=1', 'y?n=2.3', 'z?s=hi'],
+                                  [false, false, false]);
+    assert.deepEqual(values, [1, 2.3, 'hi']);
+  });
+  it('object and function', function() {
+    let values = destructure.from('fn1', ['x:f', 'y:o'], [function(){}, {a:1}]);
+    assert.deepEqual(values[0].constructor.name, 'Function');
+    assert.deepEqual(values[1], {a:1});
+    assert.throws(function() {
+      let vals = destructure.from('fn1', ['x:f', 'y:o'], [function(){}, 123.4]);
+    }, /could not convert to object: 123.4/);
   });
 });

@@ -1,5 +1,6 @@
-function DescribeSpec(choices) {
+function DescribeSpec(choices, allowPositional) {
   this.choices = choices;
+  this.allowPositional = allowPositional;
   return this;
 }
 
@@ -8,8 +9,13 @@ function build(spec) {
   let mapping = {};
   let needed = 0;
   let row = [];
+  let allowPositional = true;
   for (k = 0; k < spec.length; k++) {
     let p = spec[k];
+    if (p == '!name') {
+      allowPositional = false;
+      continue;
+    }
     if (p == '||') {
       choices.push({row: row, mapping: mapping, needed: needed});
       row = [];
@@ -27,19 +33,27 @@ function build(spec) {
   if (row.length > 0) {
     choices.push({row: row, mapping: mapping, needed: needed});
   }
-  return new DescribeSpec(choices);
+  return new DescribeSpec(choices, allowPositional);
 }
 
 function toParam(paramText) {
   let pos = paramText.indexOf(':');
   if (pos != -1) {
-    let [name, type] = paramText.split(':');
-    return {name: name, type: type, req: true};
+    let [name, suffixText] = paramText.split(':');
+    let [type, def] = suffixText.split('=');
+    if (def) {
+      throw new Error(`cannot have default for required param ${paramText}`);
+    }
+    return {name: name, type: type, req: true, def: null};
   }
   pos = paramText.indexOf('?');
   if (pos != -1) {
-    let [name, type] = paramText.split('?');
-    return {name: name, type: type, req: false};
+    let [name, suffixText] = paramText.split('?');
+    let [type, def] = suffixText.split('=');
+    if (def) {
+      def = typeCoerce(def, type);
+    }
+    return {name: name, type: type, req: false, def: def};
   }
   throw new Error(`could not convert param ${paramText}`);
 }
@@ -49,7 +63,7 @@ function from(fname, paramSpec, args, converter) {
   let spec = build(paramSpec);
   for (let i = 0; i < spec.choices.length; i++) {
     let choice = spec.choices[i];
-    let match = tryMatch(choice, args);
+    let match = tryMatch(spec, fname, choice, args);
     if (match.values) {
       if (i > 0 && converter) {
         return converter(i, match.values);
@@ -63,13 +77,20 @@ function from(fname, paramSpec, args, converter) {
   throw new Error(`function ${fname} ${err}`);
 }
 
-function tryMatch(choice, args) {
+function tryMatch(spec, fname, choice, args) {
   let row = choice.row;
   let allowed = row.length;
   let needed = choice.needed;
   let mapping = choice.mapping;
+  if (args.length == 0) {
+    return tryMatchNamedParam(choice, {});
+  }
   if (args.length == 1 && isRawObject(args[0])) {
     return tryMatchNamedParam(choice, args[0]);
+  }
+  if (!spec.allowPositional) {
+    // TODO: Should this check move up to `from`?
+    throw new Error(`cannot pass positional arguments to ${fname}`);
   }
   return tryMatchPositionalParam(choice, args);
 }
@@ -86,10 +107,12 @@ function tryMatchNamedParam(choice, argMap) {
     let p = row[i];
     let v = argMap[p.name];
     if (v !== undefined) {
-      values.push(typeCoerce(v, p.type));
+      values.push(toValueLike(v, p));
       let pos = haveArgKeys.indexOf(p.name);
       haveArgKeys.splice(pos, 1);
-    } else if (p.req) {
+    } else if (!p.req) {
+      values.push(toValueLike(null, p));
+    } else {
       return {err: `missing parameter ${p.name}`};
     }
   }
@@ -131,7 +154,7 @@ function tryMatchPositionalParam(choice, args) {
       }
       return {err: `argument ${i} not found`};
     }
-    values.push(typeCoerce(args[i], p.type));
+    values.push(toValueLike(args[i], p));
   }
   return {values: values};
 }
@@ -146,28 +169,51 @@ function isRawObject(thing) {
   return false;
 }
 
+function toValueLike(value, param) {
+  if (!value && param.def) {
+    return param.def;
+  }
+  return typeCoerce(value, param.type);
+}
+
 function typeCoerce(value, type) {
   if (type == 'i') {
     // int
-    return value;
-  } else if (type == 'f') {
-    // float
-    return value;
+    return Math.floor(Number(value));
+  } else if (type == 'n') {
+    // number
+    return Number(value);
   } else if (type == 'ps') {
     // points
+    // TODO: Validate and/or convert
     return value;
   } else if (type == 'a' || type == 'any') {
-    // points
+    // any
     return value;
   } else if (type == 's') {
     // string
-    return value;
+    return value.toString();
   } else if (type == 'b') {
-    // string
-    return value;
+    // bool
+    return !!value;
   } else if (type == 'o') {
     // object
-    return value;
+    if (!value) {
+      return null;
+    }
+    if (value.constructor.name == 'Object') {
+      return value;
+    }
+    throw new Error(`could not convert to object: ${value}`);
+  } else if (type == 'f') {
+    // function
+    if (!value) {
+      return null;
+    }
+    if (value.constructor.name == 'Function') {
+      return value;
+    }
+    throw new Error(`could not convert to function: ${value}`);
   } else {
     throw new Error(`unknown type: ${type}`);
   }

@@ -455,25 +455,18 @@ Scene.prototype.useInterrupts = function(conf) {
   if (!Array.isArray(conf)) {
     throw new Error(`useInterrupts param must be an array`);
   }
-  let renderPoint = -1;
   for (let k = 0; k < conf.length; k++) {
     let elem = conf[k];
     if (elem.scanline === undefined) {
       throw new Error(`useInterrupts element ${k} missing field 'scanline'`);
     }
-    if (elem.scanline.constructor.name != 'Number') {
-      throw new Error(`useInterrupts element ${k}.scanline must be number`);
-    }
+    // TODO: scanline must be Number or [Number], and in ascending order
     if (!elem.irq) {
       throw new Error(`useInterrupts element ${k} missing field 'irq'`);
     }
     if (elem.irq.constructor.name != 'Function') {
       throw new Error(`useInterrupts element ${k}.irq must be function`);
     }
-    if (elem.scanline < renderPoint) {
-      throw new Error(`useInterrupts element ${k}.scanline larger than ${renderPoint}`);
-    }
-    renderPoint = elem.scanline;
   }
   this.interrupts = conf;
 }

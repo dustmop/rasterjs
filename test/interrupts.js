@@ -20,4 +20,20 @@ describe('Interrupts', function() {
     util.renderCompareTo(ra, 'test/testdata/irq-fruit.png');
   });
 
+  it('change scroll', function() {
+    ra.resetState();
+    ra.useColors('pico8');
+
+    let img = ra.loadImage('test/testdata/small-fruit.png');
+    ra.drawImage(img);
+
+    ra.useInterrupts([
+      {scanline:     0, irq: () => { ra.setScrollX(0) }},
+      {scanline:     2, irq: () => { ra.setScrollX(1) }},
+      {scanline: [5,7], irq: (ln) => { ra.setScrollX(ln) }},
+    ]);
+
+    util.renderCompareTo(ra, 'test/testdata/diag-fruit.png');
+  });
+
 });

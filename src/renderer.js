@@ -145,20 +145,43 @@ Renderer.prototype.render = function() {
     return [this._renderRegion(0, 0, width, height)];
   }
 
-  // Otherwise, render between each interrupt.
-  let renderPoint = 0;
-  for (let k = 0; k < system.interrupts.length + 1; k++) {
+  // Otherwise, collect IRQs per each scanline
+  let perIRQs = [];
+  for (let k = 0; k < system.interrupts.length; k++) {
+    let row = system.interrupts[k];
+    if (Array.isArray(row.scanline)) {
+      let lineRange = row.scanline;
+      // TODO: Assume a pair of integers
+      for (let j = lineRange[0]; j < lineRange[1]+1; j++) {
+        perIRQs.push({scanline: j, irq: row.irq});
+      }
+      continue;
+    } else if (isNumber(row.scanline)) {
+      perIRQs.push({scanline: row.scanline, irq: row.irq});
+    } else {
+      throw new Error(`invalid scanline number: ${row.scanline}`);
+    }
+  }
+
+  // Per region rendering
+  let renderBegin = 0;
+  for (let k = 0; k < perIRQs.length + 1; k++) {
+    // Render a region up until the given scanline
     let scanLine;
-    if (k < system.interrupts.length) {
-      scanLine = Math.min(system.interrupts[k].scanline, height);
+    if (k < perIRQs.length) {
+      scanLine = Math.min(perIRQs[k].scanline, height);
     } else {
       scanLine = height;
     }
-    this._renderRegion(0, renderPoint, width, scanLine);
-    renderPoint = scanLine;
-    if (k < system.interrupts.length) {
-      system.interrupts[k].irq();
+    if (scanLine > renderBegin) {
+      this._renderRegion(0, renderBegin, width, scanLine);
     }
+    // Execute the irq that interrupts rasterization
+    if (k < perIRQs.length) {
+      perIRQs[k].irq(scanLine);
+    }
+    // Resume rendering at the given scanline
+    renderBegin = scanLine;
   }
 
   return [layer.rgbSurface];
@@ -291,6 +314,10 @@ Renderer.prototype._toColor = function(c) {
   }
   rgbColor.ensureIs(rgb);
   return rgb
+}
+
+function isNumber(val) {
+  return typeof val == 'number';
 }
 
 module.exports.Renderer = Renderer;

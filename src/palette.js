@@ -197,7 +197,7 @@ function PaletteEntry(rgb, idx, colors) {
 }
 
 PaletteEntry.prototype.setColor = function(n) {
-  this.cval = n;
+  this.cval = Math.floor(n);
   this.rgb = new rgbColor.RGBColor(this.colors.get(this.cval));
 }
 

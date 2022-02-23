@@ -115,8 +115,8 @@ Raster.prototype.rotatePolygon = function(shape, angle) {
 }
 
 Raster.prototype.oscil = function(namedOnly) {
-  let spec = ['!name', 'period?i=60', 'begin?n', 'height?n=1.0', 'click?a'];
-  let [period, begin, height, click] = destructure.from(
+  let spec = ['!name', 'period?i=60', 'begin?n', 'amp?n=1.0', 'click?a'];
+  let [period, begin, amp, click] = destructure.from(
     'oscil', spec, arguments, null);
 
   period = period || 60;
@@ -127,7 +127,7 @@ Raster.prototype.oscil = function(namedOnly) {
     click = this.timeClick;
   }
   click = click + Math.round(period * begin);
-  return height * ((1.0 - Math.cos(click * this.TAU / period)) / 2.0000001);
+  return amp * ((1.0 - Math.cos(click * this.TAU / period)) / 2.0000001);
 }
 
 Raster.prototype.eyedrop = function(x, y) {

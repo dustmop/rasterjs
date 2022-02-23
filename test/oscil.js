@@ -23,10 +23,10 @@ describe('Oscil', function() {
     let n = ra.oscil();
     assert.almostEqual(n, 0.25);
   });
-  it('height', function() {
+  it('amp', function() {
     ra.resetState();
     ra.timeClick = 10;
-    let n = ra.oscil({height: 100});
+    let n = ra.oscil({amp: 100});
     assert.almostEqual(n, 25, {epsilon: 0.01});
   });
   it('period', function() {

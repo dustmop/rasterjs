@@ -1,7 +1,7 @@
 const cppmodule = require('../build/Release/native');
 const argparse = require('argparse');
 const path = require('path');
-const saveRenderer = require('./save_renderer.js');
+const saver = require('./save_image_display.js');
 
 function makeResources() {
   let res = cppmodule.resources();
@@ -17,7 +17,7 @@ function makeDisplay() {
 
 function getOptions() {
   // If running as a test, don't parse command-line arguments. This allows
-  // the test runner to process it's own arguments instead.
+  // the test runner to process its own arguments instead.
   if (runningAsTest()) {
     return {};
   }
@@ -30,8 +30,8 @@ function getOptions() {
   let args = parser.parse_args();
   if (args.save_filename) {
     let res = cppmodule.resources();
-    args.display = new saveRenderer.SaveRenderer(args.save_filename,
-                                                 args.num_frames, res);
+    args.display = new saver.SaveImageDisplay(args.save_filename,
+                                              args.num_frames, res);
   }
   return args;
 }

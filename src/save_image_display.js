@@ -10,7 +10,7 @@ const util = require('util');
 const randstr = require('randomstring');
 const algorithm = require('./algorithm');
 
-function SaveRenderer(targetPath, numFrames, saveService) {
+function SaveImageDisplay(targetPath, numFrames, saveService) {
   this.targetPath = targetPath;
   this.numFrames = numFrames;
   this.isGif = this.targetPath.endsWith('gif');
@@ -20,28 +20,28 @@ function SaveRenderer(targetPath, numFrames, saveService) {
   return this;
 }
 
-SaveRenderer.prototype.initialize = function() {
+SaveImageDisplay.prototype.initialize = function() {
   this.tmpdir = path.join(os.tmpdir(), 'raster-save-' + randstr.generate(8));
 }
 
-SaveRenderer.prototype.setSize = function(w, h) {
+SaveImageDisplay.prototype.setSize = function(w, h) {
   this.width = w;
   this.height = h;
 }
 
-SaveRenderer.prototype.setRenderer = function(renderer) {
+SaveImageDisplay.prototype.setRenderer = function(renderer) {
   this.renderer = renderer;
 }
 
-SaveRenderer.prototype.setZoom = function(zoomLevel) {
+SaveImageDisplay.prototype.setZoom = function(zoomLevel) {
   this.zoomLevel = zoomLevel;
 }
 
-SaveRenderer.prototype.setGrid = function(unit) {
+SaveImageDisplay.prototype.setGrid = function(unit) {
   this.gridUnit = unit;
 }
 
-SaveRenderer.prototype.renderLoop = function(nextFrame) {
+SaveImageDisplay.prototype.renderLoop = function(nextFrame) {
   let width = this.width;
   let height = this.height;
 
@@ -111,7 +111,7 @@ SaveRenderer.prototype.renderLoop = function(nextFrame) {
   }
 }
 
-SaveRenderer.prototype.createGif = function(width, height, frames, outName) {
+SaveImageDisplay.prototype.createGif = function(width, height, frames, outName) {
   const encoder = new GIFEncoder(width, height, 'octree', true, frames.length);
 
   const writeStream = createWriteStream(outName)
@@ -137,11 +137,11 @@ SaveRenderer.prototype.createGif = function(width, height, frames, outName) {
   encoder.finish();
 }
 
-SaveRenderer.prototype.handleEvent = function(eventName, callback) {
+SaveImageDisplay.prototype.handleEvent = function(eventName, callback) {
   // pass
 }
 
-SaveRenderer.prototype._overlayGrid = function(surface, spacing) {
+SaveImageDisplay.prototype._overlayGrid = function(surface, spacing) {
   let pitch = surface.pitch;
   let last = spacing - 1;
   for (let y = 0; y < surface.height; y++) {
@@ -156,7 +156,7 @@ SaveRenderer.prototype._overlayGrid = function(surface, spacing) {
   }
 }
 
-SaveRenderer.prototype._blend = function(mine, their, opacity) {
+SaveImageDisplay.prototype._blend = function(mine, their, opacity) {
   let left = mine * (0x100 - opacity);
   let rite = their * opacity;
   return Math.floor((left + rite) / 0x100);
@@ -172,4 +172,4 @@ function leftPad(value, size, fill) {
   return text;
 }
 
-module.exports.SaveRenderer = SaveRenderer;
+module.exports.SaveImageDisplay = SaveImageDisplay;

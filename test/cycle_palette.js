@@ -20,7 +20,7 @@ describe('Cycle palette', function() {
     let img = ra.loadImage('test/testdata/small-fruit.png');
     ra.drawImage(img);
 
-    let palette = ra.getPaletteAll();
+    let palette = ra.usePalette();
     palette[2].setColor(3);
     palette[8].setColor(11);
     palette[14].setColor(10);
@@ -40,8 +40,8 @@ describe('Cycle palette', function() {
     assert.deepEqual(expect, ra.clonePlane().data);
 
     // Compare the palette
-    palette = ra.getPaletteAll();
-    expect = 'PaletteCollection{0:[0]=0x000000, 1:[1]=0x1d2b53, 2:[3]=0x008751, 3:[3]=0x008751, 4:[4]=0xab5236, 5:[5]=0x5f574f, 6:[6]=0xc2c3c7, 7:[7]=0xfff1e8, 8:[11]=0x00e436, 9:[9]=0xffa300, 10:[10]=0xffec27, 11:[11]=0x00e436, 12:[12]=0x29adff, 13:[13]=0x83769c, 14:[10]=0xffec27, 15:[15]=0xffccaa}';
+    palette = ra.usePalette();
+    expect = 'Palette{0:[0]=0x000000, 1:[1]=0x1d2b53, 2:[3]=0x008751, 3:[3]=0x008751, 4:[4]=0xab5236, 5:[5]=0x5f574f, 6:[6]=0xc2c3c7, 7:[7]=0xfff1e8, 8:[11]=0x00e436, 9:[9]=0xffa300, 10:[10]=0xffec27, 11:[11]=0x00e436, 12:[12]=0x29adff, 13:[13]=0x83769c, 14:[10]=0xffec27, 15:[15]=0xffccaa}';
     let actual = palette.toString();
     assert.equal(expect, actual);
   });
@@ -103,8 +103,8 @@ describe('Cycle palette', function() {
 
     // Compare the palette, which has aliased color. Dropped rgb is shown in
     // parenthesis.
-    palette = ra.getPaletteAll();
-    expect = 'PaletteCollection{0:[8]=0xff004d, 1:[0]=0x000000, 2:[0]=(0xab5236), 3:[0]=(0xff77a8), 4:[2]=0x7e2553}';
+    palette = ra.usePalette();
+    expect = 'Palette{0:[8]=0xff004d, 1:[0]=0x000000, 2:[0]=(0xab5236), 3:[0]=(0xff77a8), 4:[2]=0x7e2553}';
     let actual = palette.toString();
     assert.equal(expect, actual);
   });
@@ -132,8 +132,8 @@ describe('Cycle palette', function() {
     assert.deepEqual(expect, ra.clonePlane().data);
 
     // Compare the palette
-    palette = ra.getPaletteAll();
-    expect = 'PaletteCollection{0:[8]=0xff004d, 1:[0]=0x000000, 2:[2]=0x7e2553, 3:[14]=0xff77a8, 4:[4]=0xab5236}';
+    palette = ra.usePalette();
+    expect = 'Palette{0:[8]=0xff004d, 1:[0]=0x000000, 2:[2]=0x7e2553, 3:[14]=0xff77a8, 4:[4]=0xab5236}';
     let actual = palette.toString();
     assert.equal(expect, actual);
   });
@@ -143,7 +143,7 @@ describe('Cycle palette', function() {
     ra.useColors([0x000000, 0xff0000, 0x00ff00, 0x0000ff]);
 
     // Enable the palette
-    let palette = ra.getPaletteAll();
+    let palette = ra.usePalette();
 
     assert.throws(function() {
       ra.loadImage('test/testdata/small-fruit.png');

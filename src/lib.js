@@ -63,6 +63,10 @@ Raster.prototype.originAtCenter = function() {
   this.scene.originAtCenter();
 }
 
+Raster.prototype.useDisplay = function(disp) {
+  this.scene.useDisplay(disp);
+}
+
 Raster.prototype.useColors = function(rep) {
   return this.scene.useColors(rep);
 }
@@ -75,9 +79,7 @@ Raster.prototype.numColors = function() {
   return this.scene.numColors();
 }
 
-Raster.prototype.useDisplay = function(disp) {
-  this.scene.useDisplay(disp);
-}
+////////////////////////////////////////
 
 Raster.prototype.Plane = function() {
   if (new.target === undefined) {
@@ -128,17 +130,12 @@ Raster.prototype.oscil = function(namedOnly) {
   return height * ((1.0 - Math.cos(click * this.TAU / period)) / 2.0000001);
 }
 
-Raster.prototype.getPaletteEntry = function(x, y) {
-  return this.scene.getPaletteEntry(x, y);
+Raster.prototype.eyedrop = function(x, y) {
+  return this.scene.eyedrop(x, y);
 }
 
-Raster.prototype.getPaletteAll = function(opt) {
-  opt = opt || {};
-  return this.scene.getPaletteAll(opt);
-}
-
-Raster.prototype.usePalette = function(vals) {
-  return this.scene.usePalette(vals);
+Raster.prototype.usePalette = function(optOrVals) {
+  return this.scene.usePalette(optOrVals);
 }
 
 Raster.prototype.setFont = function(spec) {
@@ -214,20 +211,20 @@ Raster.prototype.setScrollY = function(v) {
 ////////////////////////////////////////
 
 Raster.prototype.useTileset = function(pl, sizeInfo) {
-  this.scene.useTileset(pl, sizeInfo);
+  return this.scene.useTileset(pl, sizeInfo);
 }
 
 Raster.prototype.useAttributes = function(pl, sizeInfo) {
-  this.scene.useAttributes(pl, sizeInfo);
+  return this.scene.useAttributes(pl, sizeInfo);
 }
 
 Raster.prototype.usePlane = function(pl) {
-  this.scene.usePlane(pl);
   this._removeMethods();
+  return this.scene.usePlane(pl);
 }
 
 Raster.prototype.useInterrupts = function(conf) {
-  this.scene.useInterrupts(conf);
+  return this.scene.useInterrupts(conf);
 }
 
 ////////////////////////////////////////

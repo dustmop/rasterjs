@@ -5,14 +5,14 @@ const palette = require('./palette.js');
 const renderer = require('./renderer.js');
 const textLoader = require('./text_loader.js');
 
-function PaletteCollection(items, saveService) {
+function Palette(items, saveService) {
   if (saveService != null && !saveService.saveTo) {
-    throw new Error('PaletteCollection given invalid saveService');
+    throw new Error('Palette given invalid saveService');
   }
   this.items = items;
   for (let i = 0; i < items.length; i++) {
     if (items[i].constructor != palette.PaletteEntry) {
-      throw new Error('PaletteCollection got invalid item[${i}], should be PaletteEntry');
+      throw new Error('Palette got invalid item[${i}], should be PaletteEntry');
     }
   }
   // length
@@ -27,11 +27,11 @@ function PaletteCollection(items, saveService) {
   return this;
 }
 
-PaletteCollection.prototype.get = function(c) {
+Palette.prototype.get = function(c) {
   return this.items[c];
 }
 
-PaletteCollection.prototype.reset = function() {
+Palette.prototype.reset = function() {
   for (let i = 0; i < this.items.length; i++) {
     let it = this.items[i];
     it.cval = it.idx;
@@ -39,7 +39,7 @@ PaletteCollection.prototype.reset = function() {
   }
 }
 
-PaletteCollection.prototype.save = function(filename) {
+Palette.prototype.save = function(filename) {
   let target = new plane.Plane();
   // Preserve
   let preserveScene = target.scene;
@@ -50,7 +50,7 @@ PaletteCollection.prototype.save = function(filename) {
   target.scene = preserveScene;
 }
 
-PaletteCollection.prototype._saveTo = function(target, savepath) {
+Palette.prototype._saveTo = function(target, savepath) {
   let numX = 8;
   let numY = Math.ceil(this.items.length / 8);
   // Parameterize
@@ -121,26 +121,26 @@ PaletteCollection.prototype._saveTo = function(target, savepath) {
   this.saveService.saveTo(savepath, surfaces);
 }
 
-PaletteCollection.prototype._isLightColor = function(rgb) {
+Palette.prototype._isLightColor = function(rgb) {
   let total = rgb.r + rgb.g + rgb.b;
   let avg = total / 3;
   return avg > 0x80;
 }
 
-PaletteCollection.prototype.toString = function() {
+Palette.prototype.toString = function() {
   return this._stringify(0, {});
 }
 
-PaletteCollection.prototype._stringify = function(depth, opts) {
+Palette.prototype._stringify = function(depth, opts) {
   let elems = [];
   for (let i = 0; i < this.items.length; i++) {
     let it = this.items[i];
     elems.push(`${i}:[${it.cval}]=${it.hex()}`);
   }
-  return 'PaletteCollection{' + elems.join(', ') + '}';
+  return 'Palette{' + elems.join(', ') + '}';
 }
 
-PaletteCollection.prototype.find = function(cval) {
+Palette.prototype.find = function(cval) {
   for (let n = 0; n < this.items.length; n++) {
     let ent = this.items[n];
     if (cval === ent.cval) {
@@ -150,11 +150,11 @@ PaletteCollection.prototype.find = function(cval) {
   return null;
 }
 
-PaletteCollection.prototype.lookup = function(v) {
+Palette.prototype.lookup = function(v) {
   return this.items[v].cval;
 }
 
-PaletteCollection.prototype.insertWhereAvail = function(rgbval) {
+Palette.prototype.insertWhereAvail = function(rgbval) {
   for (let n = 0; n < this.items.length; n++) {
     let ent = this.items[n];
     if (ent.isAvail) {
@@ -167,7 +167,7 @@ PaletteCollection.prototype.insertWhereAvail = function(rgbval) {
   return null;
 }
 
-PaletteCollection.prototype.relocateColorTo = function(c, pieceNum, optSize) {
+Palette.prototype.relocateColorTo = function(c, pieceNum, optSize) {
   let cval = this.items[c].cval;
   for (let n = 0; n < this.items.length; n++) {
     if (c == n) { continue; }
@@ -225,5 +225,5 @@ PaletteEntry.prototype.dump = function() {
   return ans;
 }
 
-module.exports.PaletteCollection = PaletteCollection;
+module.exports.Palette = Palette;
 module.exports.PaletteEntry = PaletteEntry;

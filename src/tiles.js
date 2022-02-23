@@ -30,6 +30,9 @@ function Tileset(sourceOrNum, sizeInfo) {
   } else if (isPlane(sourceOrNum)) {
     // load tiles by aliasing their buffers to the source
     let source = sourceOrNum;
+    if (!source.width || !source.height) {
+      throw new Error(`Tileset's source has invalid size`);
+    }
     if (sizeInfo.tile_width > source.width) {
       throw new Error(`Tileset's tile_width is larger than source data`);
     }
@@ -42,6 +45,7 @@ function Tileset(sourceOrNum, sizeInfo) {
   } else {
     throw new Error(`invalid source: ${JSON.stringify(sourceOrNum)}`);
   }
+  this.length = this.numTiles;
 
   return this;
 }
@@ -51,6 +55,7 @@ Tileset.prototype.get = function(c) {
 }
 
 Tileset.prototype._loadTilesFromSource = function(source) {
+  source.ensureReady();
   this.numTileX = source.width / this.tileWidth;
   this.numTileY = source.height / this.tileHeight;
   this.numTiles = this.numTileX * this.numTileY

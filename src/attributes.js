@@ -1,33 +1,39 @@
 function Attributes(source, sizeInfo) {
+  if (!source && !sizeInfo) {
+    throw new Error(`Attributes expects an argument`);
+  }
   if (!sizeInfo) {
     throw new Error(`Attributes requires a detail object parameter`);
   }
-  if (!sizeInfo.block_width) {
-    throw new Error(`invalid Attributes detail: missing block_width`);
+  if (!sizeInfo.cell_width) {
+    throw new Error(`invalid Attributes detail: missing cell_width`);
   }
-  if (!sizeInfo.block_height) {
-    throw new Error(`invalid Attributes detail: missing block_height`);
+  if (!sizeInfo.cell_height) {
+    throw new Error(`invalid Attributes detail: missing cell_height`);
   }
   if (!sizeInfo.piece_size) {
     throw new Error(`invalid Attributes detail: missing piece_size`);
   }
-  if (!Math.trunc(sizeInfo.block_width) != 0) {
-    throw new Error(`Attributes's block_width must be integer`);
+  if (!Math.trunc(sizeInfo.cell_width) != 0) {
+    throw new Error(`Attributes's cell_width must be integer`);
   }
-  if (!Math.trunc(sizeInfo.block_height) != 0) {
-    throw new Error(`Attributes's block_height must be integer`);
+  if (!Math.trunc(sizeInfo.cell_height) != 0) {
+    throw new Error(`Attributes's cell_height must be integer`);
   }
   if (!Math.trunc(sizeInfo.piece_size) != 0) {
     throw new Error(`Attributes's piece_size must be integer`);
   }
-  if (sizeInfo.block_width <= 0) {
-    throw new Error(`Attributes's block_width must be > 0`);
+  if (sizeInfo.cell_width <= 0) {
+    throw new Error(`Attributes's cell_width must be > 0`);
   }
-  if (sizeInfo.block_height <= 0) {
-    throw new Error(`Attributes's block_height must be > 0`);
+  if (sizeInfo.cell_height <= 0) {
+    throw new Error(`Attributes's cell_height must be > 0`);
   }
   if (sizeInfo.piece_size <= 0) {
     throw new Error(`Attributes's piece_size must be > 0`);
+  }
+  if (Number.isInteger(source)) {
+    throw new Error(`Attributes expects a Plane as an argument`);
   }
   if (!source.data) {
     throw new Error(`invalid source, data is null`);
@@ -124,10 +130,10 @@ Attributes.prototype._recolorTile = function(pieceNum, palette, tile) {
 }
 
 Attributes.prototype.realizeIndexedColor = function(c, x, y) {
-  let blockX = Math.floor(x / this.sizeInfo.block_width);
-  let blockY = Math.floor(y / this.sizeInfo.block_height);
+  let cellX = Math.floor(x / this.sizeInfo.cell_width);
+  let cellY = Math.floor(y / this.sizeInfo.cell_height);
   let pieceSize = this.sizeInfo.piece_size;
-  let k = blockY * this.source.pitch + blockX;
+  let k = cellY * this.source.pitch + cellX;
   let choice = this.source.data[k];
   return (c % pieceSize) + (choice * pieceSize);
 }

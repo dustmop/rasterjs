@@ -137,6 +137,10 @@ SaveRenderer.prototype.createGif = function(width, height, frames, outName) {
   encoder.finish();
 }
 
+SaveRenderer.prototype.handleEvent = function(eventName, callback) {
+  // pass
+}
+
 SaveRenderer.prototype._overlayGrid = function(surface, spacing) {
   let pitch = surface.pitch;
   let last = spacing - 1;

@@ -85,6 +85,10 @@ function ImagePlane() {
   return this;
 }
 
+ImagePlane.prototype.ensureReady = function() {
+  this.fillData();
+}
+
 ImagePlane.prototype.copy = function(x, y, w, h) {
   let make = new ImagePlane();
   make.parentLoader = this.parentLoader;
@@ -107,6 +111,11 @@ ImagePlane.prototype.copy = function(x, y, w, h) {
 ImagePlane.prototype.get = function(x, y) {
   let k = y*this.pitch + x;
   return this.data[k];
+}
+
+ImagePlane.prototype.put = function(x, y, v) {
+  let k = y*this.pitch + x;
+  this.data[k] = v;
 }
 
 ImagePlane.prototype.fillData = function() {

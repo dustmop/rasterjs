@@ -50,7 +50,7 @@ Renderer.prototype.connect = function(input) {
   if (input.tiles && input.tiles.constructor != tiles.Tileset) {
     throw new Error(`input.tiles must be a Tileset, got ${input.tiles}`);
   }
-  if (input.palette && input.palette.constructor != palette.PaletteCollection) {
+  if (input.palette && input.palette.constructor != palette.Palette) {
     throw new Error(`input.palette must be a Palette, got ${input.palette}`);
   }
   if (input.attrs && input.attrs.constructor != attrs.Attributes) {

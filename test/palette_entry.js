@@ -15,7 +15,7 @@ describe('Palette entry', function() {
     let img = ra.loadImage('test/testdata/line.png');
     ra.drawImage(img, 0, 0);
 
-    let entry = ra.getPaletteEntry(8, 4);
+    let entry = ra.eyedrop(8, 4);
     entry.setColor(0x13);
 
     util.renderCompareTo(ra, 'test/testdata/pal_set.png');
@@ -26,7 +26,7 @@ describe('Palette entry', function() {
     ra.setSize(8, 8);
 
     let result = [];
-    let palette = ra.getPaletteAll();
+    let palette = ra.usePalette();
     let i = 0;
     for (let y = 0; y < 8; y++) {
       for (let x = 0; x < 8; x++) {
@@ -46,7 +46,7 @@ describe('Palette entry', function() {
     let tmpout = tmpdir + '/actual.png';
     ra.resetState();
 
-    let palette = ra.getPaletteAll();
+    let palette = ra.usePalette();
     palette.save(tmpout);
 
     util.ensureFilesMatch('test/testdata/pal_saved.png', tmpout);
@@ -58,7 +58,7 @@ describe('Palette entry', function() {
     ra.resetState();
     ra.useColors('dos');
 
-    let palette = ra.getPaletteAll();
+    let palette = ra.usePalette();
     palette.save(tmpout);
 
     util.ensureFilesMatch('test/testdata/pal_dos_saved.png', tmpout);
@@ -70,14 +70,14 @@ describe('Palette entry', function() {
     ra.resetState();
     ra.useColors('dos');
 
-    let palette = ra.getPaletteAll();
+    let palette = ra.usePalette();
     for (let i = 0; i < palette.length; i++) {
       if (palette.get(i).rgb.toInt() != rgb_map.rgb_map_dos[i]) {
         assert.fail('Did not match!');
       }
     }
 
-    let expect = 'PaletteCollection{0:[0]=0x000000, 1:[1]=0x0000aa, 2:[2]=0x00aa00, 3:[3]=0x00aaaa, 4:[4]=0xaa0000, 5:[5]=0xaa00aa, 6:[6]=0xaa5500, 7:[7]=0xaaaaaa, 8:[8]=0x555555, 9:[9]=0x5555ff, 10:[10]=0x55ff55, 11:[11]=0x55ffff, 12:[12]=0xff5555, 13:[13]=0xff55ff, 14:[14]=0xffff55, 15:[15]=0xffffff}';
+    let expect = 'Palette{0:[0]=0x000000, 1:[1]=0x0000aa, 2:[2]=0x00aa00, 3:[3]=0x00aaaa, 4:[4]=0xaa0000, 5:[5]=0xaa00aa, 6:[6]=0xaa5500, 7:[7]=0xaaaaaa, 8:[8]=0x555555, 9:[9]=0x5555ff, 10:[10]=0x55ff55, 11:[11]=0x55ffff, 12:[12]=0xff5555, 13:[13]=0xff55ff, 14:[14]=0xffff55, 15:[15]=0xffffff}';
     let actual = palette.toString();
     assert.equal(expect, actual);
   });
@@ -94,7 +94,7 @@ describe('Palette entry', function() {
     let img = ra.loadImage('test/testdata/boss_first_form.png');
 
     ra.drawImage(img, 0, 0);
-    let colors = ra.getPaletteAll({sort: true});
+    let colors = ra.usePalette({sort: true});
     let actual = [];
     for (let i = 0; i < colors.length; i++) {
       actual.push(colors[i].hex());

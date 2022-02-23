@@ -196,8 +196,8 @@ describe('Tileset', function() {
 
     // Create palette, 4 options, each of size 6
     let pal = [17,16,14,15,13,12,
-               0,11, 7,10, 9, 2,
-               6, 5, 4, 3, 1, 0,
+                0,11, 7,10, 9, 2,
+                6, 5, 4, 3, 1, 0,
                18,20, 8, 5,21,19,
               ];
     ra.usePalette(pal);
@@ -205,12 +205,12 @@ describe('Tileset', function() {
     // Build attributes
     let attrs = new ra.Plane();
     attrs.setSize(4);
-    attrs.fillDot([[0,1,1,1],
-                   [1,3,3,3],
-                   [2,2,1,0],
-                   [1,3,0,0],
-                  ]);
-    ra.useAttributes(attrs, {block_width: 4, block_height: 4, piece_size: 6});
+    attrs.fillPattern([[0,1,1,1],
+                       [1,3,3,3],
+                       [2,2,1,0],
+                       [1,3,0,0],
+                      ]);
+    ra.useAttributes(attrs, {cell_width: 4, cell_height: 4, piece_size: 6});
 
     // Tileset / CHR
     let tiles = ra.loadImage('test/testdata/tiles.png');
@@ -220,10 +220,10 @@ describe('Tileset', function() {
     let plane = new ra.Plane();
     plane.setSize(4);
     ra.usePlane(plane);
-    plane.fillDot([[2, 6, 1, 3],
-                   [6, 7, 7, 7],
-                   [5, 5, 1, 0],
-                   [6, 4, 2, 2]]);
+    plane.fillPattern([[2, 6, 1, 3],
+                       [6, 7, 7, 7],
+                       [5, 5, 1, 0],
+                       [6, 4, 2, 2]]);
 
     util.renderCompareTo(ra, 'test/testdata/map_of_tiles.png');
   });
@@ -240,8 +240,8 @@ describe('Tileset', function() {
 
     // Create palette, 4 options, each of size 6
     let pal = [17,16,14,15,13,12,
-               0,11, 7,10, 9, 2,
-               6, 5, 4, 3, 1, 0,
+                0,11, 7,10, 9, 2,
+                6, 5, 4, 3, 1, 0,
                18,20, 8, 5,21,19,
               ];
     ra.usePalette(pal);
@@ -249,12 +249,12 @@ describe('Tileset', function() {
     // Build attributes
     let attrs = new ra.Plane();
     attrs.setSize(4);
-    attrs.fillDot([[0,1,1,1],
-                   [1,3,3,3],
-                   [2,2,1,0],
-                   [1,3,0,0],
-                  ]);
-    ra.useAttributes(attrs, {block_width: 4, block_height: 4, piece_size: 6});
+    attrs.fillPattern([[0,1,1,1],
+                       [1,3,3,3],
+                       [2,2,1,0],
+                       [1,3,0,0],
+                      ]);
+    ra.useAttributes(attrs, {cell_width: 4, cell_height: 4, piece_size: 6});
 
     // Tileset / CHR
     let tiles = ra.loadImage('test/testdata/tiles.png');
@@ -264,10 +264,10 @@ describe('Tileset', function() {
     let plane = new ra.Plane();
     plane.setSize(4);
     ra.usePlane(plane);
-    plane.fillDot([[2, 6, 1, 3],
-                   [6, 7, 7, 7],
-                   [5, 5, 1, 0],
-                   [6, 4, 2, 2]]);
+    plane.fillPattern([[2, 6, 1, 3],
+                       [6, 7, 7, 7],
+                       [5, 5, 1, 0],
+                       [6, 4, 2, 2]]);
 
     attrs.put(1, 0, 3);
     attrs.put(3, 0, 0);

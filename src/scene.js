@@ -315,15 +315,15 @@ Scene.prototype.isDisplayObject = function(obj) {
   return true;
 }
 
-Scene.prototype.getPaletteEntry = function(x, y) {
+Scene.prototype.eyedrop = function(x, y) {
   let c = this.aPlane.get(x, y);
-  this._ensurePalette();
+  this._paletteFromColorset();
   return this.palette.get(c);
 }
 
-Scene.prototype.getPaletteAll = function(opt) {
-  this._ensurePalette();
-  if (opt.sort) {
+Scene.prototype._initPaletteFromPlane = function(shouldSort) {
+  this._paletteFromColorset();
+  if (shouldSort) {
     let remap = {};
     let vals = [];
     for (let i = 0; i < this.palette.length; i++) {
@@ -362,14 +362,14 @@ Scene.prototype.getPaletteAll = function(opt) {
     }
     // Assigin the palette to the scene
     let saveService = this.saveService;
-    let pal = new palette.PaletteCollection(items, saveService);
+    let pal = new palette.Palette(items, saveService);
     this.palette = pal;
   }
   return this.palette;
 }
 
-Scene.prototype._ensurePalette = function() {
-  if (this.palette == null) {
+Scene.prototype._paletteFromColorset = function() {
+  if (!this.palette) {
     let colors = this.colorSet;
     let saveService = this.saveService;
     let all = [];
@@ -379,8 +379,9 @@ Scene.prototype._ensurePalette = function() {
       let ent = new palette.PaletteEntry(rgb, i, colors);
       all.push(ent);
     }
-    this.palette = new palette.PaletteCollection(all, saveService);
+    this.palette = new palette.Palette(all, saveService);
   }
+  return this.palette;
 }
 
 Scene.prototype.usePlane = function(pl) {
@@ -392,7 +393,21 @@ Scene.prototype.usePlane = function(pl) {
   this._config.usingNonPrimaryPlane = true;
 }
 
-Scene.prototype.usePalette = function(vals) {
+Scene.prototype.usePalette = function(optOrVals) {
+  optOrVals = optOrVals || {};
+  if (optOrVals.constructor.name == 'Object') {
+    return this._initPaletteFromPlane(optOrVals.sort);
+  } else if (Array.isArray(optOrVals)) {
+    return this._constructPaletteFromVals(optOrVals);
+  } else if (Number.isInteger(optOrVals)) {
+    let vals = new Array(optOrVals);
+    vals.fill(0);
+    return this._constructPaletteFromVals(vals);
+  }
+  throw new Error(`usePalette: unsupported param ${optOrVals}`);
+}
+
+Scene.prototype._constructPaletteFromVals = function(vals) {
   let colors = this.colorSet;
   let saveService = this.saveService;
   let all = [];
@@ -414,10 +429,14 @@ Scene.prototype.usePalette = function(vals) {
     ent = new palette.PaletteEntry(rgb, cval, colors);
     all.push(ent);
   }
-  this.palette = new palette.PaletteCollection(all, saveService);
+  this.palette = new palette.Palette(all, saveService);
+  return this.palette;
 }
 
 Scene.prototype.useTileset = function(imgOrTileset, sizeInfo) {
+  if (!imgOrTileset) {
+    throw new Error(`useTileset expects an argument`);
+  }
   if (imgOrTileset.constructor.name == 'Tileset') {
     this.tiles = imgOrTileset;
   } else if (Array.isArray(imgOrTileset)) {
@@ -438,6 +457,7 @@ Scene.prototype.useTileset = function(imgOrTileset, sizeInfo) {
   if (this.attrs) {
     this.attrs.ensureConsistentTileset(this.tiles, this.palette);
   }
+  return this.tiles;
 }
 
 Scene.prototype.useAttributes = function(pl, sizeInfo) {
@@ -449,6 +469,7 @@ Scene.prototype.useAttributes = function(pl, sizeInfo) {
   if (this.tiles) {
     this.attrs.ensureConsistentTileset(this.tiles, this.palette);
   }
+  return this.attrs;
 }
 
 Scene.prototype.useInterrupts = function(conf) {

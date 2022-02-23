@@ -17,7 +17,7 @@ describe('HSV sort', function() {
     img.then(function() {
       ra.drawImage(img);
 
-      let pal = ra.getPaletteAll();
+      let pal = ra.usePalette();
       // Compare the palette to expectation
       pal.save(tmpout);
       util.ensureFilesMatch('test/testdata/pal_sphere.png', tmpout);
@@ -74,7 +74,7 @@ describe('HSV sort', function() {
     img.then(function() {
       ra.drawImage(img);
 
-      let pal = ra.getPaletteAll();
+      let pal = ra.usePalette();
       // Compare the palette to expectation
       pal.save(tmpout);
       util.ensureFilesMatch('test/testdata/pal_sphere_sort.png', tmpout);
@@ -131,7 +131,7 @@ describe('HSV sort', function() {
     img.then(function() {
       ra.drawImage(img);
 
-      let pal = ra.getPaletteAll({sort: true});
+      let pal = ra.usePalette({sort: true});
       // Compare the palette to expectation
       pal.save(tmpout);
       util.ensureFilesMatch('test/testdata/pal_sphere_all.png', tmpout);
@@ -199,7 +199,7 @@ describe('HSV sort', function() {
         0xffff80,
       ]) - numBaseColors;
 
-      let pal = ra.getPaletteAll({sort: true});
+      let pal = ra.usePalette({sort: true});
 
       const skip = 1;
       let cycle = 2;
@@ -217,7 +217,7 @@ describe('HSV sort', function() {
       util.renderCompareTo(ra, 'test/testdata/cycle_color_sphere1.png');
 
       let actual = pal.toString();
-      let expect = 'PaletteCollection{0:[0]=0x40c060, 1:[10]=0xffc000, 2:[11]=0xffff00, 3:[12]=0xffff80, 4:[7]=0xff0000, 5:[8]=0xff4000, 6:[9]=0xff8000, 7:[11]=0xffff00, 8:[3]=0x231418, 9:[4]=0x2e1d23, 10:[2]=0x34292e, 11:[6]=0x493b43, 12:[5]=0x5b4951}';
+      let expect = 'Palette{0:[0]=0x40c060, 1:[10]=0xffc000, 2:[11]=0xffff00, 3:[12]=0xffff80, 4:[7]=0xff0000, 5:[8]=0xff4000, 6:[9]=0xff8000, 7:[11]=0xffff00, 8:[3]=0x231418, 9:[4]=0x2e1d23, 10:[2]=0x34292e, 11:[6]=0x493b43, 12:[5]=0x5b4951}';
       assert.equal(expect, actual);
     });
   });

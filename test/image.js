@@ -83,8 +83,8 @@ describe('Image', function() {
     assert.deepEqual(expect, ra.clonePlane().data);
 
     // Compare the palette
-    let palette = ra.getPaletteAll();
-    expect = 'PaletteCollection{0:[0]=0x000000, 1:[1]=0xab5236, 2:[2]=0xff004d, 3:[3]=0x29adff, 4:[4]=0x7e2553, 5:[5]=0xff77a8}';
+    let palette = ra.usePalette();
+    expect = 'Palette{0:[0]=0x000000, 1:[1]=0xab5236, 2:[2]=0xff004d, 3:[3]=0x29adff, 4:[4]=0x7e2553, 5:[5]=0xff77a8}';
     let actual = palette.toString();
     assert.equal(expect, actual);
   });

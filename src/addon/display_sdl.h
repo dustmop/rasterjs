@@ -10,6 +10,7 @@ class RawBuffer;
 struct SDL_Window;
 struct SDL_Renderer;
 struct SDL_Texture;
+struct SDL_Surface;
 
 class DisplaySDL : public Napi::ObjectWrap<DisplaySDL> {
  public:
@@ -24,6 +25,7 @@ class DisplaySDL : public Napi::ObjectWrap<DisplaySDL> {
   Napi::Value SetZoom(const Napi::CallbackInfo& info);
   Napi::Value SetGrid(const Napi::CallbackInfo& info);
   Napi::Value HandleEvent(const Napi::CallbackInfo& info);
+  Napi::Value InsteadSaveFile(const Napi::CallbackInfo& info);
   Napi::Value RenderLoop(const Napi::CallbackInfo& info);
   Napi::Value AppQuit(const Napi::CallbackInfo& info);
   Napi::Value ReadImage(const Napi::CallbackInfo& info);
@@ -35,9 +37,12 @@ class DisplaySDL : public Napi::ObjectWrap<DisplaySDL> {
   int zoomLevel;
   int gridUnit;
 
+  std::string hookSaveFile;
+
   int displayWidth;
   int displayHeight;
 
+  SDL_Surface* softwareTarget;
   SDL_Window* windowHandle;
   SDL_Renderer* rendererHandle;
   SDL_Texture* textureHandle;

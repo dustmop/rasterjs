@@ -1,6 +1,7 @@
 #include "display_sdl.h"
 #include "resources.h"
 #include "type.h"
+#include "image_load_save.h"
 
 #include <SDL.h>
 
@@ -22,6 +23,7 @@ void DisplaySDL::InitClass(Napi::Env env, Napi::Object exports) {
        InstanceMethod("handleEvent", &DisplaySDL::HandleEvent),
        InstanceMethod("renderLoop", &DisplaySDL::RenderLoop),
        InstanceMethod("appQuit", &DisplaySDL::AppQuit),
+       InstanceMethod("insteadSaveFile", &DisplaySDL::InsteadSaveFile),
   });
   g_displayConstructor = Napi::Persistent(func);
   g_displayConstructor.SuppressDestruct();
@@ -32,6 +34,7 @@ DisplaySDL::DisplaySDL(const Napi::CallbackInfo& info)
   this->sdlInitialized = 0;
   this->zoomLevel = 1;
   this->gridUnit = 0;
+  this->softwareTarget = NULL;
   this->windowHandle = NULL;
   this->rendererHandle = NULL;
   this->textureHandle = NULL;
@@ -130,6 +133,13 @@ void display_napi_value(Napi::Env env, napi_value value) {
   printf("%s\n", buffer);
 }
 
+Napi::Value DisplaySDL::InsteadSaveFile(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  Napi::String filename = info[0].As<Napi::String>();
+  this->hookSaveFile = filename;
+  return Napi::Number::New(env, 0);
+}
+
 Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
@@ -211,21 +221,41 @@ Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
   int windowWidth = viewWidth * zoomLevel;
   int windowHeight = viewHeight * zoomLevel;
 
-  // Create window
-  this->windowHandle = SDL_CreateWindow(
-      "RasterJS",
-      SDL_WINDOWPOS_UNDEFINED,
-      SDL_WINDOWPOS_UNDEFINED,
-      windowWidth, windowHeight,
-      SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI);
-  if (this->windowHandle == NULL) {
-    printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
-    exit(1);
+  // Calculate the flags for CreateWindow.
+  // TODO: Detect whether HIGHAPI is required.
+  int createWindowFlags = SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI;
+  if (this->hookSaveFile != "") {
+    createWindowFlags = SDL_WINDOW_MINIMIZED | SDL_WINDOW_ALLOW_HIGHDPI;
   }
 
-  // Get window renderer
-  this->rendererHandle = SDL_CreateRenderer(this->windowHandle, -1,
-    SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+  if (this->hookSaveFile == "") {
+    // Create window
+    this->windowHandle = SDL_CreateWindow(
+        "RasterJS",
+        SDL_WINDOWPOS_UNDEFINED,
+        SDL_WINDOWPOS_UNDEFINED,
+        windowWidth, windowHeight,
+        createWindowFlags);
+    if (this->windowHandle == NULL) {
+      printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
+      exit(1);
+    }
+    // Get window renderer
+    this->rendererHandle = SDL_CreateRenderer(this->windowHandle, -1,
+      SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+  } else {
+    // Software renderer using an off-screen surface
+    this->softwareTarget = SDL_CreateRGBSurface(
+        0,
+        windowWidth*2,
+        windowHeight*2,
+        32,
+        0xff000000,
+        0x00ff0000,
+        0x0000ff00,
+        0x000000ff);
+    this->rendererHandle = SDL_CreateSoftwareRenderer(this->softwareTarget);
+  }
 
   if (!this->rendererHandle) {
     printf("SDL_CreateRenderer() failed with \"%s.\"", SDL_GetError());
@@ -398,6 +428,27 @@ Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
     if (this->gridHandle) {
       SDL_RenderCopy(this->rendererHandle, this->gridHandle, NULL, NULL);
     }
+
+    if (this->hookSaveFile != "") {
+      // TODO: 2 is only true if high dpi is enabled
+      int width = this->displayWidth * this->zoomLevel * 2;
+      int height = this->displayHeight * this->zoomLevel * 2;
+      SDL_Rect rect;
+      rect.x = rect.y = 0;
+      rect.w = width;
+      rect.h = height;
+      int savePitch = width * 4;
+      int saveSize = width * height * 4;
+      u8* saveBuff = (u8*)malloc(saveSize);
+      SDL_RenderReadPixels(this->rendererHandle,
+                           &rect,
+                           SDL_PIXELFORMAT_ABGR8888,
+                           saveBuff,
+                           savePitch);
+      WritePng(this->hookSaveFile.c_str(), saveBuff, rect.w, rect.h, savePitch);
+      return Napi::Number::New(env, 0);
+    }
+
     // Swap buffers to display
     SDL_RenderPresent(this->rendererHandle);
 

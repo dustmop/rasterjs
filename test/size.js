@@ -5,7 +5,7 @@ describe('Size', function() {
   it('set using a single int', function() {
     ra.resetState();
 
-    ra.fillBackground(4);
+    ra.fillColor(4);
     ra.setSize(8);
 
     ra.setColor(0x22);

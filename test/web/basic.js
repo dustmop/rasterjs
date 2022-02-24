@@ -4,7 +4,7 @@ describe('basic', function () {
     let ra = require('raster');
     ra.resetState();
     ra.setSize({w: 8, h: 8});
-    ra.fillBackground(4);
+    ra.fillColor(4);
     ra.setColor(0x22);
     ra.drawDot(7, 5);
     ra.drawDot(5, 7);
@@ -18,7 +18,7 @@ describe('basic', function () {
     let ra = require('raster');
     ra.resetState();
     ra.setSize({w: 15, h: 15});
-    ra.fillBackground(7);
+    ra.fillColor(7);
     ra.setColor(0x24);
     ra.drawCircle({x: 1, y: 2, r: 6});
     ra.setColor(0x31);
@@ -31,7 +31,7 @@ describe('basic', function () {
     let ra = require('raster');
     ra.resetState();
     ra.setSize({w: 10, h: 10});
-    ra.fillBackground(2);
+    ra.fillColor(2);
     ra.setColor(0x1b);
     ra.fillRect({x: 4, y: 6, w: 12, h: 3});
     util.renderCompareTo(ra, 'img/overflow.png', success);
@@ -42,7 +42,7 @@ describe('basic', function () {
     let ra = require('raster');
     ra.resetState();
     ra.setSize(8, 8);
-    ra.fillBackground(25);
+    ra.fillColor(25);
     ra.show(null, ensureImageMatch('img/solid-orange.png', success));
   });
 });

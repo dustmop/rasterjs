@@ -7,7 +7,7 @@ describe('True Color', function() {
     ra.resetState();
     ra.setSize({w: 8, h: 8});
 
-    ra.fillTrueBackground(0xcc66cc);
+    ra.fillTrueColor(0xcc66cc);
     ra.setTrueColor(0x44aa66);
     ra.fillSquare({x:0, y: 0, size: 3});
 

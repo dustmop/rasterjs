@@ -7,7 +7,7 @@ describe('Center', function() {
     ra.setSize({w:54, h:54});
     ra.originAtCenter();
 
-    ra.fillBackground(0x00);
+    ra.fillColor(0x00);
     ra.setColor(0x25);
 
     ra.drawLine(-23, -20, -16, -25);

@@ -10,7 +10,7 @@ describe('Palette entry', function() {
     ra.resetState();
 
     ra.setSize({w: 14, h: 14});
-    ra.fillBackground(0);
+    ra.fillColor(0);
 
     let img = ra.loadImage('test/testdata/line.png');
     ra.drawImage(img, 0, 0);
@@ -85,7 +85,7 @@ describe('Palette entry', function() {
   it('get all', function() {
     ra.resetState();
     ra.useColors(null);
-    ra.fillTrueBackground(0x444444);
+    ra.fillTrueColor(0x444444);
 
     // TODO: Currently, loading the image adds to the colorSet.
     // It should really happen lazily, when the image plane gets

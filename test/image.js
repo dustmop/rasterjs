@@ -7,7 +7,7 @@ describe('Image', function() {
   it('load and draw', function() {
     ra.resetState();
     // Black background
-    ra.fillBackground(0);
+    ra.fillColor(0);
     ra.setSize({w: 22, h: 22});
 
     // Draw an image twice

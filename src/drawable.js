@@ -2,11 +2,11 @@ const algorithm = require('./algorithm.js');
 const geometry = require('./geometry.js');
 const frameMemory = require('./frame_memory.js');
 
-function Drawing() {
+function Drawable() {
   return this;
 }
 
-Drawing.prototype.getMethods = function() {
+Drawable.prototype.getMethods = function() {
   let result = [];
   for (let fname in this) {
     if (fname.endsWith('_params')) { continue; }
@@ -19,58 +19,32 @@ Drawing.prototype.getMethods = function() {
   return result;
 }
 
-Drawing.prototype.setColor_params = ['color:i'];
-Drawing.prototype.setColor = function(color) {
+Drawable.prototype.setColor_params = ['color:i'];
+Drawable.prototype.setColor = function(color) {
   this.frontColor = color;
 }
 
-Drawing.prototype.setTrueColor_params = ['rgb:i'];
-Drawing.prototype.setTrueColor = function(rgb) {
-  if (typeof rgb !== 'number') {
-    throw new Error(`setTrueColor needs rgb as a number, got ${rgb}`);
-  }
-  let color = this.getComponents().colorSet.addEntry(rgb);
-  this.setColor(color);
-}
-
-Drawing.prototype.fillColor_params = ['color:i'];
-Drawing.prototype.fillColor = function(color) {
+Drawable.prototype.fillColor_params = ['color:i'];
+Drawable.prototype.fillColor = function(color) {
   this.bgColor = color;
   this._needErase = true;
 }
 
-Drawing.prototype.fillBackground_params = ['color:i'];
-Drawing.prototype.fillBackground = function(color) {
-  this.bgColor = color;
-  this._needErase = true;
-}
-
-Drawing.prototype.fillTrueBackground_params = ['rgb:i'];
-Drawing.prototype.fillTrueBackground = function(rgb) {
-  let color = this.getComponents().colorSet.addEntry(rgb);
-  this.fillBackground(color);
-}
-
-Drawing.prototype.drawLine_params = ['x0:n', 'y0:n', 'x1:n', 'y1:n', 'cc?b'];
-Drawing.prototype.drawLine = function(x0, y0, x1, y1, cc) {
+Drawable.prototype.drawLine_params = ['x0:n', 'y0:n', 'x1:n', 'y1:n', 'cc?b'];
+Drawable.prototype.drawLine = function(x0, y0, x1, y1, cc) {
   cc = cc ? 1 : 0;
   let res = algorithm.renderLine(this, x0, y0, x1, y1, cc);
   this.putSequence(res);
 }
 
-Drawing.prototype.drawDot_params = ['x:i', 'y:i'];
-Drawing.prototype.drawDot = function(x, y) {
+Drawable.prototype.drawDot_params = ['x:i', 'y:i'];
+Drawable.prototype.drawDot = function(x, y) {
   let put = [[x, y]];
   this.putSequence(put);
 }
 
-Drawing.prototype.fillDot_params = ['dots:any'];
-Drawing.prototype.fillDot = function(dots) {
-  return this.fillPattern(dots);
-}
-
-Drawing.prototype.fillPattern_params = ['dots:any'];
-Drawing.prototype.fillPattern = function(dots) {
+Drawable.prototype.fillPattern_params = ['dots:any'];
+Drawable.prototype.fillPattern = function(dots) {
   this._prepare();
   let buffer = this.data;
 
@@ -87,31 +61,31 @@ Drawing.prototype.fillPattern = function(dots) {
   mem.copyTo(buffer, this);
 }
 
-Drawing.prototype.fillSquare_params = ['x:i', 'y:i', 'size:i'];
-Drawing.prototype.fillSquare = function(x, y, size) {
+Drawable.prototype.fillSquare_params = ['x:i', 'y:i', 'size:i'];
+Drawable.prototype.fillSquare = function(x, y, size) {
   _renderRect(this, x, y, size, size, true);
 }
 
-Drawing.prototype.drawSquare_params = ['x:i', 'y:i', 'size:i'];
-Drawing.prototype.drawSquare = function(x, y, size) {
+Drawable.prototype.drawSquare_params = ['x:i', 'y:i', 'size:i'];
+Drawable.prototype.drawSquare = function(x, y, size) {
   _renderRect(this, x, y, size, size, false);
 }
 
-Drawing.prototype.fillRect_params = ['x:i', 'y:i', 'w:i', 'h:i', '||',
+Drawable.prototype.fillRect_params = ['x:i', 'y:i', 'w:i', 'h:i', '||',
                                      'x:i', 'y:i', 'x1:i', 'y1:i'];
-Drawing.prototype.fillRect_convert = function(choice, vals) {
+Drawable.prototype.fillRect_convert = function(choice, vals) {
   return [vals[0], vals[1], vals[2] - vals[0], vals[3] - vals[1]];
 }
-Drawing.prototype.fillRect = function(x, y, w, h) {
+Drawable.prototype.fillRect = function(x, y, w, h) {
   _renderRect(this, x, y, w, h, true);
 }
 
-Drawing.prototype.drawRect_params = ['x:i', 'y:i', 'w:i', 'h:i', '||',
+Drawable.prototype.drawRect_params = ['x:i', 'y:i', 'w:i', 'h:i', '||',
                                      'x:i', 'y:i', 'x1:i', 'y1:i'];
-Drawing.prototype.drawRect_convert = function(choice, vals) {
+Drawable.prototype.drawRect_convert = function(choice, vals) {
   return [vals[0], vals[1], vals[2] - vals[0], vals[3] - vals[1]];
 }
-Drawing.prototype.drawRect = function(x, y, w, h) {
+Drawable.prototype.drawRect = function(x, y, w, h) {
   _renderRect(this, x, y, w, h, false);
 }
 
@@ -149,8 +123,8 @@ function _renderRect(self, x, y, w, h, fill) {
   self.putSequence(put);
 }
 
-Drawing.prototype.fillCircle_params = ['x:i', 'y:i', 'r:n'];
-Drawing.prototype.fillCircle = function(x, y, r) {
+Drawable.prototype.fillCircle_params = ['x:i', 'y:i', 'r:n'];
+Drawable.prototype.fillCircle = function(x, y, r) {
   let centerX = x + r;
   let centerY = y + r;
   let arc = algorithm.midpointCircleRasterize(r);
@@ -159,8 +133,8 @@ Drawing.prototype.fillCircle = function(x, y, r) {
   this.putSequence(put);
 }
 
-Drawing.prototype.drawCircle_params = ['x:i', 'y:i', 'r:n', 'width?i'];
-Drawing.prototype.drawCircle = function(x, y, r, width) {
+Drawable.prototype.drawCircle_params = ['x:i', 'y:i', 'r:n', 'width?i'];
+Drawable.prototype.drawCircle = function(x, y, r, width) {
   let centerX = x + r;
   let centerY = y + r;
   let arc = algorithm.midpointCircleRasterize(r);
@@ -173,8 +147,8 @@ Drawing.prototype.drawCircle = function(x, y, r, width) {
   this.putSequence(put);
 }
 
-Drawing.prototype.fillPolygon_params = ['points:ps', 'x?i', 'y?i'];
-Drawing.prototype.fillPolygon = function(polygon, x, y) {
+Drawable.prototype.fillPolygon_params = ['points:ps', 'x?i', 'y?i'];
+Drawable.prototype.fillPolygon = function(polygon, x, y) {
   x = x || 0;
   y = y || 0;
   let points = geometry.convertToPoints(polygon);
@@ -182,8 +156,8 @@ Drawing.prototype.fillPolygon = function(polygon, x, y) {
   this.putSequence(res);
 }
 
-Drawing.prototype.drawPolygon_params = ['points:ps', 'x?i', 'y?i'];
-Drawing.prototype.drawPolygon = function(polygon, x, y) {
+Drawable.prototype.drawPolygon_params = ['points:ps', 'x?i', 'y?i'];
+Drawable.prototype.drawPolygon = function(polygon, x, y) {
   x = x || 0;
   y = y || 0;
   let points = geometry.convertToPoints(polygon);
@@ -191,8 +165,8 @@ Drawing.prototype.drawPolygon = function(polygon, x, y) {
   this.putSequence(res);
 }
 
-Drawing.prototype.fillFlood_params = ['x:i', 'y:i'];
-Drawing.prototype.fillFlood = function(x, y) {
+Drawable.prototype.fillFlood_params = ['x:i', 'y:i'];
+Drawable.prototype.fillFlood = function(x, y) {
   this._prepare();
   let buffer = this.data;
 
@@ -202,8 +176,8 @@ Drawing.prototype.fillFlood = function(x, y) {
   mem.copyTo(buffer, this);
 }
 
-Drawing.prototype.fillFrame_params = ['options?o', 'fillerFunc:f'];
-Drawing.prototype.fillFrame = function(options, fillerFunc) {
+Drawable.prototype.fillFrame_params = ['options?o', 'fillerFunc:f'];
+Drawable.prototype.fillFrame = function(options, fillerFunc) {
   if (this.mem == null) {
     this.mem = frameMemory.NewFrameMemory(this.offsetLeft, this.offsetTop, this.width, this.height);
   }
@@ -243,8 +217,8 @@ Drawing.prototype.fillFrame = function(options, fillerFunc) {
   this.mem._didFrame = true;
 }
 
-Drawing.prototype.drawImage_params = ['img:a', 'x?i', 'y?i'];
-Drawing.prototype.drawImage = function(img, x, y) {
+Drawable.prototype.drawImage_params = ['img:a', 'x?i', 'y?i'];
+Drawable.prototype.drawImage = function(img, x, y) {
   if (!img.data) {
     throw 'drawImage: image has been opened, but not yet read';
   }
@@ -257,9 +231,9 @@ Drawing.prototype.drawImage = function(img, x, y) {
   this.putImage(img, x, y);
 }
 
-Drawing.prototype.drawText_params = ['text:s', 'x:i', 'y:i'];
-Drawing.prototype.drawText = function(text, x, y) {
-  let font = this.getComponents().font;
+Drawable.prototype.drawText_params = ['text:s', 'x:i', 'y:i'];
+Drawable.prototype.drawText = function(text, x, y) {
+  let font = this.font;
   if (!font) {
     throw new Error('drawText: no font has been assigned');
   }
@@ -298,4 +272,4 @@ Drawing.prototype.drawText = function(text, x, y) {
   this.putSequence(put);
 }
 
-module.exports.Drawing = Drawing;
+module.exports.Drawable = Drawable;

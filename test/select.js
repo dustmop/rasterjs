@@ -7,7 +7,7 @@ describe('Select', function() {
 
     ra.setSize(10);
 
-    ra.fillBackground(25);
+    ra.fillColor(25);
     ra.setColor(43);
 
     let sel = ra.select({x: 1, y: 1, w: 6, h: 6});
@@ -27,7 +27,7 @@ describe('Select', function() {
 
     ra.setSize(10);
 
-    ra.fillBackground(25);
+    ra.fillColor(25);
     ra.setColor(43);
 
     let sel = ra.select({x: 1, y: 1, w: 6, h: 6});

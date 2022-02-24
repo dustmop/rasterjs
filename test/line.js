@@ -6,7 +6,7 @@ describe('Line', function() {
     ra.resetState();
 
     // Black background
-    ra.fillBackground(0);
+    ra.fillColor(0);
     ra.setSize({w: 14, h: 14});
 
     // Horizontal line
@@ -38,7 +38,7 @@ describe('Line', function() {
   it('draw float', function() {
     ra.resetState();
 
-    ra.fillBackground(0);
+    ra.fillColor(0);
     ra.setSize(14, 17);
 
     //red

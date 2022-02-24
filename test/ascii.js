@@ -13,7 +13,7 @@ describe('Ascii', function() {
       stdout += text;
     }
 
-    ra.fillBackground(1);
+    ra.fillColor(1);
     ra.setSize({w: 8, h: 8});
 
     ra.setColor(2);

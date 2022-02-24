@@ -52,7 +52,7 @@ describe('Fill', function() {
       }
     });
     // Fill the background
-    ra.fillBackground(4);
+    ra.fillColor(4);
     // A second call to draw lower right
     ra.fillFrame(function(mem, x, y) {
       if (x + y > 11) {
@@ -104,7 +104,7 @@ describe('Fill', function() {
     ra.resetState();
 
     ra.setSize({w: 7, h: 7});
-    ra.fillBackground(0);
+    ra.fillColor(0);
 
     ra.fillFrame(function(mem) {
       mem.put(1, 1, 0x30);
@@ -118,7 +118,7 @@ describe('Fill', function() {
 
     ra.nextFrame();
 
-    ra.fillBackground(0);
+    ra.fillColor(0);
     ra.fillFrame({previous: true}, function(mem) {
       oldA = mem.getPrevious(1, 1);
       oldB = mem.getPrevious(1, 5);

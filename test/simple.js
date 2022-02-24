@@ -8,7 +8,7 @@ describe('Simple', function() {
     let tmpout = tmpdir + '/actual.png';
     ra.resetState();
     // Red background
-    ra.fillBackground(0x20);
+    ra.fillColor(0x20);
     ra.setSize({w: 16, h: 16});
     // Green line
     ra.setColor(0x23);

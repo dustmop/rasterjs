@@ -1,5 +1,5 @@
 const colorSet = require('./color_set.js');
-const drawing = require('./drawing.js');
+const drawable = require('./drawable.js');
 const destructure = require('./destructure.js');
 const algorithm = require('./algorithm.js');
 const palette = require('./palette.js');
@@ -34,7 +34,6 @@ function Scene(env) {
   this.attrs = null;
   this.interrupts = null;
 
-  plane.setGlobalScene(this);
   this.aPlane = new plane.Plane();
   this._config = {};
   this.numFrames = FRAMES_LOOP_FOREVER;
@@ -64,7 +63,7 @@ Scene.prototype.initialize = function () {
 
 Scene.prototype._addMethods = function() {
   let self = this;
-  let d = new drawing.Drawing();
+  let d = new drawable.Drawable();
   let methods = d.getMethods();
   for (let i = 0; i < methods.length; i++) {
     let [fname, paramSpec, converter, impl] = methods[i];
@@ -84,7 +83,7 @@ Scene.prototype._addMethods = function() {
 
 Scene.prototype._removeMethods = function() {
   let self = this;
-  let d = new drawing.Drawing();
+  let d = new drawable.Drawable();
   let methods = d.getMethods();
   for (let i = 0; i < methods.length; i++) {
     let [fname, paramSpec, converter, impl] = methods[i];
@@ -111,6 +110,22 @@ Scene.prototype._translateArguments = function(params, args) {
       args[i] += midY;
     }
   }
+}
+
+Scene.prototype.setTrueColor = function(rgb) {
+  if (typeof rgb !== 'number') {
+    throw new Error(`setTrueColor needs rgb as a number, got ${rgb}`);
+  }
+  let color = this.colorSet.addEntry(rgb);
+  this.aPlane.setColor(color);
+}
+
+Scene.prototype.fillTrueColor = function(rgb) {
+  if (typeof rgb !== 'number') {
+    throw new Error(`fillTrueColor needs rgb as a number, got ${rgb}`);
+  }
+  let color = this.colorSet.addEntry(rgb);
+  this.aPlane.fillColor(color);
 }
 
 Scene.prototype.setSize = function(w, h) {
@@ -285,6 +300,7 @@ Scene.prototype.setFont = function(spec) {
   }
   let filename = spec;
   this.font = this.textLoader.loadFont(filename);
+  this.aPlane.font = this.font;
 }
 
 Scene.prototype.setTileset = function(which) {

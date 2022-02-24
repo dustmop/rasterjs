@@ -6,7 +6,7 @@ describe('Circle', function() {
     ra.resetState();
 
     // Black background
-    ra.fillBackground(0);
+    ra.fillColor(0);
     ra.setSize({w: 58, h: 27});
 
     ra.fillFrame(function(mem, x, y) {

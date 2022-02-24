@@ -1,16 +1,9 @@
-const drawing = require('./drawing.js');
+const drawable = require('./drawable.js');
 const destructure = require('./destructure.js');
-
-var _g_scene = null;
 
 function Plane() {
   this.clear();
-  this.scene = _g_scene;
   return this;
-}
-
-function setGlobalScene(scene) {
-  _g_scene = scene;
 }
 
 Plane.prototype.clear = function() {
@@ -19,10 +12,9 @@ Plane.prototype.clear = function() {
   this.pitch = 0;
   this.data = null;
   this.mem = null;
-  this.rgbBuffer = null;
-  this._backBuffer = null;
   this.bgColor = 0;
   this.frontColor = 7;
+  this.font = null;
   this._addMethods();
 }
 
@@ -36,15 +28,8 @@ Plane.prototype.clone = function() {
   make.mem = this.mem;
   make.bgColor = this.bgColor;
   make.frontColor = this.frontColor;
-  // rgbBuffer
-  // _backBuffer
-  // bgColor
-  // frontColor
+  make.font = this.font;
   return make;
-}
-
-Plane.prototype.getComponents = function() {
-  return this.scene;
 }
 
 Plane.prototype.ensureReady = function() {
@@ -55,7 +40,7 @@ Plane.prototype.ensureReady = function() {
 
 Plane.prototype._addMethods = function(shouldDestruct) {
   let self = this;
-  let d = new drawing.Drawing();
+  let d = new drawable.Drawable();
   let methods = d.getMethods();
   for (let i = 0; i < methods.length; i++) {
     let [fname, paramSpec, converter, impl] = methods[i];
@@ -241,4 +226,3 @@ Plane.prototype.select = function(x, y, w, h) {
 }
 
 module.exports.Plane = Plane;
-module.exports.setGlobalScene = setGlobalScene;

@@ -9,7 +9,7 @@ describe('Polygon Rotation', function() {
     ra.resetState();
 
     ra.setSize({w: 40, h: 40});
-    ra.fillBackground(0);
+    ra.fillColor(0);
 
     let centers = [];
 

@@ -86,19 +86,17 @@ Palette.prototype._saveTo = function(target, savepath) {
     colorSet: colors,
     font: font,
   };
-  target.getComponents = function() {
-    return components;
-  }
 
   // Draw the palette format
-  target.fillTrueBackground(0x606060);
+  target.font = font;
+  target.fillColor(colors.addEntry(0x606060));
   for (let k = 0; k < this.items.length; k++) {
     let rgbInt = this.items[k].rgb.toInt();
     let j = k % 8;
     let i = Math.floor(k / 8);
     let y = i * gridY;
     let x = j * gridX;
-    target.setTrueColor(rgbInt);
+    target.setColor(colors.addEntry(rgbInt));
     target.fillRect(x + showOuter, y + showOuter,
                     gridX - showBetween, gridY - showBetween);
     let v = k.toString();
@@ -106,9 +104,9 @@ Palette.prototype._saveTo = function(target, savepath) {
       v = '0' + v;
     }
     if (this._isLightColor(this.items[k].rgb)) {
-      target.setTrueColor(0);
+      target.setColor(colors.addEntry(0));
     } else {
-      target.setTrueColor(0xffffff);
+      target.setColor(colors.addEntry(0xffffff));
     }
     target.drawText(`${v}`, x + showPad + showOuter, y + showPad + showOuter);
   }

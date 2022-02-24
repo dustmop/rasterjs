@@ -9,7 +9,7 @@ describe('Polygon', function() {
     ra.resetState();
 
     ra.setSize({w: 36, h: 34});
-    ra.fillBackground(0);
+    ra.fillColor(0);
 
     let polygon = [[2, 3], [14, 3], [10, 7], [6, 7]];
     ra.setColor(0x15);
@@ -58,7 +58,7 @@ describe('Polygon', function() {
     ra.resetState();
 
     ra.setSize({w: 16, h: 40});
-    ra.fillBackground(0);
+    ra.fillColor(0);
 
     // Even floating polygon, center is at a whole number (5.0, 5.0) => width=8
     let points = [

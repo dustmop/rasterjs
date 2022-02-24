@@ -1,6 +1,6 @@
 const rgbColor = require('./rgb_color.js');
 const scene = require('./scene.js');
-const drawing = require('./drawing.js');
+const drawable = require('./drawable.js');
 const destructure = require('./destructure.js');
 const plane = require('./plane.js');
 const tiles = require('./tiles.js');
@@ -13,7 +13,7 @@ function Raster(env) {
 
 Raster.prototype._addMethods = function() {
   let self = this;
-  let d = new drawing.Drawing();
+  let d = new drawable.Drawable();
   let methods = d.getMethods();
   for (let i = 0; i < methods.length; i++) {
     let [fname, params, converter, impl] = methods[i];
@@ -26,7 +26,7 @@ Raster.prototype._addMethods = function() {
 
 Raster.prototype._removeMethods = function() {
   let self = this;
-  let d = new drawing.Drawing();
+  let d = new drawable.Drawable();
   let methods = d.getMethods();
   for (let i = 0; i < methods.length; i++) {
     let [fname, params, converter, impl] = methods[i];
@@ -77,6 +77,16 @@ Raster.prototype.appendColors = function(rep) {
 
 Raster.prototype.numColors = function() {
   return this.scene.numColors();
+}
+
+////////////////////////////////////////
+
+Raster.prototype.setTrueColor = function(rgb) {
+  return this.scene.setTrueColor(rgb);
+}
+
+Raster.prototype.fillTrueColor = function(rgb) {
+  return this.scene.fillTrueColor(rgb);
 }
 
 ////////////////////////////////////////

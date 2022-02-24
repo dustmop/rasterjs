@@ -10,7 +10,7 @@ describe('HSV sort', function() {
 
     ra.setZoom(12);
     ra.useColors(null);
-    ra.fillTrueBackground(0x40c060);
+    ra.fillTrueColor(0x40c060);
 
     // Draw the image, sets the size and color set
     let img = ra.loadImage('test/testdata/dark_sphere.png');
@@ -67,7 +67,7 @@ describe('HSV sort', function() {
 
     ra.setZoom(12);
     ra.useColors(null);
-    ra.fillTrueBackground(0x40c060);
+    ra.fillTrueColor(0x40c060);
 
     // Draw the image, sets the size and color set
     let img = ra.loadImage('test/testdata/dark_sphere.png', {sortColors: 'usingHSV'});
@@ -124,7 +124,7 @@ describe('HSV sort', function() {
 
     ra.setZoom(12);
     ra.useColors(null);
-    ra.fillTrueBackground(0x40c060);
+    ra.fillTrueColor(0x40c060);
 
     // Draw the image, sets the size and color set
     let img = ra.loadImage('test/testdata/dark_sphere.png');
@@ -181,7 +181,7 @@ describe('HSV sort', function() {
 
     ra.setZoom(12);
     ra.useColors(null);
-    ra.fillTrueBackground(0x40c060);
+    ra.fillTrueColor(0x40c060);
 
     // Draw the image, sets the size and color set
     let img = ra.loadImage('test/testdata/dark_sphere.png');

@@ -9,7 +9,7 @@ describe('Rect and square', function() {
     ra.resetState();
 
     ra.setSize({w: 40, h: 12});
-    ra.fillBackground(0);
+    ra.fillColor(0);
 
     // Squares
     ra.setColor(0x10);
@@ -84,7 +84,7 @@ describe('Rect and square', function() {
     ra.resetState();
 
     ra.setSize({w: 40, h: 12});
-    ra.fillBackground(0);
+    ra.fillColor(0);
 
     // Squares
     ra.setColor(0x10);

@@ -13,6 +13,7 @@ const scene = require('./scene.js');
 const tiles = require('./tiles.js');
 const attributes = require('./attributes.js');
 const rgbColor = require('./rgb_color.js');
+const types = require('./types.js');
 
 ////////////////////////////////////////
 
@@ -489,23 +490,14 @@ Scene.prototype.useAttributes = function(pl, sizeInfo) {
 }
 
 Scene.prototype.useInterrupts = function(conf) {
-  if (!Array.isArray(conf)) {
-    throw new Error(`useInterrupts param must be an array`);
+  if (types.isArray(conf)) {
+    this.interrupts = new renderer.Interrupts(conf);
+  } else if (types.isInterrupts(conf)) {
+    this.interrupts = conf;
+  } else {
+    throw new Error(`useInterrupts param must be array or interrupts`);
   }
-  for (let k = 0; k < conf.length; k++) {
-    let elem = conf[k];
-    if (elem.scanline === undefined) {
-      throw new Error(`useInterrupts element ${k} missing field 'scanline'`);
-    }
-    // TODO: scanline must be Number or [Number], and in ascending order
-    if (!elem.irq) {
-      throw new Error(`useInterrupts element ${k} missing field 'irq'`);
-    }
-    if (elem.irq.constructor.name != 'Function') {
-      throw new Error(`useInterrupts element ${k}.irq must be function`);
-    }
-  }
-  this.interrupts = conf;
+  return this.interrupts;
 }
 
 Scene.prototype.provide = function() {

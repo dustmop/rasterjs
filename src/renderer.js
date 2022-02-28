@@ -4,6 +4,7 @@ const colorSet = require('./color_set.js');
 const tiles = require('./tiles.js');
 const palette = require('./palette.js');
 const attrs = require('./attributes.js');
+const types = require('./types.js');
 
 function Renderer() {
   this._init();
@@ -59,8 +60,8 @@ Renderer.prototype.connect = function(input) {
   if (!input.conf) { // TODO: mustHaveKeys([width, height, scroll{X,Y}, ...])
     throw new Error(`input.conf must be non-null`);
   }
-  if (input.interrupts && !Array.isArray(input.interrupts)) {
-    throw new Error(`input.interrupts must be an array`);
+  if (input.interrupts && !types.isInterrupts(input.interrupts)) {
+    throw new Error(`input.interrupts must be a Interrupts`);
   }
 
   layer.plane    = input.plane;
@@ -148,7 +149,7 @@ Renderer.prototype.render = function() {
   // Otherwise, collect IRQs per each scanline
   let perIRQs = [];
   for (let k = 0; k < system.interrupts.length; k++) {
-    let row = system.interrupts[k];
+    let row = system.interrupts.get(k);
     if (Array.isArray(row.scanline)) {
       let lineRange = row.scanline;
       // TODO: Assume a pair of integers
@@ -156,7 +157,7 @@ Renderer.prototype.render = function() {
         perIRQs.push({scanline: j, irq: row.irq});
       }
       continue;
-    } else if (isNumber(row.scanline)) {
+    } else if (types.isNumber(row.scanline)) {
       perIRQs.push({scanline: row.scanline, irq: row.irq});
     } else {
       throw new Error(`invalid scanline number: ${row.scanline}`);
@@ -316,8 +317,53 @@ Renderer.prototype._toColor = function(c) {
   return rgb
 }
 
-function isNumber(val) {
-  return typeof val == 'number';
+function Interrupts(arr) {
+  this.arr = arr;
+  this.length = this.arr.length;
+  this._assertInterruptFields();
+  return this;
 }
 
+Interrupts.prototype._assertInterruptFields = function() {
+  for (let k = 0; k < this.arr.length; k++) {
+    let elem = this.arr[k];
+    if (elem.scanline === undefined) {
+      throw new Error(`useInterrupts element ${k} missing field 'scanline'`);
+    }
+    // TODO: scanline must be Number or [Number], and in ascending order
+    if (!elem.irq) {
+      throw new Error(`useInterrupts element ${k} missing field 'irq'`);
+    }
+    if (elem.irq.constructor.name != 'Function') {
+      throw new Error(`useInterrupts element ${k}.irq must be function`);
+    }
+  }
+}
+
+Interrupts.prototype.shiftDown = function(line, obj) {
+  let startIndex = obj.startIndex;
+  let endIndex = obj.endIndex || this.arr.length;
+  let deltaValue = null;
+  for (let k = startIndex; k < endIndex; k++) {
+    let elem = this.arr[k];
+    if (k == startIndex) {
+      // first row of our subset
+      deltaValue = line - elem.scanline;
+    }
+    if (types.isNumber(elem.scanline)) {
+      elem.scanline = elem.scanline + deltaValue;
+    } else if (types.isArray(elem.scanline)) {
+      let first = elem.scanline[0];
+      let second = elem.scanline[1];
+      elem.scanline = [first + deltaValue, second + deltaValue];
+    }
+  }
+}
+
+Interrupts.prototype.get = function(i) {
+  return this.arr[i];
+}
+
+
 module.exports.Renderer = Renderer;
+module.exports.Interrupts = Interrupts;

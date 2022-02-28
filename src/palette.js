@@ -4,6 +4,7 @@ const plane = require('./plane.js');
 const palette = require('./palette.js');
 const renderer = require('./renderer.js');
 const textLoader = require('./text_loader.js');
+const destructure = require('./destructure.js');
 
 function Palette(items, saveService) {
   if (saveService != null && !saveService.saveTo) {
@@ -138,18 +139,45 @@ Palette.prototype._stringify = function(depth, opts) {
   return 'Palette{' + elems.join(', ') + '}';
 }
 
+// locate where the 8-bit color value is in the palette, return the index
 Palette.prototype.find = function(cval) {
-  for (let n = 0; n < this.items.length; n++) {
-    let ent = this.items[n];
-    if (cval === ent.cval) {
-      return n;
+  for (let i = 0; i < this.items.length; i++) {
+    if (cval === this.items[i].cval) {
+      return i;
     }
   }
   return null;
 }
 
-Palette.prototype.lookup = function(v) {
-  return this.items[v].cval;
+// get the n'th color value in the palette
+Palette.prototype.lookup = function(n) {
+  return this.items[n].cval;
+}
+
+// fill each value of the palette with the given value
+Palette.prototype.fill = function(v) {
+  for (let i = 0; i < this.items.length; i++) {
+    this.items[i].setColor(v);
+  }
+}
+
+Palette.prototype.assign = function(assoc) {
+  let keys = Object.keys(assoc);
+  for (let i = 0; i < keys.length; i++) {
+    let key = keys[i];
+    this.items[key].setColor(assoc[key]);
+  }
+}
+
+Palette.prototype.rotate = function(args) {
+  let spec = ['!name', 'startIndex?i', 'endIndex?i',
+              'base?i', 'click?i', 'size?i'];
+  let [startIndex, endIndex, base, click, size] = destructure.from(
+    'rotate', spec, arguments, null);
+  for (let i = startIndex; i < endIndex; i++) {
+    let r = base + ((click + i) % size);
+    this.items[i].setColor(r);
+  }
 }
 
 Palette.prototype.insertWhereAvail = function(rgbval) {

@@ -1,3 +1,5 @@
+const types = require('./types.js');
+
 function Tileset(sourceOrNum, sizeInfo) {
   if (!sizeInfo) {
     throw new Error(`Tileset requires a detail object parameter`);
@@ -21,13 +23,13 @@ function Tileset(sourceOrNum, sizeInfo) {
     throw new Error(`Tileset's tile_height must be > 0`);
   }
 
-  if (typeof sourceOrNum == 'number') {
+  if (types.isNumber(sourceOrNum)) {
     // construct a number of tiles
     let num = sourceOrNum;
     this.tileWidth = sizeInfo.tile_width;
     this.tileHeight = sizeInfo.tile_height;
     this._constructTiles(num);
-  } else if (isPlane(sourceOrNum)) {
+  } else if (types.isPlane(sourceOrNum)) {
     // load tiles by aliasing their buffers to the source
     let source = sourceOrNum;
     if (!source.width || !source.height) {
@@ -148,11 +150,6 @@ Tile.prototype.display = function() {
     }
     process.stdout.write('\n');
   }
-}
-
-
-function isPlane(obj) {
-  return obj.constructor.name == 'Plane' || obj.constructor.name == 'ImagePlane';
 }
 
 module.exports.Tileset = Tileset;

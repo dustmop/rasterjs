@@ -1,3 +1,5 @@
+const types = require('./types.js');
+
 function Attributes(source, sizeInfo) {
   if (!source && !sizeInfo) {
     throw new Error(`Attributes expects an argument`);
@@ -32,7 +34,7 @@ function Attributes(source, sizeInfo) {
   if (sizeInfo.piece_size <= 0) {
     throw new Error(`Attributes's piece_size must be > 0`);
   }
-  if (Number.isInteger(source)) {
+  if (types.isInteger(source)) {
     throw new Error(`Attributes expects a Plane as an argument`);
   }
   if (!source.data) {

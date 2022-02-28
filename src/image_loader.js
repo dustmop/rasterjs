@@ -203,3 +203,4 @@ ImagePlane.prototype.then = function(cb) {
 }
 
 module.exports.Loader = Loader;
+module.exports.ImagePlane = ImagePlane;

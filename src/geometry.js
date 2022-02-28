@@ -1,3 +1,5 @@
+const types = require('./types.js');
+
 function convertToPolygon(pointsOrPolygon) {
   // If already a polygon, just return it.
   if (pointsOrPolygon instanceof Polygon) {
@@ -7,7 +9,7 @@ function convertToPolygon(pointsOrPolygon) {
   let points = pointsOrPolygon;
   var isPixelPolygon = true;
   for (let i = 0; i < points.length; i++) {
-    if (!isInt(points[i][0]) && !isInt(points[i][0])) {
+    if (!types.isInteger(points[i][0]) && !types.isInteger(points[i][0])) {
       isPixelPolygon = false;
       break;
     }
@@ -85,12 +87,6 @@ function guessCenterOf(points) {
   return [(left+right)/2, (top+bot)/2];
 }
 
-function isInt(n) {
-  let fract = n - Math.floor(n);
-  return fract == 0.0;
-}
-
 module.exports.Polygon = Polygon;
 module.exports.convertToPolygon = convertToPolygon;
 module.exports.convertToPoints = convertToPoints;
-module.exports.isInt = isInt;

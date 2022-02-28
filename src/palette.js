@@ -5,6 +5,7 @@ const palette = require('./palette.js');
 const renderer = require('./renderer.js');
 const textLoader = require('./text_loader.js');
 const destructure = require('./destructure.js');
+const types = require('./types.js');
 
 function Palette(items, saveService) {
   if (saveService != null && !saveService.saveTo) {
@@ -205,13 +206,13 @@ Palette.prototype.relocateColorTo = function(c, pieceNum, optSize) {
 }
 
 function PaletteEntry(rgb, idx, colors) {
-  if (rgb.constructor != rgbColor.RGBColor) {
+  if (!types.isRGBColor(rgb)) {
     throw new Error(`PaletteEntry: rgb must be a RGBColor`);
   }
-  if (typeof idx != 'number') {
+  if (!types.isNumber(idx)) {
     throw new Error(`PaletteEntry: idx must be a number`);
   }
-  if (colors.constructor != colorSet.Set) {
+  if (!types.isColorSet(colors)) {
     throw new Error(`PaletteEntry: colors must be a color.Set`);
   }
   this.rgb = rgb;

@@ -42,19 +42,19 @@ Renderer.prototype.connect = function(input) {
     }
   }
 
-  if (!input.plane || input.plane.constructor != plane.Plane) {
+  if (!input.plane || !types.isPlane(input.plane)) {
     throw new Error(`input.plane must be a non-null Plane`);
   }
-  if (!input.colorSet || input.colorSet.constructor != colorSet.Set) {
+  if (!input.colorSet || !types.isColorSet(input.colorSet)) {
     throw new Error(`input.colorSet must be a non-null colorSet`);
   }
-  if (input.tiles && input.tiles.constructor != tiles.Tileset) {
+  if (input.tiles && !types.isTileset(input.tiles)) {
     throw new Error(`input.tiles must be a Tileset, got ${input.tiles}`);
   }
-  if (input.palette && input.palette.constructor != palette.Palette) {
+  if (input.palette && !types.isPalette(input.palette)) {
     throw new Error(`input.palette must be a Palette, got ${input.palette}`);
   }
-  if (input.attrs && input.attrs.constructor != attrs.Attributes) {
+  if (input.attrs && !types.isAttributes(input.attrs)) {
     throw new Error(`input.attrs must be a Attributes`);
   }
   if (!input.conf) { // TODO: mustHaveKeys([width, height, scroll{X,Y}, ...])
@@ -150,7 +150,7 @@ Renderer.prototype.render = function() {
   let perIRQs = [];
   for (let k = 0; k < system.interrupts.length; k++) {
     let row = system.interrupts.get(k);
-    if (Array.isArray(row.scanline)) {
+    if (types.isArray(row.scanline)) {
       let lineRange = row.scanline;
       // TODO: Assume a pair of integers
       for (let j = lineRange[0]; j < lineRange[1]+1; j++) {

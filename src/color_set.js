@@ -1,5 +1,6 @@
 const rgbMap = require('./rgb_map.js');
 const rgbColor = require('./rgb_color.js');
+const types = require('./types.js');
 
 function Set(vals) {
   if (!vals) {
@@ -16,7 +17,7 @@ function colorIntValsToRGBs(vals, allowDups) {
   let collect = [];
   let lookup = {};
   for (let i = 0; i < vals.length; i++) {
-    if (typeof vals[i] != 'number') {
+    if (!types.isNumber(vals[i])) {
       throw new Error(`type err: wanted number, got ${vals[i]}`);
     }
     let rgb = new rgbColor.RGBColor(vals[i]);
@@ -51,7 +52,7 @@ Set.prototype.assign = function(vals, opts) {
 }
 
 Set.prototype.addEntry = function(rgb) {
-  if (typeof rgb == 'number') {
+  if (types.isNumber(rgb)) {
     rgb = new rgbColor.RGBColor(rgb);
   }
   rgbColor.ensureIs(rgb);
@@ -69,7 +70,7 @@ Set.prototype.addEntry = function(rgb) {
 }
 
 Set.prototype.find = function(rgb) {
-  if (typeof rgb != 'number') {
+  if (!types.isNumber(rgb)) {
     throw new Error('colorSet needs rgb as a number');
   }
   rgb = new rgbColor.RGBColor(rgb);
@@ -81,7 +82,7 @@ Set.prototype.find = function(rgb) {
 }
 
 Set.prototype.use = function(rep) {
-  if (typeof rep == 'string') {
+  if (types.isString(rep)) {
     let text = rep;
     if (text == 'quick') {
       this.assign(rgbMap.rgb_map_quick);
@@ -102,22 +103,24 @@ Set.prototype.use = function(rep) {
     } else {
       throw new Error('Unknown color set: ' + text);
     }
-  } else if (Array.isArray(rep)) {
+  } else if (types.isArray(rep)) {
     let list = rep;
     this.assign(list);
   } else if (!rep) {
     this.assign([]);
+  } else {
+    throw new Error('colorSet.use got unknown param ${rep}');
   }
   return this.collect.length;
 }
 
 Set.prototype.append = function(list) {
-  if (!Array.isArray(list)) {
+  if (!types.isArray(list)) {
     throw new Error('can only append to colorSet using a list of rgb values');
   }
   for (let i = 0; i < list.length; i++) {
     let v = list[i];
-    if (typeof v != 'number') {
+    if (!types.isNumber(v)) {
       throw new Error(`TODO: number err, got ${v}`);
     }
     let rgb = new rgbColor.RGBColor(v);

@@ -114,7 +114,7 @@ Scene.prototype._translateArguments = function(params, args) {
 }
 
 Scene.prototype.setTrueColor = function(rgb) {
-  if (typeof rgb !== 'number') {
+  if (!types.isNumber(rgb)) {
     throw new Error(`setTrueColor needs rgb as a number, got ${rgb}`);
   }
   let color = this.colorSet.addEntry(rgb);
@@ -122,7 +122,7 @@ Scene.prototype.setTrueColor = function(rgb) {
 }
 
 Scene.prototype.fillTrueColor = function(rgb) {
-  if (typeof rgb !== 'number') {
+  if (!types.isNumber(rgb)) {
     throw new Error(`fillTrueColor needs rgb as a number, got ${rgb}`);
   }
   let color = this.colorSet.addEntry(rgb);
@@ -325,7 +325,7 @@ Scene.prototype.isDisplayObject = function(obj) {
                      'renderLoop'];
   for (let i = 0; i < needMethods.length; i++) {
     let method = obj[needMethods[i]];
-    if (!method || typeof method != 'function') {
+    if (!method || !types.isFunction(method)) {
       return false;
     }
   }
@@ -402,7 +402,7 @@ Scene.prototype._paletteFromColorset = function() {
 }
 
 Scene.prototype.usePlane = function(pl) {
-  if (pl.constructor != plane.Plane) {
+  if (!types.isPlane(pl)) {
     throw new Error(`usePlane requires a Plane`);
   }
   this.aPlane = pl;
@@ -412,11 +412,11 @@ Scene.prototype.usePlane = function(pl) {
 
 Scene.prototype.usePalette = function(optOrVals) {
   optOrVals = optOrVals || {};
-  if (optOrVals.constructor.name == 'Object') {
+  if (types.isObject(optOrVals)) {
     return this._initPaletteFromPlane(optOrVals.sort);
-  } else if (Array.isArray(optOrVals)) {
+  } else if (types.isArray(optOrVals)) {
     return this._constructPaletteFromVals(optOrVals);
-  } else if (Number.isInteger(optOrVals)) {
+  } else if (types.isInteger(optOrVals)) {
     let vals = new Array(optOrVals);
     vals.fill(0);
     return this._constructPaletteFromVals(vals);
@@ -454,9 +454,9 @@ Scene.prototype.useTileset = function(imgOrTileset, sizeInfo) {
   if (!imgOrTileset) {
     throw new Error(`useTileset expects an argument`);
   }
-  if (imgOrTileset.constructor.name == 'Tileset') {
+  if (types.isTileset(imgOrTileset)) {
     this.tiles = imgOrTileset;
-  } else if (Array.isArray(imgOrTileset)) {
+  } else if (types.isArray(imgOrTileset)) {
     // TODO: list of Tileset objects
     let imageList = imgOrTileset;
     let allBanks = [];

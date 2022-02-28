@@ -1,3 +1,5 @@
+const types = require('./types.js');
+
 function RGBColor(val) {
   if (val === undefined || val === null) {
     this.r = this.g = this.b = 0;
@@ -5,7 +7,7 @@ function RGBColor(val) {
   }
 
   // if int, treat it as 24-bit rgb value
-  if (typeof val == 'number') {
+  if (types.isNumber(val)) {
     this.r = Math.floor(val / 0x10000) % 0x100;
     this.g = Math.floor(val / 0x100)   % 0x100;
     this.b = Math.floor(val / 0x1)     % 0x100;
@@ -13,7 +15,7 @@ function RGBColor(val) {
   }
 
   // if string, treat it as a html style hex value
-  if (typeof val == 'string') {
+  if (types.isString(val)) {
     if (val[0] == '#') {
       this.r = parseInt(val.slice(1, 3), 16)
       this.g = parseInt(val.slice(3, 5), 16)
@@ -24,7 +26,7 @@ function RGBColor(val) {
   }
 
   // if list, treat it as a 3 tuple
-  if (val.constructor.name == 'Array') {
+  if (types.isArray(val)) {
     if (val.length == 3) {
       this.r = val[0];
       this.g = val[1];
@@ -35,14 +37,14 @@ function RGBColor(val) {
   }
 
   // if object, treat as a r,g,b struct
-  if (val.constructor.name == 'Object') {
+  if (types.isObject(val)) {
     this.r = val.r;
     this.g = val.g;
     this.b = val.b;
     return this;
   }
 
-  if (val.constructor == RGBColor) {
+  if (types.isRGBColor(val)) {
     this.r = val.r;
     this.g = val.g;
     this.b = val.b;

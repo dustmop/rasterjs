@@ -45,7 +45,7 @@ function Tileset(sourceOrNum, sizeInfo) {
     this.tileHeight = sizeInfo.tile_height;
     this._loadTilesFromSource(source);
   } else {
-    throw new Error(`invalid source: ${JSON.stringify(sourceOrNum)}`);
+    throw new Error(`invalid source: ${sourceOrNum.constructor.name}`);
   }
   this.length = this.numTiles;
 

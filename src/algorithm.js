@@ -1,7 +1,6 @@
 const palette = require('./palette.js');
 const rgbColor = require('./rgb_color.js');
-const geometry = require('./geometry.js');
-const isInt = geometry.isInt;
+const types = require('./types.js');
 
 function midpointCircleRasterize(r) {
   if (!r) {
@@ -94,7 +93,7 @@ function rgbToHSV(r, g, b) {
 function sortByHSV(items) {
   for (let i = 0; i < items.length; i++) {
     let it = items[i];
-    if (it.constructor != rgbColor.RGBColor) {
+    if (!types.isRGBColor(it)) {
       throw new Error('sortByHSV got invalid item[${i}] must be RGBColor');
     }
   }
@@ -199,7 +198,8 @@ function writeRGBColor(buff, pitch, x, y, rgb) {
 
 
 function renderLine(plane, x0, y0, x1, y1, connectCorners) {
-  if (!isInt(x0) || !isInt(y0) || !isInt(x1) || !isInt(y1)) {
+  if (!types.isInteger(x0) || !types.isInteger(y0) ||
+      !types.isInteger(x1) || !types.isInteger(y1)) {
     return renderLineFloat(plane, x0, y0, x1, y1);
   }
 
@@ -370,11 +370,11 @@ function fract(n) {
 }
 
 function renderPolygon(plane, baseX, baseY, inPoints, fill) {
-  let isPixelPoly = geometry.isInt(baseX) && geometry.isInt(baseY);
+  let isPixelPoly = types.isInteger(baseX) && types.isInteger(baseY);
   let points = [];
   for (let i = 0; i < inPoints.length; i++) {
     let p = inPoints[i];
-    if (!geometry.isInt(p[0]) || !geometry.isInt(p[1])) {
+    if (!types.isInteger(p[0]) || !types.isInteger(p[1])) {
       isPixelPoly = false;
     }
     points.push({x: p[0] + baseX, y: p[1] + baseY});

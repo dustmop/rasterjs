@@ -131,7 +131,7 @@ For animation, use `ra.run` instead of `ra.show`, and pass a draw function that 
 ```
 function draw() {
   ra.setColor(8+ra.time/2);
-  ra.drawLine(0, 0, ra.oscil()*80, ra.oscil(null, 0.5)*80);
+  ra.drawLine(0, 0, ra.oscil({amp:80}), ra.oscil({amp:80,begin:0.5}));
 }
 
 ra.run(draw);

@@ -103,9 +103,17 @@ Rotates the given polygon by the given angle, returning a new polygon.
 
 `returns` a polygon
 
-### oscil(period, fracOffset, click)
+### oscil({period, begin, amp, click})
 
-Produce an oscilating value that varies between 0.0 and 1.0 in a sinusoidal motion.
+Produce an oscilating wave value that varies between 0.0 and 1.0 in a sinusoidal motion. Parameters to `oscil` must be named parameters only, positional parameters are not allowed.
+
+`period`: The period of the motion, in clicks. Larger means a slower motion. Default is 60
+
+`begin`: How far into the motion to begin, as a fraction between 0.0 and 1.0. Default is 0.0
+
+`amp`: Amplitude of the motion, representing the distance from valley to peak. Default 1.0
+
+`click`: Parameter used as input. Default is `ra.timeClick`
 
 ### on(eventName, callback)
 
@@ -134,17 +142,17 @@ A mathematical constant representing the number of radians in the full rotation 
 ## Color usage
 
 ```
-fillBackground
-fillTrueBackground
+fillColor
+fillTrueColor
 setColor
 setTrueColor
 ```
 
-### fillBackground(color)
+### fillColor(color)
 
 Set the background color and clear the plane.
 
-### fillTrueBackground(rgb)
+### fillTrueColor(rgb)
 
 Add the rgb value to the colorSet and use it as the background color. Also clear the plane.
 
@@ -162,12 +170,13 @@ For most of these methods, there are two versions, one starting with `draw` and 
 
 ```
 drawLine     -
-drawDot      fillDot
+drawDot      -
 drawSquare   fillSquare
 drawRect     fillRect
 drawCircle   fillCircle
 drawPolygon  fillPolygon
 drawImage    -
+-            fillPattern
 -            fillFrame
 -            fillFlood
 -            fillPattern
@@ -184,10 +193,6 @@ If any of the values are non-integers, then the line is drawn between those poin
 ### drawDot(x, y)
 
 Draw a dot at point x,y.
-
-### fillDot(dots)
-
-An alias for `fillPattern`.
 
 ### drawSquare(x, y, size)
 
@@ -274,20 +279,15 @@ Scroll the plane x pixels horizontally. Rendering will wrap-around when it reach
 
 Scroll the plane y pixels vertically. Rendering will wrap-around when it reaches the edge of the plane.
 
-## Palette access
+## Palette
 
 ```
-getPaletteEntry
-getPaletteAll
+eyedrop
 ```
 
-### getPaletteEntry(x, y)
+### eyedrop(x, y)
 
-Gets a single palette entry, for the color found at position x,y. If no palette is in use, one is created that directly maps to the colorset.
-
-### getPaletteAll()
-
-Gets the palette as a list of palette entryies. If no palette is in use, one is created that directly maps to the colorset.
+Pick the color at position x,y and return it as a palette entry. If no palette is in use, one is created that directly maps to the colorset.
 
 ## Display
 

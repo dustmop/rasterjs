@@ -9,7 +9,6 @@ const imageLoader = require('./image_loader.js');
 const textLoader = require('./text_loader.js');
 const displayAscii = require('./display_ascii.js');
 const plane = require('./plane.js');
-const scene = require('./scene.js');
 const tiles = require('./tiles.js');
 const attributes = require('./attributes.js');
 const rgbColor = require('./rgb_color.js');
@@ -27,7 +26,7 @@ function Scene(env) {
   this.saveService = this.resources;
 
   this.colorSet = new colorSet.Set();
-  this.renderer = new renderer.Renderer(this.colorSet);
+  this.renderer = new renderer.Renderer();
 
   this.font = null;
   this.palette = null;
@@ -135,6 +134,8 @@ Scene.prototype.setSize = function(w, h) {
   if (this.aPlane.width == 0 || this.aPlane.height == 0) {
     this.aPlane.setSize(w, h);
   }
+  // TODO: allow resizing? Need to understand how display vs plane size
+  // interact when one or the other is changed
 }
 
 Scene.prototype.setScrollX = function(x) {
@@ -408,6 +409,8 @@ Scene.prototype.usePlane = function(pl) {
   this.aPlane = pl;
   this._removeMethods();
   this._config.usingNonPrimaryPlane = true;
+  // TODO: test me
+  return this.aPlane;
 }
 
 Scene.prototype.usePalette = function(optOrVals) {

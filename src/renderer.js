@@ -90,27 +90,6 @@ Renderer.prototype.switchComponent = function(layerNum, compName, obj) {
   this._layers[layerNum].tiles = obj;
 }
 
-Renderer.prototype.size = function () {
-  let layer = this._layers[0];
-  let width = layer.conf.width;
-  let height = layer.conf.height;
-  if (!width) {
-    if (layer.tiles) {
-      width = layer.plane.width * layer.tiles.tileWidth;
-    } else {
-      width = layer.plane.width;
-    }
-  }
-  if (!height) {
-    if (layer.tiles) {
-      height = layer.plane.height * layer.tiles.tileHeight;
-    } else {
-      height = layer.plane.height;
-    }
-  }
-  return [width, height];
-}
-
 Renderer.prototype.render = function() {
   let system = this;
   let layer = this._layers[0];
@@ -303,6 +282,9 @@ Renderer.prototype._renderRegion = function(left, top, right, bottom) {
 Renderer.prototype._toColor = function(c) {
   let layer = this._layers[0];
   let rgb;
+  if (c !== 0 && !c) {
+    throw new Error(`invalid color ${c}`);
+  }
   if (layer.palette) {
     let ent = layer.palette.get(c);
     if (!ent) {

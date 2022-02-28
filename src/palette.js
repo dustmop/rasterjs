@@ -116,7 +116,6 @@ Palette.prototype._saveTo = function(target, savepath) {
   // Render it and save
   let rend = new renderer.Renderer();
   rend.connect(components);
-  let [width, height] = rend.size();
   let surfaces = rend.render();
   this.saveService.saveTo(savepath, surfaces);
 }

@@ -27,7 +27,7 @@ let sel = ra.select({x:32, y:21, w:6, h:4});
 sel.fillPattern([[FRONT_COLOR], [SHADE_COLOR], [BACK_COLOR]]);
 
 // Create raster bars using nice pastel colors
-let [bgColor, step] = [ra.getPaletteAll()[BACK_COLOR], 0];
+let [bgColor, step] = [ra.usePalette()[BACK_COLOR], 0];
 let interrupts = [
   {scanline: 0,       irq:()=>{ bgColor.setColor(BACK_COLOR) }},
   {scanline: [34,40], irq:(ln)=>{ bgColor.setColor((step+ln)%8+56) }},
@@ -37,5 +37,5 @@ ra.useInterrupts(interrupts);
 // Bounce the text by changing the Y scroll very slowly
 ra.run(function() {
   step = ra.timeClick / 8;
-  ra.setScrollY(ra.oscil({period: 240, height: 10}) - 6);
+  ra.setScrollY(ra.oscil({period: 240, amp: 10}) - 6);
 });

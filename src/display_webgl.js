@@ -12,6 +12,7 @@ Display.prototype.initialize = function() {
   this.displayHeight = 0;
   this.zoomLevel = 1;
   this.gridUnit = 0;
+  this.currentRunId = null;
 }
 
 const SHARPEN = 2;
@@ -245,31 +246,46 @@ Display.prototype.waitForContentLoad = function(cb) {
   }, 0);
 }
 
-Display.prototype.renderLoop = function(nextFrame, num, exitAfter, finalFunc) {
+Display.prototype.renderLoop = function(nextFrame, id, num, exitAfter, finalFunc) {
   let self = this;
+  self.currentRunId = id;
   this.waitForContentLoad(function() {
     self._createWebglCanvas();
-    self._beginLoop(nextFrame, num, exitAfter, finalFunc);
+    self._beginLoop(nextFrame, id, num, exitAfter, finalFunc);
   });
 }
 
-Display.prototype._beginLoop = function(nextFrame, num, exitAfter, finalFunc) {
+Display.prototype.appQuit = function() {
+  this.currentRunId = null;
+}
+
+Display.prototype._beginLoop = function(nextFrame, id, num, exitAfter, finalFunc) {
   let gl = this.gl;
   let frontBuffer = null;
   let self = this;
 
-  // TODO: Use `num`
-
   let renderIt = function() {
+    // Did the app quit?
+    if (self.currentRunId != id) {
+      return;
+    }
+
     // Get the data buffer from the plane.
     let res = self.renderer.render();
-    if (!frontBuffer) {
-      frontBuffer = res[0].buff;
-    }
+    frontBuffer = res[0].buff;
 
     // Render to the display
     if (frontBuffer) {
       gl.activeTexture(gl.TEXTURE0);
+
+      let numPoints = self.displayWidth * self.displayHeight;
+      let numBytes = numPoints*4;
+      if (numBytes != frontBuffer.length) {
+        let msg = 'invalid buffer size for display: ';
+        msg += `${numBytes} != ${frontBuffer.length}`;
+        throw new Error(msg);
+      }
+
       gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0,
                        self.displayWidth, self.displayHeight,
                        gl.RGBA, gl.UNSIGNED_BYTE, frontBuffer);

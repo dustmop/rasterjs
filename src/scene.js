@@ -136,6 +136,7 @@ Scene.prototype.setSize = function(w, h) {
   }
   // TODO: allow resizing? Need to understand how display vs plane size
   // interact when one or the other is changed
+  this.renderer.clear();
 }
 
 Scene.prototype.setScrollX = function(x) {
@@ -226,6 +227,8 @@ Scene.prototype._doRender = function(num, exitAfter, drawFunc, betweenFunc, fina
   }
   this.renderer.connect(this.provide());
 
+  let renderID = makeRenderID();
+
   let self = this;
   self.then(function() {
     self.display.setSize(self._config.width, self._config.height);
@@ -244,8 +247,16 @@ Scene.prototype._doRender = function(num, exitAfter, drawFunc, betweenFunc, fina
       if (betweenFunc) {
         betweenFunc();
       }
-    }, num, exitAfter, finalFunc);
+    }, renderID, num, exitAfter, finalFunc);
   });
+}
+
+function makeRenderID() {
+  let res = '';
+  for (let k = 0; k < 20; k++) {
+    res += String.fromCharCode(65+Math.floor(Math.random()*26));
+  }
+  return res;
 }
 
 Scene.prototype.show = function(finalFunc) {

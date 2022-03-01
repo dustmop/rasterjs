@@ -77,15 +77,15 @@ Display.prototype.waitForContentLoad = function(cb) {
   }, 0);
 }
 
-Display.prototype.renderLoop = function(nextFrame, num, exitAfter, finalFunc) {
+Display.prototype.renderLoop = function(nextFrame, id, num, exitAfter, finalFunc) {
   let self = this;
   this.waitForContentLoad(function() {
     self._create2dCanvas();
-    self._beginLoop(nextFrame, num, exitAfter, finalFunc);
+    self._beginLoop(nextFrame, id, num, exitAfter, finalFunc);
   });
 }
 
-Display.prototype._beginLoop = function(nextFrame, num, exitAfter, finalFunc) {
+Display.prototype._beginLoop = function(nextFrame, id, num, exitAfter, finalFunc) {
   let frontBuffer = null;
   let ctx = this.canvas.getContext('2d');
   ctx.imageSmoothingEnabled = false;

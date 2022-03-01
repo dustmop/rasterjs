@@ -143,14 +143,10 @@ Napi::Value DisplaySDL::InsteadSaveFile(const Napi::CallbackInfo& info) {
 Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
-  if ((info.Length() < 3) || (!info[0].IsFunction()) || (!info[1].IsNumber())) {
-    printf("RenderLoop argument error: want (function, number, bool)\n");
-    exit(1);
-  }
-
   Napi::Function eachFrameFunc = info[0].As<Napi::Function>();
-  int numRender = info[1].ToNumber().Int32Value();
-  bool exitAfter = info[2].ToBoolean();
+  // info[1] == id
+  int numRender = info[2].ToNumber().Int32Value();
+  bool exitAfter = info[3].ToBoolean();
 
   // Get the stored plane object, retrieve its basic data.
   napi_value rendererVal;

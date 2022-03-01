@@ -14,7 +14,7 @@
       ],
       "cflags_cc!": [ "-fno-exceptions" ],
       "sources": [
-        "src/addon/display_sdl.cc",
+        "src/addon/sdl_display.cc",
         "src/addon/image_load_save.cc",
         "src/addon/native.cc",
         "src/addon/resources.cc",

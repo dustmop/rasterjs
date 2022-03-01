@@ -1,26 +1,26 @@
-function DisplayAscii() {
+function AsciiDisplay() {
   this.renderer = null;
   return this;
 }
 
-DisplayAscii.prototype.initialize = function() {
+AsciiDisplay.prototype.initialize = function() {
 }
 
-DisplayAscii.prototype.setSize = function(width, height) {
+AsciiDisplay.prototype.setSize = function(width, height) {
   // pass
 }
 
-DisplayAscii.prototype.setRenderer = function(renderer) {
+AsciiDisplay.prototype.setRenderer = function(renderer) {
   this.renderer = renderer;
 }
 
-DisplayAscii.prototype.setZoom = function(zoom) {
+AsciiDisplay.prototype.setZoom = function(zoom) {
 }
 
-DisplayAscii.prototype.setGrid = function(unit) {
+AsciiDisplay.prototype.setGrid = function(unit) {
 }
 
-DisplayAscii.prototype.renderLoop = function(nextFrame) {
+AsciiDisplay.prototype.renderLoop = function(nextFrame) {
   let plane = this.renderer.getFirstPlane();
   let buffer = plane.data;
   let pitch = plane.pitch;
@@ -44,5 +44,5 @@ function byteToAscii(b) {
   return alphabet[b % 64];
 }
 
-module.exports.DisplayAscii = DisplayAscii;
+module.exports.AsciiDisplay = AsciiDisplay;
 

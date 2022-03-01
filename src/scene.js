@@ -7,7 +7,7 @@ const renderer = require('./renderer.js');
 const geometry = require('./geometry.js');
 const imageLoader = require('./image_loader.js');
 const textLoader = require('./text_loader.js');
-const displayAscii = require('./display_ascii.js');
+const asciiDisplay = require('./ascii_display.js');
 const plane = require('./plane.js');
 const tiles = require('./tiles.js');
 const attributes = require('./attributes.js');
@@ -196,7 +196,7 @@ Scene.prototype.numColors = function() {
 
 Scene.prototype.useDisplay = function(nameOrDisplay) {
   if (nameOrDisplay == 'ascii') {
-    this.display = new displayAscii.DisplayAscii();
+    this.display = new asciiDisplay.AsciiDisplay();
   } else if (this.isDisplayObject(nameOrDisplay)) {
     this.display = nameOrDisplay;
   } else {

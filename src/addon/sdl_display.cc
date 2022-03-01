@@ -1,4 +1,4 @@
-#include "display_sdl.h"
+#include "sdl_display.h"
 #include "resources.h"
 #include "type.h"
 #include "image_load_save.h"
@@ -11,26 +11,26 @@ Napi::FunctionReference g_displayConstructor;
 
 typedef unsigned char u8;
 
-void DisplaySDL::InitClass(Napi::Env env, Napi::Object exports) {
+void SDLDisplay::InitClass(Napi::Env env, Napi::Object exports) {
   Napi::Function func = DefineClass(
       env,
       "Display",
-      {InstanceMethod("initialize", &DisplaySDL::Initialize),
-       InstanceMethod("setSize", &DisplaySDL::SetSize),
-       InstanceMethod("setRenderer", &DisplaySDL::SetRenderer),
-       InstanceMethod("setZoom", &DisplaySDL::SetZoom),
-       InstanceMethod("setGrid", &DisplaySDL::SetGrid),
-       InstanceMethod("handleEvent", &DisplaySDL::HandleEvent),
-       InstanceMethod("renderLoop", &DisplaySDL::RenderLoop),
-       InstanceMethod("appQuit", &DisplaySDL::AppQuit),
-       InstanceMethod("insteadSaveFile", &DisplaySDL::InsteadSaveFile),
+      {InstanceMethod("initialize", &SDLDisplay::Initialize),
+       InstanceMethod("setSize", &SDLDisplay::SetSize),
+       InstanceMethod("setRenderer", &SDLDisplay::SetRenderer),
+       InstanceMethod("setZoom", &SDLDisplay::SetZoom),
+       InstanceMethod("setGrid", &SDLDisplay::SetGrid),
+       InstanceMethod("handleEvent", &SDLDisplay::HandleEvent),
+       InstanceMethod("renderLoop", &SDLDisplay::RenderLoop),
+       InstanceMethod("appQuit", &SDLDisplay::AppQuit),
+       InstanceMethod("insteadSaveFile", &SDLDisplay::InsteadSaveFile),
   });
   g_displayConstructor = Napi::Persistent(func);
   g_displayConstructor.SuppressDestruct();
 }
 
-DisplaySDL::DisplaySDL(const Napi::CallbackInfo& info)
-    : Napi::ObjectWrap<DisplaySDL>(info) {
+SDLDisplay::SDLDisplay(const Napi::CallbackInfo& info)
+    : Napi::ObjectWrap<SDLDisplay>(info) {
   this->sdlInitialized = 0;
   this->zoomLevel = 1;
   this->gridUnit = 0;
@@ -41,13 +41,13 @@ DisplaySDL::DisplaySDL(const Napi::CallbackInfo& info)
   this->gridHandle = NULL;
 };
 
-Napi::Object DisplaySDL::NewInstance(Napi::Env env, Napi::Value arg) {
+Napi::Object SDLDisplay::NewInstance(Napi::Env env, Napi::Value arg) {
   Napi::EscapableHandleScope scope(env);
   Napi::Object obj = g_displayConstructor.New({arg});
   return scope.Escape(napi_value(obj)).ToObject();
 }
 
-Napi::Value DisplaySDL::Initialize(const Napi::CallbackInfo& info) {
+Napi::Value SDLDisplay::Initialize(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if( SDL_Init( SDL_INIT_VIDEO ) < 0 ) {
     printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
@@ -57,7 +57,7 @@ Napi::Value DisplaySDL::Initialize(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, 0);
 }
 
-Napi::Value DisplaySDL::SetSize(const Napi::CallbackInfo& info) {
+Napi::Value SDLDisplay::SetSize(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   if (info.Length() < 2) {
@@ -71,7 +71,7 @@ Napi::Value DisplaySDL::SetSize(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, 0);
 }
 
-Napi::Value DisplaySDL::SetRenderer(const Napi::CallbackInfo& info) {
+Napi::Value SDLDisplay::SetRenderer(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   if (!this->sdlInitialized) {
@@ -89,7 +89,7 @@ Napi::Value DisplaySDL::SetRenderer(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, 0);
 }
 
-Napi::Value DisplaySDL::SetZoom(const Napi::CallbackInfo& info) {
+Napi::Value SDLDisplay::SetZoom(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if (info.Length() < 1) {
     printf("SetZoom needs zoom\n");
@@ -99,7 +99,7 @@ Napi::Value DisplaySDL::SetZoom(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, 0);
 }
 
-Napi::Value DisplaySDL::SetGrid(const Napi::CallbackInfo& info) {
+Napi::Value SDLDisplay::SetGrid(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if (info.Length() < 1) {
     printf("SetGrid needs grid\n");
@@ -113,7 +113,7 @@ Napi::Value DisplaySDL::SetGrid(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, 0);
 }
 
-Napi::Value DisplaySDL::HandleEvent(const Napi::CallbackInfo& info) {
+Napi::Value SDLDisplay::HandleEvent(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   Napi::String eventName = info[0].ToString();
   if (eventName.Utf8Value() == std::string("keypress")) {
@@ -133,14 +133,14 @@ void display_napi_value(Napi::Env env, napi_value value) {
   printf("%s\n", buffer);
 }
 
-Napi::Value DisplaySDL::InsteadSaveFile(const Napi::CallbackInfo& info) {
+Napi::Value SDLDisplay::InsteadSaveFile(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   Napi::String filename = info[0].As<Napi::String>();
   this->hookSaveFile = filename;
   return Napi::Number::New(env, 0);
 }
 
-Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
+Napi::Value SDLDisplay::RenderLoop(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   Napi::Function eachFrameFunc = info[0].As<Napi::Function>();
@@ -455,7 +455,7 @@ Napi::Value DisplaySDL::RenderLoop(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, 0);
 }
 
-Napi::Value DisplaySDL::AppQuit(const Napi::CallbackInfo& info) {
+Napi::Value SDLDisplay::AppQuit(const Napi::CallbackInfo& info) {
   this->isRunning = false;
   return info.Env().Null();
 }

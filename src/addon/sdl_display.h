@@ -1,5 +1,5 @@
-#ifndef DISPLAY_SDL_H
-#define DISPLAY_SDL_H
+#ifndef SDL_DISPLAY_H
+#define SDL_DISPLAY_H
 
 #include <napi.h>
 
@@ -12,11 +12,11 @@ struct SDL_Renderer;
 struct SDL_Texture;
 struct SDL_Surface;
 
-class DisplaySDL : public Napi::ObjectWrap<DisplaySDL> {
+class SDLDisplay : public Napi::ObjectWrap<SDLDisplay> {
  public:
   static void InitClass(Napi::Env env, Napi::Object exports);
   static Napi::Object NewInstance(Napi::Env env, Napi::Value arg);
-  DisplaySDL(const Napi::CallbackInfo& info);
+  SDLDisplay(const Napi::CallbackInfo& info);
 
  private:
   Napi::Value Initialize(const Napi::CallbackInfo& info);

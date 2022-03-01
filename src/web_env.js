@@ -1,5 +1,5 @@
-const displayWebGL = require('./display_webgl.js');
-const display2dCanvas = require('./display_2d_canvas.js');
+const webGLDisplay = require('./webgl_display.js');
+const twoDCanvas = require('./2d_canvas.js');
 const plane = require('./plane.js');
 const resources = require('./resources.js');
 
@@ -9,9 +9,9 @@ function makeResources() {
 
 function makeDisplay() {
   if (!runningUnderKarma() && detectFeatureWebGL()) {
-    return new displayWebGL.Display();
+    return new webGLDisplay.Display();
   }
-  return new display2dCanvas.Display();
+  return new twoDCanvas.Display();
 }
 
 function getOptions() {

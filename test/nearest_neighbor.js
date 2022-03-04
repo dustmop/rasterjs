@@ -33,4 +33,29 @@ describe('Nearest neighbor', function() {
 
     util.renderCompareTo(ra, 'test/testdata/simple-times-2.png');
   });
+
+  it('plane upscale', function() {
+    ra.resetState();
+
+    let img = ra.loadImage('test/testdata/simple.png');
+    ra.drawImage(img, 0, 0);
+
+    let upscale = ra.resize(29, 33);
+    ra.usePlane(upscale);
+
+    util.renderCompareTo(ra, 'test/testdata/simple-upscale.png');
+  });
+
+  it('plane downscale', function() {
+    ra.resetState();
+
+    let img = ra.loadImage('test/testdata/simple.png');
+    ra.drawImage(img, 0, 0);
+
+    let upscale = ra.resize(13, 11);
+    ra.usePlane(upscale);
+
+    util.renderCompareTo(ra, 'test/testdata/simple-downscale.png');
+  });
+
 });

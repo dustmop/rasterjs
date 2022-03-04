@@ -102,14 +102,14 @@ Plane.prototype._prepare = function() {
 Plane.prototype.get = function(x, y) {
   this._prepare();
   this._offs = this.offsetTop * this.pitch + this.offsetLeft || 0;
-  let k = y * this.pitch + x;
+  let k = Math.floor(y) * this.pitch + Math.floor(x);
   return this.data[this._offs + k];
 }
 
 Plane.prototype.put = function(x, y, v) {
   this._prepare();
   this._offs = this.offsetTop * this.pitch + this.offsetLeft || 0;
-  let k = y * this.pitch + x;
+  let k = Math.floor(y) * this.pitch + Math.floor(x);
   // TODO: Check width and height
   this.data[this._offs + k] = v;
 }

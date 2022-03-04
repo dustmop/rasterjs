@@ -140,6 +140,10 @@ Raster.prototype.oscil = function(namedOnly) {
   return amp * ((1.0 - Math.cos(click * this.TAU / period)) / 2.0000001);
 }
 
+Raster.prototype.resize = function(x, y) {
+  return this.scene.resize(x, y);
+}
+
 Raster.prototype.eyedrop = function(x, y) {
   return this.scene.eyedrop(x, y);
 }

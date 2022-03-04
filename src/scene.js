@@ -351,6 +351,10 @@ Scene.prototype._assertDisplayObject = function(obj) {
   }
 }
 
+Scene.prototype.resize = function(x, y) {
+  return this.aPlane.resize(x, y);
+}
+
 Scene.prototype.eyedrop = function(x, y) {
   let c = this.aPlane.get(x, y);
   this._paletteFromColorset();

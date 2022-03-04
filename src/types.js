@@ -32,36 +32,43 @@ function isArray(obj) {
 }
 
 function isRGBColor(obj) {
+  if (!obj) { return false; }
   return obj.constructor == rgbColor.RGBColor;
 }
 
 function isInterrupts(obj) {
+  if (!obj) { return false; }
   return obj.constructor == renderer.Interrupts;
 }
 
 function isTileset(obj) {
+  if (!obj) { return false; }
   return obj.constructor == tiles.Tileset;
 }
 
 function isAttributes(obj) {
+  if (!obj) { return false; }
   return obj.constructor == attributes.Attributes;
 }
 
 function isPalette(obj) {
+  if (!obj) { return false; }
   return obj.constructor == palette.Palette;
 }
 
 function isPlane(obj) {
+  if (!obj) { return false; }
   return (obj.constructor == plane.Plane ||
           obj.constructor == imageLoader.ImagePlane);
 }
 
 function isColorSet(obj) {
+  if (!obj) { return false; }
   return obj.constructor == colorSet.Set;
 }
 
 function isSurface(obj) {
-  return obj.width && obj.height && obj.pitch && obj.buff;
+  return obj && obj.width && obj.height && obj.pitch && obj.buff;
 }
 
 module.exports.isPlane   = isPlane;

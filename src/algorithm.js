@@ -152,26 +152,48 @@ function flood(mem, initX, initY, color) {
   }
 }
 
-function nearestNeighbor(input, scaleX, scaleY) {
-  if (!scaleY) {
-    scaleY = scaleX;
-  }
 
+function nearestNeighbor(input, scaleX, scaleY) {
+  if (!types.isPlane(input)) {
+    throw new Error(`input must be a Plane`);
+  }
+  scaleY = scaleY || scaleX;
+
+  let make = input.clone();
+  make.clear();
+  make.setSize(Math.floor(input.width*scaleX), Math.floor(input.height*scaleY));
+
+  for (let y = 0; y < input.height; y++) {
+    for (let x = 0; x < input.width; x++) {
+      // Read value
+      let c = input.get(x, y);
+      for (let i = 0; i < scaleY; i++) {
+        for (let j = 0; j < scaleX; j++) {
+          // Write value
+          make.put(x*scaleX+j, y*scaleY+i, c);
+        }
+      }
+    }
+  }
+  return make;
+}
+
+
+function nearestNeighborSurface(input, zoomLevel) {
   if (!types.isSurface(input)) {
     throw new Error(`nearestNeighbor needs surface`);
   }
 
   // Allocate the surface scaled to its new size
-  let make = makeSurface(input.width * scaleX, input.height * scaleY);
+  let make = makeSurface(input.width * zoomLevel, input.height * zoomLevel);
   for (let y = 0; y < input.height; y++) {
     for (let x = 0; x < input.width; x++) {
       // Read value
       let rgb = readRGBColor(input, x, y);
-      for (let i = 0; i < scaleY; i++) {
-        for (let j = 0; j < scaleX; j++) {
+      for (let i = 0; i < zoomLevel; i++) {
+        for (let j = 0; j < zoomLevel; j++) {
           // Write value
-          // TODO: Scale up correctly
-          writeRGBColor(make, x*scaleX+j, y*scaleY+i, rgb);
+          writeRGBColor(make, x*zoomLevel+j, y*zoomLevel+i, rgb);
         }
       }
     }
@@ -690,3 +712,4 @@ module.exports.sortByHSV = sortByHSV;
 module.exports.isHalfwayValue = isHalfwayValue;
 module.exports.flood = flood;
 module.exports.nearestNeighbor = nearestNeighbor;
+module.exports.nearestNeighborSurface = nearestNeighborSurface;

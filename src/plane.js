@@ -1,3 +1,4 @@
+const algorithm = require('./algorithm.js');
 const drawable = require('./drawable.js');
 const destructure = require('./destructure.js');
 
@@ -65,6 +66,12 @@ Plane.prototype.setSize = function(w, h) {
   this.height = h;
   // TODO: Make this adjustment be semi-random instead
   this.pitch = w + 2;
+}
+
+Plane.prototype.resize = function(x, y) {
+  let scaleX = x / this.width;
+  let scaleY = y / this.height;
+  return algorithm.nearestNeighbor(this, scaleX, scaleY);
 }
 
 Plane.prototype.nextFrame = function() {

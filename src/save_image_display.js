@@ -82,7 +82,7 @@ SaveImageDisplay.prototype.renderLoop = function(nextFrame) {
     let res = this.renderer.render();
     let surface = res[0];
     if (this.zoomLevel > 1) {
-      surface = algorithm.nearestNeighbor(surface, this.zoomLevel);
+      surface = algorithm.nearestNeighborSurface(surface, this.zoomLevel);
       res[0] = surface;
     }
     if (this.gridUnit > 0) {

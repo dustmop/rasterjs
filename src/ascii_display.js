@@ -20,6 +20,11 @@ AsciiDisplay.prototype.setZoom = function(zoom) {
 AsciiDisplay.prototype.setGrid = function(unit) {
 }
 
+AsciiDisplay.prototype.handleEvent = function(eventName, callback) {
+  // ascii display does not use an event loop, so it can not handle
+  // any events
+}
+
 AsciiDisplay.prototype.renderLoop = function(nextFrame) {
   let plane = this.renderer.getFirstPlane();
   let buffer = plane.data;

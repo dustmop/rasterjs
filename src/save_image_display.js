@@ -41,6 +41,11 @@ SaveImageDisplay.prototype.setGrid = function(unit) {
   this.gridUnit = unit;
 }
 
+SaveImageDisplay.prototype.handleEvent = function(eventName, callback) {
+  // save image display does not use an event loop, so it can
+  // not handle any events
+}
+
 SaveImageDisplay.prototype.renderLoop = function(nextFrame) {
   let width = this.width;
   let height = this.height;

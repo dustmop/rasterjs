@@ -2,7 +2,9 @@ const compile = require('./compile.js');
 
 function Display() {
   this.canvas = null;
+  this.sysEventHandler = null;
   this.initialize();
+  this._createEventHandlers();
   return this;
 }
 
@@ -209,6 +211,17 @@ void main() {
   }
 }
 
+Display.prototype._createEventHandlers = function() {
+  let self = this;
+  document.addEventListener('keypress', function(e) {
+    if (self.sysEventHandler) {
+      self.sysEventHandler({
+        key: e.key
+      });
+    }
+  })
+}
+
 Display.prototype._createGrid = function(unit) {
   let width = this.displayWidth * this.zoomLevel;
   let height = this.displayHeight * this.zoomLevel;
@@ -311,6 +324,14 @@ Display.prototype._beginLoop = function(nextFrame, id, num, exitAfter, finalFunc
   };
 
   renderIt();
+}
+
+Display.prototype.handleEvent = function(eventName, callback) {
+  if (eventName == 'keypress') {
+    this.sysEventHandler = callback;
+  } else {
+    throw new Error('only event "keypress" can be handled');
+  }
 }
 
 module.exports.Display = Display;

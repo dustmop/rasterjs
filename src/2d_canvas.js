@@ -2,6 +2,8 @@ function Display() {
   this.canvas = null;
   this.displayWidth = 0;
   this.displayHeight = 0;
+  this.sysEventHandler = null;
+  this._createEventHandlers();
   return this;
 }
 
@@ -33,6 +35,17 @@ Display.prototype.setZoom = function(_zoomLevel) {
 
 Display.prototype.setGrid = function(unit) {
   this.gridUnit = unit;
+}
+
+Display.prototype._createEventHandlers = function() {
+  let self = this;
+  document.addEventListener('keypress', function(e) {
+    if (self.sysEventHandler) {
+      self.sysEventHandler({
+        key: e.key
+      });
+    }
+  })
 }
 
 Display.prototype._create2dCanvas = function() {
@@ -123,6 +136,14 @@ Display.prototype._beginLoop = function(nextFrame, id, num, exitAfter, finalFunc
   };
 
   renderIt();
+}
+
+Display.prototype.handleEvent = function(eventName, callback) {
+  if (eventName == 'keypress') {
+    this.sysEventHandler = callback;
+  } else {
+    throw new Error('only event "keypress" can be handled');
+  }
 }
 
 module.exports.Display = Display;

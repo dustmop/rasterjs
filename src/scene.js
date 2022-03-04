@@ -195,12 +195,15 @@ Scene.prototype.numColors = function() {
 }
 
 Scene.prototype.useDisplay = function(nameOrDisplay) {
-  if (nameOrDisplay == 'ascii') {
-    this.display = new asciiDisplay.AsciiDisplay();
-  } else if (this.isDisplayObject(nameOrDisplay)) {
-    this.display = nameOrDisplay;
+  if (types.isString(nameOrDisplay)) {
+    if (nameOrDisplay == 'ascii') {
+      this.display = new asciiDisplay.AsciiDisplay();
+    } else {
+      throw new Error(`unknown built-in display name "${nameOrDisplay}"`);
+    }
   } else {
-    throw new Error(`Invalid display ${JSON.stringify(nameOrDisplay)}`);
+    this._assertDisplayObject(nameOrDisplay);
+    this.display = nameOrDisplay;
   }
   this.display.initialize();
 }
@@ -328,20 +331,24 @@ Scene.prototype.handleEvent = function(eventName, callback) {
   this.display.handleEvent(eventName, callback);
 }
 
-Scene.prototype.isDisplayObject = function(obj) {
+Scene.prototype._assertDisplayObject = function(obj) {
   let needMethods = ['initialize',
+                     'handleEvent',
                      'setSize',
                      'setRenderer',
                      'setZoom',
                      'setGrid',
                      'renderLoop'];
+  let failures = [];
   for (let i = 0; i < needMethods.length; i++) {
     let method = obj[needMethods[i]];
     if (!method || !types.isFunction(method)) {
-      return false;
+      failures.push(needMethods[i]);
     }
   }
-  return true;
+  if (failures.length) {
+    throw new Error(`invalid display: missing ${JSON.stringify(failures)}`);
+  }
 }
 
 Scene.prototype.eyedrop = function(x, y) {

@@ -32,6 +32,11 @@ myDisplay.prototype.initialize = function() {
   this.count = 1000;
 }
 
+myDisplay.prototype.handleEvent = function(eventName, callback) {
+  // my display does not use an event loop, so it can not handle
+  // any events
+}
+
 myDisplay.prototype.setSize = function(width, height) {
   // pass
 }

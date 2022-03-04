@@ -33,9 +33,7 @@ Plane.prototype.clone = function() {
 }
 
 Plane.prototype.ensureReady = function() {
-  if (!this.data) {
-    this._prepare();
-  }
+  this._prepare();
 }
 
 Plane.prototype._addMethods = function(shouldDestruct) {

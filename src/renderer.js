@@ -117,9 +117,6 @@ Renderer.prototype.render = function() {
     layer.rgbSurface.pitch = width*4;
   }
 
-  // If plane has not been rendered yet, do so now.
-  layer.plane.ensureReady();
-
   // If no interrupts, render everything at once.
   if (!system.interrupts) {
     return [this._renderRegion(0, 0, width, height)];
@@ -169,6 +166,9 @@ Renderer.prototype.render = function() {
 
 Renderer.prototype._renderRegion = function(left, top, right, bottom) {
   let layer = this._layers[0];
+
+  // If plane has not been rendered yet, do so now.
+  layer.plane.ensureReady();
 
   let source = layer.plane.data;
   let sourcePitch = layer.plane.pitch;

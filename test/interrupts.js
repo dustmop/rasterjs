@@ -36,4 +36,19 @@ describe('Interrupts', function() {
     util.renderCompareTo(ra, 'test/testdata/diag-fruit.png');
   });
 
+  it('fill color', function() {
+    ra.resetState();
+    ra.useColors('pico8');
+    ra.setSize(8, 8);
+
+    ra.useInterrupts([
+      {scanline:  0, irq: () => { ra.fillColor(2) }},
+      {scanline:  2, irq: () => { ra.fillColor(3) }},
+      {scanline:  4, irq: () => { ra.fillColor(4) }},
+      {scanline:  6, irq: () => { ra.fillColor(5) }},
+    ]);
+
+    util.renderCompareTo(ra, 'test/testdata/color_stripes.png');
+  });
+
 });

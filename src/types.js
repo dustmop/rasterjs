@@ -60,6 +60,10 @@ function isColorSet(obj) {
   return obj.constructor == colorSet.Set;
 }
 
+function isSurface(obj) {
+  return obj.width && obj.height && obj.pitch && obj.buff;
+}
+
 module.exports.isPlane   = isPlane;
 module.exports.isNumber  = isNumber;
 module.exports.isInteger = isInteger;
@@ -73,3 +77,4 @@ module.exports.isColorSet = isColorSet;
 module.exports.isTileset = isTileset;
 module.exports.isAttributes = isAttributes;
 module.exports.isPalette = isPalette;
+module.exports.isSurface = isSurface;

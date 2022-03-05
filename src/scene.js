@@ -44,6 +44,10 @@ function Scene(env) {
 Scene.prototype.initialize = function () {
   this._config.zoomScale = 1;
   this._config.titleText = '';
+  this.time = 0.0;
+  this.timeClick = 0;
+  this.TAU = 6.283185307179586;
+  this.PI = this.TAU / 2;
   this.colorSet.clear();
   this.imgLoader = new imageLoader.Loader(this.resources, this);
   this.textLoader = new textLoader.TextLoader(this.resources);
@@ -60,6 +64,26 @@ Scene.prototype.initialize = function () {
     this.setZoom(options.zoom);
   }
 }
+
+Scene.prototype.Plane = function() {
+  if (new.target === undefined) {
+    throw new Error('Plane constructor must be called with `new`');
+  }
+  let p = new plane.Plane();
+  p._addMethods(true);
+  return p;
+}
+
+Scene.prototype.Tileset = function() {
+  if (new.target === undefined) {
+    throw new Error('Tileset constructor must be called with `new`');
+  }
+  let args = arguments;
+  // TODO: destructure?
+  return new tiles.Tileset(args[0], args[1]);
+}
+
+// TODO: Constructors for other components, Attributes, etc ...
 
 Scene.prototype._addMethods = function() {
   let self = this;
@@ -129,6 +153,10 @@ Scene.prototype.fillTrueColor = function(rgb) {
 }
 
 Scene.prototype.setSize = function(w, h) {
+  let spec = ['w:i', 'h?i'];
+  [w, h] = destructure.from('setSize', spec, arguments, null);
+  if (h === undefined) { h = w; };
+
   this._config.width = w;
   this._config.height = h;
   if (this.aPlane.width == 0 || this.aPlane.height == 0) {
@@ -151,6 +179,8 @@ Scene.prototype.resetState = function() {
   this.colorSet.clear();
   this.aPlane.clear();
   this.renderer.clear();
+  this.time = 0.0;
+  this.timeClick = 0;
   this.palette = null;
   this.tiles = null;
   this.attrs = null;
@@ -208,15 +238,27 @@ Scene.prototype.useDisplay = function(nameOrDisplay) {
   this.display.initialize();
 }
 
+// TODO: Re-organize the methods in this file, into topics.
+
 Scene.prototype.loadImage = function(filepath, opt) {
-  return this.imgLoader.loadImage(filepath, opt);
+  return this._makeShape('load', [filepath, opt]);
+}
+
+Scene.prototype.makePolygon = function(shape, angle) {
+  return this._makeShape('polygon', [shape]);
+}
+
+Scene.prototype.rotatePolygon = function(shape, angle) {
+  return this._makeShape('rotate', [shape, angle]);
 }
 
 Scene.prototype.select = function(x, y, w, h) {
+  let spec = ['x:i', 'y:i', 'w:i', 'h:i'];
+  [x, y, w, h] = destructure.from('select', spec, arguments, null);
   return this.aPlane.select(x, y, w, h);
 }
 
-Scene.prototype._doRender = function(num, exitAfter, drawFunc, betweenFunc, finalFunc) {
+Scene.prototype._doRender = function(num, exitAfter, drawFunc, finalFunc) {
   let plane = this.aPlane;
 
   if (!this._config.width || !this._config.height) {
@@ -247,9 +289,7 @@ Scene.prototype._doRender = function(num, exitAfter, drawFunc, betweenFunc, fina
           throw e;
         }
       }
-      if (betweenFunc) {
-        betweenFunc();
-      }
+      self.nextFrame();
     }, renderID, num, exitAfter, finalFunc);
   });
 }
@@ -262,12 +302,17 @@ function makeRenderID() {
   return res;
 }
 
-Scene.prototype.show = function(finalFunc) {
-  this._doRender(1, false, null, null, finalFunc);
+Scene.prototype.show = function(drawFunc, finalFunc) {
+  this._doRender(1, false, drawFunc, finalFunc);
 }
 
-Scene.prototype.run = function(drawFunc, betweenFrameFunc) {
-  this._doRender(this.numFrames, true, drawFunc, betweenFrameFunc, null);
+Scene.prototype.run = function(drawFunc) {
+  this._doRender(this.numFrames, true, drawFunc, null);
+}
+
+Scene.prototype.showFrame = function(callback) {
+  this.fillFrame(callback);
+  this.show();
 }
 
 Scene.prototype.save = function(savepath) {
@@ -289,10 +334,72 @@ Scene.prototype.quit = function() {
 }
 
 Scene.prototype.nextFrame = function() {
-  this.aPlane.nextFrame();
+  var self = this;
+  self.then(function() {
+    self.timeClick += 1;
+    self.time = self.timeClick / 60.0;
+    self.aPlane.nextFrame();
+  });
 }
 
-Scene.prototype.makeShape = function(method, params) {
+Scene.prototype.mixColors = function(spec) {
+  let result = [];
+  let cursor = 0;
+  let leftColor = spec[cursor + 1];
+  let rightColor = spec[cursor + 3];
+  let startIndex = spec[0];
+  let targetIndex = spec[2];
+  let endIndex = spec[spec.length - 2];
+  for (let i = 0; i < endIndex; i++) {
+    if (i == targetIndex) {
+      cursor += 2;
+      startIndex = targetIndex;
+      leftColor = spec[cursor + 1];
+      rightColor = spec[cursor + 3];
+      targetIndex = spec[cursor + 2];
+    }
+    let L = new rgbColor.RGBColor(leftColor);
+    let R = new rgbColor.RGBColor(rightColor);
+    let rgb = L.interpolate(R, i, {min: startIndex, max: targetIndex});
+    result.push(rgb.toInt());
+  }
+  return result;
+}
+
+Scene.prototype.clonePlane = function() {
+  let s = this.aPlane;
+  let p = s.clone();
+  p.pitch = p.width;
+  let numPixels = p.height * p.pitch;
+  let newBuff = new Uint8Array(numPixels);
+  for (let y = 0; y < p.height; y++) {
+    for (let x = 0; x < p.width; x++) {
+      let k = y*s.pitch + x;
+      let j = y*p.pitch + x;
+      newBuff[j] = s.data[k];
+    }
+  }
+  p.data = newBuff;
+  return p;
+}
+
+Scene.prototype.oscil = function(namedOnly) {
+  let spec = ['!name', 'period?i=60', 'begin?n', 'amp?n=1.0', 'click?a'];
+  let [period, begin, amp, click] = destructure.from(
+    'oscil', spec, arguments, null);
+
+  period = period || 60;
+  if (begin === undefined) {
+    begin = 0.0;
+  }
+  if (click === null) {
+    click = this.timeClick;
+  }
+  click = click + Math.round(period * begin);
+  return amp * ((1.0 - Math.cos(click * this.TAU / period)) / 2.0000001);
+}
+
+Scene.prototype._makeShape = function(method, params) {
   if (method == 'polygon') {
     let pointsOrPolygon = params[0];
     return geometry.convertToPolygon(pointsOrPolygon);
@@ -304,7 +411,7 @@ Scene.prototype.makeShape = function(method, params) {
   } else if (method == 'load') {
     let [filepath, opt] = params;
     opt = opt || {};
-    return this.loadImage(filepath, opt);
+    return this.imgLoader.loadImage(filepath, opt);
   }
 }
 

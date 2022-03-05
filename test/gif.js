@@ -97,4 +97,34 @@ describe('Gif', function() {
     });
   });
 
+  it('show with callback', function() {
+    let tmpdir = util.mkTmpDir();
+    let tmpout = tmpdir + '/actual.png';
+    let script = 'test/testdata/scripts/show_with_callback.js';
+    let cmd = `node ${script} --save ${tmpout}`;
+    let cwd = process.cwd();
+    child_process.exec(cmd, function(error, stdout, stderr) {
+      if (error) {
+        throw error;
+      }
+      let goldenPath = 'test/testdata/spin-frame00.png';
+      util.ensureFilesMatch(goldenPath, tmpout);
+    });
+  });
+
+  it('showFrame', function() {
+    let tmpdir = util.mkTmpDir();
+    let tmpout = tmpdir + '/actual.png';
+    let script = 'test/testdata/scripts/show_frame.js';
+    let cmd = `node ${script} --save ${tmpout}`;
+    let cwd = process.cwd();
+    child_process.exec(cmd, function(error, stdout, stderr) {
+      if (error) {
+        throw error;
+      }
+      let goldenPath = 'test/testdata/palette_offs3.png';
+      util.ensureFilesMatch(goldenPath, tmpout);
+    });
+  });
+
 });

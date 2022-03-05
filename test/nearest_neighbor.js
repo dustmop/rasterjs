@@ -9,9 +9,9 @@ describe('Nearest neighbor', function() {
     let img = ra.loadImage('test/testdata/simple.png');
     ra.drawImage(img, 0, 0);
 
-    let resources = ra.scene.resources;
+    let resources = ra.resources;
 
-    let res = ra.scene.renderPrimaryPlane();
+    let res = ra.renderPrimaryPlane();
     let surf = res[0]
     surf = algorithm.nearestNeighborSurface(surf, 2);
 

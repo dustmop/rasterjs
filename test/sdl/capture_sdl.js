@@ -7,7 +7,7 @@ describe('SDL', function() {
     let tmpout = tmpdir + '/capture.png';
 
     ra.resetState();
-    ra.scene.display.insteadSaveFile(tmpout);
+    ra.display.insteadSaveFile(tmpout);
 
     ra.setZoom(4);
     ra.setGrid(2);

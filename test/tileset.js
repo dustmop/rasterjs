@@ -180,7 +180,7 @@ describe('Tileset', function() {
                        [6, 4, 2, 2]]);
 
     assert.throws(function() {
-      ra.scene.renderPrimaryPlane();
+      ra.renderPrimaryPlane();
     }, /Error: invalid tile number 15 at 2,1/);
   });
 

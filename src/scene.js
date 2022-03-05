@@ -240,6 +240,10 @@ Scene.prototype.useDisplay = function(nameOrDisplay) {
 
 // TODO: Re-organize the methods in this file, into topics.
 
+Scene.prototype.insertResource = function(name, imageSurf) {
+  return this.resources.insert(name, imageSurf);
+}
+
 Scene.prototype.loadImage = function(filepath, opt) {
   return this._makeShape('load', [filepath, opt]);
 }

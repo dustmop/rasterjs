@@ -28,7 +28,6 @@ Loader.prototype.loadImage = function(filename, opt) {
   img.left = 0;
   img.top = 0;
   // resources.openImage assigns these:
-  img.elemNode = null;
   img.width = 0;
   img.height = 0;
   img.pitch = 0;
@@ -47,8 +46,10 @@ Loader.prototype.loadImage = function(filename, opt) {
   if (img.rgbBuff) {
     if (img.rgbBuff.constructor.name == 'ArrayBuffer') {
       img.rgbBuff = new Uint8Array(img.rgbBuff);
+    } else if (img.rgbBuff.constructor.name == 'Uint8ClampedArray') {
+      // pass
     } else {
-      throw 'ERROR!';
+      throw `error, unknown type for rgbBuff: ${img.rgbBuff.constructor.name}`;
     }
     img.fillData();
   }

@@ -27,6 +27,18 @@ describe('Display', function() {
     display._pushFakeEvent({key: 'ok'});
     assert.equal(gotKey, true);
   });
+
+  it('allowed events', function() {
+    ra.resetState();
+
+    let display = new myDisplay();
+    ra.on('keypress', function(e) {});
+    ra.on('click', function(e) {});
+
+    assert.throws(() => {
+      ra.on('ready', function(e) {});
+    });
+  });
 });
 
 function myDisplay() {

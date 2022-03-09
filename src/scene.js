@@ -439,6 +439,11 @@ Scene.prototype.setTileset = function(which) {
 }
 
 Scene.prototype.on = function(eventName, callback) {
+  let allowed = ['keypress', 'click'];
+  if (!allowed.includes(eventName)) {
+    let expect = allowed.map((n)=>`"${n}"`).join(', ');
+    throw new Error(`unknown event "${eventName}", only ${expect} supported`);
+  }
   this.display.handleEvent(eventName, callback);
 }
 

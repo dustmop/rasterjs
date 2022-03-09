@@ -2,7 +2,8 @@ const compile = require('./compile.js');
 
 function Display() {
   this.canvas = null;
-  this.sysEventHandler = null;
+  this.eventKeypressHandler = null;
+  this.eventClickHandler = null;
   this.initialize();
   this._createEventHandlers();
   return this;
@@ -214,10 +215,19 @@ void main() {
 Display.prototype._createEventHandlers = function() {
   let self = this;
   document.addEventListener('keypress', function(e) {
-    if (self.sysEventHandler) {
-      self.sysEventHandler({
+    if (self.eventKeypressHandler) {
+      self.eventKeypressHandler({
         key: e.key
       });
+    }
+  })
+  document.addEventListener('click', function(e) {
+    if (self.eventClickHandler) {
+      let x = Math.floor(e.offsetX / self.zoomLevel);
+      let y = Math.floor(e.offsetY / self.zoomLevel);
+      if (x >= 0 && x < self.displayWidth && y >= 0 && y < self.displayHeight) {
+        self.eventClickHandler({x: x, y: y});
+      }
     }
   })
 }
@@ -328,9 +338,11 @@ Display.prototype._beginLoop = function(nextFrame, id, num, exitAfter, finalFunc
 
 Display.prototype.handleEvent = function(eventName, callback) {
   if (eventName == 'keypress') {
-    this.sysEventHandler = callback;
+    this.eventKeypressHandler = callback;
+  } else if (eventName == 'click') {
+    this.eventClickHandler = callback;
   } else {
-    throw new Error('only event "keypress" can be handled');
+    throw new Error(`unknown event "${eventName}"`);
   }
 }
 

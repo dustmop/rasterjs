@@ -37,11 +37,11 @@ function Scene(env) {
   this.aPlane = new plane.Plane();
   this._config = {};
   this.numFrames = FRAMES_LOOP_FOREVER;
-  this.initialize();
+  this._initialize();
   return this;
 }
 
-Scene.prototype.initialize = function () {
+Scene.prototype._initialize = function () {
   this._config.zoomScale = 1;
   this._config.titleText = '';
   this.time = 0.0;
@@ -438,7 +438,7 @@ Scene.prototype.setTileset = function(which) {
   this.renderer.switchComponent(0, 'tiles', this.tiles);
 }
 
-Scene.prototype.handleEvent = function(eventName, callback) {
+Scene.prototype.on = function(eventName, callback) {
   this.display.handleEvent(eventName, callback);
 }
 

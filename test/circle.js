@@ -26,11 +26,15 @@ describe('Circle', function() {
     ra.fillCircle({x: 23, y: 5, r: 5});
 
     ra.setColor(0x10);
-    ra.drawCircle({x: 38, y: 2, r: 8, width: 3});
+    ra.drawCircle({x: 38, y: 2, r: 8, thick: 3});
+
+    // Additional circle
+    ra.setColor(0x35);
+    ra.drawCircle({centerX: 27, centerY: 22, r: 3});
 
     // Smaller circle
     ra.setColor(0x32);
-    ra.fillCircle({x: 33, y: 17, r: 4.5});
+    ra.fillCircle({centerX: 37, centerY: 21, r: 4.5});
 
     // Overflow
     ra.setColor(0x07);

@@ -19,12 +19,20 @@ describe('Display', function() {
       700    // height
     );
     assert.equal(display.count, expect);
+
+    let gotKey = false;
+    ra.on('keypress', function(e) {
+      gotKey = true;
+    });
+    display._pushFakeEvent({key: 'ok'});
+    assert.equal(gotKey, true);
   });
 });
 
 function myDisplay() {
   this.count = 0;
   this.plane = null;
+  this.eventHandler = null;
   return this;
 }
 
@@ -33,8 +41,13 @@ myDisplay.prototype.initialize = function() {
 }
 
 myDisplay.prototype.handleEvent = function(eventName, callback) {
-  // my display does not use an event loop, so it can not handle
-  // any events
+  this.eventHandler = callback;
+}
+
+myDisplay.prototype._pushFakeEvent = function(e) {
+  if (this.eventHandler) {
+    this.eventHandler(e);
+  }
 }
 
 myDisplay.prototype.setSize = function(width, height) {

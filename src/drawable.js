@@ -72,7 +72,7 @@ Drawable.prototype.drawSquare = function(x, y, size) {
 }
 
 Drawable.prototype.fillRect_params = ['x:i', 'y:i', 'w:i', 'h:i', '||',
-                                     'x:i', 'y:i', 'x1:i', 'y1:i'];
+                                      'x:i', 'y:i', 'x1:i', 'y1:i'];
 Drawable.prototype.fillRect_convert = function(choice, vals) {
   return [vals[0], vals[1], vals[2] - vals[0], vals[3] - vals[1]];
 }
@@ -81,8 +81,8 @@ Drawable.prototype.fillRect = function(x, y, w, h) {
 }
 
 Drawable.prototype.drawRect_params = ['x:i', 'y:i', 'w:i', 'h:i', '||',
-                                     'x:i', 'y:i', 'x1:i', 'y1:i'];
-Drawable.prototype.drawRect_convert = function(choice, vals) {
+                                      'x:i', 'y:i', 'x1:i', 'y1:i'];
+Drawable.prototype.drawRect_convert = function(_choice, vals) {
   return [vals[0], vals[1], vals[2] - vals[0], vals[3] - vals[1]];
 }
 Drawable.prototype.drawRect = function(x, y, w, h) {
@@ -123,7 +123,11 @@ function _renderRect(self, x, y, w, h, fill) {
   self.putSequence(put);
 }
 
-Drawable.prototype.fillCircle_params = ['x:i', 'y:i', 'r:n'];
+Drawable.prototype.fillCircle_params = ['x:i', 'y:i', 'r:n', '||',
+                                        'centerX:i', 'centerY:i', 'r:n'];
+Drawable.prototype.fillCircle_convert = function(_choice, vals) {
+  return [vals[0]-vals[2]+0.5, vals[1]-vals[2]+0.5, vals[2]];
+}
 Drawable.prototype.fillCircle = function(x, y, r) {
   let centerX = x + r;
   let centerY = y + r;
@@ -133,14 +137,19 @@ Drawable.prototype.fillCircle = function(x, y, r) {
   this.putSequence(put);
 }
 
-Drawable.prototype.drawCircle_params = ['x:i', 'y:i', 'r:n', 'width?i'];
-Drawable.prototype.drawCircle = function(x, y, r, width) {
+Drawable.prototype.drawCircle_params = ['x:i', 'y:i', 'r:n', 'thick?i', '||',
+                                        'centerX:i', 'centerY:i', 'r:n',
+                                            'thick?i'];
+Drawable.prototype.drawCircle_convert = function(_choice, vals) {
+  return [vals[0]-vals[2], vals[1]-vals[2], vals[2], vals[3]];
+}
+Drawable.prototype.drawCircle = function(x, y, r, thick) {
   let centerX = x + r;
   let centerY = y + r;
   let arc = algorithm.midpointCircleRasterize(r);
   let inner = null;
-  if (width) {
-    inner = algorithm.midpointCircleRasterize(r - width + 1);
+  if (thick) {
+    inner = algorithm.midpointCircleRasterize(r - thick + 1);
   }
   let half = algorithm.isHalfwayValue(r);
   let put = algorithm.renderCircle(centerX, centerY, arc, inner, false, half);

@@ -279,4 +279,19 @@ describe('Tileset', function() {
     util.renderCompareTo(ra, 'test/testdata/attr_change.png');
   });
 
+  it('tiles save', function() {
+    let tmpdir = util.mkTmpDir();
+    let tmpout = tmpdir + '/actual.png';
+    ra.resetState();
+
+    let tiles = ra.loadImage('test/testdata/tiles.png');
+    let tileset = ra.useTileset(tiles, {tile_width: 4, tile_height: 4});
+
+    let surfaces = tileset.serialize();
+    let resources = ra.resources;
+    resources.saveTo(tmpout, surfaces);
+
+    util.ensureFilesMatch('test/testdata/tiles_saved.png', tmpout);
+  });
+
 });

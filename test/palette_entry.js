@@ -52,6 +52,58 @@ describe('Palette entry', function() {
     util.ensureFilesMatch('test/testdata/pal_saved.png', tmpout);
   });
 
+  it('palette as buffer', function() {
+    let tmpdir = util.mkTmpDir();
+    let tmpout = tmpdir + '/actual.png';
+    ra.resetState();
+
+    let palette = ra.usePalette();
+    let surfaces = palette.serialize();
+
+    let resources = ra.resources;
+    resources.saveTo(tmpout, surfaces);
+
+    util.ensureFilesMatch('test/testdata/pal_saved.png', tmpout);
+  });
+
+  it('palette buffer with options', function() {
+    let tmpdir = util.mkTmpDir();
+    let tmpout = tmpdir + '/actual.png';
+    ra.resetState();
+
+    let palette = ra.usePalette();
+    let surfaces = palette.serialize({
+      cell_width: 10, cell_height: 7,
+      cell_between: 3,
+      outer_top: 2, outer_left: 1,
+    });
+
+    let resources = ra.resources;
+    resources.saveTo(tmpout, surfaces);
+
+    util.ensureFilesMatch('test/testdata/custom_pal.png', tmpout);
+  });
+
+  it('palette vertical', function() {
+    let tmpdir = util.mkTmpDir();
+    let tmpout = tmpdir + '/actual.png';
+    ra.resetState();
+    ra.useColors('nes');
+
+    let palette = ra.usePalette();
+    let surfaces = palette.serialize({
+      cell_width: 7, cell_height: 19,
+      cell_between: 1,
+      outer_top: 3, outer_left: 3,
+      row_size: 16, vert_text: true,
+    });
+
+    let resources = ra.resources;
+    resources.saveTo(tmpout, surfaces);
+
+    util.ensureFilesMatch('test/testdata/vert_nes.png', tmpout);
+  });
+
   it('palette alternate', function() {
     let tmpdir = util.mkTmpDir();
     let tmpout = tmpdir + '/actual.png';

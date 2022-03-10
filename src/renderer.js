@@ -119,7 +119,7 @@ Renderer.prototype.render = function() {
 
   // If no interrupts, render everything at once.
   if (!system.interrupts) {
-    return [this._renderRegion(0, 0, width, height)];
+    return [this._renderRegion(layer, 0, 0, width, height)];
   }
 
   // Otherwise, collect IRQs per each scanline
@@ -151,7 +151,7 @@ Renderer.prototype.render = function() {
       scanLine = height;
     }
     if (scanLine > renderBegin) {
-      this._renderRegion(0, renderBegin, width, scanLine);
+      this._renderRegion(layer, 0, renderBegin, width, scanLine);
     }
     // Execute the irq that interrupts rasterization
     if (k < perIRQs.length) {
@@ -164,9 +164,7 @@ Renderer.prototype.render = function() {
   return [layer.rgbSurface];
 }
 
-Renderer.prototype._renderRegion = function(left, top, right, bottom) {
-  let layer = this._layers[0];
-
+Renderer.prototype._renderRegion = function(layer, left, top, right, bottom) {
   // If plane has not been rendered yet, do so now.
   layer.plane.ensureReady();
 

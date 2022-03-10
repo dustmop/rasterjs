@@ -76,6 +76,7 @@ Tileset.prototype._loadTilesFromSource = function(source) {
       this.data[k] = t;
     }
   }
+  this.source = source;
 }
 
 Tileset.prototype._constructTiles = function(num) {
@@ -96,6 +97,18 @@ Tileset.prototype._constructTiles = function(num) {
       this.data[k] = t;
     }
   }
+}
+
+Tileset.prototype.serialize = function() {
+  // TODO: Support chr-ram style tilesets, and palettes.
+  let buff = this.source.rgbBuff;
+  let surface = {
+    width:  this.source.width,
+    height: this.source.height,
+    pitch:  this.source.pitch*4,
+    buff:   buff,
+  }
+  return [surface];
 }
 
 Tileset.prototype.display = function() {

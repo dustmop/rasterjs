@@ -1,5 +1,6 @@
 const rgbMap = require('./rgb_map.js');
 const rgbColor = require('./rgb_color.js');
+const serializer = require('./serializer.js');
 const types = require('./types.js');
 
 function Set(vals) {
@@ -129,6 +130,11 @@ Set.prototype.append = function(list) {
   }
   // TODO: this.newIndex?
   return this.collect.length;
+}
+
+Set.prototype.serialize = function(opt) {
+  let ser = new serializer.Serializer();
+  return ser.colorsToSurface(this.collect);
 }
 
 module.exports.Set = Set;

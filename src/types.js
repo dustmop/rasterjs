@@ -67,6 +67,11 @@ function isColorSet(obj) {
   return obj.constructor == colorSet.Set;
 }
 
+function isPaletteEntry(obj) {
+  if (!obj) { return false; }
+  return obj.constructor == palette.PaletteEntry;
+}
+
 function isSurface(obj) {
   return obj && obj.width && obj.height && obj.pitch && obj.buff;
 }
@@ -81,6 +86,7 @@ module.exports.isFunction = isFunction;
 module.exports.isObject = isObject;
 module.exports.isRGBColor = isRGBColor;
 module.exports.isColorSet = isColorSet;
+module.exports.isPaletteEntry = isPaletteEntry;
 module.exports.isTileset = isTileset;
 module.exports.isAttributes = isAttributes;
 module.exports.isPalette = isPalette;

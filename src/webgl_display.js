@@ -46,16 +46,18 @@ Display.prototype.setGrid = function(unit) {
 }
 
 Display.prototype._createWebglCanvas = function() {
-  var canvasElems = document.getElementsByTagName('canvas');
-  if (canvasElems.length >= 1) {
-    this.canvas = canvasElems[0];
+  var canvasElem = document.getElementById('main-display');
+  if (canvasElem != null) {
+    this.canvas = canvasElem;
   } else {
     var canvasContainer = document.getElementById('canvas');
     if (canvasContainer) {
       this.canvas = document.createElement('canvas');
+      this.canvas.id = 'main-display';
       canvasContainer.appendChild(this.canvas);
     } else {
       this.canvas = document.createElement('canvas');
+      this.canvas.id = 'main-display';
       document.body.appendChild(this.canvas);
     }
   }
@@ -74,7 +76,7 @@ Display.prototype._createWebglCanvas = function() {
 
   // Size that element takes up in rendered page.
   var style = document.createElement('style');
-  style.textContent = 'canvas { width: ' + elemWidth + 'px; height: ' +
+  style.textContent = '#main-display { width: ' + elemWidth + 'px; height: ' +
       elemHeight + 'px; border: solid 1px black;}';
   document.body.appendChild(style);
 

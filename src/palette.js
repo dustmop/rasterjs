@@ -1,11 +1,7 @@
 const rgbColor = require('./rgb_color.js');
-const colorSet = require('./color_set.js');
-const plane = require('./plane.js');
-const palette = require('./palette.js');
-const renderer = require('./renderer.js');
-const textLoader = require('./text_loader.js');
 const destructure = require('./destructure.js');
 const types = require('./types.js');
+const serializer = require('./serializer.js');
 
 function Palette(items, saveService) {
   if (saveService != null && !saveService.saveTo) {
@@ -13,7 +9,7 @@ function Palette(items, saveService) {
   }
   this.items = items;
   for (let i = 0; i < items.length; i++) {
-    if (items[i].constructor != palette.PaletteEntry) {
+    if (items[i].constructor != PaletteEntry) {
       throw new Error('Palette got invalid item[${i}], should be PaletteEntry');
     }
   }
@@ -42,88 +38,13 @@ Palette.prototype.reset = function() {
 }
 
 Palette.prototype.save = function(filename) {
-  let target = new plane.Plane();
-  // Preserve
-  let preserveScene = target.scene;
-  // Save operation
-  target.scene = null;
-  this._saveTo(target, filename);
-  // Restore
-  target.scene = preserveScene;
+  let res = this.serialize();
+  this.saveService.saveTo(filename, res);
 }
 
-Palette.prototype._saveTo = function(target, savepath) {
-  let numX = 8;
-  let numY = Math.ceil(this.items.length / 8);
-  // Parameterize
-  let showWidth = 7;
-  let showHeight = 5;
-  let showPad = 4;
-  let showBetween = 2;
-  let showOuter = 3;
-  // Calculate
-  let offsetLeft = showOuter;
-  let offsetTop = showOuter;
-  let gridX = showWidth + showPad * 2 + showBetween;
-  let gridY = showHeight + showPad * 2 + showBetween;
-  // Draw the palette
-  target.setSize(numX * gridX - showBetween + showOuter * 2,
-                 numY * gridY - showBetween + showOuter * 2);
-
-  // Create dependencies for drawing
-  let loader = new textLoader.TextLoader(this.saveService);
-  let font = loader.createFontResource('tiny');
-  let colors = new colorSet.Set([]);
-  colors.assign([]);
-  let components = {
-    plane: target,
-    conf: {
-      width: target.width,
-      height: target.height,
-    },
-    _config: {
-      width: target.width,
-      height: target.height,
-    },
-    colorSet: colors,
-    font: font,
-  };
-
-  // Draw the palette format
-  target.font = font;
-  target.fillColor(colors.addEntry(0x606060));
-  for (let k = 0; k < this.items.length; k++) {
-    let rgbInt = this.items[k].rgb.toInt();
-    let j = k % 8;
-    let i = Math.floor(k / 8);
-    let y = i * gridY;
-    let x = j * gridX;
-    target.setColor(colors.addEntry(rgbInt));
-    target.fillRect(x + showOuter, y + showOuter,
-                    gridX - showBetween, gridY - showBetween);
-    let v = k.toString();
-    if (v.length < 2) {
-      v = '0' + v;
-    }
-    if (this._isLightColor(this.items[k].rgb)) {
-      target.setColor(colors.addEntry(0));
-    } else {
-      target.setColor(colors.addEntry(0xffffff));
-    }
-    target.drawText(`${v}`, x + showPad + showOuter, y + showPad + showOuter);
-  }
-
-  // Render it and save
-  let rend = new renderer.Renderer();
-  rend.connect(components);
-  let surfaces = rend.render();
-  this.saveService.saveTo(savepath, surfaces);
-}
-
-Palette.prototype._isLightColor = function(rgb) {
-  let total = rgb.r + rgb.g + rgb.b;
-  let avg = total / 3;
-  return avg > 0x80;
+Palette.prototype.serialize = function(opt) {
+  let ser = new serializer.Serializer();
+  return ser.colorsToSurface(this.items, opt);
 }
 
 Palette.prototype.toString = function() {
@@ -239,6 +160,10 @@ PaletteEntry.prototype.hex = function() {
     return '(0x' + text + ')';
   }
   return '0x' + text;
+}
+
+PaletteEntry.prototype.asInt = function() {
+  return this.rgb.toInt();
 }
 
 PaletteEntry.prototype.dump = function() {

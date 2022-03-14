@@ -88,4 +88,23 @@ describe('Image', function() {
     let actual = palette.toString();
     assert.equal(expect, actual);
   });
+
+
+  // Jpg images cannot be used
+  it('jpg cannot be used', function() {
+    ra.resetState();
+    assert.throws(() => {
+      ra.loadImage('test/testdata/small-fruit.jpg');
+    }, /only 'png' images supported, couldn't load test\/testdata\/small-fruit.jpg/);
+  });
+
+
+  // Png will too many colors will fail to load
+  it('png with too many colors', function() {
+    ra.resetState();
+    assert.throws(() => {
+      ra.loadImage('test/testdata/gradient.png');
+    }, /too many colors in image test\/testdata\/gradient.png: 576/);
+  });
+
 });

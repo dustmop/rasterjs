@@ -10,6 +10,10 @@ function Loader(resources, scene) {
 }
 
 Loader.prototype.loadImage = function(filename, opt) {
+  if (!filename.endsWith('.png')) {
+    throw new Error(`only 'png' images supported, couldn't load ${filename}`);
+  }
+
   let sortUsingHSV = false;
   if (opt.sortColors) {
     if (opt.sortColors == 'usingHSV') {
@@ -25,6 +29,9 @@ Loader.prototype.loadImage = function(filename, opt) {
   img.parentLoader = this;
   img.filename = filename;
   img.id = this.list.length;
+  img.colorSet = this.scene.colorSet;
+  img.palette = this.scene.palette;
+  img.sortUsingHSV = sortUsingHSV;
   img.left = 0;
   img.top = 0;
   // resources.openImage assigns these:
@@ -32,9 +39,6 @@ Loader.prototype.loadImage = function(filename, opt) {
   img.height = 0;
   img.pitch = 0;
   img.data = null;
-  img.colorSet = this.scene.colorSet;
-  img.palette = this.scene.palette;
-  img.sortUsingHSV = sortUsingHSV;
 
   let ret = this.resources.openImage(filename, img);
   if (ret == -1) {
@@ -126,6 +130,11 @@ ImagePlane.prototype.fillData = function() {
     this.alpha = new Uint8Array(numPixels);
   }
   let needs = this._collectColorNeeds();
+
+  let numColors = needs.rgbItems.length
+  if (numColors > 0xff) {
+    throw new Error(`too many colors in image ${this.filename}: ${numColors}`);
+  }
 
   // Sort the colors, if required.
   if (this.sortUsingHSV) {

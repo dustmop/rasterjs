@@ -103,7 +103,7 @@ Rotates the given polygon by the given angle, returning a new polygon.
 
 `returns` a polygon
 
-### oscil({period, begin, amp, click})
+### oscil({period, begin, max, click})
 
 Produce an oscilating wave value that varies between 0.0 and 1.0 in a sinusoidal motion. Parameters to `oscil` must be named parameters only, positional parameters are not allowed.
 
@@ -111,7 +111,7 @@ Produce an oscilating wave value that varies between 0.0 and 1.0 in a sinusoidal
 
 `begin`: How far into the motion to begin, as a fraction between 0.0 and 1.0. Default is 0.0
 
-`amp`: Amplitude of the motion, representing the distance from valley to peak. Default 1.0
+`max`: Maximum value to be returned, representing the distance from valley to peak. Default 1.0
 
 `click`: Parameter used as input. Default is `ra.timeClick`
 

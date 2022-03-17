@@ -4,8 +4,6 @@ var ra = require('../src/lib.js');
 
 describe('Rect and square', function() {
   it('shapes fill and draw', function() {
-    let tmpdir = util.mkTmpDir();
-    let tmpout = tmpdir + '/actual.png';
     ra.resetState();
 
     ra.setSize({w: 40, h: 12});
@@ -79,8 +77,6 @@ describe('Rect and square', function() {
   });
 
   it('alternate params', function() {
-    let tmpdir = util.mkTmpDir();
-    let tmpout = tmpdir + '/actual.png';
     ra.resetState();
 
     ra.setSize({w: 40, h: 12});
@@ -94,12 +90,12 @@ describe('Rect and square', function() {
 
     // Rectangles
     ra.setColor(0x12);
-    ra.fillRect({x: 15, y: 2, x1: 18, y1: 7});
+    ra.fillRect({x0: 15, y0: 2, x1: 18, y1: 7});
     ra.setColor(0x13);
     ra.drawRect(20, 2, 3, 5);
 
     ra.setColor(0x14);
-    ra.fillRect({x: 25, y: 2, x1: 31, y1: 5});
+    ra.fillRect({x0: 25, y0: 2, x1: 31, y1: 5});
 
     ra.setColor(0x15);
     ra.drawRect(32, 2, 6, 3);
@@ -119,4 +115,59 @@ describe('Rect and square', function() {
 
     util.renderCompareTo(ra, 'test/testdata/rect_square.png');
   });
+
+  it('negative and zero width', function() {
+    ra.resetState();
+
+    ra.setSize({w: 60, h: 9});
+    ra.fillColor(0);
+
+    // x0, y0, x1, y1
+    ra.setColor(0x10);
+    ra.fillRect({x0:  2, y0: 2, x1: 5, y1: 4});
+    // Zero size does nothing
+    ra.setColor(0x11);
+    ra.fillSquare({x:  7, y: 2, size: 0.1});
+
+    // fill width is negative
+    // TODO: Bug in rendering
+    ra.setColor(0x12);
+    ra.fillRect({x: 15, y: 4, w: -3, h: -2});
+
+    // fill positions are backwards
+    // TODO: Bug in rendering
+    ra.setColor(0x13);
+    ra.fillRect({x0: 25, y0: 5, x1: 20, y1: 2});
+
+    // compare to forward positions
+    ra.setColor(0x14);
+    ra.fillRect({x0: 30, y0: 2, x1: 35, y1: 5});
+
+    // switch only the y
+    // TODO: Bug in rendering
+    ra.setColor(0x15);
+    ra.fillRect({x0: 38, y0: 5, x1: 43, y1: 2});
+
+    // now with draw instead of fill
+    // TODO: Bug in rendering
+    ra.setColor(0x16);
+    ra.drawRect({x0: 45, y0: 5, x1: 50, y1: 2});
+
+    // Fractional width and height
+    // TODO: Figure out invariants for how fractional values should work
+    ra.setColor(0x17);
+    ra.drawRect({x: 53, y: 1, w: 2.4, h: 3.6});
+
+    ra.put( 2, 7, 7);
+    ra.put( 7, 7, 7);
+    ra.put(15, 7, 7);
+    ra.put(25, 7, 7);
+    ra.put(30, 7, 7);
+    ra.put(38, 7, 7);
+    ra.put(45, 7, 7);
+    ra.put(53, 7, 7);
+
+    util.renderCompareTo(ra, 'test/testdata/rect_more.png');
+  });
+
 });

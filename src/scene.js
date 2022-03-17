@@ -157,6 +157,8 @@ Scene.prototype.setSize = function(w, h) {
   [w, h] = destructure.from('setSize', spec, arguments, null);
   if (h === undefined) { h = w; };
 
+  this.width = w;
+  this.height = h;
   this._config.width = w;
   this._config.height = h;
   if (this.aPlane.width == 0 || this.aPlane.height == 0) {
@@ -388,8 +390,8 @@ Scene.prototype.clonePlane = function() {
 }
 
 Scene.prototype.oscil = function(namedOnly) {
-  let spec = ['!name', 'period?i=60', 'begin?n', 'amp?n=1.0', 'click?a'];
-  let [period, begin, amp, click] = destructure.from(
+  let spec = ['!name', 'period?i=60', 'begin?n', 'max?n=1.0', 'click?a'];
+  let [period, begin, max, click] = destructure.from(
     'oscil', spec, arguments, null);
 
   period = period || 60;
@@ -400,7 +402,7 @@ Scene.prototype.oscil = function(namedOnly) {
     click = this.timeClick;
   }
   click = click + Math.round(period * begin);
-  return amp * ((1.0 - Math.cos(click * this.TAU / period)) / 2.0000001);
+  return max * ((1.0 - Math.cos(click * this.TAU / period)) / 2.0000001);
 }
 
 Scene.prototype._makeShape = function(method, params) {
@@ -409,6 +411,9 @@ Scene.prototype._makeShape = function(method, params) {
     return geometry.convertToPolygon(pointsOrPolygon);
   } else if (method == 'rotate') {
     let [pointsOrPolygon, angle] = params;
+    if (angle === null || angle === undefined) {
+      angle = this.time;
+    }
     let polygon = geometry.convertToPolygon(pointsOrPolygon);
     polygon.rotate(angle);
     return polygon;
@@ -475,6 +480,14 @@ Scene.prototype.eyedrop = function(x, y) {
   let c = this.aPlane.get(x, y);
   this._paletteFromColorset();
   return this.palette.get(c);
+}
+
+Scene.prototype.get = function(x, y) {
+  return this.aPlane.get(x, y);
+}
+
+Scene.prototype.put = function(x, y, v) {
+  return this.aPlane.put(x, y, v);
 }
 
 Scene.prototype._initPaletteFromPlane = function(shouldSort) {

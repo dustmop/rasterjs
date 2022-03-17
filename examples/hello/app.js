@@ -16,7 +16,7 @@ for (let j = 0; j < 2; j++) {
   for (let offs = 0; offs < 39; offs += 38) {
     sel.fillRect({x:offs, y:0, w:4, h:24});
     sel.fillRect({x:10+offs, y:0, w:4, h:24});
-    sel.drawCircle({x:18+offs, y:8, r:8, width:4});
+    sel.drawCircle({x:18+offs, y:8, r:8, thick:4});
   }
   // Some horizontal lines on the left-hand half
   sel.fillRect({x: 0, y:10, w:12, h:4});
@@ -37,5 +37,5 @@ ra.useInterrupts(interrupts);
 // Bounce the text by changing the Y scroll very slowly
 ra.run(function() {
   step = ra.timeClick / 8;
-  ra.setScrollY(ra.oscil({period: 240, amp: 10}) - 6);
+  ra.setScrollY(ra.oscil({period: 240, max: 10}) - 6);
 });

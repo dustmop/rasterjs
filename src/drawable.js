@@ -63,16 +63,22 @@ Drawable.prototype.fillPattern = function(dots) {
 
 Drawable.prototype.fillSquare_params = ['x:i', 'y:i', 'size:i'];
 Drawable.prototype.fillSquare = function(x, y, size) {
+  if (Math.abs(size) < 0.5) {
+    return;
+  }
   _renderRect(this, x, y, size, size, true);
 }
 
 Drawable.prototype.drawSquare_params = ['x:i', 'y:i', 'size:i'];
 Drawable.prototype.drawSquare = function(x, y, size) {
+  if (Math.abs(size) < 0.5) {
+    return;
+  }
   _renderRect(this, x, y, size, size, false);
 }
 
 Drawable.prototype.fillRect_params = ['x:i', 'y:i', 'w:i', 'h:i', '||',
-                                      'x:i', 'y:i', 'x1:i', 'y1:i'];
+                                      'x0:i', 'y0:i', 'x1:i', 'y1:i'];
 Drawable.prototype.fillRect_convert = function(choice, vals) {
   return [vals[0], vals[1], vals[2] - vals[0], vals[3] - vals[1]];
 }
@@ -81,7 +87,7 @@ Drawable.prototype.fillRect = function(x, y, w, h) {
 }
 
 Drawable.prototype.drawRect_params = ['x:i', 'y:i', 'w:i', 'h:i', '||',
-                                      'x:i', 'y:i', 'x1:i', 'y1:i'];
+                                      'x0:i', 'y0:i', 'x1:i', 'y1:i'];
 Drawable.prototype.drawRect_convert = function(_choice, vals) {
   return [vals[0], vals[1], vals[2] - vals[0], vals[3] - vals[1]];
 }
@@ -110,7 +116,7 @@ function _renderRect(self, x, y, w, h, fill) {
   let put = [];
   if (fill) {
     for (let n = y; n <= y1; n++) {
-      put.push([x, x + w - 1, n, n]);
+      put.push([x, x1, n, n]);
     }
     self.putSequence(put);
     return;
@@ -188,7 +194,8 @@ Drawable.prototype.fillFlood = function(x, y) {
 Drawable.prototype.fillFrame_params = ['options?o', 'fillerFunc:f'];
 Drawable.prototype.fillFrame = function(options, fillerFunc) {
   if (this.mem == null) {
-    this.mem = frameMemory.NewFrameMemory(this.offsetLeft, this.offsetTop, this.width, this.height);
+    this.mem = frameMemory.NewFrameMemory(this.offsetLeft, this.offsetTop,
+                                          this.width, this.height);
   }
   if (options && options.previous && !this.mem._didFrame) {
     this.mem.createBackBuffer();
@@ -209,6 +216,15 @@ Drawable.prototype.fillFrame = function(options, fillerFunc) {
   // Invoke the callback
   if (fillerFunc.length == 1) {
     fillerFunc(this.mem);
+  } else if (fillerFunc.length == 2) {
+    for (let y = 0; y < this.mem.y_dim; y++) {
+      for (let x = 0; x < this.mem.x_dim; x++) {
+        let ret = fillerFunc(x, y);
+        if (ret !== null && ret !== undefined) {
+          this.mem[x + y*this.mem.pitch] = ret;
+        }
+      }
+    }
   } else if (fillerFunc.length == 3) {
     for (let y = 0; y < this.mem.y_dim; y++) {
       for (let x = 0; x < this.mem.x_dim; x++) {

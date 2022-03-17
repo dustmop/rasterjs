@@ -4,8 +4,6 @@ var ra = require('../src/lib.js');
 
 describe('Polygon Rotation', function() {
   it('polygon rotation', function() {
-    let tmpdir = util.mkTmpDir();
-    let tmpout = tmpdir + '/actual.png';
     ra.resetState();
 
     ra.setSize({w: 40, h: 40});
@@ -39,5 +37,23 @@ describe('Polygon Rotation', function() {
     }
 
     util.renderCompareTo(ra, 'test/testdata/polygon_rotate.png');
+  });
+
+  it('rotate default is time', function() {
+    ra.resetState();
+
+    ra.setSize({w: 40, h: 18});
+    ra.fillColor(0);
+
+    let polygon = [[2, 3], [14, 3], [10, 7], [6, 7]];
+    ra.setColor(0x18);
+
+    ra.time = 2.0;
+    let rotated = ra.rotatePolygon(polygon);
+
+    ra.fillPolygon(rotated, 0,  2);
+    ra.drawPolygon(rotated, 14, 2);
+
+    util.renderCompareTo(ra, 'test/testdata/rotate_default.png');
   });
 });

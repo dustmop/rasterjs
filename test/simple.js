@@ -4,8 +4,6 @@ var ra = require('../src/lib.js');
 
 describe('Simple', function() {
   it('draw operations', function() {
-    let tmpdir = util.mkTmpDir();
-    let tmpout = tmpdir + '/actual.png';
     ra.resetState();
     // Red background
     ra.fillColor(0x20);

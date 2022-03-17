@@ -24,6 +24,18 @@ describe('Fill', function() {
     util.renderCompareTo(ra, 'test/testdata/fill_oscil.png');
   });
 
+  it('callback uses 2 parameters', function() {
+    ra.resetState();
+    ra.setSize({w: 8, h: 8});
+    ra.fillFrame(function(x, y) {
+      let i = y*ra.width + x;
+      if (ra.oscil({period:54, click:i*76}) > 0.5) {
+        return 0x22;
+      }
+    });
+    util.renderCompareTo(ra, 'test/testdata/fill_oscil.png');
+  });
+
   it('twice, keep contents', function() {
     ra.resetState();
     ra.setSize({w: 8, h: 8});

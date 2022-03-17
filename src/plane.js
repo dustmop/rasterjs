@@ -100,6 +100,7 @@ Plane.prototype._prepare = function() {
 }
 
 Plane.prototype.get = function(x, y) {
+  // TODO: Handle wrap
   this._prepare();
   this._offs = this.offsetTop * this.pitch + this.offsetLeft || 0;
   let k = Math.floor(y) * this.pitch + Math.floor(x);
@@ -107,6 +108,7 @@ Plane.prototype.get = function(x, y) {
 }
 
 Plane.prototype.put = function(x, y, v) {
+  // TODO: Handle wrap
   this._prepare();
   this._offs = this.offsetTop * this.pitch + this.offsetLeft || 0;
   let k = Math.floor(y) * this.pitch + Math.floor(x);

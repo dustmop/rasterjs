@@ -13,6 +13,9 @@ if (typeof window === 'undefined' && typeof process !== 'undefined') {
 }
 
 var singleton = new scene.Scene(env);
+singleton.newInstance = function() {
+  return new scene.Scene(env);
+}
 
 if (typeof module !== 'undefined') {
   // Node.js or browserify

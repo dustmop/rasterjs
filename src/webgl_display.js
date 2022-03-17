@@ -1,6 +1,7 @@
 const compile = require('./compile.js');
 
 function Display() {
+  this.elemID = null;
   this.canvas = null;
   this.eventKeypressHandler = null;
   this.eventClickHandler = null;
@@ -10,6 +11,7 @@ function Display() {
 }
 
 Display.prototype.initialize = function() {
+  this.elemID = null;
   this.imgAssets = [];
   this.displayWidth = 0;
   this.displayHeight = 0;
@@ -46,18 +48,27 @@ Display.prototype.setGrid = function(unit) {
 }
 
 Display.prototype._createWebglCanvas = function() {
-  var canvasElem = document.getElementById('main-display');
+  let displayID = 'main-display';
+  if (this.elemID) {
+    displayID = this.elemID;
+  }
+
+  var canvasElem = document.getElementById(displayID);
   if (canvasElem != null) {
+    let tag = canvasElem.tagName;
+    if (tag !== 'CANVAS') {
+      throw new Error(`display html elem must be a canvas, got ${tag}`);
+    }
     this.canvas = canvasElem;
   } else {
     var canvasContainer = document.getElementById('canvas');
     if (canvasContainer) {
       this.canvas = document.createElement('canvas');
-      this.canvas.id = 'main-display';
+      this.canvas.id = displayID;
       canvasContainer.appendChild(this.canvas);
     } else {
       this.canvas = document.createElement('canvas');
-      this.canvas.id = 'main-display';
+      this.canvas.id = displayID;
       document.body.appendChild(this.canvas);
     }
   }
@@ -76,8 +87,9 @@ Display.prototype._createWebglCanvas = function() {
 
   // Size that element takes up in rendered page.
   var style = document.createElement('style');
-  style.textContent = '#main-display { width: ' + elemWidth + 'px; height: ' +
-      elemHeight + 'px; border: solid 1px black;}';
+  style.textContent = '#' + displayID + ' { ' +
+    'width: ' + elemWidth + 'px; ' +
+    'height: ' + elemHeight + 'px; border: solid 1px black;}';
   document.body.appendChild(style);
 
   var vertexShaderText = `

@@ -227,6 +227,16 @@ Scene.prototype.numColors = function() {
 }
 
 Scene.prototype.useDisplay = function(nameOrDisplay) {
+  if (types.isObject(nameOrDisplay)) {
+    // NOTE: An experimental feature.
+    let opt = nameOrDisplay;
+    if (opt.displayElemID) {
+      this.display.elemID = opt.displayElemID;
+      return;
+    }
+    throw new Error(`illegal param for useDisplay: ${JSON.stringify(opt)}`);
+  }
+
   if (types.isString(nameOrDisplay)) {
     if (nameOrDisplay == 'ascii') {
       this.display = new asciiDisplay.AsciiDisplay();

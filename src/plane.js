@@ -227,6 +227,7 @@ Plane.prototype.select = function(x, y, w, h) {
   make.offsetTop  = (this.offsetTop || 0) + y;
   make.width  = w;
   make.height = h;
+  make.isSelection = true;
   make._addMethods(true);
 
   return make;

@@ -72,4 +72,16 @@ describe('Select', function() {
     util.renderCompareTo(ra, 'test/testdata/select_on_select.png');
   });
 
+  it('works with fillColor', function() {
+    ra.resetState();
+
+    ra.setSize(16);
+    ra.fillColor(0);
+
+    let sel = ra.select({x: 3, y: 5, w: 7, h: 7});
+    sel.fillColor(28);
+
+    util.renderCompareTo(ra, 'test/testdata/green_square.png');
+  });
+
 });

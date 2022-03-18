@@ -28,6 +28,14 @@ Drawable.prototype.fillColor_params = ['color:i'];
 Drawable.prototype.fillColor = function(color) {
   this.bgColor = color;
   this._needErase = true;
+  if (this.isSelection) {
+    this._needErase = false;
+    for (let y = 0; y < this.height; y++) {
+      for (let x = 0; x < this.width; x++) {
+        this.put(x, y, color);
+      }
+    }
+  }
 }
 
 Drawable.prototype.drawLine_params = ['x0:n', 'y0:n', 'x1:n', 'y1:n', 'cc?b'];

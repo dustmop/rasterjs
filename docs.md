@@ -8,6 +8,7 @@ The API should be considered unstable for now, subject to changes until a 1.0 re
 setSize
 setZoom
 setTitle
+setGrid
 originAtCenter
 useColors
 useDisplay
@@ -24,6 +25,10 @@ Set the zoom level, in other words, the size of a single pixel as it appears on 
 ### setTitle(title)
 
 If the display is in a window, sets the title of that window. Also used by discovery services to determine the name of a script without running it.
+
+### setGrid(units)
+
+Show the grid on top of the display, spaced out the given number of units.
 
 ### originAtCenter()
 
@@ -59,7 +64,7 @@ Names of pre-existing color sets:
 
 ### useDisplay(display)
 
-The display to use, instead of the default display. Either the name of a pre-existing display, or an object with the methods `initialize`, `setSource`, and `renderLoop`.
+The display to use, instead of the default display. Either the name of a pre-existing display, or a display object.
 
 Names of pre-existing displays:
 
@@ -122,10 +127,16 @@ Handle events caused by user interaction. Only eventName that is currently handl
 ## Special variables
 
 ```
+width
+height
 time
 timeClick
 TAU
 ```
+
+### width, height
+
+Width and height of the scene, equivalent to the display size.
 
 ### time
 
@@ -182,7 +193,7 @@ drawImage    -
 -            fillPattern
 ```
 
-### drawLine(x0, y0, x1, y1, cc)
+### drawLine(x0, y0, x1, y1, cc?)
 
 Draw a line from the point x0,y0 to x1,y1.
 
@@ -204,21 +215,29 @@ Fill a square with x,y as the upper-left point, and size being the width and hei
 
 ### drawRect(x, y, w, h)
 
+<b>&nbsp; drawRect({x0, y0, x1, y1})</b>
+
 Draw a rectangle with x,y as the upper-left point, and w,h as the width and height.
 
 ### fillRect(x, y, w, h)
 
+<b>&nbsp; fillRect({x0, y0, x1, y1})</b>
+
 Fill a rectangle with x,y as the upper-left point, and w,h as the width and height. Same as `drawRect`, except the shape's interior is also filled.
 
-### drawCircle(x, y, r, width)
+### drawCircle(x, y, r, thick?)
 
-Draw a circle with x,y as the upper-left point, and radius of `r`. The circle will be a ring 1 pixel wide, unless `width` is specified. If it is, the `width` is measured from the outside edge of the circle and goes inward. The radius is not changed by specifying a `width`.
+<b>&nbsp; drawCircle({centerX, centerY, r, thick?})</b>
+
+Draw a circle with x,y as the upper-left point, and radius of `r`. The circle will be a ring 1 pixel wide, unless `thick` is specified. If it is, the `thick` is measured from the outside edge of the circle and goes inward. The radius is not changed by specifying `thick`.
 
 `r`: radius of the circle. If this is an integer, then the number of pixels from the top or left edge of the top of left pixel to the other extreme will equal `r * 2`, an even number. If `r` is 0.5 more than some integer, the circle will instead span an odd number of pixels from one edge to the other. Other values will be rounded to the nearest half-integer.
 
 ### fillCircle(x, y, r)
 
-Fill a circle with x,y as the upper-left point, and radius of `r`. Same as `drawCircle`, except the shape's interior is also filled, and `width` is not used.
+<b>&nbsp; fillCircle({centerX, centerY, r})</b>
+
+Fill a circle with x,y as the upper-left point, and radius of `r`. Same as `drawCircle`, except the shape's interior is also filled, and `thick` is not used.
 
 ### drawPolygon(shape, x?, y?)
 
@@ -230,11 +249,11 @@ Draws the outline of a polygon, offset by the optional x,y position.
 
 Fills a polygon, offset by the optional x,y position. Same as `drawPolygon`, except the shape's interior is filled.
 
-### drawImage(img, x, y)
+### drawImage(img, x?, y?)
 
 Draw an image to the plane, downsampling it to match the allowed colors.
 
-`img`: An image that was created by `loadImage`. NOTE: If raster.js is running in an async environment, such as in a web browser, calls to `drawImage` must be made inside of a render function such as those passed to `show` or `run`, while `loadImage` must be called earlier, such as at the script's top-level.
+`img`: An image that was created by `loadImage`. NOTE: If raster.js is running in an async environment, such as in a web browser, calls to `drawImage` must be made inside of a render function such as those passed to `then`, `show`, or `run`, while `loadImage` must be called earlier, such as at the script's top-level.
 
 `x`: X dimension (left ) of the upper-left point where drawing starts.
 
@@ -248,13 +267,9 @@ fillFrame iterates over each pixel of the plane, and invokes the callback with a
 
 `callback`: A callback to be invoked with the frame data. The parameters to this callback may take two forms:
 
-> `function(mem)`
+> `function(x, y)`
 
-For this version, the callback will be invoked once. Inside, code may use `mem.get(x, y)` to get pixel data, and `mem.put(x, y, v)` to assign pixel data. The method `mem.getPrevious(x, y)` is allowed if and only if `previous` was passed using `options`.
-
-> `function(mem, x, y)`
-
-For this version, the callback will be invoked per each pixel in the plane. Code may use `mem.get` and `mem.put` as mentioned above. In addition, if the callback returns a number, that number will be assigned to that pixel. Otherwise the pixel's value is not modified.
+The callback will be invoked per each pixel in the plane. If the callback returns a number, that number will be assigned to that pixel. Otherwise the pixel's value is not modified.
 
 ### fillFlood(x, y)
 

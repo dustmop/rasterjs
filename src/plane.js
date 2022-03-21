@@ -100,19 +100,26 @@ Plane.prototype._prepare = function() {
 }
 
 Plane.prototype.get = function(x, y) {
-  // TODO: Handle wrap
   this._prepare();
   this._offs = this.offsetTop * this.pitch + this.offsetLeft || 0;
-  let k = Math.floor(y) * this.pitch + Math.floor(x);
+  x = Math.floor(x);
+  y = Math.floor(y);
+  if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
+    return null;
+  }
+  let k = y * this.pitch + x;
   return this.data[this._offs + k];
 }
 
 Plane.prototype.put = function(x, y, v) {
-  // TODO: Handle wrap
   this._prepare();
   this._offs = this.offsetTop * this.pitch + this.offsetLeft || 0;
-  let k = Math.floor(y) * this.pitch + Math.floor(x);
-  // TODO: Check width and height
+  x = Math.floor(x);
+  y = Math.floor(y);
+  if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
+    return;
+  }
+  let k = y * this.pitch + x;
   this.data[this._offs + k] = v;
 }
 
@@ -128,6 +135,9 @@ Plane.prototype.putSequence = function(seq) {
       // Sequence of length 2 is a single point
       let x = Math.floor(elem[0]);
       let y = Math.floor(elem[1]);
+      if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
+        continue;
+      }
       let k = y * this.pitch + x;
       // TODO: Add offsets
       this.data[this._offs + k] = c;

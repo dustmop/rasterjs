@@ -1,5 +1,6 @@
 var util = require('./util.js');
 var ra = require('../src/lib.js');
+var assert = require('assert');
 
 describe('Basic', function() {
   it('then draw', function() {
@@ -25,6 +26,34 @@ describe('Basic', function() {
     ra.setSize(8, 8);
     ra.fillColor(29);
     util.renderCompareTo(ra, 'test/testdata/solid-blue.png');
+  });
+
+  it('do not wrap', function() {
+    ra.resetState();
+    ra.setSize(18);
+
+    let polygon = [
+      [4, 7],
+      [16, 8],
+      [25, 13],
+      [5, 14],
+    ];
+
+    let rot = ra.rotatePolygon(polygon, 2.0);
+    ra.fillPolygon(rot);
+
+    ra.put(1, 1, 7);
+    ra.put(24, 1, 7);
+    ra.put(-9, 1, 7);
+
+    let v = ra.get(4, 8);
+    assert.equal(v, 0);
+    v = ra.get(1, 1);
+    assert.equal(v, 7);
+    v = ra.get(24, 8);
+    assert.equal(v, null);
+
+    util.renderCompareTo(ra, 'test/testdata/polygon-draw.png');
   });
 
 });

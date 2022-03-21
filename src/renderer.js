@@ -1,3 +1,4 @@
+const algorithm = require('./algorithm.js');
 const rgbColor = require('./rgb_color.js');
 const plane = require('./plane.js');
 const colorSet = require('./color_set.js');
@@ -275,6 +276,64 @@ Renderer.prototype._renderRegion = function(layer, left, top, right, bottom) {
   }
 
   return layer.rgbSurface;
+}
+
+Renderer.prototype.renderComponents = function(components, settings, callback) {
+  let myPlane = this._layers[0].plane;
+  let myColorSet = this._layers[0].colorSet;
+  let myTiles = this._layers[0].tiles;
+  let myPalette = this._layers[0].palette;
+  settings = settings || {};
+
+  if (settings.resize) {
+    let width = settings.resize.width;
+    let height = Math.floor(width / myPlane.width * myPlane.height);
+    myPlane = myPlane.resize(width, height);
+  }
+
+  for (let i = 0; i < components.length; i++) {
+    let comp = components[i];
+    if (comp == 'plane') {
+      if (!this.innerPlaneRenderer) {
+        this.innerPlaneRenderer = new Renderer();
+        let components = {
+          plane: myPlane,
+          colorSet: myColorSet,
+          conf: {},
+          _config: {},
+        }
+        this.innerPlaneRenderer.connect(components);
+      }
+      let surfaces = this.innerPlaneRenderer.render();
+      let layer = surfaces[0];
+      callback('plane', layer);
+
+    } else if (comp == 'palette') {
+      if (myPalette) {
+        let surface = myPalette.serialize();
+        callback('palette', surface);
+      } else {
+        let opt = {};
+        if (settings.colorSet && myColorSet.name) {
+          if (settings.colorSet['*']) {
+            opt = settings.colorSet['*'];
+          } else {
+            opt = settings.colorSet[myColorSet.name];
+          }
+        }
+        let surface = myColorSet.serialize(opt);
+        callback('palette', surface);
+      }
+
+    } else if (comp == 'tileset') {
+      if (myTiles) {
+        let surface = myTiles.serialize();
+        callback('tileset', surface);
+      } else {
+        callback('tileset', null);
+      }
+    }
+  }
 }
 
 Renderer.prototype._toColor = function(c) {

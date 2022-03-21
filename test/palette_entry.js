@@ -95,13 +95,33 @@ describe('Palette entry', function() {
       cell_width: 7, cell_height: 19,
       cell_between: 1,
       outer_top: 3, outer_left: 3,
-      row_size: 16, vert_text: true,
+      row_size: 16, text: 'vert',
     });
 
     let resources = ra.resources;
     resources.saveTo(tmpout, surfaces);
 
     util.ensureFilesMatch('test/testdata/vert_nes.png', tmpout);
+  });
+
+  it('palette textless', function() {
+    let tmpdir = util.mkTmpDir();
+    let tmpout = tmpdir + '/actual.png';
+    ra.resetState();
+    ra.useColors('nes');
+
+    let palette = ra.usePalette();
+    let surfaces = palette.serialize({
+      cell_width: 4, cell_height: 4,
+      cell_between: 0,
+      outer_top: 2, outer_left: 2,
+      row_size: 16, text: 'none',
+    });
+
+    let resources = ra.resources;
+    resources.saveTo(tmpout, surfaces);
+
+    util.ensureFilesMatch('test/testdata/textless_nes.png', tmpout);
   });
 
   it('palette alternate', function() {
@@ -132,6 +152,9 @@ describe('Palette entry', function() {
     let expect = 'Palette{0:[0]=0x000000, 1:[1]=0x0000aa, 2:[2]=0x00aa00, 3:[3]=0x00aaaa, 4:[4]=0xaa0000, 5:[5]=0xaa00aa, 6:[6]=0xaa5500, 7:[7]=0xaaaaaa, 8:[8]=0x555555, 9:[9]=0x5555ff, 10:[10]=0x55ff55, 11:[11]=0x55ffff, 12:[12]=0xff5555, 13:[13]=0xff55ff, 14:[14]=0xffff55, 15:[15]=0xffffff}';
     let actual = palette.toString();
     assert.equal(expect, actual);
+
+    let entry = palette[0];
+    assert.equal(entry.toInt(), 1);
   });
 
   it('get all', function() {

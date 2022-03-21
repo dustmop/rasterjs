@@ -18,15 +18,15 @@ Serializer.prototype.colorsToSurface = function(colorList, opt) {
   // Parameterize
   let cellWidth  = opt.cell_width || 15;
   let cellHeight = opt.cell_height || 13;
-  let cellBetween = opt.cell_between || 2;
-  let outerTop  = opt.outer_top || 3;
-  let outerLeft = opt.outer_left || 3;
-  let vertText = opt.vert_text;
+  let cellBetween = (opt.cell_between != undefined) ? opt.cell_between : 2;
+  let outerTop  = (opt.outer_top != undefined) ? opt.outer_top : 3;
+  let outerLeft = (opt.outer_left != undefined) ? opt.outer_left : 3;
+  let textOpt = opt.text;
 
   // Constants from the font.
   let fontWidth = 7;
   let fontHeight = 5;
-  if (vertText) {
+  if (textOpt == 'vert') {
     fontWidth = 3;
     fontHeight = 11;
   }
@@ -52,7 +52,7 @@ Serializer.prototype.colorsToSurface = function(colorList, opt) {
   target.font = font;
   target.fillColor(colors.addEntry(0x606060));
   for (let k = 0; k < colorList.length; k++) {
-    let rgbInt = colorList[k].asInt();
+    let rgbInt = colorList[k].toInt();
     let j = k % numX;
     let i = Math.floor(k / numX);
     let y = i * gridY;
@@ -69,13 +69,15 @@ Serializer.prototype.colorsToSurface = function(colorList, opt) {
     } else {
       target.setColor(colors.addEntry(0xffffff));
     }
-    if (!vertText) {
-      target.drawText(`${v}`, x + textLeft + outerLeft, y + textTop + outerTop);
-    } else {
+    if (textOpt == 'none') {
+      // pass
+    } else if (textOpt == 'vert') {
       let textX = x + textLeft + outerLeft;
       let textY = y + textTop + outerTop;
       target.drawText(`${v[0]}`, textX, textY);
       target.drawText(`${v[1]}`, textX, textY + 6);
+    } else {
+      target.drawText(`${v}`, x + textLeft + outerLeft, y + textTop + outerTop);
     }
   }
 

@@ -83,8 +83,10 @@ Set.prototype.find = function(rgb) {
 }
 
 Set.prototype.use = function(rep) {
+  this.name = null;
   if (types.isString(rep)) {
     let text = rep;
+    this.name = text;
     if (text == 'quick') {
       this.assign(rgbMap.rgb_map_quick);
     } else if (text == 'dos') {
@@ -134,7 +136,7 @@ Set.prototype.append = function(list) {
 
 Set.prototype.serialize = function(opt) {
   let ser = new serializer.Serializer();
-  return ser.colorsToSurface(this.collect);
+  return ser.colorsToSurface(this.collect, opt);
 }
 
 module.exports.Set = Set;

@@ -162,7 +162,7 @@ PaletteEntry.prototype.hex = function() {
   return '0x' + text;
 }
 
-PaletteEntry.prototype.asInt = function() {
+PaletteEntry.prototype.toInt = function() {
   return this.rgb.toInt();
 }
 

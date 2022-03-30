@@ -153,8 +153,8 @@ describe('Palette entry', function() {
     let actual = palette.toString();
     assert.equal(expect, actual);
 
-    let entry = palette[0];
-    assert.equal(entry.toInt(), 1);
+    let entry = palette[1];
+    assert.equal(entry.toInt(), 170);
   });
 
   it('get all', function() {

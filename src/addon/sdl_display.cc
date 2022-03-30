@@ -1,7 +1,6 @@
 #include "sdl_display.h"
-#include "resources.h"
 #include "type.h"
-#include "image_load_save.h"
+#include "png_load_write.h"
 
 #include <SDL.h>
 
@@ -441,7 +440,13 @@ Napi::Value SDLDisplay::RenderLoop(const Napi::CallbackInfo& info) {
                            SDL_PIXELFORMAT_ABGR8888,
                            saveBuff,
                            savePitch);
-      WritePng(this->hookSaveFile.c_str(), saveBuff, rect.w, rect.h, savePitch);
+      Surface surf;
+      surf.top = surf.left = 0;
+      surf.buff = saveBuff;
+      surf.width = width;
+      surf.height = height;
+      surf.pitch = savePitch;
+      WritePng(this->hookSaveFile.c_str(), &surf);
       return Napi::Number::New(env, 0);
     }
 

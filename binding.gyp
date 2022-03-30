@@ -14,10 +14,10 @@
       ],
       "cflags_cc!": [ "-fno-exceptions" ],
       "sources": [
-        "src/addon/sdl_display.cc",
-        "src/addon/image_load_save.cc",
+        "src/addon/filesys_access.cc",
         "src/addon/native.cc",
-        "src/addon/resources.cc",
+        "src/addon/png_load_write.cc",
+        "src/addon/sdl_display.cc",
       ],
       "include_dirs": [
         "<!@(node -p \"require('node-addon-api').include\")",

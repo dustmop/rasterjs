@@ -288,8 +288,8 @@ describe('Tileset', function() {
     let tileset = ra.useTileset(tiles, {tile_width: 4, tile_height: 4});
 
     let surfaces = tileset.serialize();
-    let resources = ra.resources;
-    resources.saveTo(tmpout, surfaces);
+
+    ra._saveSurfacesTo(surfaces, tmpout);
 
     util.ensureFilesMatch('test/testdata/tiles_saved.png', tmpout);
   });

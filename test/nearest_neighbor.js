@@ -9,15 +9,13 @@ describe('Nearest neighbor', function() {
     let img = ra.loadImage('test/testdata/simple.png');
     ra.drawImage(img, 0, 0);
 
-    let resources = ra.resources;
-
     let res = ra.renderPrimaryPlane();
     let surf = res[0]
     surf = algorithm.nearestNeighborSurface(surf, 2);
 
     let tmpdir = util.mkTmpDir();
     let actual = tmpdir + '/actual.png';
-    resources.saveTo(actual, [surf]);
+    ra._saveSurfacesTo([surf], actual);
 
     util.ensureFilesMatch(actual, 'test/testdata/simple-times-2.png');
   });

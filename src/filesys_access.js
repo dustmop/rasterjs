@@ -1,11 +1,12 @@
-function Resources() {
+function FilesysAccess() {
   this.numToLoad = 0;
   this.numLoadDone = 0;
+  // TODO: Don't need this
   this.addedFiles = {};
   return this;
 }
 
-Resources.prototype.openImage = function(filename, imgPlane) {
+FilesysAccess.prototype.openImage = function(filename, imgPlane) {
   let self = this;
 
   // Wait for the image to load
@@ -47,11 +48,12 @@ Resources.prototype.openImage = function(filename, imgPlane) {
   imgElem.src = '/' + filename;
 }
 
-Resources.prototype.insert = function(filename, imgsurf) {
+// TODO: don't do this on FilesysAccess
+FilesysAccess.prototype.insert = function(filename, imgsurf) {
   this.addedFiles[filename] = imgsurf;
 }
 
-Resources.prototype.openText = function(filename) {
+FilesysAccess.prototype.openText = function(filename) {
   let self = this;
   let file = {src: filename};
   self.numToLoad++;
@@ -64,16 +66,23 @@ Resources.prototype.openText = function(filename) {
   return file;
 }
 
-Resources.prototype.localAsset = function(relpath) {
+FilesysAccess.prototype.localAsset = function(relpath) {
   throw new Error('cannot get local assets');
 }
 
-Resources.prototype.allLoaded = function() {
-  return this.numLoadDone == this.numToLoad;
+FilesysAccess.prototype.whenLoaded = function(cb) {
+  let self = this;
+  function checkIfDone() {
+    if (self.numLoadDone == self.numToLoad) {
+      return cb();
+    }
+    setTimeout(checkIfDone, 100);
+  }
+  checkIfDone();
 }
 
-Resources.prototype.saveTo = function() {
+FilesysAccess.prototype.saveTo = function() {
   throw new Error('cannot save image');
 }
 
-module.exports.Resources = Resources;
+module.exports.FilesysAccess = FilesysAccess;

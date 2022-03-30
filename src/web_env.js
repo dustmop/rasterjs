@@ -1,10 +1,10 @@
 const webGLDisplay = require('./webgl_display.js');
 const twoDCanvas = require('./2d_canvas.js');
 const plane = require('./plane.js');
-const resources = require('./resources.js');
+const filesysAccess = require('./filesys_access.js');
 
-function makeResources() {
-  return new resources.Resources();
+function makeFilesysAccess() {
+  return new filesysAccess.FilesysAccess();
 }
 
 function makeDisplay() {
@@ -32,5 +32,5 @@ function runningUnderKarma() {
 }
 
 module.exports.makeDisplay = makeDisplay;
-module.exports.makeResources = makeResources;
+module.exports.makeFilesysAccess = makeFilesysAccess;
 module.exports.getOptions = getOptions;

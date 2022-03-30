@@ -21,9 +21,9 @@ const FRAMES_LOOP_FOREVER = -1;
 function Scene(env) {
   this._addMethods();
   this.env = env;
-  this.resources = env.makeResources();
+  this.fsacc = env.makeFilesysAccess();
   this.display = env.makeDisplay();
-  this.saveService = this.resources;
+  this.saveService = this.fsacc;
 
   this.colorSet = new colorSet.Set();
   this.renderer = new renderer.Renderer();
@@ -49,8 +49,8 @@ Scene.prototype._initialize = function () {
   this.TAU = 6.283185307179586;
   this.PI = this.TAU / 2;
   this.colorSet.clear();
-  this.imgLoader = new imageLoader.Loader(this.resources, this);
-  this.textLoader = new textLoader.TextLoader(this.resources);
+  this.imgLoader = new imageLoader.Loader(this.fsacc, this);
+  this.textLoader = new textLoader.TextLoader(this.fsacc);
   let options = this.env.getOptions();
   this.numFrames = options.num_frames || -1;
   if (options.display) {
@@ -253,7 +253,8 @@ Scene.prototype.useDisplay = function(nameOrDisplay) {
 // TODO: Re-organize the methods in this file, into topics.
 
 Scene.prototype.insertResource = function(name, imageSurf) {
-  return this.resources.insert(name, imageSurf);
+  // TODO: Don't do this, add it to the loader instead
+  return this.fsacc.insert(name, imageSurf);
 }
 
 Scene.prototype.loadImage = function(filepath, opt) {
@@ -682,6 +683,10 @@ Scene.prototype.provide = function() {
     prov.interrupts = this.interrupts;
   }
   return prov;
+}
+
+Scene.prototype._saveSurfacesTo = function(surfaces, filename) {
+  this.fsacc.saveTo(filename, surfaces);
 }
 
 module.exports.Scene = Scene;

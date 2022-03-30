@@ -60,8 +60,7 @@ describe('Palette entry', function() {
     let palette = ra.usePalette();
     let surfaces = palette.serialize();
 
-    let resources = ra.resources;
-    resources.saveTo(tmpout, surfaces);
+    ra._saveSurfacesTo(surfaces, tmpout);
 
     util.ensureFilesMatch('test/testdata/pal_saved.png', tmpout);
   });
@@ -78,8 +77,7 @@ describe('Palette entry', function() {
       outer_top: 2, outer_left: 1,
     });
 
-    let resources = ra.resources;
-    resources.saveTo(tmpout, surfaces);
+    ra._saveSurfacesTo(surfaces, tmpout);
 
     util.ensureFilesMatch('test/testdata/custom_pal.png', tmpout);
   });
@@ -98,8 +96,7 @@ describe('Palette entry', function() {
       row_size: 16, text: 'vert',
     });
 
-    let resources = ra.resources;
-    resources.saveTo(tmpout, surfaces);
+    ra._saveSurfacesTo(surfaces, tmpout);
 
     util.ensureFilesMatch('test/testdata/vert_nes.png', tmpout);
   });
@@ -118,8 +115,7 @@ describe('Palette entry', function() {
       row_size: 16, text: 'none',
     });
 
-    let resources = ra.resources;
-    resources.saveTo(tmpout, surfaces);
+    ra._saveSurfacesTo(surfaces, tmpout);
 
     util.ensureFilesMatch('test/testdata/textless_nes.png', tmpout);
   });

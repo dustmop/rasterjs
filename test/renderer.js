@@ -39,9 +39,8 @@ describe('Render components', function() {
     let tmppal = tmpdir + '/actual-palette.png';
     let tmptiles = tmpdir + '/actual-tileset.png';
 
-    let resources = ra.resources;
-    resources.saveTo(tmppal, gotPalette);
-    resources.saveTo(tmptiles, gotTileset);
+    ra._saveSurfacesTo(gotPalette, tmppal);
+    ra._saveSurfacesTo(gotTileset, tmptiles);
 
     util.ensureFilesMatch(tmppal, 'test/testdata/pal_of_tiles.png');
     util.ensureFilesMatch(tmptiles, 'test/testdata/tiles_made.png');

@@ -2,43 +2,37 @@
 #include <fstream>
 #include <streambuf>
 
-#include "resources.h"
+#include "filesys_access.h"
 
-#include "image_load_save.h"
+#include "png_load_write.h"
 
-Napi::FunctionReference g_resourcesConstructor;
+Napi::FunctionReference g_filesysAccessConstructor;
 
-void Resources::InitClass(Napi::Env env, Napi::Object exports) {
+void FilesysAccess::InitClass(Napi::Env env, Napi::Object exports) {
   Napi::Function func = DefineClass(
       env,
-      "Resources",
-      {InstanceMethod("clear", &Resources::Clear),
-       InstanceMethod("openImage", &Resources::OpenImage),
-       InstanceMethod("openText", &Resources::OpenText),
-       InstanceMethod("saveTo", &Resources::SaveTo),
-       InstanceMethod("allLoaded", &Resources::AllLoaded),
+      "FilesysAccess",
+      {InstanceMethod("openImage", &FilesysAccess::OpenImage),
+       InstanceMethod("openText", &FilesysAccess::OpenText),
+       InstanceMethod("saveTo", &FilesysAccess::SaveTo),
+       InstanceMethod("whenLoaded", &FilesysAccess::WhenLoaded),
   });
-  g_resourcesConstructor = Napi::Persistent(func);
-  g_resourcesConstructor.SuppressDestruct();
+  g_filesysAccessConstructor = Napi::Persistent(func);
+  g_filesysAccessConstructor.SuppressDestruct();
 }
 
-Resources::Resources(const Napi::CallbackInfo& info) : Napi::ObjectWrap<Resources>(info) {
+FilesysAccess::FilesysAccess(const Napi::CallbackInfo& info) : Napi::ObjectWrap<FilesysAccess>(info) {
   Napi::Env env = info.Env();
   Napi::HandleScope scope(env);
 }
 
-Napi::Object Resources::NewInstance(Napi::Env env, Napi::Value arg) {
+Napi::Object FilesysAccess::NewInstance(Napi::Env env, Napi::Value arg) {
   Napi::EscapableHandleScope scope(env);
-  Napi::Object obj = g_resourcesConstructor.New({arg});
+  Napi::Object obj = g_filesysAccessConstructor.New({arg});
   return scope.Escape(napi_value(obj)).ToObject();
 }
 
-Napi::Value Resources::Clear(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  return Napi::Number::New(env, 0);
-}
-
-Napi::Value Resources::OpenImage(const Napi::CallbackInfo& info) {
+Napi::Value FilesysAccess::OpenImage(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   Napi::Value fileVal = info[0];
@@ -49,23 +43,23 @@ Napi::Value Resources::OpenImage(const Napi::CallbackInfo& info) {
   Napi::Object imgObj = imgVal.ToObject();
 
   // TODO: Other formats
-  Image img;
-  img.buff = NULL;
-  int err = LoadPng(filename.c_str(), &img);
+  Surface surf;
+  surf.buff = NULL;
+  int err = LoadPng(filename.c_str(), &surf);
   if (err != 0) {
     // TODO: Throw an error
     return Napi::Number::New(env, -1);
   }
 
-  imgObj.Set("width", img.width);
-  imgObj.Set("height", img.height);
-  imgObj.Set("pitch", img.pitch);
+  imgObj.Set("width", surf.width);
+  imgObj.Set("height", surf.height);
+  imgObj.Set("pitch", surf.pitch);
 
-  int byteLength = img.width * img.height * 4;
+  int byteLength = surf.width * surf.height * 4;
   Napi::ArrayBuffer arrayBuff = Napi::ArrayBuffer::New(env, byteLength);
   uint8* buffData = (uint8*)arrayBuff.Data();
   for (int k = 0; k < byteLength; k++) {
-    buffData[k] = img.buff[k];
+    buffData[k] = surf.buff[k];
   }
   imgObj.Set("rgbBuff", arrayBuff);
 
@@ -76,7 +70,7 @@ Napi::Value Resources::OpenImage(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, 0);
 }
 
-Napi::Value Resources::OpenText(const Napi::CallbackInfo& info) {
+Napi::Value FilesysAccess::OpenText(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   Napi::Value fileVal = info[0];
@@ -96,7 +90,7 @@ Napi::Value Resources::OpenText(const Napi::CallbackInfo& info) {
   return result;
 }
 
-Napi::Value Resources::SaveTo(const Napi::CallbackInfo& info) {
+Napi::Value FilesysAccess::SaveTo(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   Napi::Value val = info[0];
@@ -121,16 +115,40 @@ Napi::Value Resources::SaveTo(const Napi::CallbackInfo& info) {
   Napi::Value heightVal = surfaceObj.Get("height");
   Napi::Value pitchVal = surfaceObj.Get("pitch");
 
-  int width = widthVal.As<Napi::Number>().Int32Value();
-  int height = heightVal.As<Napi::Number>().Int32Value();
-  int pitch = pitchVal.As<Napi::Number>().Int32Value();
+  Surface surf;
+  surf.width = widthVal.As<Napi::Number>().Int32Value();
+  surf.height = heightVal.As<Napi::Number>().Int32Value();
+  surf.pitch = pitchVal.As<Napi::Number>().Int32Value();
+  surf.buff = rawBuff;
 
-  WritePng(savepath.c_str(), rawBuff, width, height, pitch);
+  WritePng(savepath.c_str(), &surf);
 
   return Napi::Number::New(env, 0);
 }
 
-Napi::Value Resources::AllLoaded(const Napi::CallbackInfo& info) {
+Napi::Value FilesysAccess::WhenLoaded(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  return Napi::Number::New(env, 1);
+  Napi::Value arg = info[0];
+
+  if (!arg.IsFunction()) {
+    printf("whenLoaded needs to be given a function\n");
+    exit(1);
+  }
+  Napi::Function callbackFunc = arg.As<Napi::Function>();
+
+  napi_status status;
+  napi_value self;
+  status = napi_create_object(env, &self);
+  if (status != napi_ok) {
+    printf("napi_create_object(self) failed to create\n");
+    return Napi::Number::New(env, -1);
+  }
+  napi_value resVal;
+  status = napi_call_function(env, self, callbackFunc, 0, NULL, &resVal);
+  if (status != napi_ok) {
+    // TODO: Copy the func from sdl_display here
+    printf("function call failed!\n");
+  }
+
+  return Napi::Number::New(env, 0);
 }

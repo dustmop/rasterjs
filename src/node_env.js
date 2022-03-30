@@ -3,12 +3,13 @@ const argparse = require('argparse');
 const path = require('path');
 const saver = require('./save_image_display.js');
 
-function makeResources() {
-  let res = cppmodule.resources();
-  res.localAsset = function(filename) {
+function makeFilesysAccess() {
+  let fsacc = cppmodule.filesysAccess();
+  // TODO: this method shouldn't be needed, the loader should do this
+  fsacc.localAsset = function(filename) {
     return path.posix.join(__dirname, '../', filename);
   }
-  return res;
+  return fsacc;
 }
 
 function makeDisplay() {
@@ -29,9 +30,9 @@ function getOptions() {
   parser.add_argument('--zoom', {type: 'int'});
   let args = parser.parse_args();
   if (args.save_filename) {
-    let res = cppmodule.resources();
+    let fsacc = cppmodule.filesysAccess();
     args.display = new saver.SaveImageDisplay(args.save_filename,
-                                              args.num_frames, res);
+                                              args.num_frames, fsacc);
   }
   return args;
 }
@@ -42,5 +43,5 @@ function runningAsTest() {
 }
 
 module.exports.makeDisplay = makeDisplay;
-module.exports.makeResources = makeResources;
+module.exports.makeFilesysAccess = makeFilesysAccess;
 module.exports.getOptions = getOptions;

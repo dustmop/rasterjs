@@ -2,9 +2,9 @@ const rgbColor = require('./rgb_color.js');
 const algorithm = require('./algorithm.js');
 const palette = require('./palette.js');
 
-function Loader(resources, scene) {
+function Loader(fsacc, scene) {
   this.list = [];
-  this.resources = resources;
+  this.fsacc = fsacc;
   this.scene = scene;
   return this;
 }
@@ -25,6 +25,8 @@ Loader.prototype.loadImage = function(filename, opt) {
     throw new Error(`unknown option value ${opt}`);
   }
 
+  let self = this;
+
   let img = new ImagePlane();
   img.parentLoader = this;
   img.filename = filename;
@@ -40,10 +42,14 @@ Loader.prototype.loadImage = function(filename, opt) {
   img.pitch = 0;
   img.data = null;
 
-  let ret = this.resources.openImage(filename, img);
+  // TODO: -1 not found sync, 0 success, 1 async
+  let ret = this.fsacc.openImage(filename, img, function(err) {
+    self.loadErr = err;
+  });
   if (ret == -1) {
-    throw new Error('image not found');
+    this.loadErr = new Error('image not found');
   }
+
   // HACK: openImage should return a uint8array, not ArrayBuffer
   // web_env returns a Uint8Array (but also img.data == null currently)
   // node_env returns an ArrayBuffer
@@ -57,21 +63,16 @@ Loader.prototype.loadImage = function(filename, opt) {
     }
     img.fillData();
   }
+
   this.list.push(img);
   return img;
 }
 
+// TODO: this sholdn't even be here. just call fsacc.whenLoaded directly
 Loader.prototype.resolveAll = function(cb) {
-  let self = this;
-  function waitForImageLoad() {
-    if (self.resources.allLoaded()) {
-      return cb();
-    }
-    setTimeout(waitForImageLoad, 0);
-  }
-  // Changing this to be async breaks node_env. Since the node_env has a
-  // blocking render loop, this call needs to be synchronous as well.
-  waitForImageLoad();
+  this.fsacc.whenLoaded(function() {
+    cb();
+  });
 }
 
 function ImagePlane() {

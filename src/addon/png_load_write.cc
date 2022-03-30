@@ -1,4 +1,4 @@
-#include "image_load_save.h"
+#include "png_load_write.h"
 #include "type.h"
 
 #include <png.h>
@@ -96,23 +96,17 @@ int loadPngFile(const char* filename, int *outWidth, int *outHeight, int *outPit
   return 0;
 }
 
-int LoadPng(const char* filename, Image* img) {
-  int width, height, pitch;
-  uint8* buff = NULL;
-  int ret = loadPngFile(filename, &width, &height, &pitch, &buff, false);
+int LoadPng(const char* filename, Surface* surf) {
+  int ret = loadPngFile(filename, &surf->width, &surf->height, &surf->pitch, &surf->buff, false);
   if (ret != 0) {
     return ret;
   }
-  img->top = 0;
-  img->left = 0;
-  img->buff = buff;
-  img->width = width;
-  img->height = height;
-  img->pitch = pitch;
+  surf->top = 0;
+  surf->left = 0;
   return 0;
 }
 
-int WritePng(const char* savepath, uint8* buffer, int width, int height, int pitch) {
+int WritePng(const char* savepath, Surface* surf) {
   int code = 0;
   int y = 0;
   FILE *fp = NULL;
@@ -154,15 +148,15 @@ int WritePng(const char* savepath, uint8* buffer, int width, int height, int pit
   png_init_io(png_ptr, fp);
 
   // Write header (8 bit colour depth)
-  png_set_IHDR(png_ptr, info_ptr, width, height,
+  png_set_IHDR(png_ptr, info_ptr, surf->width, surf->height,
       8, PNG_COLOR_TYPE_RGBA, PNG_INTERLACE_NONE,
       PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
 
   png_write_info(png_ptr, info_ptr);
 
-  rows = (png_bytep*)malloc(sizeof(png_bytep)*height);
-  for (y=0 ; y<height; y++) {
-    rows[y] = buffer+(y*pitch);
+  rows = (png_bytep*)malloc(sizeof(png_bytep)*surf->height);
+  for (y=0 ; y<surf->height; y++) {
+    rows[y] = surf->buff+(y*surf->pitch);
   }
   png_set_rows(png_ptr, info_ptr, rows);
   png_write_png(png_ptr, info_ptr, 0, NULL);

@@ -33,6 +33,10 @@ Plane.prototype.clone = function() {
   return make;
 }
 
+Plane.prototype.replace = function(other) {
+  throw new Error('IMPLEMENT ME: replace');
+}
+
 Plane.prototype.ensureReady = function() {
   this._prepare();
 }
@@ -120,7 +124,7 @@ Plane.prototype.put = function(x, y, v) {
     return;
   }
   let k = y * this.pitch + x;
-  this.data[this._offs + k] = v;
+  this.data[this._offs + k] = Math.floor(v);
 }
 
 Plane.prototype.putSequence = function(seq) {

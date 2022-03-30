@@ -17,7 +17,7 @@ describe('Image', function() {
 
     // Draw and crop
     let sheet = ra.loadImage('test/testdata/circle.png');
-    let obj = sheet.copy(2, 2, 10, 10);
+    let obj = sheet.select(2, 2, 10, 10);
     ra.drawImage(obj, 11, 11);
 
     util.renderCompareTo(ra, 'test/testdata/composite.png');

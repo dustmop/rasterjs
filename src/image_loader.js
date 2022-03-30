@@ -110,7 +110,7 @@ ImagePlane.prototype.ensureReady = function() {
   this.fillData();
 }
 
-ImagePlane.prototype.copy = function(x, y, w, h) {
+ImagePlane.prototype.select = function(x, y, w, h) {
   let make = new ImagePlane();
   make.parentLoader = this.parentLoader;
   make.filename = this.filename;
@@ -125,18 +125,61 @@ ImagePlane.prototype.copy = function(x, y, w, h) {
   make.rgbBuff = this.rgbBuff;
   make.colorSet = this.colorSet;
   make.palette = this.palette;
-  this.sortUsingHSV = this.sortUsingHSV;
+  make.sortUsingHSV = this.sortUsingHSV;
   return make;
 }
 
+ImagePlane.prototype.clone = function() {
+  let make = new ImagePlane();
+  make.parentLoader = this.parentLoader;
+  make.filename = this.filename;
+  make.id = this.id;
+  make.left = 0;
+  make.top = 0;
+  make.width = this.width;
+  make.height = this.height;
+  make.pitch = this.pitch;
+  make.colorSet = this.colorSet;
+  make.palette = this.palette;
+  make.sortUsingHSV = this.sortUsingHSV;
+  // Deep copy `make.data`, NOTE: no alpha nor rgbBuff
+  make.data = new Uint8Array(this.data.length);
+  for (let k = 0; k < this.data.length; k++) {
+    make.data[k] = this.data[k];
+  }
+
+  return make;
+}
+
+ImagePlane.prototype.replace = function(other) {
+  if (this.data.length != other.data.length) {
+    throw new Error('IMPLEMENT ME: replace with different data length');
+  }
+  for (let k = 0; k < other.data.length; k++) {
+    this.data[k] = other.data[k];
+  }
+}
+
 ImagePlane.prototype.get = function(x, y) {
-  let k = y*this.pitch + x;
+  // TODO: offsets `left` and `top`
+  x = Math.floor(x);
+  y = Math.floor(y);
+  if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
+    return null;
+  }
+  let k = y * this.pitch + x;
   return this.data[k];
 }
 
 ImagePlane.prototype.put = function(x, y, v) {
-  let k = y*this.pitch + x;
-  this.data[k] = v;
+  // TODO: offsets `left` and `top`
+  x = Math.floor(x);
+  y = Math.floor(y);
+  if (x < 0 || x >= this.width || y < 0 || y >= this.height) {
+    return;
+  }
+  let k = y * this.pitch + x;
+  this.data[k] = Math.floor(v);
 }
 
 ImagePlane.prototype.fillData = function() {

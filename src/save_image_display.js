@@ -98,7 +98,8 @@ SaveImageDisplay.prototype.renderLoop = function(nextFrame) {
   if (this.isGif) {
     // Actually write the gif.
     const self = this;
-    this.createGif(width, height, bufferList, this.targetPath);
+    this.createGif(width*this.zoomLevel, height*this.zoomLevel,
+                   bufferList, this.targetPath);
   } else if (!hasTemplate) {
     // Copy the first frame to our target path.
     let infile = `${this.tmpdir}/000.png`;
@@ -117,7 +118,7 @@ SaveImageDisplay.prototype.renderLoop = function(nextFrame) {
 }
 
 SaveImageDisplay.prototype.createGif = function(width, height, frames, outName) {
-  const encoder = new GIFEncoder(width, height, 'octree', true, frames.length);
+  const encoder = new GIFEncoder(width, height, 'octree', false, frames.length);
 
   const writeStream = createWriteStream(outName)
   // when stream closes GIF is created so resolve promise

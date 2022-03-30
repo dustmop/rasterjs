@@ -82,6 +82,21 @@ describe('Gif', function() {
     });
   });
 
+  it('animation with zoom', function() {
+    let tmpdir = util.mkTmpDir();
+    let tmpout = tmpdir + '/actual.gif';
+    let script = 'test/testdata/scripts/change_color.js';
+    let cmd = `node ${script} --save ${tmpout}`;
+    let cwd = process.cwd();
+    child_process.exec(cmd, function(error, stdout, stderr) {
+      if (error) {
+        throw error;
+      }
+      let goldenPath = 'test/testdata/change-color.gif';
+      util.ensureFilesMatch(goldenPath, tmpout);
+    });
+  });
+
   it('zoom and grid', function() {
     let tmpdir = util.mkTmpDir();
     let tmpout = tmpdir + '/actual.png';

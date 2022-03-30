@@ -47,7 +47,7 @@ Napi::Value FilesysAccess::OpenImage(const Napi::CallbackInfo& info) {
   surf.buff = NULL;
   int err = LoadPng(filename.c_str(), &surf);
   if (err != 0) {
-    // TODO: Throw an error
+    // Return -1 which means "not found"
     return Napi::Number::New(env, -1);
   }
 

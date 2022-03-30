@@ -198,8 +198,8 @@ Plane.prototype.putSequence = function(seq) {
 
 Plane.prototype.putImage = function(img, baseX, baseY) {
   this._prepare();
-  let imageTop = img.top;
-  let imageLeft = img.left;
+  let imageTop = img.top || 0;
+  let imageLeft = img.left || 0;
   let imageHeight = img.height;
   let imageWidth = img.width;
   let imagePitch = img.pitch;

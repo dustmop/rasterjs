@@ -5,10 +5,6 @@ const saver = require('./save_image_display.js');
 
 function makeFilesysAccess() {
   let fsacc = cppmodule.filesysAccess();
-  // TODO: this method shouldn't be needed, the loader should do this
-  fsacc.localAsset = function(filename) {
-    return path.posix.join(__dirname, '../', filename);
-  }
   return fsacc;
 }
 

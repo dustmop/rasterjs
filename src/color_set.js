@@ -53,6 +53,9 @@ Set.prototype.assign = function(vals, opts) {
 }
 
 Set.prototype.addEntry = function(rgb) {
+  if (rgb !== 0 && !rgb) {
+    throw new Error(`invalid rgb value: ${rgb}`);
+  }
   if (types.isNumber(rgb)) {
     rgb = new rgbColor.RGBColor(rgb);
   }

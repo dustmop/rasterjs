@@ -13,5 +13,3 @@ dev:
 
 tests:
 	npm test
-	npm run web-test
-	npm run sdl-test

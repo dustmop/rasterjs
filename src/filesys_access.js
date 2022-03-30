@@ -1,8 +1,6 @@
 function FilesysAccess() {
   this.numToLoad = 0;
   this.numLoadDone = 0;
-  // TODO: Don't need this
-  this.addedFiles = {};
   return this;
 }
 
@@ -11,18 +9,6 @@ FilesysAccess.prototype.openImage = function(filename, imgPlane) {
 
   // Wait for the image to load
   this.numToLoad++;
-
-  if (this.addedFiles[filename]) {
-    let imgsurf = this.addedFiles[filename];
-    imgPlane.rgbBuff = imgsurf.buff;
-    imgPlane.width = imgsurf.width;
-    // TODO: Fix me
-    imgPlane.pitch = imgsurf.width;
-    imgPlane.height = imgsurf.height;
-    self.numLoadDone++;
-    imgPlane.fillData();
-    return 1;
-  }
 
   // The html node for loading the Image.
   let imgElem = new Image;
@@ -44,13 +30,10 @@ FilesysAccess.prototype.openImage = function(filename, imgPlane) {
     imgPlane.fillData();
     self.numLoadDone++;
   }
-  // TODO: Handle 404 not found for images
+  // TODO: Handle 404 not found for images. Collect errors here, throw in
+  // the `whenLoaded` method
   imgElem.src = '/' + filename;
-}
-
-// TODO: don't do this on FilesysAccess
-FilesysAccess.prototype.insert = function(filename, imgsurf) {
-  this.addedFiles[filename] = imgsurf;
+  return 1;
 }
 
 FilesysAccess.prototype.openText = function(filename) {
@@ -66,8 +49,8 @@ FilesysAccess.prototype.openText = function(filename) {
   return file;
 }
 
-FilesysAccess.prototype.localAsset = function(relpath) {
-  throw new Error('cannot get local assets');
+FilesysAccess.prototype.saveTo = function() {
+  throw new Error('cannot save image');
 }
 
 FilesysAccess.prototype.whenLoaded = function(cb) {
@@ -79,10 +62,6 @@ FilesysAccess.prototype.whenLoaded = function(cb) {
     setTimeout(checkIfDone, 100);
   }
   checkIfDone();
-}
-
-FilesysAccess.prototype.saveTo = function() {
-  throw new Error('cannot save image');
 }
 
 module.exports.FilesysAccess = FilesysAccess;

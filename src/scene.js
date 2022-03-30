@@ -195,7 +195,7 @@ Scene.prototype.resetState = function() {
 }
 
 Scene.prototype.then = function(cb) {
-  this.imgLoader.resolveAll(cb);
+  this.fsacc.whenLoaded(cb);
 }
 
 Scene.prototype.setZoom = function(scale) {
@@ -253,8 +253,10 @@ Scene.prototype.useDisplay = function(nameOrDisplay) {
 // TODO: Re-organize the methods in this file, into topics.
 
 Scene.prototype.insertResource = function(name, imageSurf) {
-  // TODO: Don't do this, add it to the loader instead
-  return this.fsacc.insert(name, imageSurf);
+  if (!types.isSurface(imageSurf)) {
+    throw new Error(`insertResource: expects surface`);
+  }
+  this.imgLoader.insert(name, imageSurf);
 }
 
 Scene.prototype.loadImage = function(filepath, opt) {

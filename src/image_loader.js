@@ -1,19 +1,17 @@
 const rgbColor = require('./rgb_color.js');
 const algorithm = require('./algorithm.js');
 const palette = require('./palette.js');
+const types = require('./types.js');
 
 function Loader(fsacc, scene) {
   this.list = [];
+  this.addedFiles = {};
   this.fsacc = fsacc;
   this.scene = scene;
   return this;
 }
 
 Loader.prototype.loadImage = function(filename, opt) {
-  if (!filename.endsWith('.png')) {
-    throw new Error(`only 'png' images supported, couldn't load ${filename}`);
-  }
-
   let sortUsingHSV = false;
   if (opt.sortColors) {
     if (opt.sortColors == 'usingHSV') {
@@ -23,6 +21,25 @@ Loader.prototype.loadImage = function(filename, opt) {
     }
   } else if (Object.keys(opt) > 0) {
     throw new Error(`unknown option value ${opt}`);
+  }
+
+  if (this.addedFiles[filename]) {
+    let found = this.addedFiles[filename];
+    let planePitch = found.width;
+    let imgPlane = new ImagePlane();
+    imgPlane.top = found.top || 0;
+    imgPlane.left = found.left || 0;
+    imgPlane.rgbBuff = found.buff;
+    imgPlane.width = found.width;
+    imgPlane.pitch = planePitch;
+    imgPlane.height = found.height;
+    imgPlane.colorSet = this.scene.colorSet;
+    imgPlane.fillData();
+    return imgPlane;
+  }
+
+  if (!filename.endsWith('.png')) {
+    throw new Error(`only 'png' images supported, couldn't load ${filename}`);
   }
 
   let self = this;
@@ -43,11 +60,9 @@ Loader.prototype.loadImage = function(filename, opt) {
   img.data = null;
 
   // TODO: -1 not found sync, 0 success, 1 async
-  let ret = this.fsacc.openImage(filename, img, function(err) {
-    self.loadErr = err;
-  });
+  let ret = this.fsacc.openImage(filename, img);
   if (ret == -1) {
-    this.loadErr = new Error('image not found');
+    throw new Error('image not found');
   }
 
   // HACK: openImage should return a uint8array, not ArrayBuffer
@@ -68,11 +83,11 @@ Loader.prototype.loadImage = function(filename, opt) {
   return img;
 }
 
-// TODO: this sholdn't even be here. just call fsacc.whenLoaded directly
-Loader.prototype.resolveAll = function(cb) {
-  this.fsacc.whenLoaded(function() {
-    cb();
-  });
+Loader.prototype.insert = function(name, imageSurf) {
+  if (!types.isSurface(imageSurf)) {
+    throw new Error(`insert: expects surface`);
+  }
+  this.addedFiles[name] = imageSurf;
 }
 
 function ImagePlane() {
@@ -210,7 +225,7 @@ ImagePlane.prototype._collectColorNeeds = function() {
 }
 
 ImagePlane.prototype.then = function(cb) {
-  this.parentLoader.resolveAll(cb);
+  this.parentLoader.fsacc.whenLoaded(cb);
 }
 
 module.exports.Loader = Loader;

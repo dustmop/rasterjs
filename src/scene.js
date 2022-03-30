@@ -181,6 +181,7 @@ Scene.prototype.resetState = function() {
   this.colorSet.clear();
   this.aPlane.clear();
   this.renderer.clear();
+  this.fsacc.clear();
   this.time = 0.0;
   this.timeClick = 0;
   this.palette = null;

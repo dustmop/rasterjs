@@ -12,7 +12,8 @@ void FilesysAccess::InitClass(Napi::Env env, Napi::Object exports) {
   Napi::Function func = DefineClass(
       env,
       "FilesysAccess",
-      {InstanceMethod("openImage", &FilesysAccess::OpenImage),
+      {InstanceMethod("clear", &FilesysAccess::Clear),
+       InstanceMethod("openImage", &FilesysAccess::OpenImage),
        InstanceMethod("openText", &FilesysAccess::OpenText),
        InstanceMethod("saveTo", &FilesysAccess::SaveTo),
        InstanceMethod("whenLoaded", &FilesysAccess::WhenLoaded),
@@ -30,6 +31,11 @@ Napi::Object FilesysAccess::NewInstance(Napi::Env env, Napi::Value arg) {
   Napi::EscapableHandleScope scope(env);
   Napi::Object obj = g_filesysAccessConstructor.New({arg});
   return scope.Escape(napi_value(obj)).ToObject();
+}
+
+Napi::Value FilesysAccess::Clear(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  return Napi::Number::New(env, 0);
 }
 
 Napi::Value FilesysAccess::OpenImage(const Napi::CallbackInfo& info) {

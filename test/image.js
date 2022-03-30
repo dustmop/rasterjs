@@ -107,4 +107,12 @@ describe('Image', function() {
     }, /too many colors in image test\/testdata\/gradient.png: 576/);
   });
 
+  // Not found throws an error
+  it('not found throws error', function() {
+    ra.resetState();
+    assert.throws(() => {
+      ra.loadImage('test/testdata/not_found.png');
+    }, /image not found/);
+  });
+
 });

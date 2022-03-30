@@ -253,7 +253,7 @@ Drawable.prototype.fillFrame = function(options, fillerFunc) {
 Drawable.prototype.drawImage_params = ['img:a', 'x?i', 'y?i'];
 Drawable.prototype.drawImage = function(img, x, y) {
   if (!img.data) {
-    throw 'drawImage: image has been opened, but not yet read';
+    throw new Error('drawImage: image has been opened, but not yet read');
   }
   x = x || 0;
   y = y || 0;

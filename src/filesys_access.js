@@ -1,7 +1,12 @@
 function FilesysAccess() {
+  this.clear();
+  return this;
+}
+
+FilesysAccess.prototype.clear = function() {
   this.numToLoad = 0;
   this.numLoadDone = 0;
-  return this;
+  this.loadFail = null;
 }
 
 FilesysAccess.prototype.openImage = function(filename, imgPlane) {
@@ -30,8 +35,10 @@ FilesysAccess.prototype.openImage = function(filename, imgPlane) {
     imgPlane.fillData();
     self.numLoadDone++;
   }
-  // TODO: Handle 404 not found for images. Collect errors here, throw in
-  // the `whenLoaded` method
+  imgElem.onerror = function() {
+    self.loadFail = filename;
+    self.numLoadDone++;
+  }
   imgElem.src = '/' + filename;
   return 1;
 }
@@ -56,6 +63,9 @@ FilesysAccess.prototype.saveTo = function() {
 FilesysAccess.prototype.whenLoaded = function(cb) {
   let self = this;
   function checkIfDone() {
+    if (self.loadFail) {
+      throw new Error(`image "${self.loadFail}" not found`);
+    }
     if (self.numLoadDone == self.numToLoad) {
       return cb();
     }

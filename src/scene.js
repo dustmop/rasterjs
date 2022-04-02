@@ -13,10 +13,13 @@ const tiles = require('./tiles.js');
 const attributes = require('./attributes.js');
 const rgbColor = require('./rgb_color.js');
 const types = require('./types.js');
+const verboseLogger = require('./verbose_logger.js');
 
 ////////////////////////////////////////
 
 const FRAMES_LOOP_FOREVER = -1;
+
+let verbose = new verboseLogger.Logger();
 
 function Scene(env) {
   this._addMethods();
@@ -25,9 +28,9 @@ function Scene(env) {
   this.display = env.makeDisplay();
   this.saveService = this.fsacc;
 
-  this.colorSet = new colorSet.Set();
   this.renderer = new renderer.Renderer();
 
+  this.colorSet = null;
   this.font = null;
   this.palette = null;
   this.tiles = null;
@@ -48,7 +51,7 @@ Scene.prototype._initialize = function () {
   this.timeClick = 0;
   this.TAU = 6.283185307179586;
   this.PI = this.TAU / 2;
-  this.colorSet.clear();
+  this.colorSet = null;
   this.imgLoader = new imageLoader.Loader(this.fsacc, this);
   this.textLoader = new textLoader.TextLoader(this.fsacc);
   let options = this.env.getOptions();
@@ -103,6 +106,14 @@ Scene.prototype._addMethods = function() {
       self.aPlane[fname].apply(self.aPlane, realArgs);
     }
   }
+  this.setColor = function(n) {
+    self._ensureColorSet();
+    self.aPlane.setColor(n);
+  }
+  this.fillColor = function(n) {
+    self._ensureColorSet();
+    self.aPlane.fillColor(n);
+  }
 }
 
 Scene.prototype._removeMethods = function() {
@@ -113,6 +124,12 @@ Scene.prototype._removeMethods = function() {
     let [fname, paramSpec, converter, impl] = methods[i];
     delete this[fname];
   }
+}
+
+Scene.prototype._removeAdditionalMethods = function() {
+  // TODO: improve this way specific methods are handled
+  delete this['setColor'];
+  delete this['fillColor'];
 }
 
 Scene.prototype._translateArguments = function(params, args) {
@@ -140,7 +157,8 @@ Scene.prototype.setTrueColor = function(rgb) {
   if (!types.isNumber(rgb)) {
     throw new Error(`setTrueColor needs rgb as a number, got ${rgb}`);
   }
-  let color = this.colorSet.addEntry(rgb);
+  this._ensureColorSet();
+  let color = this.colorSet.extendWith(rgb);
   this.aPlane.setColor(color);
 }
 
@@ -148,7 +166,8 @@ Scene.prototype.fillTrueColor = function(rgb) {
   if (!types.isNumber(rgb)) {
     throw new Error(`fillTrueColor needs rgb as a number, got ${rgb}`);
   }
-  let color = this.colorSet.addEntry(rgb);
+  this._ensureColorSet();
+  let color = this.colorSet.extendWith(rgb);
   this.aPlane.fillColor(color);
 }
 
@@ -178,7 +197,7 @@ Scene.prototype.setScrollY = function(y) {
 }
 
 Scene.prototype.resetState = function() {
-  this.colorSet.clear();
+  this.colorSet = null;
   this.aPlane.clear();
   this.renderer.clear();
   this.fsacc.clear();
@@ -216,15 +235,12 @@ Scene.prototype.originAtCenter = function() {
 }
 
 Scene.prototype.useColors = function(obj) {
-  return this.colorSet.use(obj);
-}
-
-Scene.prototype.appendColors = function(obj) {
-  return this.colorSet.append(obj);
-}
-
-Scene.prototype.numColors = function() {
-  return this.colorSet.size();
+  if (this.colorSet) {
+    let name = this.colorSet.name;
+    throw new Error(`cannot use colorSet "${obj}", already using "${name}"`);
+  }
+  this.colorSet = colorSet.constructFrom(obj);
+  return this.colorSet;
 }
 
 Scene.prototype.useDisplay = function(nameOrDisplay) {
@@ -434,6 +450,10 @@ Scene.prototype._makeShape = function(method, params) {
   } else if (method == 'load') {
     let [filepath, opt] = params;
     opt = opt || {};
+    if (!this.colorSet) {
+      verbose.log(`Scene.loadImage: creating an empty colorSet`, 4);
+      this.colorSet = colorSet.constructFrom([]);
+    }
     return this.imgLoader.loadImage(filepath, opt);
   }
 }
@@ -491,8 +511,9 @@ Scene.prototype.resize = function(x, y) {
 }
 
 Scene.prototype.eyedrop = function(x, y) {
-  let c = this.aPlane.get(x, y);
+  this._ensureColorSet();
   this._paletteFromColorset();
+  let c = this.aPlane.get(x, y);
   return this.palette.get(c);
 }
 
@@ -553,6 +574,7 @@ Scene.prototype._initPaletteFromPlane = function(shouldSort) {
 
 Scene.prototype._paletteFromColorset = function() {
   if (!this.palette) {
+    verbose.log(`constructing palette from colorSet`, 4);
     let colors = this.colorSet;
     let saveService = this.saveService;
     let all = [];
@@ -573,13 +595,22 @@ Scene.prototype.usePlane = function(pl) {
   }
   this.aPlane = pl;
   this._removeMethods();
+  this._removeAdditionalMethods();
   this._config.usingNonPrimaryPlane = true;
   // TODO: test me
   return this.aPlane;
 }
 
+Scene.prototype._ensureColorSet = function() {
+  if (!this.colorSet) {
+    verbose.log(`creating default colorSet`, 4);
+    this.colorSet = colorSet.makeDefault();
+  }
+}
+
 Scene.prototype.usePalette = function(optOrVals) {
   optOrVals = optOrVals || {};
+  this._ensureColorSet();
   if (types.isObject(optOrVals)) {
     return this._initPaletteFromPlane(optOrVals.sort);
   } else if (types.isArray(optOrVals)) {
@@ -669,6 +700,7 @@ Scene.prototype.useInterrupts = function(conf) {
 }
 
 Scene.prototype.provide = function() {
+  this._ensureColorSet();
   let prov = {};
   prov.plane = this.aPlane;
   prov.colorSet = this.colorSet;

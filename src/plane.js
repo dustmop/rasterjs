@@ -37,6 +37,23 @@ Plane.prototype.replace = function(other) {
   throw new Error('IMPLEMENT ME: replace');
 }
 
+Plane.prototype.setColor = function(color) {
+  this.frontColor = color;
+}
+
+Plane.prototype.fillColor = function(color) {
+  this.bgColor = color;
+  this._needErase = true;
+  if (this.isSelection) {
+    this._needErase = false;
+    for (let y = 0; y < this.height; y++) {
+      for (let x = 0; x < this.width; x++) {
+        this.put(x, y, color);
+      }
+    }
+  }
+}
+
 Plane.prototype.ensureReady = function() {
   this._prepare();
 }

@@ -2,6 +2,9 @@ const rgbColor = require('./rgb_color.js');
 const algorithm = require('./algorithm.js');
 const palette = require('./palette.js');
 const types = require('./types.js');
+const verboseLogger = require('./verbose_logger.js');
+
+let verbose = new verboseLogger.Logger();
 
 function Loader(fsacc, scene) {
   this.list = [];
@@ -218,10 +221,12 @@ ImagePlane.prototype.fillData = function() {
         }
       }
     } else {
-      c = this.colorSet.addEntry(rgbval);
+      c = this.colorSet.extendWith(rgbval);
     }
     remap[rgbval] = c;
   }
+
+  verbose.log(`loading image with rgb map: ${JSON.stringify(remap)}`, 6);
 
   // Build the data buffer
   for (let y = 0; y < this.height; y++) {

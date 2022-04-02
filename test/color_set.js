@@ -67,24 +67,30 @@ describe('Color set', function() {
     util.renderCompareTo(ra, 'test/testdata/colors_custom.png');
   });
 
-  it('append', function() {
-    ra.resetState();
-    ra.setSize({w: 8, h: 8})
-    let first = ra.useColors([0x404040, 0xff0000, 0x00ff00, 0x0000ff]);
-    let second = ra.appendColors([0xff80ff]);
-    ra.fillPattern([[1,2],[3,4]]);
-    util.renderCompareTo(ra, 'test/testdata/colors_append.png');
-    assert.equal(first, 4);
-    assert.equal(second, 5);
-    assert.equal(ra.numColors(), 5);
-  });
-
   it('no dups', function() {
     ra.resetState();
     ra.setSize({w: 8, h: 8})
     assert.throws(function() {
       ra.useColors([1, 2, 3, 3]);
     }, /Error: duplicate color in set: RGBColor{#000003}/);
+  });
+
+  it('too late', function() {
+    ra.resetState();
+    ra.setSize({w: 8, h: 8})
+    ra.setColor(1);
+    assert.throws(function() {
+      ra.useColors('nes');
+    }, /Error: cannot use colorSet "nes", already using "quick"/);
+  });
+
+  it('frozen', function() {
+    ra.resetState();
+    ra.useColors('pico8');
+    ra.setSize({w: 8, h: 8})
+    assert.throws(function() {
+      ra.setTrueColor(1);
+    }, /Error: colorSet is frozen, cannot extend with RGBColor{#000001}/);
   });
 
   // TODO: useColors(null) crash

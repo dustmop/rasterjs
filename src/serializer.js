@@ -50,14 +50,14 @@ Serializer.prototype.colorsToSurface = function(colorList, opt) {
 
   // Draw the palette
   target.font = font;
-  target.fillColor(colors.addEntry(0x606060));
+  target.fillColor(colors.extendWith(0x606060));
   for (let k = 0; k < colorList.length; k++) {
     let rgbInt = colorList[k].toInt();
     let j = k % numX;
     let i = Math.floor(k / numX);
     let y = i * gridY;
     let x = j * gridX;
-    target.setColor(colors.addEntry(rgbInt));
+    target.setColor(colors.extendWith(rgbInt));
     target.fillRect(x + outerLeft, y + outerTop,
                     gridX - cellBetween, gridY - cellBetween);
     let v = k.toString();
@@ -65,9 +65,9 @@ Serializer.prototype.colorsToSurface = function(colorList, opt) {
       v = '0' + v;
     }
     if (this._isLightColor(colorList[k])) {
-      target.setColor(colors.addEntry(0));
+      target.setColor(colors.extendWith(0));
     } else {
-      target.setColor(colors.addEntry(0xffffff));
+      target.setColor(colors.extendWith(0xffffff));
     }
     if (textOpt == 'none') {
       // pass

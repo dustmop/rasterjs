@@ -24,6 +24,7 @@ function getOptions() {
   parser.add_argument('--display', {type: 'str'});
   parser.add_argument('--colors', {type: 'str'});
   parser.add_argument('--zoom', {type: 'int'});
+  parser.add_argument('-v', {action: 'store_true'});
   let args = parser.parse_args();
   if (args.save_filename) {
     let fsacc = cppmodule.filesysAccess();

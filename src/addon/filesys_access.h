@@ -13,8 +13,8 @@ class FilesysAccess : public Napi::ObjectWrap<FilesysAccess> {
   FilesysAccess(const Napi::CallbackInfo& info);
 
   Napi::Value Clear(const Napi::CallbackInfo& info);
-  Napi::Value OpenImage(const Napi::CallbackInfo& info);
-  Napi::Value OpenText(const Napi::CallbackInfo& info);
+  Napi::Value ReadImageData(const Napi::CallbackInfo& info);
+  Napi::Value ReadText(const Napi::CallbackInfo& info);
   Napi::Value SaveTo(const Napi::CallbackInfo& info);
   Napi::Value WhenLoaded(const Napi::CallbackInfo& info);
 

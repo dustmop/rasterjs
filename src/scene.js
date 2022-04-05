@@ -458,14 +458,14 @@ Scene.prototype._makeShape = function(method, params) {
   }
 }
 
-Scene.prototype.setFont = function(spec) {
+Scene.prototype.setFont = function(spec, opt) {
   if (spec.startsWith('font:')) {
     let name = spec.split(':')[1];
     this.font = this.textLoader.createFontResource(name);
-    return;
+  } else {
+    let filename = spec;
+    this.font = this.textLoader.loadFont(filename, opt);
   }
-  let filename = spec;
-  this.font = this.textLoader.loadFont(filename);
   this.aPlane.font = this.font;
 }
 

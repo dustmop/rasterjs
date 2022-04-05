@@ -13,8 +13,8 @@ void FilesysAccess::InitClass(Napi::Env env, Napi::Object exports) {
       env,
       "FilesysAccess",
       {InstanceMethod("clear", &FilesysAccess::Clear),
-       InstanceMethod("openImage", &FilesysAccess::OpenImage),
-       InstanceMethod("openText", &FilesysAccess::OpenText),
+       InstanceMethod("readImageData", &FilesysAccess::ReadImageData),
+       InstanceMethod("readText", &FilesysAccess::ReadText),
        InstanceMethod("saveTo", &FilesysAccess::SaveTo),
        InstanceMethod("whenLoaded", &FilesysAccess::WhenLoaded),
   });
@@ -38,7 +38,7 @@ Napi::Value FilesysAccess::Clear(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, 0);
 }
 
-Napi::Value FilesysAccess::OpenImage(const Napi::CallbackInfo& info) {
+Napi::Value FilesysAccess::ReadImageData(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   Napi::Value fileVal = info[0];
@@ -67,16 +67,14 @@ Napi::Value FilesysAccess::OpenImage(const Napi::CallbackInfo& info) {
   for (int k = 0; k < byteLength; k++) {
     buffData[k] = surf.buff[k];
   }
-  imgObj.Set("rgbBuff", arrayBuff);
 
-  // TODO: Return value should be uint8array, not ArrayBuffer
-  //Napi::Value arr = Napi::TypedArrayOf<uint8_t>::New(env, 1, arrayBuff, 0, napi_uint8_array);
-  //imgObj.Set("data", arr);
+  Napi::Value arr = Napi::TypedArrayOf<uint8_t>::New(env, byteLength, arrayBuff, 0, napi_uint8_array);
+  imgObj.Set("rgbBuff", arr);
 
   return Napi::Number::New(env, 0);
 }
 
-Napi::Value FilesysAccess::OpenText(const Napi::CallbackInfo& info) {
+Napi::Value FilesysAccess::ReadText(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   Napi::Value fileVal = info[0];

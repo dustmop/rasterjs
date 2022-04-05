@@ -63,7 +63,7 @@ Loader.prototype.loadImage = function(filename, opt) {
   img.data = null;
 
   // TODO: -1 not found sync, 0 success, 1 async
-  let ret = this.fsacc.openImage(filename, img);
+  let ret = this.fsacc.readImageData(filename, img);
   if (ret == -1) {
     throw new Error('image not found');
   }
@@ -74,6 +74,8 @@ Loader.prototype.loadImage = function(filename, opt) {
   if (img.rgbBuff) {
     if (img.rgbBuff.constructor.name == 'ArrayBuffer') {
       img.rgbBuff = new Uint8Array(img.rgbBuff);
+    } else if (img.rgbBuff.constructor.name == 'Uint8Array') {
+      // pass
     } else if (img.rgbBuff.constructor.name == 'Uint8ClampedArray') {
       // pass
     } else {

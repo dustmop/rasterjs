@@ -9,7 +9,7 @@ FilesysAccess.prototype.clear = function() {
   this.loadFail = null;
 }
 
-FilesysAccess.prototype.openImage = function(filename, imgPlane) {
+FilesysAccess.prototype.readImageData = function(filename, imgPlane) {
   let self = this;
 
   // Wait for the image to load
@@ -32,7 +32,9 @@ FilesysAccess.prototype.openImage = function(filename, imgPlane) {
     imgPlane.pitch = pixels.width;
     imgPlane.height = pixels.height;
     // Down-sample the rgb buffer into the data, then finish
-    imgPlane.fillData();
+    if (imgPlane.fillData) {
+      imgPlane.fillData();
+    }
     self.numLoadDone++;
   }
   imgElem.onerror = function() {
@@ -43,7 +45,7 @@ FilesysAccess.prototype.openImage = function(filename, imgPlane) {
   return 1;
 }
 
-FilesysAccess.prototype.openText = function(filename) {
+FilesysAccess.prototype.readText = function(filename) {
   let self = this;
   let file = {src: filename};
   self.numToLoad++;

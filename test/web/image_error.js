@@ -4,6 +4,7 @@ describe('image', function () {
     let ra = require('raster');
     ra.resetState();
     ra.setSize({w: 12, h: 12});
+    ra.fillColor(0);
     let img = ra.loadImage('img/fill_clear.png');
     img.then(function() {
       ra.drawImage(img, 2, 2);

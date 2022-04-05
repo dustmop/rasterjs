@@ -6,6 +6,9 @@ const tiles = require('./tiles.js');
 const palette = require('./palette.js');
 const attrs = require('./attributes.js');
 const types = require('./types.js');
+const verboseLogger = require('./verbose_logger.js');
+
+let verbose = new verboseLogger.Logger();
 
 function Renderer() {
   this._init();
@@ -42,6 +45,8 @@ Renderer.prototype.connect = function(input) {
       throw new Error(`connect param has unrecognized key "${k}"`);
     }
   }
+
+  verbose.log(`renderer.connect components: ${Object.keys(input)}`);
 
   if (!input.plane || !types.isPlane(input.plane)) {
     throw new Error(`input.plane must be a non-null Plane`);

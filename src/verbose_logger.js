@@ -17,7 +17,7 @@ function sourceLocation(height) {
 
 Logger.prototype.log = function(str, height) {
   let shouldDisplay = false;
-  if (process && process.argv) {
+  if (typeof process !== 'undefined' && process && process.argv) {
     if (process.argv.includes('-v')) {
       shouldDisplay = true;
     }

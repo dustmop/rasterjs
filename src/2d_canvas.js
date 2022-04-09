@@ -141,8 +141,10 @@ Display.prototype._beginLoop = function(nextFrame, id, num, exitAfter, finalFunc
 Display.prototype.handleEvent = function(eventName, callback) {
   if (eventName == 'keypress') {
     this.sysEventHandler = callback;
+  } else if (eventName == 'click') {
+    // pass
   } else {
-    throw new Error('only event "keypress" can be handled');
+    throw new Error(`only event "keypress" can be handled, got "${eventName}"`);
   }
 }
 

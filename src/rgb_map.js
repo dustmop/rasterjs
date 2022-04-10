@@ -59,22 +59,22 @@ const rgb_map_gameboy = [
 ];
 
 const rgb_map_pico8 = [
-  0x000000,
-  0x1d2b53,
-  0x7e2553,
-  0x008751,
-  0xab5236,
-  0x5f574f,
-  0xc2c3c7,
-  0xfff1e8,
-  0xff004d,
-  0xffa300,
-  0xffec27,
-  0x00e436,
-  0x29adff,
-  0x83769c,
-  0xff77a8,
-  0xffccaa,
+  0x000000, // black
+  0x1d2b53, // navy blue
+  0x7e2553, // purple
+  0x008751, // dark green
+  0xab5236, // brown
+  0x5f574f, // dark grey
+  0xc2c3c7, // light grey
+  0xfff1e8, // white
+  0xff004d, // red
+  0xffa300, // orange
+  0xffec27, // yellow
+  0x00e436, // light green
+  0x29adff, // blue
+  0x83769c, // purple/grey
+  0xff77a8, // pink
+  0xffccaa, // peach
 ];
 
 const rgb_map_zx_spectrum = [

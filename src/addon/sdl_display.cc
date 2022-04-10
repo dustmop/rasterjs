@@ -1,6 +1,5 @@
 #include "sdl_display.h"
 #include "type.h"
-#include "png_load_write.h"
 
 #include <SDL.h>
 
@@ -22,7 +21,7 @@ void SDLDisplay::InitClass(Napi::Env env, Napi::Object exports) {
        InstanceMethod("handleEvent", &SDLDisplay::HandleEvent),
        InstanceMethod("renderLoop", &SDLDisplay::RenderLoop),
        InstanceMethod("appQuit", &SDLDisplay::AppQuit),
-       InstanceMethod("insteadSaveFile", &SDLDisplay::InsteadSaveFile),
+       InstanceMethod("insteadWriteBuffer", &SDLDisplay::InsteadWriteBuffer),
   });
   g_displayConstructor = Napi::Persistent(func);
   g_displayConstructor.SuppressDestruct();
@@ -33,6 +32,7 @@ SDLDisplay::SDLDisplay(const Napi::CallbackInfo& info)
   this->sdlInitialized = 0;
   this->zoomLevel = 1;
   this->gridUnit = 0;
+  this->hasWriteBuffer = 0;
   this->softwareTarget = NULL;
   this->windowHandle = NULL;
   this->rendererHandle = NULL;
@@ -132,10 +132,10 @@ void display_napi_value(Napi::Env env, napi_value value) {
   printf("%s\n", buffer);
 }
 
-Napi::Value SDLDisplay::InsteadSaveFile(const Napi::CallbackInfo& info) {
+Napi::Value SDLDisplay::InsteadWriteBuffer(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  Napi::String filename = info[0].As<Napi::String>();
-  this->hookSaveFile = filename;
+  this->writeBuffer = Napi::Persistent(info[0]);
+  this->hasWriteBuffer = 1;
   return Napi::Number::New(env, 0);
 }
 
@@ -219,11 +219,11 @@ Napi::Value SDLDisplay::RenderLoop(const Napi::CallbackInfo& info) {
   // Calculate the flags for CreateWindow.
   // TODO: Detect whether HIGHAPI is required.
   int createWindowFlags = SDL_WINDOW_SHOWN | SDL_WINDOW_ALLOW_HIGHDPI;
-  if (this->hookSaveFile != "") {
+  if (this->hasWriteBuffer) {
     createWindowFlags = SDL_WINDOW_MINIMIZED | SDL_WINDOW_ALLOW_HIGHDPI;
   }
 
-  if (this->hookSaveFile == "") {
+  if (!this->hasWriteBuffer) {
     // Create window
     this->windowHandle = SDL_CreateWindow(
         "RasterJS",
@@ -424,7 +424,7 @@ Napi::Value SDLDisplay::RenderLoop(const Napi::CallbackInfo& info) {
       SDL_RenderCopy(this->rendererHandle, this->gridHandle, NULL, NULL);
     }
 
-    if (this->hookSaveFile != "") {
+    if (this->hasWriteBuffer) {
       // TODO: 2 is only true if high dpi is enabled
       int width = this->displayWidth * this->zoomLevel * 2;
       int height = this->displayHeight * this->zoomLevel * 2;
@@ -440,13 +440,16 @@ Napi::Value SDLDisplay::RenderLoop(const Napi::CallbackInfo& info) {
                            SDL_PIXELFORMAT_ABGR8888,
                            saveBuff,
                            savePitch);
-      Surface surf;
-      surf.top = surf.left = 0;
-      surf.buff = saveBuff;
-      surf.width = width;
-      surf.height = height;
-      surf.pitch = savePitch;
-      WritePng(this->hookSaveFile.c_str(), &surf);
+      // Copy the result into the hook buffer.
+      Napi::Value bufferVal = this->writeBuffer.Value();
+      Napi::TypedArray typeArr = bufferVal.As<Napi::TypedArray>();
+      Napi::ArrayBuffer arrBuff = typeArr.ArrayBuffer();
+      void* untypedData = arrBuff.Data();
+      unsigned char* rawBuff = (unsigned char*)untypedData;
+      for (size_t k = 0; k < arrBuff.ByteLength(); k++) {
+        rawBuff[k] = saveBuff[k];
+      }
+      free(saveBuff);
       return Napi::Number::New(env, 0);
     }
 

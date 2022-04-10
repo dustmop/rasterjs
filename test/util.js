@@ -2,24 +2,38 @@ var assert = require('assert');
 var os = require('os');
 var path = require('path');
 var fs = require('fs');
+var PNG = require('pngjs').PNG;
 
 function mkTmpDir(targetPath) {
   let tmpdir = fs.mkdtempSync(path.join(os.tmpdir(), 'raster_test_'));
   return tmpdir;
 }
 
-function compareFiles(left, right) {
-  let leftFile = fs.readFileSync(left);
-  let rightFile = fs.readFileSync(right);
-  if (leftFile.length != rightFile.length) {
+function compareFiles(leftFilename, rightFilename) {
+  let leftContent = fs.readFileSync(leftFilename);
+  let rightContent = fs.readFileSync(rightFilename);
+  if (leftFilename.endsWith('.png') && rightFilename.endsWith('.png')) {
+    return comparePngContent(leftContent, rightContent);
+  }
+  return compareBinaryData(leftContent, rightContent);
+}
+
+function compareBinaryData(left, right) {
+  if (left.length != right.length) {
     return false;
   }
-  for (let i = 0; i < leftFile.length; i++) {
-    if (leftFile[i] != rightFile[i]) {
+  for (let i = 0; i < left.length; i++) {
+    if (left[i] != right[i]) {
       return false;
     }
   }
   return true;
+}
+
+function comparePngContent(leftContent, rightContent) {
+  let leftImg = PNG.sync.read(leftContent);
+  let rightImg = PNG.sync.read(rightContent);
+  return compareBinaryData(leftImg.data, rightImg.data);
 }
 
 function renderCompareTo(client, goldenPath) {

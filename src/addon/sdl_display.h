@@ -25,10 +25,13 @@ class SDLDisplay : public Napi::ObjectWrap<SDLDisplay> {
   Napi::Value SetZoom(const Napi::CallbackInfo& info);
   Napi::Value SetGrid(const Napi::CallbackInfo& info);
   Napi::Value HandleEvent(const Napi::CallbackInfo& info);
-  Napi::Value InsteadSaveFile(const Napi::CallbackInfo& info);
+  Napi::Value InsteadWriteBuffer(const Napi::CallbackInfo& info);
   Napi::Value RenderLoop(const Napi::CallbackInfo& info);
   Napi::Value AppQuit(const Napi::CallbackInfo& info);
   Napi::Value ReadImage(const Napi::CallbackInfo& info);
+
+  bool hasWriteBuffer;
+  Napi::Reference<Napi::Value> writeBuffer;
 
   Napi::FunctionReference keyHandleFunc;
   bool isRunning;
@@ -36,8 +39,6 @@ class SDLDisplay : public Napi::ObjectWrap<SDLDisplay> {
   napi_ref rendererRef;
   int zoomLevel;
   int gridUnit;
-
-  std::string hookSaveFile;
 
   int displayWidth;
   int displayHeight;

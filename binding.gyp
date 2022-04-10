@@ -3,7 +3,6 @@
     {
       "target_name": "native",
       "dependencies" : [
-        "./deps/libpng.gyp:libpng"
       ],
       "cflags!": [
         "-fno-exceptions"
@@ -14,15 +13,12 @@
       ],
       "cflags_cc!": [ "-fno-exceptions" ],
       "sources": [
-        "src/addon/filesys_access.cc",
         "src/addon/native.cc",
-        "src/addon/png_load_write.cc",
         "src/addon/sdl_display.cc",
       ],
       "include_dirs": [
         "<!@(node -p \"require('node-addon-api').include\")",
         "<!(node ./tools/locate_sdl include)",
-        "./deps/libpng",
       ],
       "libraries": [
         "<!@(node ./tools/locate_sdl lib)",

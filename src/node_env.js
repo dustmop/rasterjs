@@ -2,9 +2,10 @@ const cppmodule = require('../build/Release/native');
 const argparse = require('argparse');
 const path = require('path');
 const saver = require('./save_image_display.js');
+const filesysLocal = require('./filesys_local.js');
 
 function makeFilesysAccess() {
-  let fsacc = cppmodule.filesysAccess();
+  let fsacc = new filesysLocal.FilesysAccess();
   return fsacc;
 }
 
@@ -27,7 +28,7 @@ function getOptions() {
   parser.add_argument('-v', {action: 'store_true'});
   let args = parser.parse_args();
   if (args.save_filename) {
-    let fsacc = cppmodule.filesysAccess();
+    let fsacc = new filesysLocal.FilesysAccess();
     args.display = new saver.SaveImageDisplay(args.save_filename,
                                               args.num_frames, fsacc);
   }

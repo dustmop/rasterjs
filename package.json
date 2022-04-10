@@ -23,6 +23,7 @@
     "gif-encoder-2": "^1.0.5",
     "node-addon-api": "^3.1.0",
     "png-file-stream": "^1.2.1",
+    "pngjs": "^6.0.0",
     "randomstring": "^1.1.5"
   },
   "devDependencies": {

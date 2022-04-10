@@ -72,7 +72,9 @@ Loader.prototype.loadImage = function(filename, opt) {
   // web_env returns a Uint8Array (but also img.data == null currently)
   // node_env returns an ArrayBuffer
   if (img.rgbBuff) {
-    if (img.rgbBuff.constructor.name == 'ArrayBuffer') {
+    if (img.rgbBuff.constructor.name == 'Buffer') {
+      // pass
+    } else if (img.rgbBuff.constructor.name == 'ArrayBuffer') {
       img.rgbBuff = new Uint8Array(img.rgbBuff);
     } else if (img.rgbBuff.constructor.name == 'Uint8Array') {
       // pass

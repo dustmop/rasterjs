@@ -90,6 +90,24 @@ describe('Image', function() {
   });
 
 
+  // Draw an image onto a selection
+  it('draw on selection', function() {
+    ra.resetState();
+    ra.useColors('pico8');
+
+    ra.setSize(10, 10);
+    ra.fillColor(1);
+
+    let sel = ra.select({x: 1, y: 2, w: 8, h: 6});
+
+    let img = ra.loadImage('test/testdata/small-fruit.png');
+    sel.fillColor(2);
+    sel.drawImage(img, 1, 2);
+
+    util.renderCompareTo(ra, 'test/testdata/put-select.png');
+  });
+
+
   // Jpg images cannot be used
   it('jpg cannot be used', function() {
     ra.resetState();

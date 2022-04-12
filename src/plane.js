@@ -219,6 +219,8 @@ Plane.prototype.putSequence = function(seq) {
 
 Plane.prototype.putImage = function(img, baseX, baseY) {
   this._prepare();
+  let offsetTop = this.offsetTop || 0;
+  let offsetLeft = this.offsetLeft || 0;
   let imageTop = img.top || 0;
   let imageLeft = img.left || 0;
   let imageHeight = img.height;
@@ -229,20 +231,19 @@ Plane.prototype.putImage = function(img, baseX, baseY) {
   if (this.data == null) {
     return;
   }
-  baseX = Math.floor(baseX);
-  baseY = Math.floor(baseY);
+  baseX = Math.floor(baseX) + offsetLeft;
+  baseY = Math.floor(baseY) + offsetTop;
   for (let y = imageTop; y < imageHeight; y++) {
     for (let x = imageLeft; x < imageWidth; x++) {
       let j = y*imagePitch + x;
       let putX = x + baseX;
       let putY = y + baseY;
-      if (putX < 0 || putX >= this.width ||
-          putY < 0 || putY >= this.height) {
+      if (putX < 0 || putX >= this.width + offsetLeft ||
+          putY < 0 || putY >= this.height + offsetTop) {
         continue;
       }
       let k = putY*this.pitch + putX;
       if (imageAlpha && imageAlpha[j] >= 0x80) {
-        // TODO: this._offs
         this.data[k] = imageData[j];
       }
     }

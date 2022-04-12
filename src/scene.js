@@ -31,6 +31,7 @@ function Scene(env) {
   this.renderer = new renderer.Renderer();
 
   this.colorSet = null;
+  this.camera = {};
   this.font = null;
   this.palette = null;
   this.tiles = null;
@@ -38,19 +39,18 @@ function Scene(env) {
   this.interrupts = null;
 
   this.aPlane = new plane.Plane();
-  this._config = {};
   this.numFrames = FRAMES_LOOP_FOREVER;
   this._initialize();
   return this;
 }
 
 Scene.prototype._initialize = function () {
-  this._config.zoomScale = 1;
-  this._config.titleText = '';
+  this._initConfig();
   this.time = 0.0;
   this.timeClick = 0;
   this.TAU = 6.283185307179586;
   this.PI = this.TAU / 2;
+  this.camera = {};
   this.colorSet = null;
   this.imgLoader = new imageLoader.Loader(this.fsacc, this);
   this.textLoader = new textLoader.TextLoader(this.fsacc);
@@ -100,7 +100,7 @@ Scene.prototype._addMethods = function() {
         throw new Error(`function ${fname} does not have parameter spec`);
       }
       let realArgs = destructure.from(fname, paramSpec, args, converter);
-      if (self._config.translateCenter) {
+      if (self.config.translateCenter) {
         self._translateArguments(paramSpec, realArgs);
       }
       self.aPlane[fname].apply(self.aPlane, realArgs);
@@ -178,8 +178,6 @@ Scene.prototype.setSize = function(w, h) {
 
   this.width = w;
   this.height = h;
-  this._config.width = w;
-  this._config.height = h;
   if (this.aPlane.width == 0 || this.aPlane.height == 0) {
     this.aPlane.setSize(w, h);
   }
@@ -189,29 +187,40 @@ Scene.prototype.setSize = function(w, h) {
 }
 
 Scene.prototype.setScrollX = function(x) {
-  this._config.scrollX = Math.floor(x);
+  this.camera.x = Math.floor(x);
 }
 
 Scene.prototype.setScrollY = function(y) {
-  this._config.scrollY = Math.floor(y);
+  this.camera.y = Math.floor(y);
 }
 
 Scene.prototype.resetState = function() {
+  this.width = null;
+  this.height = null;
   this.colorSet = null;
   this.aPlane.clear();
   this.renderer.clear();
   this.fsacc.clear();
   this.time = 0.0;
   this.timeClick = 0;
+  this.camera = {};
   this.palette = null;
   this.tiles = null;
   this.attrs = null;
   this.interrupts = null;
   this.rgbBuffer = null;
-  this._config = {};
-  this._config.zoomScale = 1;
-  this._config.usingNonPrimaryPlane = false;
+  this._initConfig();
   this._addMethods();
+}
+
+Scene.prototype._initConfig = function() {
+  this.config = {
+    zoomScale: 1,
+    titleText: '',
+    translateCenter: false,
+    usingNonPrimaryPlane: false,
+    gridUnit: null,
+  };
 }
 
 Scene.prototype.then = function(cb) {
@@ -219,19 +228,19 @@ Scene.prototype.then = function(cb) {
 }
 
 Scene.prototype.setZoom = function(scale) {
-  this._config.zoomScale = scale;
+  this.config.zoomScale = scale;
 }
 
 Scene.prototype.setGrid = function(unit) {
-  this._config.gridUnit = unit;
+  this.config.gridUnit = unit;
 }
 
 Scene.prototype.setTitle = function(title) {
-  this._config.titleText = title;
+  this.config.titleText = title;
 }
 
 Scene.prototype.originAtCenter = function() {
-  this._config.translateCenter = true;
+  this.config.translateCenter = true;
 }
 
 Scene.prototype.useColors = function(obj) {
@@ -297,13 +306,13 @@ Scene.prototype.select = function(x, y, w, h) {
 Scene.prototype._doRender = function(num, exitAfter, drawFunc, finalFunc) {
   let plane = this.aPlane;
 
-  if (!this._config.width || !this._config.height) {
+  if (!this.width || !this.height) {
     if (!this.tiles) {
-      this._config.width = plane.width;
-      this._config.height = plane.height;
+      this.width = plane.width;
+      this.height = plane.height;
     } else {
-      this._config.width = plane.width * this.tiles.tileWidth;
-      this._config.height = plane.height * this.tiles.tileHeight;
+      this.width = plane.width * this.tiles.tileWidth;
+      this.height = plane.height * this.tiles.tileHeight;
     }
   }
   this.renderer.connect(this.provide());
@@ -312,10 +321,10 @@ Scene.prototype._doRender = function(num, exitAfter, drawFunc, finalFunc) {
 
   let self = this;
   self.then(function() {
-    self.display.setSize(self._config.width, self._config.height);
+    self.display.setSize(self.width, self.height);
     self.display.setRenderer(self.renderer);
-    self.display.setZoom(self._config.zoomScale);
-    self.display.setGrid(self._config.gridUnit);
+    self.display.setZoom(self.config.zoomScale);
+    self.display.setGrid(self.config.gridUnit);
     self.display.renderLoop(function() {
       if (drawFunc) {
         try {
@@ -596,7 +605,7 @@ Scene.prototype.usePlane = function(pl) {
   this.aPlane = pl;
   this._removeMethods();
   this._removeAdditionalMethods();
-  this._config.usingNonPrimaryPlane = true;
+  this.config.usingNonPrimaryPlane = true;
   // TODO: test me
   return this.aPlane;
 }
@@ -701,10 +710,19 @@ Scene.prototype.useInterrupts = function(conf) {
 
 Scene.prototype.provide = function() {
   this._ensureColorSet();
+  if (this.tiles != null) {
+    // Assert that useTileset requires usePlane
+    if (!this.config.usingNonPrimaryPlane) {
+      throw new Error('cannot use tileset without also using plane');
+    }
+  }
   let prov = {};
   prov.plane = this.aPlane;
   prov.colorSet = this.colorSet;
-  prov.conf = this._config;
+  prov.size = {width: this.width, height: this.height};
+  if (this.camera) {
+    prov.camera = this.camera;
+  }
   if (this.tiles) {
     prov.tiles = this.tiles;
   }

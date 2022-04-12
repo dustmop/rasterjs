@@ -23,12 +23,13 @@ Renderer.prototype._init = function() {
   this._layers = [
     {
       rgbSurface: null,
+      camera: null,
       plane: null,
       colorSet: null,
       tiles: null,
       palette: null,
       attrs: null,
-      conf: null,
+      size: null,
     }
   ]
   this.interrupts = null;
@@ -36,8 +37,8 @@ Renderer.prototype._init = function() {
 
 Renderer.prototype.connect = function(input) {
   let layer = this._layers[0];
-  let allow = ['plane', 'colorSet', 'tiles', 'palette', 'attrs', 'conf',
-               'interrupts', '_config', 'font'];
+  let allow = ['plane', 'colorSet', 'size', 'camera',
+               'tiles', 'palette', 'attrs', 'interrupts', 'font'];
   let keys = Object.keys(input);
   for (let i = 0; i < keys.length; i++) {
     let k = keys[i];
@@ -63,20 +64,18 @@ Renderer.prototype.connect = function(input) {
   if (input.attrs && !types.isAttributes(input.attrs)) {
     throw new Error(`input.attrs must be a Attributes`);
   }
-  if (!input.conf) { // TODO: mustHaveKeys([width, height, scroll{X,Y}, ...])
-    throw new Error(`input.conf must be non-null`);
-  }
   if (input.interrupts && !types.isInterrupts(input.interrupts)) {
     throw new Error(`input.interrupts must be a Interrupts`);
   }
 
   layer.plane    = input.plane;
+  layer.size     = input.size;
+  layer.camera   = input.camera;
   // TODO: colorSet should be 'global'
   layer.colorSet = input.colorSet;
   layer.tiles    = input.tiles;
   layer.palette  = input.palette;
   layer.attrs    = input.attrs;
-  layer.conf     = input.conf;
   this.interrupts = input.interrupts;
 }
 
@@ -101,8 +100,9 @@ Renderer.prototype.render = function() {
   let layer = this._layers[0];
 
   // Calculate size of the buffer to render.
-  let width = layer.conf.width;
-  let height = layer.conf.height;
+
+  let width = (layer.size && layer.size.width);
+  let height = (layer.size && layer.size.height);
   if (!width || !height) {
     if (!layer.tiles) {
       width = layer.plane.width;
@@ -180,10 +180,6 @@ Renderer.prototype._renderRegion = function(layer, left, top, right, bottom) {
   let sourceHeight = layer.plane.height;
 
   if (layer.tiles != null) {
-    // Assert that useTileset requires usePlane
-    if (!layer.conf.usingNonPrimaryPlane) {
-      throw new Error('cannot use tileset without also using plane');
-    }
     // Calculate the size
     let tileSize = layer.tiles.tileWidth * layer.tiles.tileHeight;
     let numPoints = layer.plane.height * layer.plane.width;
@@ -214,8 +210,8 @@ Renderer.prototype._renderRegion = function(layer, left, top, right, bottom) {
 
   let targetPitch = layer.rgbSurface.pitch;
 
-  let scrollY = Math.floor(layer.conf.scrollY || 0);
-  let scrollX = Math.floor(layer.conf.scrollX || 0);
+  let scrollY = Math.floor((layer.camera && layer.camera.y) || 0);
+  let scrollX = Math.floor((layer.camera && layer.camera.x) || 0);
   scrollY = ((scrollY % sourceHeight) + sourceHeight) % sourceHeight;
   scrollX = ((scrollX % sourceWidth) + sourceWidth) % sourceWidth;
 
@@ -304,8 +300,6 @@ Renderer.prototype.renderComponents = function(components, settings, callback) {
         let components = {
           plane: myPlane,
           colorSet: myColorSet,
-          conf: {},
-          _config: {},
         }
         this.innerPlaneRenderer.connect(components);
       }

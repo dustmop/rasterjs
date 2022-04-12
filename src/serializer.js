@@ -84,14 +84,6 @@ Serializer.prototype.colorsToSurface = function(colorList, opt) {
   // Components for rendering
   let components = {
     plane: target,
-    _config: {
-      width: target.width,
-      height: target.height,
-    },
-    conf: {
-      width: target.width,
-      height: target.height,
-    },
     colorSet: colors,
   };
 

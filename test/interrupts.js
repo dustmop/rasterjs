@@ -20,7 +20,7 @@ describe('Interrupts', function() {
     util.renderCompareTo(ra, 'test/testdata/irq-fruit.png');
   });
 
-  it('change scroll', function() {
+  it('scroll range', function() {
     ra.resetState();
     ra.useColors('pico8');
 

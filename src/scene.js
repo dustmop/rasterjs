@@ -658,15 +658,21 @@ Scene.prototype._constructPaletteFromVals = function(vals) {
   return this.palette;
 }
 
-Scene.prototype.useTileset = function(imgOrTileset, sizeInfo) {
-  if (!imgOrTileset) {
+Scene.prototype.useTileset = function(something, sizeInfo) {
+  if (!something) {
     throw new Error(`useTileset expects an argument`);
   }
-  if (types.isTileset(imgOrTileset)) {
-    this.tiles = imgOrTileset;
-  } else if (types.isArray(imgOrTileset)) {
+  if (types.isObject(something) && sizeInfo == null) {
+    // Construct a tileset from the current plane.
+    sizeInfo = something;
+    this.tiles = new tiles.Tileset(this.aPlane, sizeInfo, {dedup: true});
+    this.aPlane = this.tiles.patternTable;
+  } else if (types.isTileset(something)) {
+    this.tiles = something;
+  } else if (types.isArray(something)) {
     // TODO: list of Tileset objects
-    let imageList = imgOrTileset;
+    // TODO: perhaps remove this functionality
+    let imageList = something;
     let allBanks = [];
     for (let i = 0; i < imageList.length; i++) {
       let tileset = new tiles.Tileset(imageList[i], sizeInfo);
@@ -674,10 +680,14 @@ Scene.prototype.useTileset = function(imgOrTileset, sizeInfo) {
     }
     this.tilesetBanks = allBanks;
     this.tiles = allBanks[0];
-  } else {
-    // TODO: assume this is a Plane
-    let img = imgOrTileset;
+  } else if (types.isPlane(something)) {
+    let img = something;
     this.tiles = new tiles.Tileset(img, sizeInfo);
+  } else if (types.isNumber(something)) {
+    let numTiles = something;
+    this.tiles = new tiles.Tileset(numTiles, sizeInfo);
+  } else {
+    throw new Error(`cannot construct tileset from ${something}`);
   }
   if (this.attrs) {
     this.attrs.ensureConsistentTileset(this.tiles, this.palette);

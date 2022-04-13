@@ -25,7 +25,6 @@ TextLoader.prototype.loadFont = function(filename, info) {
     this._ensureDetails(info);
     let surface = {};
     let ret = this.fsacc.readImageData(filename, surface);
-    console.log(ret);
     let font = {
       glyphs: null,
     };

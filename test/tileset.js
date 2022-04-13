@@ -294,4 +294,34 @@ describe('Tileset', function() {
     util.ensureFilesMatch('test/testdata/tiles_saved.png', tmpout);
   });
 
+  it('build from plane', function() {
+    let tmpdir = util.mkTmpDir();
+    let tmpout = tmpdir + '/actual.png';
+    ra.resetState();
+
+    let img = ra.loadImage('test/testdata/map_of_tiles.png');
+    ra.drawImage(img);
+
+    let tiles = ra.useTileset({tile_width: 4, tile_height: 4});
+    assert.equal(tiles.length, 8);
+    assert.equal(tiles.numTiles, 8);
+
+    let pattern = ra.clonePlane();
+    let expect = new Uint8Array([
+      0, 1, 2, 3,
+      1, 4, 4, 4,
+      5, 5, 2, 6,
+      1, 7, 0, 0,
+    ]);
+    assert.deepEqual(expect, pattern.data);
+    assert.deepEqual(4, pattern.width);
+    assert.deepEqual(4, pattern.height);
+  });
+
+  it('cant construct from string', function() {
+    assert.throws(function() {
+      ra.useTileset('abc', {tile_width: 4, tile_height: 4});
+    }, /cannot construct tileset from abc/);
+  });
+
 });

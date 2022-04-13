@@ -1,6 +1,7 @@
 const types = require('./types.js');
+const plane = require('./plane.js');
 
-function Tileset(sourceOrNum, sizeInfo) {
+function Tileset(sourceOrNum, sizeInfo, opt) {
   if (!sizeInfo) {
     throw new Error(`Tileset requires a detail object parameter`);
   }
@@ -23,6 +24,8 @@ function Tileset(sourceOrNum, sizeInfo) {
     throw new Error(`Tileset's tile_height must be > 0`);
   }
 
+  this.patternTable = null;
+
   if (types.isNumber(sourceOrNum)) {
     // construct a number of tiles
     let num = sourceOrNum;
@@ -43,7 +46,8 @@ function Tileset(sourceOrNum, sizeInfo) {
     }
     this.tileWidth = sizeInfo.tile_width;
     this.tileHeight = sizeInfo.tile_height;
-    this._loadTilesFromSource(source);
+    opt = opt || {};
+    this._loadTilesFromSource(source, opt.dedup);
   } else {
     throw new Error(`invalid source: ${sourceOrNum.constructor.name}`);
   }
@@ -56,27 +60,62 @@ Tileset.prototype.get = function(c) {
   return this.data[c];
 }
 
-Tileset.prototype._loadTilesFromSource = function(source) {
+Tileset.prototype._loadTilesFromSource = function(source, dedup) {
   source.ensureReady();
+  let pattern = [];
+  let lookup = {};
   this.numTileX = source.width / this.tileWidth;
   this.numTileY = source.height / this.tileHeight;
   this.numTiles = this.numTileX * this.numTileY
   this.data = new Array(this.numTiles);
+  let n = 0;
   // For each tile, load the data and create a tile object
   for (let yTile = 0; yTile < this.numTileY; yTile++) {
     for (let xTile = 0; xTile < this.numTileX; xTile++) {
       let k = yTile * this.numTileX + xTile;
+
+      let pitch = source.pitch;
+      let offset = xTile * this.tileWidth + pitch * yTile * this.tileHeight;
+      let dataArray = new Uint8Array(source.data.buffer, offset);
+
+      if (dedup) {
+        let key = this._makeTileKey(dataArray,
+                                    this.tileWidth, this.tileHeight, pitch);
+        let val = lookup[key];
+        if (val !== undefined) {
+          pattern[k] = val;
+          continue;
+        }
+        val = Object.keys(lookup).length;
+        pattern[k] = val;
+        lookup[key] = val;
+      }
+
       let t = new Tile();
       t.width = this.tileWidth;
       t.height = this.tileHeight;
-      t.pitch = source.pitch;
-      let offset = xTile * this.tileWidth + t.pitch * yTile * this.tileHeight;
-      // Alias the buffer's data, no copy happens
-      t.data = new Uint8Array(source.data.buffer, offset);
-      this.data[k] = t;
+      t.pitch = pitch;
+      t.data = dataArray;
+      this.data[n] = t;
+      n++;
     }
   }
   this.source = source;
+
+  if (dedup) {
+    this.data = this.data.slice(0, n);
+    this.numTiles = n;
+    this.patternTable = new plane.Plane();
+    this.patternTable.setSize(this.numTileX, this.numTileY);
+    this.patternTable._prepare();
+    for (let yTile = 0; yTile < this.numTileY; yTile++) {
+      for (let xTile = 0; xTile < this.numTileX; xTile++) {
+        let j = yTile * this.patternTable.pitch + xTile;
+        let k = yTile * this.numTileX + xTile;
+        this.patternTable.data[j] = pattern[k];
+      }
+    }
+  }
 }
 
 Tileset.prototype._constructTiles = function(num) {
@@ -97,6 +136,16 @@ Tileset.prototype._constructTiles = function(num) {
       this.data[k] = t;
     }
   }
+}
+
+Tileset.prototype._makeTileKey = function(dataArray, width, height, pitch) {
+  let build = [];
+  let start = 0;
+  for (let y = 0; y < height; y++) {
+    build = build.concat(dataArray.slice(start, start+width));
+    start += pitch;
+  }
+  return build.toString();
 }
 
 Tileset.prototype.serialize = function() {

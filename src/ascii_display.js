@@ -17,7 +17,8 @@ AsciiDisplay.prototype.setRenderer = function(renderer) {
 AsciiDisplay.prototype.setZoom = function(zoom) {
 }
 
-AsciiDisplay.prototype.setGrid = function(unit) {
+AsciiDisplay.prototype.setGrid = function(state) {
+  // pass
 }
 
 AsciiDisplay.prototype.handleEvent = function(eventName, callback) {

@@ -33,12 +33,13 @@ Renderer.prototype._init = function() {
     }
   ]
   this.interrupts = null;
+  this.grid = null;
 }
 
 Renderer.prototype.connect = function(input) {
   let layer = this._layers[0];
   let allow = ['plane', 'colorSet', 'size', 'camera',
-               'tiles', 'palette', 'attrs', 'interrupts', 'font'];
+               'tiles', 'palette', 'attrs', 'interrupts', 'font', 'grid'];
   let keys = Object.keys(input);
   for (let i = 0; i < keys.length; i++) {
     let k = keys[i];
@@ -76,6 +77,7 @@ Renderer.prototype.connect = function(input) {
   layer.tiles    = input.tiles;
   layer.palette  = input.palette;
   layer.attrs    = input.attrs;
+  this.grid       = input.grid;
   this.interrupts = input.interrupts;
 }
 
@@ -100,7 +102,6 @@ Renderer.prototype.render = function() {
   let layer = this._layers[0];
 
   // Calculate size of the buffer to render.
-
   let width = (layer.size && layer.size.width);
   let height = (layer.size && layer.size.height);
   if (!width || !height) {
@@ -111,6 +112,10 @@ Renderer.prototype.render = function() {
       width = layer.plane.width * layer.tiles.tileWidth;
       height = layer.plane.height * layer.tiles.tileHeight;
     }
+  }
+
+  if (this.grid && !this.grid.buff) {
+    this._renderGrid();
   }
 
   // Allocate the buffer.
@@ -125,7 +130,8 @@ Renderer.prototype.render = function() {
 
   // If no interrupts, render everything at once.
   if (!system.interrupts) {
-    return [this._renderRegion(layer, 0, 0, width, height)];
+    return [this._renderRegion(layer, 0, 0, width, height),
+            this._gridSurface()];
   }
 
   // Otherwise, collect IRQs per each scanline
@@ -167,7 +173,7 @@ Renderer.prototype.render = function() {
     renderBegin = scanLine;
   }
 
-  return [layer.rgbSurface];
+  return [layer.rgbSurface, this._gridSurface()];
 }
 
 Renderer.prototype._renderRegion = function(layer, left, top, right, bottom) {
@@ -333,6 +339,49 @@ Renderer.prototype.renderComponents = function(components, settings, callback) {
       }
     }
   }
+}
+
+Renderer.prototype._renderGrid = function() {
+  let width = this.grid.width * this.grid.zoom;
+  let height = this.grid.height * this.grid.zoom;
+  let unit = this.grid.unit * this.grid.zoom;
+
+  let targetPoint = unit;
+  let lastPoint = targetPoint - 1;
+  let numPoints = width*height;
+
+  let buff = new Uint8Array(numPoints*4);
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      let k = (y*width + x)*4;
+      if (((y % targetPoint) == lastPoint) || (x % targetPoint) == lastPoint) {
+        buff[k+0] = 0x00;
+        buff[k+1] = 0xe0;
+        buff[k+2] = 0x00;
+        buff[k+3] = 0xb0;
+      } else {
+        buff[k+0] = 0x00;
+        buff[k+1] = 0x00;
+        buff[k+2] = 0x00;
+        buff[k+3] = 0x00;
+      }
+    }
+  }
+
+  this.grid.width = width;
+  this.grid.height = height;
+  this.grid.buff = buff;
+}
+
+Renderer.prototype._gridSurface = function() {
+  if (this.grid && this.grid.buff) {
+    return {
+      width: this.grid.width,
+      height: this.grid.height,
+      buff: this.grid.buff,
+    }
+  }
+  return null;
 }
 
 Renderer.prototype._toColor = function(c) {

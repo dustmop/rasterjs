@@ -38,7 +38,7 @@ class SDLDisplay : public Napi::ObjectWrap<SDLDisplay> {
   int sdlInitialized;
   napi_ref rendererRef;
   int zoomLevel;
-  int gridUnit;
+  int hasGrid;
 
   int displayWidth;
   int displayHeight;

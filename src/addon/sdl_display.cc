@@ -31,13 +31,13 @@ SDLDisplay::SDLDisplay(const Napi::CallbackInfo& info)
     : Napi::ObjectWrap<SDLDisplay>(info) {
   this->sdlInitialized = 0;
   this->zoomLevel = 1;
-  this->gridUnit = 0;
   this->hasWriteBuffer = 0;
   this->softwareTarget = NULL;
   this->windowHandle = NULL;
   this->rendererHandle = NULL;
   this->textureHandle = NULL;
   this->gridHandle = NULL;
+  this->hasGrid = 0;
 };
 
 Napi::Object SDLDisplay::NewInstance(Napi::Env env, Napi::Value arg) {
@@ -101,14 +101,16 @@ Napi::Value SDLDisplay::SetZoom(const Napi::CallbackInfo& info) {
 Napi::Value SDLDisplay::SetGrid(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if (info.Length() < 1) {
-    printf("SetGrid needs grid\n");
+    printf("SetGrid needs state\n");
     exit(1);
   }
   Napi::Value arg = info[0];
-  if (!arg.IsNumber()) {
-    return Napi::Number::New(env, 0);
+  bool value = arg.ToBoolean();
+  if (value) {
+    SDL_SetTextureAlphaMod(this->gridHandle, 0xff);
+  } else {
+    SDL_SetTextureAlphaMod(this->gridHandle, 0x00);
   }
-  this->gridUnit = arg.As<Napi::Number>().Int32Value();
   return Napi::Number::New(env, 0);
 }
 
@@ -192,6 +194,12 @@ Napi::Value SDLDisplay::RenderLoop(const Napi::CallbackInfo& info) {
   Napi::Value surfaceVal = resObj.As<Napi::Array>()[uint32_t(0)];
   Napi::Object surfaceObj = surfaceVal.As<Napi::Object>();
 
+  Napi::Object gridLayerObj;
+  Napi::Value gridLayerVal = resObj.As<Napi::Array>()[uint32_t(1)];
+  gridLayerObj = gridLayerVal.As<Napi::Object>();
+  this->hasGrid = 1;
+
+  // Convert front surface into the raw data buffer
   Napi::Value bufferVal = surfaceObj.Get("buff");
   if (!bufferVal.IsTypedArray()) {
     printf("bufferVal expected a TypedArray, did not get one!\n");
@@ -267,37 +275,30 @@ Napi::Value SDLDisplay::RenderLoop(const Napi::CallbackInfo& info) {
   SDL_SetTextureBlendMode(this->textureHandle, SDL_BLENDMODE_BLEND);
 
   // Grid is optional
-  if (this->gridUnit) {
-    int gridWidth = viewWidth*this->zoomLevel;
-    int gridHeight = viewHeight*this->zoomLevel;
-    this->gridHandle = SDL_CreateTexture(
-      this->rendererHandle,
-      SDL_PIXELFORMAT_ABGR8888,
-      SDL_TEXTUREACCESS_TARGET,
-      gridWidth,
-      gridHeight);
-
-    u8* gridBuff = (u8*)malloc(gridWidth*gridHeight*4);
-    int targPnt = this->gridUnit * this->zoomLevel;
-    int lastPnt = targPnt - 1;
-
-    // Fill the grid
-    for(int y = 0; y < gridHeight; y++) {
-      for(int x = 0; x < gridWidth; x++) {
-          int k = (y*gridWidth + x)*4;
-          if (((y % targPnt) == lastPnt) || ((x % targPnt) == lastPnt)) {
-            gridBuff[k+0] = 0x00;
-            gridBuff[k+1] = 0xe0;
-            gridBuff[k+2] = 0x00;
-            gridBuff[k+3] = 0xb0;
-          } else {
-            gridBuff[k+0] = 0x00;
-            gridBuff[k+1] = 0x00;
-            gridBuff[k+2] = 0x00;
-            gridBuff[k+3] = 0x00;
-          }
-      }
+  if (this->hasGrid) {
+    // Convert grid surface into the raw data buffer
+    Napi::Value bufferVal = gridLayerObj.Get("buff");
+    if (!bufferVal.IsTypedArray()) {
+      printf("bufferVal expected a TypedArray, did not get one!\n");
+      exit(1);
     }
+    Napi::TypedArray typeArr = bufferVal.As<Napi::TypedArray>();
+    Napi::ArrayBuffer arrBuff = typeArr.ArrayBuffer();
+    void* untypedData = arrBuff.Data();
+    unsigned char* gridBuff = (unsigned char*)untypedData;
+
+    Napi::Value val = gridLayerObj.Get("width");
+    int gridWidth = val.ToNumber().Int32Value();
+    val = gridLayerObj.Get("height");
+    int gridHeight = val.ToNumber().Int32Value();
+
+    this->gridHandle = SDL_CreateTexture(
+        this->rendererHandle,
+        SDL_PIXELFORMAT_ABGR8888,
+        SDL_TEXTUREACCESS_TARGET,
+        gridWidth,
+        gridHeight);
+
     SDL_UpdateTexture(this->gridHandle, NULL, gridBuff, gridWidth*4);
     SDL_SetTextureBlendMode(this->gridHandle, SDL_BLENDMODE_BLEND);
   }

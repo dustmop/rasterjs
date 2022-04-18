@@ -16,7 +16,6 @@ function SaveImageDisplay(targetPath, numFrames, saveService) {
   this.isGif = this.targetPath.endsWith('gif');
   this.saveService = saveService;
   this.zoomLevel = 1;
-  this.gridUnit = 0;
   return this;
 }
 
@@ -37,8 +36,8 @@ SaveImageDisplay.prototype.setZoom = function(zoomLevel) {
   this.zoomLevel = zoomLevel;
 }
 
-SaveImageDisplay.prototype.setGrid = function(unit) {
-  this.gridUnit = unit;
+SaveImageDisplay.prototype.setGrid = function(state) {
+  // TODO: support enabling and disabling for --save
 }
 
 SaveImageDisplay.prototype.handleEvent = function(eventName, callback) {
@@ -85,9 +84,10 @@ SaveImageDisplay.prototype.renderLoop = function(nextFrame) {
       surface = algorithm.nearestNeighborSurface(surface, this.zoomLevel);
       res[0] = surface;
     }
-    if (this.gridUnit > 0) {
-      let spacing = this.zoomLevel * this.gridUnit;
-      this._overlayGrid(surface, spacing);
+
+    let gridSurface = res[1];
+    if (gridSurface && gridSurface.buff) {
+      this._overlayGrid(surface, gridSurface);
     }
     this.saveService.saveTo(outFile, res);
     bufferList.push(surface.buff);
@@ -147,17 +147,17 @@ SaveImageDisplay.prototype.handleEvent = function(eventName, callback) {
   // pass
 }
 
-SaveImageDisplay.prototype._overlayGrid = function(surface, spacing) {
+SaveImageDisplay.prototype._overlayGrid = function(surface, gridSurf) {
+  let left = surface.buff;
+  let rite = gridSurf.buff;
   let pitch = surface.pitch;
-  let last = spacing - 1;
   for (let y = 0; y < surface.height; y++) {
     for (let x = 0; x < surface.width; x++) {
-      if (((y % spacing) == last) || ((x % spacing) == last)) {
-        let k = y*pitch + x*4;
-        surface.buff[k+0] = this._blend(surface.buff[k+0], 0x00, 0xb0);
-        surface.buff[k+1] = this._blend(surface.buff[k+1], 0xe0, 0xb0);
-        surface.buff[k+2] = this._blend(surface.buff[k+2], 0x00, 0xb0);
-      }
+      let k = y*pitch + x*4;
+      let alpha = rite[k+3];
+      left[k+0] = this._blend(left[k+0], rite[k+0], alpha);
+      left[k+1] = this._blend(left[k+1], rite[k+1], alpha);
+      left[k+2] = this._blend(left[k+2], rite[k+2], alpha);
     }
   }
 }

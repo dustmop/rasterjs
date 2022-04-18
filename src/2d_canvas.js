@@ -33,8 +33,8 @@ Display.prototype.setZoom = function(_zoomLevel) {
   // NOTE: zoomLevel is ignored
 }
 
-Display.prototype.setGrid = function(unit) {
-  this.gridUnit = unit;
+Display.prototype.setGrid = function(state) {
+  this.gridState = state;
 }
 
 Display.prototype._createEventHandlers = function() {

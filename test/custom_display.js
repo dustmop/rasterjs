@@ -74,7 +74,7 @@ myDisplay.prototype.setZoom = function(zoomLevel) {
   this.count += zoomLevel;
 }
 
-myDisplay.prototype.setGrid = function(unit) {
+myDisplay.prototype.setGrid = function(state) {
 }
 
 myDisplay.prototype.renderLoop = function(nextFrame) {

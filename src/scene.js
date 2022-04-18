@@ -232,6 +232,14 @@ Scene.prototype.setZoom = function(scale) {
 }
 
 Scene.prototype.setGrid = function(unit) {
+  if (unit) {
+    this.display.setGrid(true);
+  } else {
+    this.display.setGrid(false);
+  }
+  if (this.config.gridUnit) {
+    return;
+  }
   this.config.gridUnit = unit;
 }
 
@@ -324,7 +332,6 @@ Scene.prototype._doRender = function(num, exitAfter, drawFunc, finalFunc) {
     self.display.setSize(self.width, self.height);
     self.display.setRenderer(self.renderer);
     self.display.setZoom(self.config.zoomScale);
-    self.display.setGrid(self.config.gridUnit);
     self.display.renderLoop(function() {
       if (drawFunc) {
         try {
@@ -744,6 +751,14 @@ Scene.prototype.provide = function() {
   }
   if (this.interrupts) {
     prov.interrupts = this.interrupts;
+  }
+  if (this.config.gridUnit) {
+    prov.grid = {
+      zoom: this.config.zoomScale,
+      width: this.width,
+      height: this.height,
+      unit: this.config.gridUnit,
+    }
   }
   return prov;
 }

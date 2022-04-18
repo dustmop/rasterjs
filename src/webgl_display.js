@@ -16,7 +16,6 @@ Display.prototype.initialize = function() {
   this.displayWidth = 0;
   this.displayHeight = 0;
   this.zoomLevel = 1;
-  this.gridUnit = 0;
   this.currentRunId = null;
 }
 
@@ -43,8 +42,14 @@ Display.prototype.setZoom = function(zoomLevel) {
   this.zoomLevel = zoomLevel;
 }
 
-Display.prototype.setGrid = function(unit) {
-  this.gridUnit = unit;
+Display.prototype.setGrid = function(state) {
+  this.gridState = state;
+  let gl = this.gl;
+  if (gl) {
+    let program = this.program;
+    var gridEnableLocation = gl.getUniformLocation(program, "u_gridEnable");
+    gl.uniform1i(gridEnableLocation, this.gridState);
+  }
 }
 
 Display.prototype._createWebglCanvas = function() {
@@ -106,19 +111,26 @@ void main() {
 precision mediump float;
 
 uniform sampler2D u_image0;
-uniform sampler2D u_image1;
+uniform sampler2D u_imageGrid;
+uniform bool u_gridEnable;
 
 varying vec2 v_texcoord;
 
 void main() {
    vec4 left = texture2D(u_image0, v_texcoord);
-   vec4 rite = texture2D(u_image1, v_texcoord);
-   vec3 combined = mix(left.rgb, rite.rgb, rite.a);
-   gl_FragColor = vec4(combined, left.a);
+
+   if (!u_gridEnable) {
+      gl_FragColor = left;
+   } else {
+      vec4 rite = texture2D(u_imageGrid, v_texcoord);
+      vec3 combined = mix(left.rgb, rite.rgb, rite.a);
+      gl_FragColor = vec4(combined, left.a);
+   }
 }
 `;
 
   var program = compile.createProgram(gl, vertexShaderText, fragmentShaderText);
+  this.program = program;
 
   // look up where the vertex data needs to go.
   var positionLocation = gl.getAttribLocation(program, "a_position");
@@ -164,6 +176,7 @@ void main() {
   var textureList = [];
 
   {
+    // Create texture for the front buffer
     var texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA,
@@ -187,6 +200,7 @@ void main() {
   }
 
   {
+    // Create texture for the grid
     var texture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA,
@@ -203,9 +217,12 @@ void main() {
   }
 
   var image0Location = gl.getUniformLocation(program, "u_image0");
-  var image1Location = gl.getUniformLocation(program, "u_image1");
+  var imageGridLocation = gl.getUniformLocation(program, "u_imageGrid");
   gl.uniform1i(image0Location, 0); // texture unit 0
-  gl.uniform1i(image1Location, 1); // texture unit 1
+  gl.uniform1i(imageGridLocation, 1); // texture for grid
+
+  var gridEnableLocation = gl.getUniformLocation(program, "u_gridEnable");
+  gl.uniform1i(gridEnableLocation, 1);
 
   gl.activeTexture(gl.TEXTURE0);
   gl.bindTexture(gl.TEXTURE_2D, textureList[0]);
@@ -214,16 +231,6 @@ void main() {
 
   // draw the quad (2 triangles, 6 vertices)
   gl.drawArrays(gl.TRIANGLES, 0, 6);
-
-  if (this.gridUnit) {
-    let gridWidth = this.displayWidth * this.zoomLevel;
-    let gridHeight = this.displayHeight * this.zoomLevel;
-    let gridBuff = this._createGrid(this.gridUnit);
-    gl.activeTexture(gl.TEXTURE1);
-    gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0,
-                     gridWidth, gridHeight,
-                     gl.RGBA, gl.UNSIGNED_BYTE, gridBuff);
-  }
 }
 
 Display.prototype._createEventHandlers = function() {
@@ -244,32 +251,6 @@ Display.prototype._createEventHandlers = function() {
       }
     }
   })
-}
-
-Display.prototype._createGrid = function(unit) {
-  let width = this.displayWidth * this.zoomLevel;
-  let height = this.displayHeight * this.zoomLevel;
-  let targetPoint = unit * this.zoomLevel;
-  let lastPoint = targetPoint - 1;
-  let numPoints = width*height;
-  let buff = new Uint8Array(numPoints*4);
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      let k = (y*width + x)*4;
-      if (((y % targetPoint) == lastPoint) || (x % targetPoint) == lastPoint) {
-        buff[k+0] = 0x00;
-        buff[k+1] = 0xe0;
-        buff[k+2] = 0x00;
-        buff[k+3] = 0xb0;
-      } else {
-        buff[k+0] = 0x00;
-        buff[k+1] = 0x00;
-        buff[k+2] = 0x00;
-        buff[k+3] = 0x00;
-      }
-    }
-  }
-  return buff;
 }
 
 Display.prototype.waitForContentLoad = function(cb) {
@@ -299,7 +280,9 @@ Display.prototype.appQuit = function() {
 Display.prototype._beginLoop = function(nextFrame, id, num, exitAfter, finalFunc) {
   let gl = this.gl;
   let frontBuffer = null;
+  let gridLayer = null;
   let self = this;
+  let gridHaveCopied = false;
 
   let renderIt = function() {
     // Did the app quit?
@@ -310,8 +293,9 @@ Display.prototype._beginLoop = function(nextFrame, id, num, exitAfter, finalFunc
     // Get the data buffer from the plane.
     let res = self.renderer.render();
     frontBuffer = res[0].buff;
+    gridLayer = res[1];
 
-    // Render to the display
+    // Render front buffer to the display
     if (frontBuffer) {
       gl.activeTexture(gl.TEXTURE0);
 
@@ -326,7 +310,18 @@ Display.prototype._beginLoop = function(nextFrame, id, num, exitAfter, finalFunc
       gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0,
                        self.displayWidth, self.displayHeight,
                        gl.RGBA, gl.UNSIGNED_BYTE, frontBuffer);
+    }
 
+    // Render grid, only needs to be done once
+    if (gridLayer && !gridHaveCopied) {
+      gridHaveCopied = true;
+      gl.activeTexture(gl.TEXTURE1);
+      gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0,
+                       gridLayer.width, gridLayer.height,
+                       gl.RGBA, gl.UNSIGNED_BYTE, gridLayer.buff);
+    }
+
+    if (frontBuffer) {
       gl.drawArrays(gl.TRIANGLES, 0, 6);
       if (num > 0) {
         num--;

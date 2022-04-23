@@ -196,13 +196,20 @@ Napi::Value SDLDisplay::RenderLoop(const Napi::CallbackInfo& info) {
 
   Napi::Object gridLayerObj;
   Napi::Value gridLayerVal = resObj.As<Napi::Array>()[uint32_t(1)];
-  gridLayerObj = gridLayerVal.As<Napi::Object>();
-  this->hasGrid = 1;
+  if (!gridLayerVal.IsNull()) {
+    gridLayerObj = gridLayerVal.As<Napi::Object>();
+    if (!gridLayerObj.IsNull()) {
+      Napi::Value gridBuffVal = gridLayerObj.Get("buff");
+      if (!gridBuffVal.IsNull()) {
+        this->hasGrid = 1;
+      }
+    }
+  }
 
   // Convert front surface into the raw data buffer
   Napi::Value bufferVal = surfaceObj.Get("buff");
   if (!bufferVal.IsTypedArray()) {
-    printf("bufferVal expected a TypedArray, did not get one!\n");
+    printf("surfaceObj.buff expected a TypedArray, did not get one!\n");
     exit(1);
   }
   Napi::TypedArray typeArr = bufferVal.As<Napi::TypedArray>();
@@ -279,7 +286,7 @@ Napi::Value SDLDisplay::RenderLoop(const Napi::CallbackInfo& info) {
     // Convert grid surface into the raw data buffer
     Napi::Value bufferVal = gridLayerObj.Get("buff");
     if (!bufferVal.IsTypedArray()) {
-      printf("bufferVal expected a TypedArray, did not get one!\n");
+      printf("gridLayer.buff expected a TypedArray, did not get one!\n");
       exit(1);
     }
     Napi::TypedArray typeArr = bufferVal.As<Napi::TypedArray>();

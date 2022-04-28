@@ -101,6 +101,7 @@ function tryMatchNamedParam(choice, argMap) {
   let needed = choice.needed;
   let mapping = choice.mapping;
 
+  // TODO: This fails if any of the values are `undefined`
   let haveArgKeys = Object.keys(argMap);
   let values = [];
   for (let i = 0; i < row.length; i++) {

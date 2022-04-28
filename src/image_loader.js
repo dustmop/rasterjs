@@ -209,6 +209,7 @@ ImagePlane.prototype.fillData = function() {
 
   // Create mapping from rgb to 8-bit value
   let remap = {};
+  let collect = [];
   for (let i = 0; i < needs.rgbItems.length; i++) {
     let rgbval = needs.rgbItems[i].toInt();
     if (this.palette) {
@@ -228,9 +229,28 @@ ImagePlane.prototype.fillData = function() {
       c = this.colorSet.extendWith(rgbval);
     }
     remap[rgbval] = c;
+    collect.push(c);
   }
 
   verbose.log(`loading image with rgb map: ${JSON.stringify(remap)}`, 6);
+
+  // FIXME: This feature isn't complete yet, nor particularily thought out
+  if (!this.palette) {
+    // Build palette for the image.
+    collect.sort((a,b) => a-b);
+    // TODO: What about empty collect list.
+    let firstValue = collect[0];
+    let lastValue = collect[collect.length - 1];
+    let pal = new Array(lastValue + 1);
+    pal.fill(0);
+    for (let k = 0; k < pal.length; k++) {
+      if (collect.includes(k)) {
+        pal[k] = k;
+      }
+    }
+    this._usedColors = new palette.constructFrom(pal, firstValue,
+                                                 this.colorSet, this.fsacc);
+  }
 
   // Build the data buffer
   for (let y = 0; y < this.height; y++) {
@@ -248,6 +268,8 @@ ImagePlane.prototype.fillData = function() {
       this.data[k] = c;
     }
   }
+
+  this._numColors = numColors;
 }
 
 ImagePlane.prototype._collectColorNeeds = function() {
@@ -278,6 +300,14 @@ ImagePlane.prototype._collectColorNeeds = function() {
 
 ImagePlane.prototype.then = function(cb) {
   this.parentLoader.fsacc.whenLoaded(cb);
+}
+
+ImagePlane.prototype.numColors = function() {
+  return this._numColors;
+}
+
+ImagePlane.prototype.getUsedColors = function() {
+  return this._usedColors;
 }
 
 module.exports.Loader = Loader;

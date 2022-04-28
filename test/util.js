@@ -44,6 +44,25 @@ function renderCompareTo(client, goldenPath) {
 }
 
 function ensureFilesMatch(expectFile, gotFile) {
+  if (!fs.existsSync(expectFile)) {
+    let e = new Error();
+    let lines = e.stack.split('\n');
+    let callerLine;
+    try {
+      callerLine = lines[3].split(' (')[1].slice(0, -1);
+    } catch (e) {
+      callerLine = 'Could not locate callsite';
+    }
+    console.log('');
+    console.log(callerLine);
+    console.log('file not found ' + expectFile);
+    console.log('open ' + gotFile);
+    console.log('');
+    console.log('to accept this change:');
+    console.log('cp ' + gotFile + ' ' + expectFile);
+    console.log('');
+    assert.fail('FILE MISSING');
+  }
   if (!compareFiles(expectFile, gotFile)) {
     let e = new Error();
     let lines = e.stack.split('\n');
@@ -61,9 +80,8 @@ function ensureFilesMatch(expectFile, gotFile) {
     console.log('');
     console.log('to accept this change:');
     console.log('cp ' + gotFile + ' ' + expectFile);
-    console.log('');
+    assert.fail('FILE DIFFERENCE');
   }
-  assert.ok(compareFiles(expectFile, gotFile));
 }
 
 function skipTest() {

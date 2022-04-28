@@ -48,7 +48,7 @@ Renderer.prototype.connect = function(input) {
     }
   }
 
-  verbose.log(`renderer.connect components: ${Object.keys(input)}`);
+  verbose.log(`renderer.connect components: ${Object.keys(input)}`, 5);
 
   if (!input.plane || !types.isPlane(input.plane)) {
     throw new Error(`input.plane must be a non-null Plane`);

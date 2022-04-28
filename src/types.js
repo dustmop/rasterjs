@@ -20,7 +20,7 @@ function isFunction(obj) {
 }
 
 function isObject(obj) {
-  return obj.constructor.name == 'Object';
+  return obj && obj.constructor.name == 'Object';
 }
 
 function isInteger(obj) {

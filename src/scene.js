@@ -624,19 +624,34 @@ Scene.prototype._ensureColorSet = function() {
   }
 }
 
-Scene.prototype.usePalette = function(optOrVals) {
-  optOrVals = optOrVals || {};
+Scene.prototype.usePalette = function(param) {
+  // can be called like this:
+  //
+  //   // Construct a palette from what was drawn to the plane
+  //   ra.usePalette({sort: true});
+  //
+  //   // List of indicies from the colorset.
+  //   ra.usePalette([0x17, 0x21, 0x04, 0x09]);
+  //
+  //   // Number of colors in the palette.
+  //   ra.usePalette(5);
+  //
   this._ensureColorSet();
-  if (types.isObject(optOrVals)) {
-    return this._initPaletteFromPlane(optOrVals.sort);
-  } else if (types.isArray(optOrVals)) {
-    return this._constructPaletteFromVals(optOrVals);
-  } else if (types.isInteger(optOrVals)) {
-    let vals = new Array(optOrVals);
+  if (types.isPalette(param)) {
+    this.palette = param;
+    return this.palette;
+  } else if (!param) {
+    return this._initPaletteFromPlane();
+  } else if (types.isObject(param)) {
+    return this._initPaletteFromPlane(param.sort);
+  } else if (types.isArray(param)) {
+    return this._constructPaletteFromVals(param);
+  } else if (types.isInteger(param)) {
+    let vals = new Array(param);
     vals.fill(0);
     return this._constructPaletteFromVals(vals);
   }
-  throw new Error(`usePalette: unsupported param ${optOrVals}`);
+  throw new Error(`usePalette: unsupported param ${param}`);
 }
 
 Scene.prototype._constructPaletteFromVals = function(vals) {

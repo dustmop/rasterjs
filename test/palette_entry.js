@@ -193,4 +193,41 @@ describe('Palette entry', function() {
     ];
     assert.deepEqual(expect, actual);
   });
+
+  it('palette rotation', function() {
+    let tmpdir = util.mkTmpDir();
+    let tmpout = tmpdir + '/actual.png';
+    ra.resetState();
+    ra.useColors([0xff0000, 0xff8800, 0xffff00, 0x00ff88,
+                  0x00ffff, 0x000088, 0x0000ff, 0x0088ff]);
+    let palette = ra.usePalette([1, 0, 3, 2]);
+    ra.setSize(8, 8);
+    ra.fillFrame(function(x, y) {
+      let a = x / 4;
+      let b = y / 4;
+      if (a < 1 && b < 1) {
+        return 0;
+      } else if (a >= 1 && b < 1) {
+        return 1;
+      } else if (a < 1 && b >= 1) {
+        return 2;
+      } else {
+        return 3;
+      }
+    });
+    util.renderCompareTo(ra, 'test/testdata/rotate-before.png');
+
+    palette.rotate({startIndex: 0, replaceFrom: 4, replaceSize: 4, click: 1});
+    util.renderCompareTo(ra, 'test/testdata/rotate-after1.png');
+
+    palette.rotate({startIndex: 0, replaceFrom: 4, replaceSize: 4, click: 2});
+    util.renderCompareTo(ra, 'test/testdata/rotate-after2.png');
+
+    palette.rotate({startIndex: 0, replaceFrom: 4, replaceSize: 4, click: 3});
+    util.renderCompareTo(ra, 'test/testdata/rotate-after3.png');
+
+    palette.rotate({startIndex: 0, replaceFrom: 4, replaceSize: 4, click: 4});
+    util.renderCompareTo(ra, 'test/testdata/rotate-after4.png');
+  });
+
 });

@@ -3,14 +3,15 @@ const destructure = require('./destructure.js');
 const types = require('./types.js');
 const serializer = require('./serializer.js');
 
-function Palette(items, saveService) {
-  if (saveService != null && !saveService.saveTo) {
-    throw new Error('Palette given invalid saveService');
+
+function Palette(items, fsacc) {
+  if (fsacc != null && !fsacc.saveTo) {
+    throw new Error('Palette given invalid fsacc');
   }
   this.items = items;
   for (let i = 0; i < items.length; i++) {
     if (items[i].constructor != PaletteEntry) {
-      throw new Error('Palette got invalid item[${i}], should be PaletteEntry');
+      throw new Error(`Palette got invalid item[${i}], should be PaletteEntry`);
     }
   }
   // length
@@ -19,11 +20,36 @@ function Palette(items, saveService) {
   for (let i = 0; i < this.items.length; i++) {
     this[i] = this.items[i];
   }
-  this.saveService = saveService;
+  this.fsacc = fsacc;
   // Customize how console.log displays this object.
   this[Symbol.for('nodejs.util.inspect.custom')] = this._stringify;
   return this;
 }
+
+
+function constructFrom(vals, offset, colors, fsacc) {
+  let all = [];
+  let ent;
+  for (let i = 0; i < vals.length; i++) {
+    let cval = vals[i];
+    if (cval === null) {
+      let rgb = new rgbColor.RGBColor(0);
+      ent = new PaletteEntry(rgb, -1, colors);
+      ent.isAvail = true;
+      all.push(ent);
+      continue;
+    }
+    if (cval >= colors.size()) {
+      throw new Error(`illegal color value ${cval}, colorSet only has ${colors.size()}`);
+    }
+    let rgb = colors.get(cval);
+    rgbColor.ensureIs(rgb);
+    ent = new PaletteEntry(rgb, cval, colors);
+    all.push(ent);
+  }
+  return new Palette(all, fsacc);
+}
+
 
 Palette.prototype.get = function(c) {
   return this.items[c];
@@ -39,7 +65,7 @@ Palette.prototype.reset = function() {
 
 Palette.prototype.save = function(filename) {
   let res = this.serialize();
-  this.saveService.saveTo(filename, res);
+  this.fsacc.saveTo(filename, res);
 }
 
 Palette.prototype.serialize = function(opt) {
@@ -92,12 +118,15 @@ Palette.prototype.assign = function(assoc) {
 
 Palette.prototype.rotate = function(args) {
   let spec = ['!name', 'startIndex?i', 'endIndex?i',
-              'base?i', 'click?i', 'size?i'];
-  let [startIndex, endIndex, base, click, size] = destructure.from(
-    'rotate', spec, arguments, null);
-  for (let i = startIndex; i < endIndex; i++) {
-    let r = base + ((click + i) % size);
-    this.items[i].setColor(r);
+              'replaceFrom?i', 'replaceSize?i', 'click?i'];
+  let [startIndex, endIndex, replaceFrom, replaceSize, click] = (
+    destructure.from('rotate', spec, arguments, null));
+  if (endIndex == 0) { endIndex = this.length; }
+  if (replaceFrom == 0) { replaceFrom = this.length; }
+
+  for (let k = 0; k < endIndex - startIndex; k++) {
+    let r = replaceFrom + ((click + k) % replaceSize);
+    this.items[k + startIndex].setColor(r);
   }
 }
 
@@ -178,3 +207,4 @@ PaletteEntry.prototype.dump = function() {
 
 module.exports.Palette = Palette;
 module.exports.PaletteEntry = PaletteEntry;
+module.exports.constructFrom = constructFrom;

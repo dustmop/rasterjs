@@ -239,7 +239,7 @@ Drawable.prototype.drawImage = function(img, x, y) {
   x = x || 0;
   y = y || 0;
   if (this.width == 0 && this.height == 0) {
-    // TODO: Set the colorset as well.
+    // TODO: Set the colorMap as well.
     this.setSize(img.width, img.height);
   }
   this.putImage(img, x, y);

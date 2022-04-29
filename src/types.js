@@ -5,7 +5,7 @@ const tiles = require('./tiles.js');
 const attributes = require('./attributes.js');
 const palette = require('./palette.js');
 const renderer = require('./renderer.js');
-const colorSet = require('./color_set.js');
+const colorMap = require('./color_map.js');
 
 function isNumber(obj) {
   return typeof obj == 'number';
@@ -62,9 +62,9 @@ function isPlane(obj) {
           obj.constructor == imageLoader.ImagePlane);
 }
 
-function isColorSet(obj) {
+function isColorMap(obj) {
   if (!obj) { return false; }
-  return obj.constructor == colorSet.Set;
+  return obj.constructor == colorMap.Map;
 }
 
 function isPaletteEntry(obj) {
@@ -85,7 +85,7 @@ module.exports.isString = isString;
 module.exports.isFunction = isFunction;
 module.exports.isObject = isObject;
 module.exports.isRGBColor = isRGBColor;
-module.exports.isColorSet = isColorSet;
+module.exports.isColorMap = isColorMap;
 module.exports.isPaletteEntry = isPaletteEntry;
 module.exports.isTileset = isTileset;
 module.exports.isAttributes = isAttributes;

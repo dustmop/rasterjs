@@ -3,7 +3,7 @@ const rgbColor = require('./rgb_color.js');
 const serializer = require('./serializer.js');
 const types = require('./types.js');
 
-function Set(vals) {
+function Map(vals) {
   let [collect, lookup] = colorIntValsToRGBs(vals);
   this._frozen = false;
   this.collect = collect;
@@ -34,7 +34,7 @@ function colorIntValsToRGBs(vals, allowDups) {
 }
 
 function constructFrom(rep) {
-  let make = new Set();
+  let make = new Map();
   make.name = null;
   if (types.isString(rep)) {
     let text = rep;
@@ -65,7 +65,7 @@ function constructFrom(rep) {
   } else if (!rep) {
     make.assign([]);
   } else {
-    throw new Error('colorSet.use got unknown param ${rep}');
+    throw new Error('colorMap.use got unknown param ${rep}');
   }
   return make;
 }
@@ -76,21 +76,21 @@ function makeDefault() {
   return make;
 }
 
-Set.prototype.size = function() {
+Map.prototype.size = function() {
   return this.collect.length;
 }
 
-Set.prototype.get = function(i) {
+Map.prototype.get = function(i) {
   return this.collect[i % this.collect.length];
 }
 
-Set.prototype.freeze = function() {
+Map.prototype.freeze = function() {
   this._frozen = true;
 }
 
-Set.prototype.assign = function(vals, opts) {
+Map.prototype.assign = function(vals, opts) {
   if (this._frozen) {
-    throw new Error(`colorSet is frozen, cannot assign`);
+    throw new Error(`colorMap is frozen, cannot assign`);
   }
   opts = opts || {};
   vals = vals.slice();
@@ -100,7 +100,7 @@ Set.prototype.assign = function(vals, opts) {
   this.newIndex = this.collect.length;
 }
 
-Set.prototype.extendWith = function(rgb) {
+Map.prototype.extendWith = function(rgb) {
   if (rgb !== 0 && !rgb) {
     throw new Error(`invalid rgb value: ${rgb}`);
   }
@@ -114,7 +114,7 @@ Set.prototype.extendWith = function(rgb) {
     return i;
   }
   if (this._frozen) {
-    throw new Error(`colorSet is frozen, cannot extend with ${rgb}`);
+    throw new Error(`colorMap is frozen, cannot extend with ${rgb}`);
   }
   // Add it to the map
   i = this.newIndex % 0x100;
@@ -124,9 +124,9 @@ Set.prototype.extendWith = function(rgb) {
   return i;
 }
 
-Set.prototype.find = function(rgb) {
+Map.prototype.find = function(rgb) {
   if (!types.isNumber(rgb)) {
-    throw new Error('colorSet needs rgb as a number');
+    throw new Error('colorMap needs rgb as a number');
   }
   rgb = new rgbColor.RGBColor(rgb);
   let i = this.lookup[rgb];
@@ -136,11 +136,11 @@ Set.prototype.find = function(rgb) {
   return -1;
 }
 
-Set.prototype.serialize = function(opt) {
+Map.prototype.serialize = function(opt) {
   let ser = new serializer.Serializer();
   return ser.colorsToSurface(this.collect, opt);
 }
 
-module.exports.Set = Set;
+module.exports.Map = Map;
 module.exports.constructFrom = constructFrom;
 module.exports.makeDefault = makeDefault;

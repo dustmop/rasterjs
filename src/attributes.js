@@ -64,7 +64,7 @@ Attributes.prototype._getColorNeeds = function(tile, palette) {
   let needSet = {};
   for (let y = 0; y < tile.height; y++) {
     for (let x = 0; x < tile.width; x++) {
-      // Look up the color index into colorSet
+      // Look up the color index into colorMap
       let k = tile.pitch*y + x;
       let v = tile.data[k];
       let c = palette.lookup(v);

@@ -158,7 +158,7 @@ describe('Palette entry', function() {
     ra.useColors(null);
     ra.fillTrueColor(0x444444);
 
-    // TODO: Currently, loading the image adds to the colorSet.
+    // TODO: Currently, loading the image adds to the colorMap.
     // It should really happen lazily, when the image plane gets
     // applied to the target plane. This means either when the
     // scene's `then` completes, or when the image is drawn.

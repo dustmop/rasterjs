@@ -1,6 +1,6 @@
 const plane = require('./plane.js');
 const textLoader = require('./text_loader.js');
-const colorSet = require('./color_set.js');
+const colorMap = require('./color_map.js');
 const renderer = require('./renderer.js');
 const types = require('./types.js');
 
@@ -45,7 +45,7 @@ Serializer.prototype.colorsToSurface = function(colorList, opt) {
   // Create dependencies for drawing
   let loader = new textLoader.TextLoader();
   let font = loader.createFontResource('tiny');
-  let colors = new colorSet.Set([]);
+  let colors = new colorMap.Map([]);
   colors.assign([]);
 
   // Draw the palette
@@ -84,7 +84,7 @@ Serializer.prototype.colorsToSurface = function(colorList, opt) {
   // Components for rendering
   let components = {
     plane: target,
-    colorSet: colors,
+    colorMap: colors,
   };
 
   // Render it

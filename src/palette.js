@@ -40,7 +40,7 @@ function constructFrom(vals, offset, colors, fsacc) {
       continue;
     }
     if (cval >= colors.size()) {
-      throw new Error(`illegal color value ${cval}, colorSet only has ${colors.size()}`);
+      throw new Error(`illegal color value ${cval}, colorMap only has ${colors.size()}`);
     }
     let rgb = colors.get(cval);
     rgbColor.ensureIs(rgb);
@@ -161,8 +161,8 @@ function PaletteEntry(rgb, idx, colors) {
   if (!types.isNumber(idx)) {
     throw new Error(`PaletteEntry: idx must be a number`);
   }
-  if (!types.isColorSet(colors)) {
-    throw new Error(`PaletteEntry: colors must be a color.Set`);
+  if (!types.isColorMap(colors)) {
+    throw new Error(`PaletteEntry: colors must be a color.Map`);
   }
   this.rgb = rgb;
   this.idx = idx;

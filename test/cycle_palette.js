@@ -4,7 +4,7 @@ var ra = require('../src/lib.js');
 
 describe('Cycle palette', function() {
 
-  // Colors used in small-fruit.png, from pico8 colorSet
+  // Colors used in small-fruit.png, from pico8 colorMap
   //  0x000000  0  black
   //  0x7e2553  2  purple
   //  0xab5236  4  brown
@@ -52,11 +52,11 @@ describe('Cycle palette', function() {
     ra.useColors('pico8');
     assert.throws(function() {
       ra.usePalette([16]);
-    }, /illegal color value 16, colorSet only has 16/);
+    }, /illegal color value 16, colorMap only has 16/);
   });
 
 
-  // Image uses color in the colorSet, but palette is full
+  // Image uses color in the colorMap, but palette is full
   it('error when image overflows palette', function() {
     ra.resetState();
     ra.useColors('pico8');
@@ -69,7 +69,7 @@ describe('Cycle palette', function() {
   });
 
 
-  // Image uses color that's not in the colorSet, alias it
+  // Image uses color that's not in the colorMap, alias it
   it('palette has available slots', function() {
     ra.resetState();
     ra.useColors([0x000000, // 0 = black
@@ -147,7 +147,7 @@ describe('Cycle palette', function() {
 
     assert.throws(function() {
       ra.loadImage('test/testdata/small-fruit.png');
-    }, /Error: palette exists, and image test\/testdata\/small-fruit.png uses a color not found in the colorset: RGBColor{#ab5236}/);
+    }, /Error: palette exists, and image test\/testdata\/small-fruit.png uses a color not found in the colorMap: RGBColor{#ab5236}/);
 
   });
 

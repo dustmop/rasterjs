@@ -2,7 +2,7 @@ var assert = require('assert');
 var util = require('./util.js');
 var ra = require('../src/lib.js');
 
-describe('Color set', function() {
+describe('Color map', function() {
   it('nes', function() {
     ra.resetState();
     ra.setSize({w: 8, h: 8})
@@ -81,7 +81,7 @@ describe('Color set', function() {
     ra.setColor(1);
     assert.throws(function() {
       ra.useColors('nes');
-    }, /Error: cannot use colorSet "nes", already using "quick"/);
+    }, /Error: cannot use colorMap "nes", already using "quick"/);
   });
 
   it('frozen', function() {
@@ -90,7 +90,7 @@ describe('Color set', function() {
     ra.setSize({w: 8, h: 8})
     assert.throws(function() {
       ra.setTrueColor(1);
-    }, /Error: colorSet is frozen, cannot extend with RGBColor{#000001}/);
+    }, /Error: colorMap is frozen, cannot extend with RGBColor{#000001}/);
   });
 
   // TODO: useColors(null) crash

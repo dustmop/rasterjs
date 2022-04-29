@@ -36,7 +36,7 @@ Loader.prototype.loadImage = function(filename, opt) {
     imgPlane.width = found.width;
     imgPlane.pitch = planePitch;
     imgPlane.height = found.height;
-    imgPlane.colorSet = this.scene.colorSet;
+    imgPlane.colorMap = this.scene.colorMap;
     imgPlane.fillData();
     return imgPlane;
   }
@@ -51,7 +51,7 @@ Loader.prototype.loadImage = function(filename, opt) {
   img.parentLoader = this;
   img.filename = filename;
   img.id = this.list.length;
-  img.colorSet = this.scene.colorSet;
+  img.colorMap = this.scene.colorMap;
   img.palette = this.scene.palette;
   img.sortUsingHSV = sortUsingHSV;
   img.left = 0;
@@ -107,7 +107,7 @@ function ImagePlane() {
   this.data = null;
   this.alpha = null;
   this.rgbBuff = null;
-  this.colorSet = null;
+  this.colorMap = null;
   this.palette = null;
   this.sortUsingHSV = false;
   return this;
@@ -130,7 +130,7 @@ ImagePlane.prototype.select = function(x, y, w, h) {
   make.data = this.data;
   make.alpha = this.alpha;
   make.rgbBuff = this.rgbBuff;
-  make.colorSet = this.colorSet;
+  make.colorMap = this.colorMap;
   make.palette = this.palette;
   make.sortUsingHSV = this.sortUsingHSV;
   return make;
@@ -146,7 +146,7 @@ ImagePlane.prototype.clone = function() {
   make.width = this.width;
   make.height = this.height;
   make.pitch = this.pitch;
-  make.colorSet = this.colorSet;
+  make.colorMap = this.colorMap;
   make.palette = this.palette;
   make.sortUsingHSV = this.sortUsingHSV;
   // Deep copy `make.data`, NOTE: no alpha nor rgbBuff
@@ -213,11 +213,11 @@ ImagePlane.prototype.fillData = function() {
   for (let i = 0; i < needs.rgbItems.length; i++) {
     let rgbval = needs.rgbItems[i].toInt();
     if (this.palette) {
-      let cval = this.colorSet.find(rgbval);
+      let cval = this.colorMap.find(rgbval);
       if (cval == -1) {
         c = this.palette.insertWhereAvail(rgbval);
         if (c == null) {
-          throw new Error(`palette exists, and image ${this.filename} uses a color not found in the colorset: ${needs.rgbItems[i]}`);
+          throw new Error(`palette exists, and image ${this.filename} uses a color not found in the colorMap: ${needs.rgbItems[i]}`);
         }
       } else {
         c = this.palette.find(cval);
@@ -226,7 +226,7 @@ ImagePlane.prototype.fillData = function() {
         }
       }
     } else {
-      c = this.colorSet.extendWith(rgbval);
+      c = this.colorMap.extendWith(rgbval);
     }
     remap[rgbval] = c;
     collect.push(c);
@@ -249,7 +249,7 @@ ImagePlane.prototype.fillData = function() {
       }
     }
     this._usedColors = new palette.constructFrom(pal, firstValue,
-                                                 this.colorSet, this.fsacc);
+                                                 this.colorMap, this.fsacc);
   }
 
   // Build the data buffer
@@ -279,7 +279,7 @@ ImagePlane.prototype._collectColorNeeds = function() {
     for (let x = 0; x < this.width; x++) {
       let k = y * this.pitch + x;
       this.alpha[k] = this.rgbBuff[k*4+3];
-      // Transparent pixels are not added to the colorSet.
+      // Transparent pixels are not added to the colorMap.
       if (this.alpha[k] < 0x80) {
         continue;
       }

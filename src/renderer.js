@@ -1,7 +1,7 @@
 const algorithm = require('./algorithm.js');
 const rgbColor = require('./rgb_color.js');
 const plane = require('./plane.js');
-const colorSet = require('./color_set.js');
+const colorMap = require('./color_map.js');
 const tiles = require('./tiles.js');
 const palette = require('./palette.js');
 const attrs = require('./attributes.js');
@@ -25,7 +25,7 @@ Renderer.prototype._init = function() {
       rgbSurface: null,
       camera: null,
       plane: null,
-      colorSet: null,
+      colorMap: null,
       tiles: null,
       palette: null,
       attrs: null,
@@ -38,7 +38,7 @@ Renderer.prototype._init = function() {
 
 Renderer.prototype.connect = function(input) {
   let layer = this._layers[0];
-  let allow = ['plane', 'colorSet', 'size', 'camera',
+  let allow = ['plane', 'colorMap', 'size', 'camera',
                'tiles', 'palette', 'attrs', 'interrupts', 'font', 'grid'];
   let keys = Object.keys(input);
   for (let i = 0; i < keys.length; i++) {
@@ -53,8 +53,8 @@ Renderer.prototype.connect = function(input) {
   if (!input.plane || !types.isPlane(input.plane)) {
     throw new Error(`input.plane must be a non-null Plane`);
   }
-  if (!input.colorSet || !types.isColorSet(input.colorSet)) {
-    throw new Error(`input.colorSet must be a non-null colorSet`);
+  if (!input.colorMap || !types.isColorMap(input.colorMap)) {
+    throw new Error(`input.colorMap must be a non-null colorMap`);
   }
   if (input.tiles && !types.isTileset(input.tiles)) {
     throw new Error(`input.tiles must be a Tileset, got ${input.tiles}`);
@@ -72,8 +72,8 @@ Renderer.prototype.connect = function(input) {
   layer.plane    = input.plane;
   layer.size     = input.size;
   layer.camera   = input.camera;
-  // TODO: colorSet should be 'global'
-  layer.colorSet = input.colorSet;
+  // TODO: colorMap should be 'global'
+  layer.colorMap = input.colorMap;
   layer.tiles    = input.tiles;
   layer.palette  = input.palette;
   layer.attrs    = input.attrs;
@@ -287,7 +287,7 @@ Renderer.prototype._renderRegion = function(layer, left, top, right, bottom) {
 
 Renderer.prototype.renderComponents = function(components, settings, callback) {
   let myPlane = this._layers[0].plane;
-  let myColorSet = this._layers[0].colorSet;
+  let myColorMap = this._layers[0].colorMap;
   let myTiles = this._layers[0].tiles;
   let myPalette = this._layers[0].palette;
   settings = settings || {};
@@ -305,7 +305,7 @@ Renderer.prototype.renderComponents = function(components, settings, callback) {
         this.innerPlaneRenderer = new Renderer();
         let components = {
           plane: myPlane,
-          colorSet: myColorSet,
+          colorMap: myColorMap,
         }
         this.innerPlaneRenderer.connect(components);
       }
@@ -319,14 +319,14 @@ Renderer.prototype.renderComponents = function(components, settings, callback) {
         callback('palette', surface);
       } else {
         let opt = {};
-        if (settings.colorSet && myColorSet.name) {
-          if (settings.colorSet['*']) {
-            opt = settings.colorSet['*'];
+        if (settings.colorMap && myColorMap.name) {
+          if (settings.colorMap['*']) {
+            opt = settings.colorMap['*'];
           } else {
-            opt = settings.colorSet[myColorSet.name];
+            opt = settings.colorMap[myColorMap.name];
           }
         }
-        let surface = myColorSet.serialize(opt);
+        let surface = myColorMap.serialize(opt);
         callback('palette', surface);
       }
 
@@ -398,7 +398,7 @@ Renderer.prototype._toColor = function(c) {
       rgb = ent.rgb;
     }
   } else {
-    rgb = layer.colorSet.get(c);
+    rgb = layer.colorMap.get(c);
   }
   rgbColor.ensureIs(rgb);
   return rgb

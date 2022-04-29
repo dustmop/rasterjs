@@ -231,7 +231,7 @@ describe('Tileset', function() {
   it('tiles then change attributes', function() {
     ra.resetState();
 
-    // Colorset has 22 values
+    // ColorMap has 22 values
     ra.useColors([
       0x000000, 0x565656, 0x664019, 0x858585, 0xa5a5a5, 0xc0c0c0,
       0xffffff, 0xffb973, 0xff7373, 0xff3333, 0xff9933, 0xf1ff73,

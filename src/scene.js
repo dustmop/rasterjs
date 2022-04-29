@@ -1,4 +1,4 @@
-const colorSet = require('./color_set.js');
+const colorMap = require('./color_map.js');
 const drawable = require('./drawable.js');
 const destructure = require('./destructure.js');
 const algorithm = require('./algorithm.js');
@@ -30,7 +30,7 @@ function Scene(env) {
 
   this.renderer = new renderer.Renderer();
 
-  this.colorSet = null;
+  this.colorMap = null;
   this.camera = {};
   this.font = null;
   this.palette = null;
@@ -51,7 +51,7 @@ Scene.prototype._initialize = function () {
   this.TAU = 6.283185307179586;
   this.PI = this.TAU / 2;
   this.camera = {};
-  this.colorSet = null;
+  this.colorMap = null;
   this.imgLoader = new imageLoader.Loader(this.fsacc, this);
   this.textLoader = new textLoader.TextLoader(this.fsacc);
   let options = this.env.getOptions();
@@ -107,11 +107,11 @@ Scene.prototype._addMethods = function() {
     }
   }
   this.setColor = function(n) {
-    self._ensureColorSet();
+    self._ensureColorMap();
     self.aPlane.setColor(n);
   }
   this.fillColor = function(n) {
-    self._ensureColorSet();
+    self._ensureColorMap();
     self.aPlane.fillColor(n);
   }
 }
@@ -157,8 +157,8 @@ Scene.prototype.setTrueColor = function(rgb) {
   if (!types.isNumber(rgb)) {
     throw new Error(`setTrueColor needs rgb as a number, got ${rgb}`);
   }
-  this._ensureColorSet();
-  let color = this.colorSet.extendWith(rgb);
+  this._ensureColorMap();
+  let color = this.colorMap.extendWith(rgb);
   this.aPlane.setColor(color);
 }
 
@@ -166,8 +166,8 @@ Scene.prototype.fillTrueColor = function(rgb) {
   if (!types.isNumber(rgb)) {
     throw new Error(`fillTrueColor needs rgb as a number, got ${rgb}`);
   }
-  this._ensureColorSet();
-  let color = this.colorSet.extendWith(rgb);
+  this._ensureColorMap();
+  let color = this.colorMap.extendWith(rgb);
   this.aPlane.fillColor(color);
 }
 
@@ -197,7 +197,7 @@ Scene.prototype.setScrollY = function(y) {
 Scene.prototype.resetState = function() {
   this.width = null;
   this.height = null;
-  this.colorSet = null;
+  this.colorMap = null;
   this.aPlane.clear();
   this.renderer.clear();
   this.fsacc.clear();
@@ -252,12 +252,12 @@ Scene.prototype.originAtCenter = function() {
 }
 
 Scene.prototype.useColors = function(obj) {
-  if (this.colorSet) {
-    let name = this.colorSet.name;
-    throw new Error(`cannot use colorSet "${obj}", already using "${name}"`);
+  if (this.colorMap) {
+    let name = this.colorMap.name;
+    throw new Error(`cannot use colorMap "${obj}", already using "${name}"`);
   }
-  this.colorSet = colorSet.constructFrom(obj);
-  return this.colorSet;
+  this.colorMap = colorMap.constructFrom(obj);
+  return this.colorMap;
 }
 
 Scene.prototype.useDisplay = function(nameOrDisplay) {
@@ -466,9 +466,9 @@ Scene.prototype._makeShape = function(method, params) {
   } else if (method == 'load') {
     let [filepath, opt] = params;
     opt = opt || {};
-    if (!this.colorSet) {
-      verbose.log(`Scene.loadImage: creating an empty colorSet`, 4);
-      this.colorSet = colorSet.constructFrom([]);
+    if (!this.colorMap) {
+      verbose.log(`Scene.loadImage: creating an empty colorMap`, 4);
+      this.colorMap = colorMap.constructFrom([]);
     }
     return this.imgLoader.loadImage(filepath, opt);
   }
@@ -527,8 +527,8 @@ Scene.prototype.resize = function(x, y) {
 }
 
 Scene.prototype.eyedrop = function(x, y) {
-  this._ensureColorSet();
-  this._paletteFromColorset();
+  this._ensureColorMap();
+  this._paletteFromColorMap();
   let c = this.aPlane.get(x, y);
   return this.palette.get(c);
 }
@@ -542,7 +542,7 @@ Scene.prototype.put = function(x, y, v) {
 }
 
 Scene.prototype._initPaletteFromPlane = function(shouldSort) {
-  this._paletteFromColorset();
+  this._paletteFromColorMap();
   if (shouldSort) {
     let remap = {};
     let vals = [];
@@ -563,9 +563,9 @@ Scene.prototype._initPaletteFromPlane = function(shouldSort) {
     let items = [];
     for (let i = 0; i < vals.length; i++) {
       let orig = remap[vals[i].toInt()];
-      let ent = new palette.PaletteEntry(vals[i], i, this.colorSet);
+      let ent = new palette.PaletteEntry(vals[i], i, this.colorMap);
       ent.cval = orig;
-      let reset = this.colorSet.get(ent.cval);
+      let reset = this.colorMap.get(ent.cval);
       rgbColor.ensureIs(reset);
       ent.rgb = reset;
       recolor[orig] = i;
@@ -588,10 +588,10 @@ Scene.prototype._initPaletteFromPlane = function(shouldSort) {
   return this.palette;
 }
 
-Scene.prototype._paletteFromColorset = function() {
+Scene.prototype._paletteFromColorMap = function() {
   if (!this.palette) {
-    verbose.log(`constructing palette from colorSet`, 4);
-    let colors = this.colorSet;
+    verbose.log(`constructing palette from colorMap`, 4);
+    let colors = this.colorMap;
     let saveService = this.saveService;
     let all = [];
     for (let i = 0; i < colors.size(); i++) {
@@ -617,10 +617,10 @@ Scene.prototype.usePlane = function(pl) {
   return this.aPlane;
 }
 
-Scene.prototype._ensureColorSet = function() {
-  if (!this.colorSet) {
-    verbose.log(`creating default colorSet`, 4);
-    this.colorSet = colorSet.makeDefault();
+Scene.prototype._ensureColorMap = function() {
+  if (!this.colorMap) {
+    verbose.log(`creating default colorMap`, 4);
+    this.colorMap = colorMap.makeDefault();
   }
 }
 
@@ -630,13 +630,13 @@ Scene.prototype.usePalette = function(param) {
   //   // Construct a palette from what was drawn to the plane
   //   ra.usePalette({sort: true});
   //
-  //   // List of indicies from the colorset.
+  //   // List of indicies from the colorMap.
   //   ra.usePalette([0x17, 0x21, 0x04, 0x09]);
   //
   //   // Number of colors in the palette.
   //   ra.usePalette(5);
   //
-  this._ensureColorSet();
+  this._ensureColorMap();
   if (types.isPalette(param)) {
     this.palette = param;
     return this.palette;
@@ -655,7 +655,7 @@ Scene.prototype.usePalette = function(param) {
 }
 
 Scene.prototype._constructPaletteFromVals = function(vals) {
-  let colors = this.colorSet;
+  let colors = this.colorMap;
   let saveService = this.saveService;
   let all = [];
   let ent;
@@ -669,7 +669,7 @@ Scene.prototype._constructPaletteFromVals = function(vals) {
       continue;
     }
     if (cval >= colors.size()) {
-      throw new Error(`illegal color value ${cval}, colorSet only has ${colors.size()}`);
+      throw new Error(`illegal color value ${cval}, colorMap only has ${colors.size()}`);
     }
     let rgb = colors.get(cval);
     rgbColor.ensureIs(rgb);
@@ -741,7 +741,7 @@ Scene.prototype.useInterrupts = function(conf) {
 }
 
 Scene.prototype.provide = function() {
-  this._ensureColorSet();
+  this._ensureColorMap();
   if (this.tiles != null) {
     // Assert that useTileset requires usePlane
     if (!this.config.usingNonPrimaryPlane) {
@@ -750,7 +750,7 @@ Scene.prototype.provide = function() {
   }
   let prov = {};
   prov.plane = this.aPlane;
-  prov.colorSet = this.colorSet;
+  prov.colorMap = this.colorMap;
   prov.size = {width: this.width, height: this.height};
   if (this.camera) {
     prov.camera = this.camera;

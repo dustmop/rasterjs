@@ -32,11 +32,17 @@ Renderer.prototype._init = function() {
       size: null,
     }
   ]
+  this.isConnected = false;
   this.interrupts = null;
   this.grid = null;
+  this.haveRenderedPlaneOnce = false;
 }
 
 Renderer.prototype.connect = function(input) {
+  if (this.isConnected) {
+    return;
+  }
+
   let layer = this._layers[0];
   let allow = ['plane', 'colorMap', 'size', 'camera',
                'tiles', 'palette', 'attrs', 'interrupts', 'font', 'grid'];
@@ -79,6 +85,7 @@ Renderer.prototype.connect = function(input) {
   layer.attrs    = input.attrs;
   this.grid       = input.grid;
   this.interrupts = input.interrupts;
+  this.isConnected = true;
 }
 
 Renderer.prototype.flushBuffer = function() {
@@ -292,7 +299,7 @@ Renderer.prototype.renderComponents = function(components, settings, callback) {
   let myPalette = this._layers[0].palette;
   settings = settings || {};
 
-  if (settings.resize) {
+  if (settings.resize && !this.haveRenderedPlaneOnce) {
     let width = settings.resize.width;
     let height = Math.floor(width / myPlane.width * myPlane.height);
     myPlane = myPlane.resize(width, height);
@@ -301,6 +308,11 @@ Renderer.prototype.renderComponents = function(components, settings, callback) {
   for (let i = 0; i < components.length; i++) {
     let comp = components[i];
     if (comp == 'plane') {
+      if (this.haveRenderedPlaneOnce) {
+        continue;
+      }
+      this.haveRenderedPlaneOnce = true;
+
       if (!this.innerPlaneRenderer) {
         this.innerPlaneRenderer = new Renderer();
         let components = {
@@ -313,20 +325,21 @@ Renderer.prototype.renderComponents = function(components, settings, callback) {
       let layer = surfaces[0];
       callback('plane', layer);
 
+    } else if (comp == 'colorMap') {
+      let opt = {};
+      if (settings.colorMap && myColorMap.name) {
+        if (settings.colorMap['*']) {
+          opt = settings.colorMap['*'];
+        } else {
+          opt = settings.colorMap[myColorMap.name];
+        }
+      }
+      let surface = myColorMap.serialize(opt);
+      callback('colorMap', surface);
+
     } else if (comp == 'palette') {
       if (myPalette) {
         let surface = myPalette.serialize();
-        callback('palette', surface);
-      } else {
-        let opt = {};
-        if (settings.colorMap && myColorMap.name) {
-          if (settings.colorMap['*']) {
-            opt = settings.colorMap['*'];
-          } else {
-            opt = settings.colorMap[myColorMap.name];
-          }
-        }
-        let surface = myColorMap.serialize(opt);
         callback('palette', surface);
       }
 
@@ -345,6 +358,11 @@ Renderer.prototype._renderGrid = function() {
   let width = this.grid.width * this.grid.zoom;
   let height = this.grid.height * this.grid.zoom;
   let unit = this.grid.unit * this.grid.zoom;
+  let pitch = width * 4;
+
+  if (width == 0 || height == 0 || unit == 0) {
+    throw new Error('could not render grid, invalid dimensions: width=${width}, height=${height}, unit=${unit}');
+  }
 
   let targetPoint = unit;
   let lastPoint = targetPoint - 1;
@@ -371,6 +389,7 @@ Renderer.prototype._renderGrid = function() {
   this.grid.width = width;
   this.grid.height = height;
   this.grid.buff = buff;
+  this.grid.pitch = pitch;
 }
 
 Renderer.prototype._gridSurface = function() {
@@ -379,6 +398,7 @@ Renderer.prototype._gridSurface = function() {
       width: this.grid.width,
       height: this.grid.height,
       buff: this.grid.buff,
+      pitch: this.grid.pitch,
     }
   }
   return null;

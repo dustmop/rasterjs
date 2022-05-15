@@ -240,7 +240,24 @@ Scene.prototype.setGrid = function(unit) {
   if (this.config.gridUnit) {
     return;
   }
+  if (!types.isNumber(unit)) {
+    unit = 16;
+  }
   this.config.gridUnit = unit;
+
+  let width = this.width || this.aPlane.width;
+  let height = this.height || this.aPlane.height;
+
+  if (this.renderer) {
+    // TODO: It is possible to get here with 0 width and 0 height if
+    // setGrid is called before setSize / drawImage.
+    this.renderer.grid = {
+      zoom: this.config.zoomScale,
+      width: width,
+      height: height,
+      unit: this.config.gridUnit,
+    };
+  }
 }
 
 Scene.prototype.setTitle = function(title) {

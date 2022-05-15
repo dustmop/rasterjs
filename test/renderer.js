@@ -3,7 +3,7 @@ var util = require('./util.js');
 var ra = require('../src/lib.js');
 
 describe('Render components', function() {
-  it('tileset and palette', function() {
+  it('tileset and colorMap', function() {
     ra.resetState();
     ra.useColors(null);
 
@@ -25,9 +25,9 @@ describe('Render components', function() {
     let numGot = 0;
     let gotPalette = null;
     let gotTileset = null;
-    renderer.renderComponents(['palette', 'tileset'], null, (type, surf) => {
+    renderer.renderComponents(['colorMap', 'tileset'], null, (type, surf) => {
       numGot++;
-      if (type == 'palette') {
+      if (type == 'colorMap') {
         gotPalette = surf;
       } else if (type == 'tileset') {
         gotTileset = surf;

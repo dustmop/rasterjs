@@ -56,8 +56,8 @@ function Tileset(sourceOrNum, sizeInfo, opt) {
   return this;
 }
 
-Tileset.prototype.get = function(c) {
-  return this.data[c];
+Tileset.prototype.get = function(i) {
+  return this.data[i];
 }
 
 Tileset.prototype._loadTilesFromSource = function(source, dedup) {
@@ -214,4 +214,5 @@ Tile.prototype.display = function() {
   }
 }
 
+module.exports.Tile = Tile;
 module.exports.Tileset = Tileset;

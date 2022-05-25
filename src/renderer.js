@@ -30,6 +30,7 @@ Renderer.prototype._init = function() {
       palette: null,
       attrs: null,
       size: null,
+      spriteList: null,
     }
   ]
   this.isConnected = false;
@@ -45,7 +46,8 @@ Renderer.prototype.connect = function(input) {
 
   let layer = this._layers[0];
   let allow = ['plane', 'colorMap', 'size', 'camera',
-               'tiles', 'palette', 'attrs', 'interrupts', 'font', 'grid'];
+               'tiles', 'palette', 'attrs', 'interrupts', 'spriteList',
+               'font', 'grid'];
   let keys = Object.keys(input);
   for (let i = 0; i < keys.length; i++) {
     let k = keys[i];
@@ -83,8 +85,9 @@ Renderer.prototype.connect = function(input) {
   layer.tiles    = input.tiles;
   layer.palette  = input.palette;
   layer.attrs    = input.attrs;
-  this.grid       = input.grid;
-  this.interrupts = input.interrupts;
+  layer.spriteList = input.spriteList;
+  this.grid        = input.grid;
+  this.interrupts  = input.interrupts;
   this.isConnected = true;
 }
 
@@ -285,6 +288,55 @@ Renderer.prototype._renderRegion = function(layer, left, top, right, bottom) {
         layer.rgbSurface.buff[t+1] = rgb.g;
         layer.rgbSurface.buff[t+2] = rgb.b;
         layer.rgbSurface.buff[t+3] = 0xff;
+      }
+    }
+  }
+
+  if (layer.spriteList) {
+    let chardat = layer.spriteList.chardat || layer.tiles;
+    if (!chardat) {
+      throw new Error('cannot render sprites without character data')
+    }
+    for (let k = 0; k < layer.spriteList.items.length; k++) {
+      let spr = layer.spriteList.items[k];
+      // ensure size of sprite is set
+      if ((spr.x === null) || (spr.x === undefined)) {
+        continue;
+      }
+      if ((spr.y === null) || (spr.y === undefined)) {
+        continue;
+      }
+      // invisible flag
+      if (spr.i) {
+        continue;
+      }
+      // the character object
+      let obj = chardat.get(spr.c);
+      if (!obj) {
+        continue;
+      }
+      for (let py = 0; py < obj.height; py++) {
+        for (let px = 0; px < obj.width; px++) {
+          let x = px + spr.x;
+          let y = py + spr.y;
+          let t = y*targetPitch + x*4;
+          // color value for this pixel
+          let c = obj.get(px, py);
+          if (c > 0) {
+            let rgb = this._toColor(c);
+            if (spr.m) {
+              layer.rgbSurface.buff[t+0] += rgb.r;
+              layer.rgbSurface.buff[t+1] += rgb.g;
+              layer.rgbSurface.buff[t+2] += rgb.b;
+              layer.rgbSurface.buff[t+3] = 0xff;
+            } else {
+              layer.rgbSurface.buff[t+0] = rgb.r;
+              layer.rgbSurface.buff[t+1] = rgb.g;
+              layer.rgbSurface.buff[t+2] = rgb.b;
+              layer.rgbSurface.buff[t+3] = 0xff;
+            }
+          }
+        }
       }
     }
   }

@@ -1,0 +1,5 @@
+Name: Some Other 8-bit Vertical Shooter Assets: "Valgrind"
+Copyright: Carl Olsson (surt), hosted by OpenGameArt.org
+URL: https://opengameart.org/content/some-other-8-bit-vertical-shooter-assets
+License: public domain
+Link: https://creativecommons.org/publicdomain/zero/1.0/

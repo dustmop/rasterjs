@@ -10,6 +10,7 @@ const textLoader = require('./text_loader.js');
 const asciiDisplay = require('./ascii_display.js');
 const plane = require('./plane.js');
 const tiles = require('./tiles.js');
+const sprites = require('./sprites.js');
 const attributes = require('./attributes.js');
 const rgbColor = require('./rgb_color.js');
 const types = require('./types.js');
@@ -37,6 +38,7 @@ function Scene(env) {
   this.tiles = null;
   this.attrs = null;
   this.interrupts = null;
+  this.spriteList = null;
 
   this.aPlane = new plane.Plane();
   this.numFrames = FRAMES_LOOP_FOREVER;
@@ -84,6 +86,22 @@ Scene.prototype.Tileset = function() {
   let args = arguments;
   // TODO: destructure?
   return new tiles.Tileset(args[0], args[1]);
+}
+
+Scene.prototype.SpriteList = function() {
+  if (new.target === undefined) {
+    throw new Error('SpriteList constructor must be called with `new`');
+  }
+  let args = arguments;
+  return new sprites.SpriteList(args[0], args[1]);
+}
+
+Scene.prototype.SpriteSheet = function() {
+  if (new.target === undefined) {
+    throw new Error('SpriteSheet constructor must be called with `new`');
+  }
+  let args = arguments;
+  return new sprites.SpriteSheet(args[0], args[1]);
 }
 
 // TODO: Constructors for other components, Attributes, etc ...
@@ -208,6 +226,7 @@ Scene.prototype.resetState = function() {
   this.tiles = null;
   this.attrs = null;
   this.interrupts = null;
+  this.spriteList = null;
   this.rgbBuffer = null;
   this._initConfig();
   this._addMethods();
@@ -792,11 +811,18 @@ Scene.prototype.provide = function() {
       unit: this.config.gridUnit,
     }
   }
+  if (this.spriteList) {
+    prov.spriteList = this.spriteList;
+  }
   return prov;
 }
 
 Scene.prototype._saveSurfacesTo = function(surfaces, filename) {
   this.fsacc.saveTo(filename, surfaces);
+}
+
+Scene.prototype.useSpriteList = function(sprites) {
+  this.spriteList = sprites;
 }
 
 module.exports.Scene = Scene;

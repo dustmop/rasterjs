@@ -2,7 +2,8 @@ const rgbColor = require('./rgb_color.js');
 const tiles = require('./tiles.js');
 const types = require('./types.js');
 
-function SpriteList(numSprites, chardat) {
+function SpriteList(chardat) {
+  let numSprites = chardat.length;
   let items = new Array(numSprites);
   for (let i = 0; i < items.length; i++) {
     let item = {};
@@ -70,7 +71,7 @@ SpriteSheet.prototype._parseSpriteSheet = function(pl, border) {
     ch.data = new Uint8Array(pl.data.buffer, offset);
     data[i] = ch;
   }
-  this.numTiles = numChars;
+  this.length = numChars;
   this.data = data;
 }
 

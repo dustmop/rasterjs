@@ -16,7 +16,7 @@ describe('Sprite', function() {
 
     ra.drawImage(imgBg);
 
-    let sprites = new ra.SpriteList(8, [imgObj0, imgObj1, imgObj2]);
+    let sprites = new ra.SpriteList([imgObj0, imgObj1, imgObj2]);
     ra.useSpriteList(sprites);
 
     sprites[0].x = 16;
@@ -46,7 +46,7 @@ describe('Sprite', function() {
 
     let tiles = new ra.Tileset(imgTiles, {tile_width: 16, tile_height: 16});
 
-    let sprites = new ra.SpriteList(8, tiles);
+    let sprites = new ra.SpriteList(tiles);
     ra.useSpriteList(sprites);
 
     sprites[0].x = 16;
@@ -80,7 +80,7 @@ describe('Sprite', function() {
 
     let sheet = new ra.SpriteSheet(imgSheet, {trueColorBorder: '#000cd4'});
 
-    let sprites = new ra.SpriteList(8, sheet);
+    let sprites = new ra.SpriteList(sheet);
     ra.useSpriteList(sprites);
 
     sprites[0].x = 16;

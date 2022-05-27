@@ -6,16 +6,7 @@ function SpriteList(chardat) {
   let numSprites = chardat.length;
   let items = new Array(numSprites);
   for (let i = 0; i < items.length; i++) {
-    let item = {};
-    item.x = null;
-    item.y = null;
-    item.c = null;
-    item.m = null;
-    item.a = null;
-    item.i = null;
-    item.h = null;
-    item.v = null;
-    item.b = null;
+    let item = new Sprite();
     items[i] = item;
     this[i] = item;
   }
@@ -26,6 +17,31 @@ function SpriteList(chardat) {
   }
   this.chardat = chardat;
   return this;
+}
+
+SpriteList.prototype.ensureValid = function() {
+  for (let i = 0; i < this.length; i++) {
+    this.items[i]._ensureIntPos();
+  }
+}
+
+function Sprite() {
+  let item = this;
+  item.x = null;
+  item.y = null;
+  item.c = null;
+  item.m = null;
+  item.a = null;
+  item.i = null;
+  item.h = null;
+  item.v = null;
+  item.b = null;
+  return item;
+}
+
+Sprite.prototype._ensureIntPos = function() {
+  this.x = Math.floor(this.x);
+  this.y = Math.floor(this.y);
 }
 
 // each Sprite contains:

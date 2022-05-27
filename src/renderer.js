@@ -293,6 +293,7 @@ Renderer.prototype._renderRegion = function(layer, left, top, right, bottom) {
   }
 
   if (layer.spriteList) {
+    layer.spriteList.ensureValid();
     let chardat = layer.spriteList.chardat || layer.tiles;
     if (!chardat) {
       throw new Error('cannot render sprites without character data')

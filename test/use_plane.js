@@ -74,18 +74,4 @@ describe('Use plane', function() {
     }, /ra.fillSquare is not a function/);
   });
 
-  it('useTileset requires usePlane', function() {
-    ra.resetState();
-
-    let tiles = new ra.Plane();
-    tiles.setSize(16);
-    // TODO: Shouldn't need this call, lazy evaluation requires it
-    tiles.drawDot(0, 0);
-    ra.useTileset(tiles, {tile_width: 4, tile_height: 4});
-
-    assert.throws(function() {
-      ra.renderPrimaryPlane();
-    }, /Error: cannot use tileset without also using plane/);
-  });
-
 });

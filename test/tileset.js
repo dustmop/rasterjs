@@ -5,6 +5,21 @@ var ra = require('../src/lib.js');
 describe('Tileset', function() {
   it('tiles from image', function() {
     ra.resetState();
+    ra.setSize(6, 6, {planeOnly: true});
+
+    let tiles = ra.loadImage('test/testdata/tiles.png');
+    ra.useTileset(tiles, {tile_width: 4, tile_height: 4});
+
+    ra.fillPattern([[2, 6, 1, 3],
+                    [6, 7, 7, 7],
+                    [5, 5, 1, 0],
+                    [6, 4, 2, 2]]);
+
+    util.renderCompareTo(ra, 'test/testdata/map_image.png');
+  });
+
+  it('tiles with separate plane', function() {
+    ra.resetState();
 
     let plane = new ra.Plane();
     plane.setSize(4);

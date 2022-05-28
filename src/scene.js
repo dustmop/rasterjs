@@ -189,13 +189,16 @@ Scene.prototype.fillTrueColor = function(rgb) {
   this.aPlane.fillColor(color);
 }
 
-Scene.prototype.setSize = function(w, h) {
-  let spec = ['w:i', 'h?i'];
-  [w, h] = destructure.from('setSize', spec, arguments, null);
+Scene.prototype.setSize = function(w, h, opt) {
+  let spec = ['w:i', 'h?i', 'opt?any'];
+  [w, h, opt] = destructure.from('setSize', spec, arguments, null);
   if (h === undefined) { h = w; };
+  opt = opt || {};
 
-  this.width = w;
-  this.height = h;
+  if (!opt.planeOnly) {
+    this.width = w;
+    this.height = h;
+  }
   if (this.aPlane.width == 0 || this.aPlane.height == 0) {
     this.aPlane.setSize(w, h);
   }
@@ -237,7 +240,6 @@ Scene.prototype._initConfig = function() {
     zoomScale: 1,
     titleText: '',
     translateCenter: false,
-    usingNonPrimaryPlane: false,
     gridUnit: null,
   };
 }
@@ -648,7 +650,6 @@ Scene.prototype.usePlane = function(pl) {
   this.aPlane = pl;
   this._removeMethods();
   this._removeAdditionalMethods();
-  this.config.usingNonPrimaryPlane = true;
   // TODO: test me
   return this.aPlane;
 }
@@ -664,6 +665,9 @@ Scene.prototype.usePalette = function(param) {
   // can be called like this:
   //
   //   // Construct a palette from what was drawn to the plane
+  //   ra.usePalette();
+  //
+  //   // Same, but sort the palette by hsv
   //   ra.usePalette({sort: true});
   //
   //   // List of indicies from the colorMap.
@@ -778,12 +782,6 @@ Scene.prototype.useInterrupts = function(conf) {
 
 Scene.prototype.provide = function() {
   this._ensureColorMap();
-  if (this.tiles != null) {
-    // Assert that useTileset requires usePlane
-    if (!this.config.usingNonPrimaryPlane) {
-      throw new Error('cannot use tileset without also using plane');
-    }
-  }
   let prov = {};
   prov.plane = this.aPlane;
   prov.colorMap = this.colorMap;

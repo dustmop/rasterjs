@@ -18,6 +18,14 @@ describe('Text', function() {
     util.renderCompareTo(ra, 'test/testdata/winner.png');
   });
 
+  it('write tiny text with space', function() {
+    ra.resetState();
+    ra.setSize({w: 30, h: 9});
+    ra.setFont('font:tiny');
+    ra.drawText('you win', 1, 2);
+    util.renderCompareTo(ra, 'test/testdata/you-win.png');
+  });
+
   it('write text from basic', function() {
     ra.resetState();
     ra.setSize({w: 84, h: 12});

@@ -14,6 +14,12 @@ function Loader(fsacc, scene) {
   return this;
 }
 
+const LOAD_STATE_NONE = 0;
+const LOAD_STATE_OPENED = 1;
+const LOAD_STATE_READ = 2;
+const LOAD_STATE_FILLED = 3;
+const LOAD_STATE_ERROR = -1;
+
 Loader.prototype.loadImage = function(filename, opt) {
   let sortUsingHSV = false;
   if (opt.sortColors) {
@@ -37,6 +43,7 @@ Loader.prototype.loadImage = function(filename, opt) {
     imgPlane.pitch = planePitch;
     imgPlane.height = found.height;
     imgPlane.colorMap = this.scene.colorMap;
+    imgPlane.loadState = LOAD_STATE_READ;
     imgPlane.fillData();
     return imgPlane;
   }
@@ -56,6 +63,7 @@ Loader.prototype.loadImage = function(filename, opt) {
   img.sortUsingHSV = sortUsingHSV;
   img.left = 0;
   img.top = 0;
+  img.loadState = LOAD_STATE_NONE;
   // resources.openImage assigns these:
   img.width = 0;
   img.height = 0;
@@ -84,6 +92,8 @@ Loader.prototype.loadImage = function(filename, opt) {
       throw `error, unknown type for rgbBuff: ${img.rgbBuff.constructor.name}`;
     }
     img.fillData();
+  } else {
+    img.loadState = LOAD_STATE_OPENED; // async
   }
 
   this.list.push(img);
@@ -111,6 +121,21 @@ function ImagePlane() {
   this.palette = null;
   this.sortUsingHSV = false;
   return this;
+}
+
+ImagePlane.prototype.whenRead = function() {
+  this.loadState = LOAD_STATE_READ;
+  let collect = this.parentLoader;
+  for (let k = 0; k < collect.list.length; k++) {
+    let img = collect.list[k];
+    if (img.loadState == LOAD_STATE_ERROR) {
+      continue;
+    } else if (img.loadState == LOAD_STATE_NONE || img.loadState == LOAD_STATE_OPENED) {
+      return;
+    } else if (img.loadState == LOAD_STATE_READ) {
+      img.fillData();
+    }
+  }
 }
 
 ImagePlane.prototype.ensureReady = function() {
@@ -190,6 +215,7 @@ ImagePlane.prototype.put = function(x, y, v) {
 }
 
 ImagePlane.prototype.fillData = function() {
+  this.loadState = LOAD_STATE_FILLED;
   if (this.data == null) {
     let numPixels = this.height * this.width;
     this.data = new Uint8Array(numPixels);

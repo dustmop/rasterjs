@@ -32,14 +32,23 @@ FilesysAccess.prototype.readImageData = function(filename, imgPlane) {
     imgPlane.pitch = pixels.width;
     imgPlane.height = pixels.height;
     // Down-sample the rgb buffer into the data, then finish
-    if (imgPlane.fillData) {
-      imgPlane.fillData();
+    if (imgPlane.whenRead) {
+      imgPlane.whenRead();
     }
     self.numLoadDone++;
   }
   imgElem.onerror = function() {
+    imgPlane.loadState = -1;
     self.loadFail = filename;
     self.numLoadDone++;
+  }
+
+  if (filename.startsWith('SLOW:')) {
+    setTimeout(() => {
+      filename = filename.slice(5);
+      imgElem.src = '/' + filename;
+    }, 50);
+    return 1;
   }
   imgElem.src = '/' + filename;
   return 1;

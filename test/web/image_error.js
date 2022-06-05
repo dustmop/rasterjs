@@ -46,7 +46,7 @@ describe('image', function () {
       success();
     }
 
-    // Wait for images to load, but`not_found` fails to load.
+    // Wait for images to load, but `not_found` fails to load.
     img.then(function(){
       throw new Error('did not expect callback to happen');
     });

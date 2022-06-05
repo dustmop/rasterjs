@@ -44,6 +44,15 @@ Sprite.prototype._ensureIntPos = function() {
   this.y = Math.floor(this.y);
 }
 
+Sprite.prototype.assign = function(other) {
+  let keys = Object.keys(other);
+  for (let i = 0; i < keys.length; i++) {
+    let k = keys[i];
+    this[k] = other[k];
+  }
+  this._ensureIntPos();
+}
+
 // each Sprite contains:
 // x, y   position
 // c      character

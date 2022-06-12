@@ -104,6 +104,14 @@ Scene.prototype.SpriteSheet = function() {
   return new sprites.SpriteSheet(args[0], args[1]);
 }
 
+Scene.prototype.RGBColor = function(_many) {
+  if (new.target === undefined) {
+    throw new Error('SpriteSheet constructor must be called with `new`');
+  }
+  let args = arguments;
+  return new rgbColor.RGBColor(args[0], args[1], args[2]);
+}
+
 // TODO: Constructors for other components, Attributes, etc ...
 
 Scene.prototype._addMethods = function() {
@@ -172,18 +180,14 @@ Scene.prototype._translateArguments = function(params, args) {
 }
 
 Scene.prototype.setTrueColor = function(rgb) {
-  if (!types.isNumber(rgb)) {
-    throw new Error(`setTrueColor needs rgb as a number, got ${rgb}`);
-  }
+  rgb = new rgbColor.RGBColor(rgb);
   this._ensureColorMap();
   let color = this.colorMap.extendWith(rgb);
   this.aPlane.setColor(color);
 }
 
 Scene.prototype.fillTrueColor = function(rgb) {
-  if (!types.isNumber(rgb)) {
-    throw new Error(`fillTrueColor needs rgb as a number, got ${rgb}`);
-  }
+  rgb = new rgbColor.RGBColor(rgb);
   this._ensureColorMap();
   let color = this.colorMap.extendWith(rgb);
   this.aPlane.fillColor(color);
@@ -579,6 +583,12 @@ Scene.prototype.put = function(x, y, v) {
   return this.aPlane.put(x, y, v);
 }
 
+Scene.prototype.nge = function() {
+  let spec = ['start:i', 'length?i'];
+  [start, length] = destructure.from('nge', spec, arguments, null);
+  return Array.from(new Array(length), (x,i) => i+start)
+}
+
 Scene.prototype._initPaletteFromPlane = function(shouldSort) {
   this._paletteFromColorMap();
   if (shouldSort) {
@@ -620,7 +630,7 @@ Scene.prototype._initPaletteFromPlane = function(shouldSort) {
     }
     // Assigin the palette to the scene
     let saveService = this.saveService;
-    let pal = new palette.Palette(items, saveService);
+    let pal = new palette.Palette(items, saveService, this);
     this.palette = pal;
   }
   return this.palette;
@@ -638,7 +648,7 @@ Scene.prototype._paletteFromColorMap = function() {
       let ent = new palette.PaletteEntry(rgb, i, colors);
       all.push(ent);
     }
-    this.palette = new palette.Palette(all, saveService);
+    this.palette = new palette.Palette(all, saveService, this);
   }
   return this.palette;
 }
@@ -716,7 +726,7 @@ Scene.prototype._constructPaletteFromVals = function(vals) {
     ent = new palette.PaletteEntry(rgb, cval, colors);
     all.push(ent);
   }
-  this.palette = new palette.Palette(all, saveService);
+  this.palette = new palette.Palette(all, saveService, this);
   return this.palette;
 }
 

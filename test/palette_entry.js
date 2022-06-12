@@ -217,16 +217,16 @@ describe('Palette entry', function() {
     });
     util.renderCompareTo(ra, 'test/testdata/rotate-before.png');
 
-    palette.rotate({startIndex: 0, replaceFrom: 4, replaceSize: 4, click: 1});
+    palette.cycle({values: [4, 5, 6, 7], click: 1});
     util.renderCompareTo(ra, 'test/testdata/rotate-after1.png');
 
-    palette.rotate({startIndex: 0, replaceFrom: 4, replaceSize: 4, click: 2});
+    palette.cycle({values: [4, 5, 6, 7], click: 2});
     util.renderCompareTo(ra, 'test/testdata/rotate-after2.png');
 
-    palette.rotate({startIndex: 0, replaceFrom: 4, replaceSize: 4, click: 3});
+    palette.cycle({values: [4, 5, 6, 7], click: 3});
     util.renderCompareTo(ra, 'test/testdata/rotate-after3.png');
 
-    palette.rotate({startIndex: 0, replaceFrom: 4, replaceSize: 4, click: 4});
+    palette.cycle({values: [4, 5, 6, 7], click: 4});
     util.renderCompareTo(ra, 'test/testdata/rotate-after4.png');
   });
 

@@ -56,4 +56,10 @@ describe('Basic', function() {
     util.renderCompareTo(ra, 'test/testdata/polygon-draw.png');
   });
 
+  it('ra.nge', function() {
+    let actual = ra.nge({start: 4, length: 5});
+    let expect = [4, 5, 6, 7, 8];
+    assert.deepEqual(actual, expect);
+  });
+
 });

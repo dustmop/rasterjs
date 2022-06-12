@@ -7,6 +7,9 @@ const verboseLogger = require('./verbose_logger.js');
 let verbose = new verboseLogger.Logger();
 
 function Loader(fsacc, scene) {
+  if (!scene) {
+    throw new Error('needs non-null scene object')
+  }
   this.list = [];
   this.addedFiles = {};
   this.fsacc = fsacc;
@@ -260,23 +263,8 @@ ImagePlane.prototype.fillData = function() {
 
   verbose.log(`loading image with rgb map: ${JSON.stringify(remap)}`, 6);
 
-  // FIXME: This feature isn't complete yet, nor particularily thought out
-  if (!this.palette) {
-    // Build palette for the image.
-    collect.sort((a,b) => a-b);
-    // TODO: What about empty collect list.
-    let firstValue = collect[0];
-    let lastValue = collect[collect.length - 1];
-    let pal = new Array(lastValue + 1);
-    pal.fill(0);
-    for (let k = 0; k < pal.length; k++) {
-      if (collect.includes(k)) {
-        pal[k] = k;
-      }
-    }
-    this._usedColors = new palette.constructFrom(pal, firstValue,
-                                                 this.colorMap, this.fsacc);
-  }
+  // Clone the list of values
+  this.colorUsage = collect.slice();
 
   // Build the data buffer
   for (let y = 0; y < this.height; y++) {
@@ -330,10 +318,6 @@ ImagePlane.prototype.then = function(cb) {
 
 ImagePlane.prototype.numColors = function() {
   return this._numColors;
-}
-
-ImagePlane.prototype.getUsedColors = function() {
-  return this._usedColors;
 }
 
 module.exports.Loader = Loader;

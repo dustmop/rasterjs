@@ -4,10 +4,11 @@ const types = require('./types.js');
 const serializer = require('./serializer.js');
 
 
-function Palette(items, fsacc) {
+function Palette(items, fsacc, parentScene) {
   if (fsacc != null && !fsacc.saveTo) {
     throw new Error('Palette given invalid fsacc');
   }
+  this.parentScene = parentScene;
   this.items = items;
   for (let i = 0; i < items.length; i++) {
     if (items[i].constructor != PaletteEntry) {
@@ -27,7 +28,10 @@ function Palette(items, fsacc) {
 }
 
 
-function constructFrom(vals, offset, colors, fsacc) {
+function constructFrom(vals, offset, colors, fsacc, parentScene) {
+  if (!parentScene) {
+    throw new Error('constructFrom: parentScene is null');
+  }
   let all = [];
   let ent;
   for (let i = 0; i < vals.length; i++) {
@@ -47,7 +51,7 @@ function constructFrom(vals, offset, colors, fsacc) {
     ent = new PaletteEntry(rgb, cval, colors);
     all.push(ent);
   }
-  return new Palette(all, fsacc);
+  return new Palette(all, fsacc, parentScene);
 }
 
 
@@ -116,17 +120,32 @@ Palette.prototype.assign = function(assoc) {
   }
 }
 
-Palette.prototype.rotate = function(args) {
+Palette.prototype.cycle = function(args) {
   let spec = ['!name', 'startIndex?i', 'endIndex?i',
-              'replaceFrom?i', 'replaceSize?i', 'click?i'];
-  let [startIndex, endIndex, replaceFrom, replaceSize, click] = (
-    destructure.from('rotate', spec, arguments, null));
-  if (endIndex == 0) { endIndex = this.length; }
-  if (replaceFrom == 0) { replaceFrom = this.length; }
+              'values?any', 'incStep?i', 'slow?i', 'click?a'];
+  let [startIndex, endIndex, values, incStep, slow, click] = (
+    destructure.from('cycle', spec, arguments, null));
 
-  for (let k = 0; k < endIndex - startIndex; k++) {
-    let r = replaceFrom + ((click + k) % replaceSize);
-    this.items[k + startIndex].setColor(r);
+  if (this.parentScene == null) {
+    throw new Error('parentScene is not set');
+  }
+
+  endIndex = endIndex || this.length;
+  incStep = Math.max(1, Math.floor(incStep));
+  slow = Math.max(1, Math.floor(slow));
+  click = click !== null ? click : this.parentScene.timeClick;
+
+  if (!values) {
+    values = this.parentScene.nge(0, this.length);
+  }
+
+  let param = Math.floor(click / slow);
+  let numColors = endIndex - startIndex;
+  for (let k = 0; k < numColors; k++) {
+    let index = k + startIndex;
+    let n = (k + (param*incStep)) % values.length;
+    let r = values[n];
+    this.items[index].setColor(r);
   }
 }
 

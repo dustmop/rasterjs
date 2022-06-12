@@ -115,8 +115,7 @@ describe('Image', function() {
 
     let img = ra.loadImage('test/testdata/small-fruit.png');
     assert.equal(img.numColors(), 5);
-    assert.equal(img.getUsedColors().length, 15);
-    assert.equal(img.getUsedColors().toString(), 'Palette{0:[0]=0x000000, 1:[0]=0x000000, 2:[2]=0x7e2553, 3:[0]=0x000000, 4:[4]=0xab5236, 5:[0]=0x000000, 6:[0]=0x000000, 7:[0]=0x000000, 8:[8]=0xff004d, 9:[0]=0x000000, 10:[0]=0x000000, 11:[0]=0x000000, 12:[0]=0x000000, 13:[0]=0x000000, 14:[14]=0xff77a8}');
+    assert.deepEqual(img.colorUsage, [0, 4, 2, 8, 14]);
   });
 
 

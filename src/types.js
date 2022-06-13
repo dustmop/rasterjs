@@ -67,6 +67,11 @@ function isColorMap(obj) {
   return obj.constructor == colorMap.Map;
 }
 
+function isColorAlloc(obj) {
+  if (!obj) { return false; }
+  return obj.constructor == imageLoader.ColorAlloc;
+}
+
 function isPaletteEntry(obj) {
   if (!obj) { return false; }
   return obj.constructor == palette.PaletteEntry;
@@ -86,6 +91,7 @@ module.exports.isFunction = isFunction;
 module.exports.isObject = isObject;
 module.exports.isRGBColor = isRGBColor;
 module.exports.isColorMap = isColorMap;
+module.exports.isColorAlloc = isColorAlloc;
 module.exports.isPaletteEntry = isPaletteEntry;
 module.exports.isTileset = isTileset;
 module.exports.isAttributes = isAttributes;

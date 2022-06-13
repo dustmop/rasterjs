@@ -589,8 +589,30 @@ Scene.prototype.nge = function() {
   return Array.from(new Array(length), (x,i) => i+start)
 }
 
-Scene.prototype._initPaletteFromPlane = function(shouldSort) {
-  this._paletteFromColorMap();
+Scene.prototype._initPaletteFromColorAlloc = function(colorAlloc) {
+  let max = 0;
+  for (let i = 0; i < colorAlloc._items.length; i++) {
+    if (colorAlloc._items[i] > max) {
+      max = colorAlloc._items[i];
+    }
+  }
+  let size = max + 1;
+  let recolor = {};
+  let items = [];
+  for (let i = 0; i < size; i++) {
+    let rgb = new rgbColor.RGBColor(this.colorMap[i]);
+    let ent = new palette.PaletteEntry(rgb, i, this.colorMap);
+    items.push(ent);
+  }
+  // Assigin the palette to the scene
+  let saveService = this.saveService;
+  let pal = new palette.Palette(items, saveService, this);
+  this.palette = pal;
+  return this.palette;
+}
+
+Scene.prototype._initPaletteFromPlane = function(shouldSort, optSize) {
+  this._paletteFromColorMap(optSize);
   if (shouldSort) {
     let remap = {};
     let vals = [];
@@ -636,13 +658,14 @@ Scene.prototype._initPaletteFromPlane = function(shouldSort) {
   return this.palette;
 }
 
-Scene.prototype._paletteFromColorMap = function() {
+Scene.prototype._paletteFromColorMap = function(optSize) {
   if (!this.palette) {
     verbose.log(`constructing palette from colorMap`, 4);
     let colors = this.colorMap;
+    let size = optSize || colors.size();
     let saveService = this.saveService;
     let all = [];
-    for (let i = 0; i < colors.size(); i++) {
+    for (let i = 0; i < size; i++) {
       let rgb = colors.get(i);
       rgbColor.ensureIs(rgb);
       let ent = new palette.PaletteEntry(rgb, i, colors);
@@ -680,6 +703,9 @@ Scene.prototype.usePalette = function(param) {
   //   // Same, but sort the palette by hsv
   //   ra.usePalette({sort: true});
   //
+  //   // ...
+  //   ra.usePalette({size: 4});
+  //
   //   // List of indicies from the colorMap.
   //   ra.usePalette([0x17, 0x21, 0x04, 0x09]);
   //
@@ -690,10 +716,12 @@ Scene.prototype.usePalette = function(param) {
   if (types.isPalette(param)) {
     this.palette = param;
     return this.palette;
+  } else if (types.isColorAlloc(param)) {
+    return this._initPaletteFromColorAlloc(param);
   } else if (!param) {
     return this._initPaletteFromPlane();
   } else if (types.isObject(param)) {
-    return this._initPaletteFromPlane(param.sort);
+    return this._initPaletteFromPlane(param.sort, param.size);
   } else if (types.isArray(param)) {
     return this._constructPaletteFromVals(param);
   } else if (types.isInteger(param)) {

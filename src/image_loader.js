@@ -110,6 +110,16 @@ Loader.prototype.insert = function(name, imageSurf) {
   this.addedFiles[name] = imageSurf;
 }
 
+function ColorAlloc(items) {
+  this._items = items;
+  this.length = items.length;
+  return this;
+}
+
+ColorAlloc.prototype.toInts = function() {
+  return this._items;
+}
+
 function ImagePlane() {
   this.parentLoader = null;
   this.filename = null;
@@ -264,7 +274,20 @@ ImagePlane.prototype.fillData = function() {
   verbose.log(`loading image with rgb map: ${JSON.stringify(remap)}`, 6);
 
   // Clone the list of values
-  this.colorUsage = collect.slice();
+  this.colorUsage = new ColorAlloc(collect.slice());
+  //
+  // # Why is this a colorAlloc object?
+  //
+  // ## Why do it this way instead of calling this a palette?
+  //
+  // If this is a palette, do we want to have that list of colors
+  // be sparse? Should the image have its colors compacted down
+  // to start at 0? Is there a use-case for using palette aside
+  // from assigning them to the scene?
+  //
+  // What happens if we grab img.palette and modify it with setColor?
+  //
+  // Should img.get(x,y) work the same before and after being drawn?
 
   // Build the data buffer
   for (let y = 0; y < this.height; y++) {
@@ -322,3 +345,4 @@ ImagePlane.prototype.numColors = function() {
 
 module.exports.Loader = Loader;
 module.exports.ImagePlane = ImagePlane;
+module.exports.ColorAlloc = ColorAlloc;

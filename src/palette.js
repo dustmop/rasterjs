@@ -137,6 +137,8 @@ Palette.prototype.cycle = function(args) {
 
   if (!values) {
     values = this.parentScene.nge(0, this.length);
+  } else if (types.isColorAlloc(values)) {
+    values = values.toInts();
   }
 
   let param = Math.floor(click / slow);

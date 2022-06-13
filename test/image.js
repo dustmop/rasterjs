@@ -1,6 +1,7 @@
 var assert = require('assert');
 var util = require('./util.js');
 var ra = require('../src/lib.js');
+var imageLoader = require('../src/image_loader.js');
 
 describe('Image', function() {
 
@@ -115,7 +116,8 @@ describe('Image', function() {
 
     let img = ra.loadImage('test/testdata/small-fruit.png');
     assert.equal(img.numColors(), 5);
-    assert.deepEqual(img.colorUsage, [0, 4, 2, 8, 14]);
+    let expect = new imageLoader.ColorAlloc([0, 4, 2, 8, 14])
+    assert.deepEqual(img.colorUsage, expect);
   });
 
 

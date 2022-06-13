@@ -230,4 +230,8 @@ describe('Palette entry', function() {
     util.renderCompareTo(ra, 'test/testdata/rotate-after4.png');
   });
 
+  // TODO: test usePalette(img.colorUsage)
+
+  // TODO: test palette.cycle({values: other.colorUsage});
+
 });

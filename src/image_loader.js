@@ -278,7 +278,18 @@ ImagePlane.prototype.fillData = function() {
   //
   // # Why is this a colorAlloc object?
   //
-  // ## Why do it this way instead of calling this a palette?
+  // This object represents the colors used by the loaded image,
+  // sorted according to where they are seen in the image (upper
+  // left first). It has two use cases:
+  //
+  // 1) Used as input for palette.cycle, treating the image as colors
+  // 2) To construct a palette object which will get cycled,
+  // by constructing a palette large enough to hold all used values.
+  //
+  // This second use case implies that this value can't be a plain
+  // array, but needs to be some sort tof object.
+  //
+  // # Why do it this way instead of calling this a palette?
   //
   // If this is a palette, do we want to have that list of colors
   // be sparse? Should the image have its colors compacted down

@@ -215,23 +215,68 @@ describe('Palette entry', function() {
         return 3;
       }
     });
-    util.renderCompareTo(ra, 'test/testdata/rotate-before.png');
+    util.renderCompareTo(ra, 'test/testdata/cycle-before.png');
 
     palette.cycle({values: [4, 5, 6, 7], click: 1});
-    util.renderCompareTo(ra, 'test/testdata/rotate-after1.png');
+    util.renderCompareTo(ra, 'test/testdata/cycle-after1.png');
 
     palette.cycle({values: [4, 5, 6, 7], click: 2});
-    util.renderCompareTo(ra, 'test/testdata/rotate-after2.png');
+    util.renderCompareTo(ra, 'test/testdata/cycle-after2.png');
 
     palette.cycle({values: [4, 5, 6, 7], click: 3});
-    util.renderCompareTo(ra, 'test/testdata/rotate-after3.png');
+    util.renderCompareTo(ra, 'test/testdata/cycle-after3.png');
 
     palette.cycle({values: [4, 5, 6, 7], click: 4});
-    util.renderCompareTo(ra, 'test/testdata/rotate-after4.png');
+    util.renderCompareTo(ra, 'test/testdata/cycle-colors.png');
   });
 
-  // TODO: test usePalette(img.colorUsage)
+  it('palette from image look', function() {
+    let tmpdir = util.mkTmpDir();
+    let tmpout = tmpdir + '/actual.png';
+    ra.resetState();
+    ra.useColors('pico8');
 
-  // TODO: test palette.cycle({values: other.colorUsage});
+    let img = ra.loadImage('test/testdata/green-fruit.png');
+    let pal = ra.usePalette(img.look);
+    // The pico8 default palette, except only 12 colors, because
+    // that's how much the look requires.
+    let expect = `Palette{0:[0]=0x000000, 1:[1]=0x1d2b53, 2:[2]=0x7e2553, 3:[3]=0x008751, 4:[4]=0xab5236, 5:[5]=0x5f574f, 6:[6]=0xc2c3c7, 7:[7]=0xfff1e8, 8:[8]=0xff004d, 9:[9]=0xffa300, 10:[10]=0xffec27, 11:[11]=0x00e436}`;
+    assert.equal(pal.toString(), expect);
+  });
+
+  it('palette cycle using image look', function() {
+    let tmpdir = util.mkTmpDir();
+    let tmpout = tmpdir + '/actual.png';
+    ra.resetState();
+
+    let shape = ra.loadImage('test/testdata/cycle-before.png');
+    let cycleColors = ra.loadImage('test/testdata/cycle-colors.png');
+    let palette = ra.usePalette({size: 4});
+
+    ra.setSize(8, 8);
+    ra.fillFrame(function(x, y) {
+      let a = x / 4;
+      let b = y / 4;
+      if (a < 1 && b < 1) {
+        return 0;
+      } else if (a >= 1 && b < 1) {
+        return 1;
+      } else if (a < 1 && b >= 1) {
+        return 2;
+      } else {
+        return 3;
+      }
+    });
+
+    // Cycle using the look of the loaded colormap
+    palette.cycle({values: cycleColors.look, click: 1});
+    util.renderCompareTo(ra, 'test/testdata/cycle-after1.png');
+
+    palette.cycle({values: cycleColors.look, click: 2});
+    util.renderCompareTo(ra, 'test/testdata/cycle-after2.png');
+
+    palette.cycle({values: cycleColors.look, click: 3});
+    util.renderCompareTo(ra, 'test/testdata/cycle-after3.png');
+  });
 
 });

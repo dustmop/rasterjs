@@ -110,14 +110,23 @@ describe('Image', function() {
 
 
   // Loading returns an image that knows what colors is uses
-  it('loaded image has a palette of color usage', function() {
+  it('loaded image has a look', function() {
     ra.resetState();
     ra.useColors('pico8');
 
     let img = ra.loadImage('test/testdata/small-fruit.png');
     assert.equal(img.numColors(), 5);
-    let expect = new imageLoader.ColorAlloc([0, 4, 2, 8, 14])
-    assert.deepEqual(img.colorUsage, expect);
+    let expect = new imageLoader.LookAtImage([0, 4, 2, 8, 14])
+    assert.deepEqual(img.look, expect);
+  });
+
+
+  // Look object has some functions
+  it('look has min and max', function() {
+    let look = new imageLoader.LookAtImage([3, 5, 8, 4, 2, 7]);
+    assert.equal(look.min(), 2);
+    assert.equal(look.max(), 8);
+    assert.deepEqual(look.toInts(), [3, 5, 8, 4, 2, 7]);
   });
 
 

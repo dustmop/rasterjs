@@ -420,7 +420,11 @@ Scene.prototype.save = function(savepath) {
 
 Scene.prototype.renderPrimaryPlane = function() {
   this.renderer.connect(this.provide());
-  return this.renderer.render();
+  let res = this.renderer.render();
+  if (res[0].width == 0 || res[0].height == 0 || res[0].pitch == 0) {
+    throw new Error(`invalid scene: ${JSON.stringify(res)}`);
+  }
+  return res;
 }
 
 Scene.prototype.quit = function() {
@@ -589,18 +593,11 @@ Scene.prototype.nge = function() {
   return Array.from(new Array(length), (x,i) => i+start)
 }
 
-Scene.prototype._initPaletteFromColorAlloc = function(colorAlloc) {
-  let max = 0;
-  for (let i = 0; i < colorAlloc._items.length; i++) {
-    if (colorAlloc._items[i] > max) {
-      max = colorAlloc._items[i];
-    }
-  }
-  let size = max + 1;
-  let recolor = {};
+Scene.prototype._initPaletteFromLookAtImage = function(look) {
+  let size = look.max() + 1;
   let items = [];
   for (let i = 0; i < size; i++) {
-    let rgb = new rgbColor.RGBColor(this.colorMap[i]);
+    let rgb = new rgbColor.RGBColor(this.colorMap.get(i));
     let ent = new palette.PaletteEntry(rgb, i, this.colorMap);
     items.push(ent);
   }
@@ -716,8 +713,8 @@ Scene.prototype.usePalette = function(param) {
   if (types.isPalette(param)) {
     this.palette = param;
     return this.palette;
-  } else if (types.isColorAlloc(param)) {
-    return this._initPaletteFromColorAlloc(param);
+  } else if (types.isLookAtImage(param)) {
+    return this._initPaletteFromLookAtImage(param);
   } else if (!param) {
     return this._initPaletteFromPlane();
   } else if (types.isObject(param)) {

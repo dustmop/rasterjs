@@ -137,7 +137,7 @@ Palette.prototype.cycle = function(args) {
 
   if (!values) {
     values = this.parentScene.nge(0, this.length);
-  } else if (types.isColorAlloc(values)) {
+  } else if (types.isLookAtImage(values)) {
     values = values.toInts();
   }
 

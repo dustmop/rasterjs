@@ -110,14 +110,24 @@ Loader.prototype.insert = function(name, imageSurf) {
   this.addedFiles[name] = imageSurf;
 }
 
-function ColorAlloc(items) {
+function LookAtImage(items) {
   this._items = items;
   this.length = items.length;
+  this._min = Math.min(...items);
+  this._max = Math.max(...items);
   return this;
 }
 
-ColorAlloc.prototype.toInts = function() {
+LookAtImage.prototype.toInts = function() {
   return this._items;
+}
+
+LookAtImage.prototype.min = function() {
+  return this._min;
+}
+
+LookAtImage.prototype.max = function() {
+  return this._max;
 }
 
 function ImagePlane() {
@@ -273,10 +283,10 @@ ImagePlane.prototype.fillData = function() {
 
   verbose.log(`loading image with rgb map: ${JSON.stringify(remap)}`, 6);
 
-  // Clone the list of values
-  this.colorUsage = new ColorAlloc(collect.slice());
+  // Look of the image, see the used color values. slice will clone it.
+  this.look = new LookAtImage(collect.slice());
   //
-  // # Why is this a colorAlloc object?
+  // # Why is this a LookAtImage object?
   //
   // This object represents the colors used by the loaded image,
   // sorted according to where they are seen in the image (upper
@@ -299,6 +309,11 @@ ImagePlane.prototype.fillData = function() {
   // What happens if we grab img.palette and modify it with setColor?
   //
   // Should img.get(x,y) work the same before and after being drawn?
+  //
+  // # Maybe a use case with attributes?
+  //
+  // I think the look can help to assign sprites their correct
+  // attribute. Need to research how this would actually work.
 
   // Build the data buffer
   for (let y = 0; y < this.height; y++) {
@@ -356,4 +371,4 @@ ImagePlane.prototype.numColors = function() {
 
 module.exports.Loader = Loader;
 module.exports.ImagePlane = ImagePlane;
-module.exports.ColorAlloc = ColorAlloc;
+module.exports.LookAtImage = LookAtImage;

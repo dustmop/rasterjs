@@ -110,8 +110,13 @@ Loader.prototype.insert = function(name, imageSurf) {
   this.addedFiles[name] = imageSurf;
 }
 
-function LookAtImage(items) {
-  this._items = items;
+function LookAtImage(items, density) {
+  if (!density) {
+    throw new Error(`LookAtImage needs density parameter`);
+  }
+  // Clone the list of items
+  this._items = items.slice();
+  this._density = density;
   this.length = items.length;
   this._min = Math.min(...items);
   this._max = Math.max(...items);
@@ -128,6 +133,10 @@ LookAtImage.prototype.min = function() {
 
 LookAtImage.prototype.max = function() {
   return this._max;
+}
+
+LookAtImage.prototype.density = function() {
+  return this._density;
 }
 
 function ImagePlane() {
@@ -283,8 +292,8 @@ ImagePlane.prototype.fillData = function() {
 
   verbose.log(`loading image with rgb map: ${JSON.stringify(remap)}`, 6);
 
-  // Look of the image, see the used color values. slice will clone it.
-  this.look = new LookAtImage(collect.slice());
+  // Look of the image, see the used color values
+  this.look = new LookAtImage(collect, needs.density);
   //
   // # Why is this a LookAtImage object?
   //
@@ -338,7 +347,10 @@ ImagePlane.prototype.fillData = function() {
 ImagePlane.prototype._collectColorNeeds = function() {
   let lookup = {};
   let rgbItems = [];
+  let minColorsPerLine = 9999;
+  let maxColorsPerLine = 0;
   for (let y = 0; y < this.height; y++) {
+    let seen = {};
     for (let x = 0; x < this.width; x++) {
       let k = y * this.pitch + x;
       this.alpha[k] = this.rgbBuff[k*4+3];
@@ -350,6 +362,7 @@ ImagePlane.prototype._collectColorNeeds = function() {
       let g = this.rgbBuff[k*4+1];
       let b = this.rgbBuff[k*4+2];
       let rgbval = r * 0x10000 + g * 0x100 + b;
+      seen[rgbval] = (seen[rgbval] || 0) + 1;
       if (lookup[rgbval] !== undefined) {
         continue;
       }
@@ -357,8 +370,16 @@ ImagePlane.prototype._collectColorNeeds = function() {
       lookup[rgbval] = rgbItems.length;
       rgbItems.push(new rgbColor.RGBColor(rgbval));
     }
+    let perLine = Object.keys(seen).length;
+    if (perLine < minColorsPerLine) {
+      minColorsPerLine = perLine;
+    }
+    if (perLine > maxColorsPerLine) {
+      maxColorsPerLine = perLine;
+    }
   }
-  return {lookup: lookup, rgbItems: rgbItems};
+  let density = Math.round((minColorsPerLine + maxColorsPerLine) / 2);
+  return {lookup: lookup, rgbItems: rgbItems, density: density};
 }
 
 ImagePlane.prototype.then = function(cb) {

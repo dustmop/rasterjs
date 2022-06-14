@@ -269,14 +269,18 @@ describe('Palette entry', function() {
     });
 
     // Cycle using the look of the loaded colormap
-    palette.cycle({values: cycleColors.look, click: 1});
+    palette.cycle({values: cycleColors.look, incStep: 1, click: 1});
     util.renderCompareTo(ra, 'test/testdata/cycle-after1.png');
 
-    palette.cycle({values: cycleColors.look, click: 2});
+    palette.cycle({values: cycleColors.look, incStep: 1, click: 2});
     util.renderCompareTo(ra, 'test/testdata/cycle-after2.png');
 
-    palette.cycle({values: cycleColors.look, click: 3});
+    palette.cycle({values: cycleColors.look, incStep: 1, click: 3});
     util.renderCompareTo(ra, 'test/testdata/cycle-after3.png');
+
+    // The incStep defaults to 2, which is the look.density()
+    palette.cycle({values: cycleColors.look, click: 1});
+    util.renderCompareTo(ra, 'test/testdata/cycle-after2.png');
   });
 
 });

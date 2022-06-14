@@ -116,17 +116,38 @@ describe('Image', function() {
 
     let img = ra.loadImage('test/testdata/small-fruit.png');
     assert.equal(img.numColors(), 5);
-    let expect = new imageLoader.LookAtImage([0, 4, 2, 8, 14])
+    let expect = new imageLoader.LookAtImage([0, 4, 2, 8, 14], 3)
     assert.deepEqual(img.look, expect);
   });
 
 
   // Look object has some functions
   it('look has min and max', function() {
-    let look = new imageLoader.LookAtImage([3, 5, 8, 4, 2, 7]);
+    let look = new imageLoader.LookAtImage([3, 5, 8, 4, 2, 7], 1);
     assert.equal(look.min(), 2);
     assert.equal(look.max(), 8);
     assert.deepEqual(look.toInts(), [3, 5, 8, 4, 2, 7]);
+  });
+
+
+  // Look object tries to determine how many colors appear per row
+  it('look density', function() {
+    ra.resetState();
+
+    let img = ra.loadImage('test/testdata/fill_oscil.png');
+    assert.equal(img.look.density(), 2);
+
+    img = ra.loadImage('test/testdata/odd_filled.png');
+    assert.equal(img.look.density(), 3);
+
+    img = ra.loadImage('test/testdata/palette_offs3.png');
+    assert.equal(img.look.density(), 8);
+
+    img = ra.loadImage('test/testdata/color_stripes.png');
+    assert.equal(img.look.density(), 1);
+
+    img = ra.loadImage('test/testdata/tiles.png');
+    assert.equal(img.look.density(), 7);
   });
 
 

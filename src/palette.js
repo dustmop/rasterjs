@@ -130,16 +130,19 @@ Palette.prototype.cycle = function(args) {
     throw new Error('parentScene is not set');
   }
 
+  if (!values) {
+    values = this.parentScene.nge(0, this.length);
+  } else if (types.isLookAtImage(values)) {
+    if (!incStep) {
+      incStep = values.density();
+    }
+    values = values.toInts();
+  }
+
   endIndex = endIndex || this.length;
   incStep = Math.max(1, Math.floor(incStep));
   slow = Math.max(1, Math.floor(slow));
   click = click !== null ? click : this.parentScene.timeClick;
-
-  if (!values) {
-    values = this.parentScene.nge(0, this.length);
-  } else if (types.isLookAtImage(values)) {
-    values = values.toInts();
-  }
 
   let param = Math.floor(click / slow);
   let numColors = endIndex - startIndex;

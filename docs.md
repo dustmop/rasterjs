@@ -34,21 +34,19 @@ Show the grid on top of the display, spaced out the given number of units.
 
 Move the x,y coordinate system's origin to the center of the plane, instead of the upper-left.
 
-### useColors(colorset)
+### useColors(colorMap)
 
-Assigns the color set to use for displaying the scene. May either be the name of a pre-existing color set, or a list of rgb values.
+Assigns the colorMap to use for displaying the scene. May either be the name of a pre-existing color set, or a list of rgb values.
 
-If not invoked, the current default colorset is this:
+If not invoked, the current default colorMap is this:
 
-![](asset/quick-colorset.png)
-
-This will likely change in the future: call `useColors('quick')` unless you want to modify your scripts in the future.
+![](asset/quick-colormap.png)
 
 Names of pre-existing color sets:
 
-`quick`: The current default colorset, shown above. 64 colors, a quick and simple rainbow palette.
+`quick`: The current default colorMap, shown above. 64 colors, a quick and simple rainbow palette.
 
-`dos`: Colors used by the DOS operating system. TODO: Specify which video standard.
+`dos`: Colors used by the DOS operating system.
 
 `nes`: Colors used by the NES 8-bit console.
 
@@ -165,7 +163,7 @@ Set the background color and clear the plane.
 
 ### fillTrueColor(rgb)
 
-Add the rgb value to the colorSet and use it as the background color. Also clear the plane.
+Add the rgb value to the colorMap and use it as the background color. Also clear the plane.
 
 ### setColor(color)
 
@@ -173,7 +171,7 @@ Set the foreground color to use for drawing.
 
 ### setTrueColor(rgb)
 
-Add the rgb value to the colorSet and use it as the foreground color.
+Add the rgb value to the colorMap and use it as the foreground color.
 
 ## Drawing
 
@@ -302,7 +300,7 @@ eyedrop
 
 ### eyedrop(x, y)
 
-Pick the color at position x,y and return it as a palette entry. If no palette is in use, one is created that directly maps to the colorset.
+Pick the color at position x,y and return it as a palette entry. If no palette is in use, one is created that directly maps to the colorMap.
 
 ## Display
 

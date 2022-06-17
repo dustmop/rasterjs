@@ -601,7 +601,7 @@ Scene.prototype._initPaletteFromLookAtImage = function(look) {
     let ent = new palette.PaletteEntry(rgb, i, this.colorMap);
     items.push(ent);
   }
-  // Assigin the palette to the scene
+  // Assign the palette to the scene
   let saveService = this.saveService;
   let pal = new palette.Palette(items, saveService, this);
   this.palette = pal;

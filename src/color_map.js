@@ -19,11 +19,11 @@ function colorIntValsToRGBs(vals, allowDups) {
     return [collect, lookup];
   }
 
-  for (let i = 0; i < vals.length; i++) {
-    if (!types.isNumber(vals[i])) {
-      throw new Error(`type err: wanted number, got ${vals[i]}`);
+  for (val of vals) {
+    if (!types.isNumber(val)) {
+      throw new Error(`type err: wanted number, got ${val}`);
     }
-    let rgb = new rgbColor.RGBColor(vals[i]);
+    let rgb = new rgbColor.RGBColor(val);
     if (lookup[rgb] !== undefined && !allowDups) {
       throw new Error(`duplicate color in set: ${rgb}`);
     }

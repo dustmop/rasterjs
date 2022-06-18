@@ -1,3 +1,5 @@
+// TODO: Remove this file. We can just use Planes.
+
 function NewFrameMemory(left, top, w, h) {
   var pitch = w;
   var make = new Uint8Array(w * h);

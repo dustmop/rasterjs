@@ -9,9 +9,9 @@ function makeFilesysAccess() {
 
 function makeDisplay() {
   if (!runningUnderKarma() && detectFeatureWebGL()) {
-    return new webGLDisplay.Display();
+    return new webGLDisplay.WebGLDisplay();
   }
-  return new twoDCanvas.Display();
+  return new twoDCanvas.TwoDeeDisplay();
 }
 
 function getOptions() {

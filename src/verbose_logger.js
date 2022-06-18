@@ -1,5 +1,22 @@
-function Logger() {
-  return this;
+class Logger {
+  constructor() {
+    return this;
+  }
+
+  log(str, height) {
+    let shouldDisplay = false;
+    if (typeof process !== 'undefined' && process && process.argv) {
+      if (process.argv.includes('-v')) {
+        shouldDisplay = true;
+      }
+    }
+    if (!shouldDisplay) {
+      return;
+    }
+    let [scriptName, lineNum, funcName] = sourceLocation(height);
+    let prefix = `${scriptName}:${lineNum} [${funcName}]`;
+    console.log(`[LOG] ${prefix} ${str}`);
+  }
 }
 
 function sourceLocation(height) {
@@ -13,21 +30,6 @@ function sourceLocation(height) {
   let lineNum = parseInt(client.split(':')[1])
   let funcName = raCall.split(' ')[5];
   return [scriptName, lineNum, funcName];
-}
-
-Logger.prototype.log = function(str, height) {
-  let shouldDisplay = false;
-  if (typeof process !== 'undefined' && process && process.argv) {
-    if (process.argv.includes('-v')) {
-      shouldDisplay = true;
-    }
-  }
-  if (!shouldDisplay) {
-    return;
-  }
-  let [scriptName, lineNum, funcName] = sourceLocation(height);
-  let prefix = `${scriptName}:${lineNum} [${funcName}]`;
-  console.log(`[LOG] ${prefix} ${str}`);
 }
 
 module.exports.Logger = Logger;

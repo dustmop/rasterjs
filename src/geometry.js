@@ -1,5 +1,40 @@
 const types = require('./types.js');
 
+class Polygon {
+  constructor(points, centerAxis) {
+    this._points = points;
+    centerAxis = centerAxis || guessCenterOf(this._points);
+    this._centerX = centerAxis[0];
+    this._centerY = centerAxis[1];
+    return this;
+  }
+
+  points() {
+    return this._points;
+  }
+
+  center() {
+    return [this._centerX, this._centerY];
+  }
+
+  rotate(angle) {
+    let result = [];
+    for (var i = 0; i < this._points.length; i++) {
+      var x = this._points[i][0];
+      var y = this._points[i][1];
+      // Translate to the origin.
+      x = x - this._centerX;
+      y = y - this._centerY;
+      // Rotate the points around the origin.
+      var rot_x = x * Math.cos(angle) - y * Math.sin(angle);
+      var rot_y = x * Math.sin(angle) + y * Math.cos(angle);
+      // Translate back to the original grid system, and add.
+      result.push([rot_x + this._centerX, rot_y + this._centerY]);
+    }
+    this._points = result;
+  }
+}
+
 function convertToPolygon(pointsOrPolygon) {
   // If already a polygon, just return it.
   if (pointsOrPolygon instanceof Polygon) {
@@ -29,39 +64,6 @@ function convertToPoints(pointsOrPolygon) {
     return pointsOrPolygon.points();
   }
   return pointsOrPolygon;
-}
-
-function Polygon(points, centerAxis) {
-  this._points = points;
-  centerAxis = centerAxis || guessCenterOf(this._points);
-  this._centerX = centerAxis[0];
-  this._centerY = centerAxis[1];
-  return this;
-}
-
-Polygon.prototype.points = function() {
-  return this._points;
-}
-
-Polygon.prototype.center = function() {
-  return [this._centerX, this._centerY];
-}
-
-Polygon.prototype.rotate = function(angle) {
-  let result = [];
-  for (var i = 0; i < this._points.length; i++) {
-    var x = this._points[i][0];
-    var y = this._points[i][1];
-    // Translate to the origin.
-    x = x - this._centerX;
-    y = y - this._centerY;
-    // Rotate the points around the origin.
-    var rot_x = x * Math.cos(angle) - y * Math.sin(angle);
-    var rot_y = x * Math.sin(angle) + y * Math.cos(angle);
-    // Translate back to the original grid system, and add.
-    result.push([rot_x + this._centerX, rot_y + this._centerY]);
-  }
-  this._points = result;
 }
 
 function guessCenterOf(points) {

@@ -2,55 +2,60 @@ const rgbColor = require('./rgb_color.js');
 const tiles = require('./tiles.js');
 const types = require('./types.js');
 
-function SpriteList(chardat) {
-  let numSprites = chardat.length;
-  let items = new Array(numSprites);
-  for (let i = 0; i < items.length; i++) {
-    let item = new Sprite();
-    items[i] = item;
-    this[i] = item;
+class SpriteList {
+  constructor(chardat) {
+    let numSprites = chardat.length;
+    let items = new Array(numSprites);
+    for (let i = 0; i < items.length; i++) {
+      let item = new Sprite();
+      items[i] = item;
+      this[i] = item;
+    }
+    this.items = items;
+    this.length = items.length;
+    if (types.isArray(chardat)) {
+      chardat = new ArrayWrapper(chardat);
+    }
+    this.chardat = chardat;
+    return this;
   }
-  this.items = items;
-  this.length = items.length;
-  if (types.isArray(chardat)) {
-    chardat = new ArrayWrapper(chardat);
+
+  ensureValid() {
+    for (let i = 0; i < this.length; i++) {
+      this.items[i]._ensureIntPos();
+    }
   }
-  this.chardat = chardat;
-  return this;
 }
 
-SpriteList.prototype.ensureValid = function() {
-  for (let i = 0; i < this.length; i++) {
-    this.items[i]._ensureIntPos();
+
+class Sprite {
+  constructor() {
+    let item = this;
+    item.x = null;
+    item.y = null;
+    item.c = null;
+    item.m = null;
+    item.a = null;
+    item.i = null;
+    item.h = null;
+    item.v = null;
+    item.b = null;
+    return item;
   }
-}
 
-function Sprite() {
-  let item = this;
-  item.x = null;
-  item.y = null;
-  item.c = null;
-  item.m = null;
-  item.a = null;
-  item.i = null;
-  item.h = null;
-  item.v = null;
-  item.b = null;
-  return item;
-}
-
-Sprite.prototype._ensureIntPos = function() {
-  this.x = Math.floor(this.x);
-  this.y = Math.floor(this.y);
-}
-
-Sprite.prototype.assign = function(other) {
-  let keys = Object.keys(other);
-  for (let i = 0; i < keys.length; i++) {
-    let k = keys[i];
-    this[k] = other[k];
+  _ensureIntPos() {
+    this.x = Math.floor(this.x);
+    this.y = Math.floor(this.y);
   }
-  this._ensureIntPos();
+
+  assign(other) {
+    let keys = Object.keys(other);
+    for (let i = 0; i < keys.length; i++) {
+      let k = keys[i];
+      this[k] = other[k];
+    }
+    this._ensureIntPos();
+  }
 }
 
 // each Sprite contains:
@@ -62,43 +67,46 @@ Sprite.prototype.assign = function(other) {
 // h, v   flips
 // b      behind
 
-function SpriteSheet(pl, info) {
-  // TODO: Needs better error handling
-  let loaderScene = pl.parentLoader.scene;
-  loaderScene._ensureColorMap();
-  let colorMap = loaderScene.colorMap;
-  let rgbBorder = new rgbColor.RGBColor(info.trueColorBorder);
-  let border = colorMap.find(rgbBorder.toInt());
-  this._parseSpriteSheet(pl, border);
-  return this;
-}
-
-SpriteSheet.prototype.get = function(i) {
-  return this.data[i];
-}
-
-SpriteSheet.prototype._parseSpriteSheet = function(pl, border) {
-  let res = [];
-  let rect = {x:0, y:0, r:pl.width-1, d:pl.height-1};
-  parseSpritesFromSheetPortion(res, pl, border, rect);
-
-  let numChars = res.length;
-  let data = new Array(numChars);
-  for (let i = 0; i < numChars; i++) {
-    let border = res[i];
-    let slice = {x:border.x+1, y:border.y+1};
-    let offset = slice.y * pl.pitch + slice.x;
-    // TODO: Don't need to use tile, it's just a generic plane.
-    let ch = new tiles.Tile();
-    ch.width = border.r - border.x - 1;
-    ch.height = border.d - border.y - 1;
-    ch.pitch = pl.pitch;
-    ch.data = new Uint8Array(pl.data.buffer, offset);
-    data[i] = ch;
+class SpriteSheet {
+  constructor(pl, info) {
+    // TODO: Needs better error handling
+    let loaderScene = pl.parentLoader.scene;
+    loaderScene._ensureColorMap();
+    let colorMap = loaderScene.colorMap;
+    let rgbBorder = new rgbColor.RGBColor(info.trueColorBorder);
+    let border = colorMap.find(rgbBorder.toInt());
+    this._parseSpriteSheet(pl, border);
+    return this;
   }
-  this.length = numChars;
-  this.data = data;
+
+  get(i) {
+    return this.data[i];
+  }
+
+  _parseSpriteSheet(pl, border) {
+    let res = [];
+    let rect = {x:0, y:0, r:pl.width-1, d:pl.height-1};
+    parseSpritesFromSheetPortion(res, pl, border, rect);
+
+    let numChars = res.length;
+    let data = new Array(numChars);
+    for (let i = 0; i < numChars; i++) {
+      let border = res[i];
+      let slice = {x:border.x+1, y:border.y+1};
+      let offset = slice.y * pl.pitch + slice.x;
+      // TODO: Don't need to use tile, it's just a generic plane.
+      let ch = new tiles.Tile();
+      ch.width = border.r - border.x - 1;
+      ch.height = border.d - border.y - 1;
+      ch.pitch = pl.pitch;
+      ch.data = new Uint8Array(pl.data.buffer, offset);
+      data[i] = ch;
+    }
+    this.length = numChars;
+    this.data = data;
+  }
 }
+
 
 function parseSpritesFromSheetPortion(res, pl, needle, rect) {
   for (let y = rect.y; y <= rect.d; y++) {
@@ -167,15 +175,19 @@ function buildRecursiveCases(rect, border) {
   return cases;
 }
 
-function ArrayWrapper(chardat) {
-  this.data = chardat;
-  this.length = this.data.length;
-  return this;
+
+class ArrayWrapper {
+  constructor(chardat) {
+    this.data = chardat;
+    this.length = this.data.length;
+    return this;
+  }
+
+  get = function(i) {
+    return this.data[i];
+  }
 }
 
-ArrayWrapper.prototype.get = function(i) {
-  return this.data[i];
-}
 
 module.exports.SpriteList = SpriteList;
 module.exports.SpriteSheet = SpriteSheet;

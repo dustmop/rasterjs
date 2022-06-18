@@ -1,7 +1,9 @@
-function DescribeSpec(choices, allowPositional) {
-  this.choices = choices;
-  this.allowPositional = allowPositional;
-  return this;
+class DescribeSpec {
+  constructor(choices, allowPositional) {
+    this.choices = choices;
+    this.allowPositional = allowPositional;
+    return this;
+  }
 }
 
 function build(spec) {

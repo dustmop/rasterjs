@@ -19,9 +19,9 @@ class Polygon {
 
   rotate(angle) {
     let result = [];
-    for (var i = 0; i < this._points.length; i++) {
-      var x = this._points[i][0];
-      var y = this._points[i][1];
+    for (let p of this._points) {
+      var x = p[0];
+      var y = p[1];
       // Translate to the origin.
       x = x - this._centerX;
       y = y - this._centerY;
@@ -43,17 +43,17 @@ function convertToPolygon(pointsOrPolygon) {
   // If a list of points, figure out if it is pixel-positioned.
   let points = pointsOrPolygon;
   var isPixelPolygon = true;
-  for (let i = 0; i < points.length; i++) {
-    if (!types.isInteger(points[i][0]) && !types.isInteger(points[i][0])) {
+  for (let p of points) {
+    if (!types.isInteger(p[0]) && !types.isInteger(p[0])) {
       isPixelPolygon = false;
       break;
     }
   }
   // If pixel-positioned, convert to float-positioned.
   if (isPixelPolygon) {
-    for (let i = 0; i < points.length; i++) {
-      points[i][0] += 0.50000001;
-      points[i][1] += 0.50000001;
+    for (let p of points) {
+      p[0] += 0.50000001;
+      p[1] += 0.50000001;
     }
   }
   return new Polygon(points)
@@ -71,8 +71,7 @@ function guessCenterOf(points) {
   var top   = points[0][1];
   var right = points[0][0];
   var bot   = points[0][1];
-  for (var i = 1; i < points.length; i++) {
-    var p = points[i];
+  for (let p of points) {
     if (p[0] < left) {
       left = p[0];
     }

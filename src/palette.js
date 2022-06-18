@@ -80,15 +80,14 @@ class Palette {
 
   // fill each value of the palette with the given value
   fill(v) {
-    for (let i = 0; i < this.items.length; i++) {
-      this.items[i].setColor(v);
+    for (let it of this.items) {
+      it.setColor(v);
     }
   }
 
   assign(assoc) {
     let keys = Object.keys(assoc);
-    for (let i = 0; i < keys.length; i++) {
-      let key = keys[i];
+    for (let key of keys) {
       this.items[key].setColor(assoc[key]);
     }
   }

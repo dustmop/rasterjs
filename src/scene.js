@@ -557,10 +557,10 @@ Scene.prototype._assertDisplayObject = function(obj) {
                      'setGrid',
                      'renderLoop'];
   let failures = [];
-  for (let i = 0; i < needMethods.length; i++) {
-    let method = obj[needMethods[i]];
+  for (let methodName of needMethods) {
+    let method = obj[methodName];
     if (!method || !types.isFunction(method)) {
-      failures.push(needMethods[i]);
+      failures.push(methodName);
     }
   }
   if (failures.length) {

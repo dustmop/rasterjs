@@ -21,8 +21,8 @@ class SpriteList {
   }
 
   ensureValid() {
-    for (let i = 0; i < this.length; i++) {
-      this.items[i]._ensureIntPos();
+    for (let item of this.items) {
+      item._ensureIntPos();
     }
   }
 }
@@ -49,9 +49,7 @@ class Sprite {
   }
 
   assign(other) {
-    let keys = Object.keys(other);
-    for (let i = 0; i < keys.length; i++) {
-      let k = keys[i];
+    for (let k of Object.keys(other)) {
       this[k] = other[k];
     }
     this._ensureIntPos();
@@ -183,7 +181,7 @@ class ArrayWrapper {
     return this;
   }
 
-  get = function(i) {
+  get(i) {
     return this.data[i];
   }
 }

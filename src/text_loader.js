@@ -72,8 +72,7 @@ class TextLoader {
     let currGlyph = [];
 
     let lines = content.split('\n');
-    for (let i = 0; i < lines.length; i++) {
-      let line = lines[i];
+    for (let line of lines) {
       if (line == '') {
         font[currLabel] = currGlyph;
         currLabel = null;

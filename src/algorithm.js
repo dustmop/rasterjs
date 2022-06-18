@@ -91,16 +91,14 @@ function rgbToHSV(r, g, b) {
 }
 
 function sortByHSV(items) {
-  for (let i = 0; i < items.length; i++) {
-    let it = items[i];
+  for (let it of items) {
     if (!types.isRGBColor(it)) {
       throw new Error('sortByHSV got invalid item[${i}] must be RGBColor');
     }
   }
   // Build a list of colors, weighted by HSV
   let colors = [];
-  for (let i = 0; i < items.length; i++) {
-    let rgb = items[i];
+  for (let rgb of items) {
     let [h, s, v] = rgbToHSV(rgb.r, rgb.g, rgb.b);
     let k = Math.floor(h * 10) * 10000 + Math.floor(v * 1000) + s;
     colors.push({key: k, rgb: rgb});
@@ -114,8 +112,8 @@ function sortByHSV(items) {
 
   // Convert back to just rgb values
   let build = [];
-  for (let j = 0; j < colors.length; j++) {
-    let rgb = colors[j].rgb;
+  for (let color of colors) {
+    let rgb = color.rgb;
     build.push(rgb);
   }
   return build;
@@ -413,8 +411,7 @@ function fract(n) {
 function renderPolygon(plane, baseX, baseY, inPoints, fill) {
   let isPixelPoly = types.isInteger(baseX) && types.isInteger(baseY);
   let points = [];
-  for (let i = 0; i < inPoints.length; i++) {
-    let p = inPoints[i];
+  for (let p of inPoints) {
     if (!types.isInteger(p[0]) || !types.isInteger(p[1])) {
       isPixelPoly = false;
     }
@@ -429,8 +426,7 @@ function renderPolygon(plane, baseX, baseY, inPoints, fill) {
 
 function asFloats(points) {
   let result = [];
-  for (let i = 0; i < points.length; i++) {
-    let p = points[i];
+  for (let p of points) {
     result.push({x: p.x + 0.5000001, y: p.y + 0.5000001});
   }
   return result;
@@ -459,18 +455,18 @@ function renderPolygonFill(plane, inPoints, isPixelPoly) {
   imageRight = points[0].x;
 
   // Find polygon's top and bottom.
-  for (let i = 1; i < points.length; i++) {
-    if (points[i].x < imageLeft) {
-      imageLeft = points[i].x;
+  for (let p of points) {
+    if (p.x < imageLeft) {
+      imageLeft = p.x;
     }
-    if (points[i].x > imageRight) {
-      imageRight = points[i].x;
+    if (p.x > imageRight) {
+      imageRight = p.x;
     }
-    if (points[i].y < imageTop) {
-      imageTop = points[i].y;
+    if (p.y < imageTop) {
+      imageTop = p.y;
     }
-    if (points[i].y > imageBottom) {
-      imageBottom = points[i].y;
+    if (p.y > imageBottom) {
+      imageBottom = p.y;
     }
   }
 
@@ -596,10 +592,9 @@ function renderCircle(x, y, points, inner, fill, half) {
   let put = [];
 
   // Num points will always be assigned, but num inner is optional.
-  let numPoints = points.length;
   let numInner = inner ? inner.length : -1;
 
-  for (let i = 0; i < numPoints; i++) {
+  for (let i = 0; i < points.length; i++) {
     let pair = points[i];
 
     // The circle is defined by an arc that represents one octant of the

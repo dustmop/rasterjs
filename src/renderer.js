@@ -50,8 +50,7 @@ class Renderer {
                  'tiles', 'palette', 'attrs', 'interrupts', 'spriteList',
                  'font', 'grid'];
     let keys = Object.keys(input);
-    for (let i = 0; i < keys.length; i++) {
-      let k = keys[i];
+    for (let k of keys) {
       if (!allow.includes(k)) {
         throw new Error(`connect param has unrecognized key "${k}"`);
       }
@@ -359,8 +358,7 @@ class Renderer {
       myPlane = myPlane.resize(width, height);
     }
 
-    for (let i = 0; i < components.length; i++) {
-      let comp = components[i];
+    for (let comp of components) {
       if (comp == 'plane') {
         if (this.haveRenderedPlaneOnce) {
           continue;

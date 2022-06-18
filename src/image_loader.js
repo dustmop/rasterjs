@@ -163,8 +163,7 @@ class ImagePlane {
   whenRead() {
     this.loadState = LOAD_STATE_READ;
     let collect = this.parentLoader;
-    for (let k = 0; k < collect.list.length; k++) {
-      let img = collect.list[k];
+    for (let img of collect.list) {
       if (img.loadState == LOAD_STATE_ERROR) {
         continue;
       } else if (img.loadState == LOAD_STATE_NONE || img.loadState == LOAD_STATE_OPENED) {

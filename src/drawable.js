@@ -258,8 +258,7 @@ Drawable.prototype.drawText = function(text, x, y) {
   let put = [];
   let cursor = 0;
 
-  for (let i = 0; i < text.length; i++) {
-    let ch = text[i];
+  for (let ch of text) {
     let num = ch.charCodeAt(0);
     let name = num.toString(16);
     let glyph = font.glyphs[name];

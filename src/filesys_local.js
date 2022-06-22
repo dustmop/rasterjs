@@ -1,5 +1,6 @@
 const fs = require('fs');
 const PNG = require('pngjs').PNG;
+const jpeg = require('jpeg-js');
 
 class FilesysAccess {
   constructor() {
@@ -17,14 +18,20 @@ class FilesysAccess {
     } catch (e) {
       throw new Error(`image not found`);
     }
-    let image = PNG.sync.read(bytes);
-    let pitch = image.width;
-
-    imgPlane.rgbBuff = image.data;
-    imgPlane.width = image.width;
-    imgPlane.pitch = pitch;
-    imgPlane.height = image.height;
-    return 0;
+    if (filename.endsWith('.jpg') || filename.endsWith('.jpeg')) {
+      this._loadJpegImage(filename, imgPlane);
+      return 0;
+    }
+    if (filename.endsWith('.png')) {
+      let image = PNG.sync.read(bytes);
+      let pitch = image.width;
+      imgPlane.rgbBuff = image.data;
+      imgPlane.width = image.width;
+      imgPlane.pitch = pitch;
+      imgPlane.height = image.height;
+      return 0;
+    }
+    throw new Error(`invalid image format type: ${filename}`);
   }
 
   readText(filename) {
@@ -45,6 +52,16 @@ class FilesysAccess {
     }
     let bytes = PNG.sync.write(image);
     fs.writeFileSync(filename, bytes);
+  }
+
+  _loadJpegImage(filename, img) {
+    let binData = fs.readFileSync(filename);
+    var rawImageData = jpeg.decode(binData, {useTArray: true});
+    img.width = rawImageData.width;
+    img.height = rawImageData.height;
+    img.rgbBuff = rawImageData.data;
+    img.pitch = img.width;
+    return 1;
   }
 
   whenLoaded(cb) {

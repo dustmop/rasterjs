@@ -1,0 +1,5 @@
+Name: Magma Spawn
+Copyright: Katarzyna Zalecka and Gabriel Verdon, submitted by MoikMellah, hosted by OpenGameArt.org
+URL: https://opengameart.org/content/magma-spawn
+License: CC-BY-SA 3.0
+Link: https://creativecommons.org/licenses/by-sa/3.0/

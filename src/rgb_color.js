@@ -7,6 +7,10 @@ class RGBColor {
       return this;
     }
 
+    if (arguments.length == 3 && arguments[2] !== undefined) {
+      val = [arguments[0], arguments[1], arguments[2]];
+    }
+
     // if int, treat it as 24-bit rgb value
     if (types.isNumber(val)) {
       this.r = Math.floor(val / 0x10000) % 0x100;
@@ -32,6 +36,7 @@ class RGBColor {
         this.r = val[0];
         this.g = val[1];
         this.b = val[2];
+        this._ensureOk();
         return this;
       }
       throw `could not convert to RGB: ${val}`
@@ -103,10 +108,13 @@ class RGBColor {
   }
 
   toInt() {
+    this._ensureOk();
     return this.r * 0x10000 + this.g * 0x100 + this.b;
   }
 
   toHexStr() {
+    this._ensureOk();
+
     let rtxt = this.r.toString(16);
     let gtxt = this.g.toString(16);
     let btxt = this.b.toString(16);
@@ -125,7 +133,20 @@ class RGBColor {
   toString() {
     return 'RGBColor{' + this.toHexStr() + '}';
   }
+
+  _ensureOk() {
+    if (this.r > 255 || this.g > 255 || this.b > 255) {
+      throw new Error(`rgb value too large ${this.r} ${this.g} ${this.b}`);
+    }
+    if (this.r === undefined ||
+        this.g === undefined ||
+        this.b === undefined) {
+      throw new Error(`rgb value not properly defined ${this.r} ${this.g} ${this.b}`);
+    }
+  }
+
 }
+
 
 function ensureIs(rgb) {
   if (rgb == null) {

@@ -64,6 +64,11 @@ function ensureFilesMatch(expectFile, gotFile) {
     assert.fail('FILE MISSING');
   }
   if (!compareFiles(expectFile, gotFile)) {
+    if (process.argv.indexOf('--accept-all') > -1) {
+      fs.copyFileSync(gotFile, expectFile);
+      console.log(`copied ${gotFile} to ${expectFile}`);
+      return;
+    }
     let e = new Error();
     let lines = e.stack.split('\n');
     let callerLine;

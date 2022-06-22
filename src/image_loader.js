@@ -1,5 +1,6 @@
 const rgbColor = require('./rgb_color.js');
 const algorithm = require('./algorithm.js');
+const quantizer = require('./quantizer.js');
 const palette = require('./palette.js');
 const types = require('./types.js');
 const verboseLogger = require('./verbose_logger.js');
@@ -52,10 +53,6 @@ class Loader {
       return imgPlane;
     }
 
-    if (!filename.endsWith('.png')) {
-      throw new Error(`only 'png' images supported, couldn't load ${filename}`);
-    }
-
     let self = this;
 
     let img = new ImagePlane();
@@ -74,7 +71,7 @@ class Loader {
     img.pitch = 0;
     img.data = null;
 
-    // TODO: -1 not found sync, 0 success, 1 async
+    // TODO: -1 missing sync, 0 success sync, 1 pending async
     let ret = this.fsacc.readImageData(filename, img);
     if (ret == -1) {
       throw new Error('image not found');
@@ -257,6 +254,14 @@ class ImagePlane {
       this.data = new Uint8Array(numPixels);
       this.alpha = new Uint8Array(numPixels);
     }
+
+    if (this.filename.endsWith('.jpg') || this.filename.endsWith('.jpeg')) {
+      let quant = new quantizer.Quantizer();
+      let quantizedRes = quant.colorQuantize(this.rgbBuff);
+      this.colorMap.assign(quantizedRes.colors);
+      this.rgbBuff = quantizedRes.rgbBuff;
+    }
+
     let needs = this._collectColorNeeds();
 
     let numColors = needs.rgbItems.length
@@ -269,36 +274,12 @@ class ImagePlane {
       needs.rgbItems = algorithm.sortByHSV(needs.rgbItems);
     }
 
-    // Create mapping from rgb to 8-bit value
-    let remap = {};
-    let collect = [];
-    for (let i = 0; i < needs.rgbItems.length; i++) {
-      let rgbval = needs.rgbItems[i].toInt();
-      let c;
-      if (this.palette) {
-        let cval = this.colorMap.find(rgbval);
-        if (cval == -1) {
-          c = this.palette.insertWhereAvail(rgbval);
-          if (c == null) {
-            throw new Error(`palette exists, and image ${this.filename} uses a color not found in the colorMap: ${needs.rgbItems[i]}`);
-          }
-        } else {
-          c = this.palette.find(cval);
-          if (c == null) {
-            throw new Error(`image uses valid colors, but palette is full. color=0x${rgbval.toString(16)}`);
-          }
-        }
-      } else {
-        c = this.colorMap.extendWith(rgbval);
-      }
-      remap[rgbval] = c;
-      collect.push(c);
-    }
+    let res = this._remapRGBItems(needs.rgbItems, this.palette, this.colorMap);
 
-    verbose.log(`loading image with rgb map: ${JSON.stringify(remap)}`, 6);
+    verbose.log(`loading image with rgb map: ${JSON.stringify(res.remap)}`, 6);
 
     // Look of the image, see the used color values
-    this.look = new LookAtImage(collect, needs.density);
+    this.look = new LookAtImage(res.items, needs.density);
     //
     // # Why is this a LookAtImage object?
     //
@@ -341,7 +322,7 @@ class ImagePlane {
         let g = this.rgbBuff[k*4+1];
         let b = this.rgbBuff[k*4+2];
         let rgbval = r * 0x10000 + g * 0x100 + b;
-        let c = remap[rgbval];
+        let c = res.remap[rgbval];
         this.data[k] = c;
       }
     }
@@ -349,13 +330,18 @@ class ImagePlane {
     this._numColors = numColors;
   }
 
+  // Iterate the 32-bit RGB pixels of the image, and calculate the following;
+  //  rgbItems: list[rgbval]
+  //  density:  int ;; approximate median number of colors per line
+  //  votes:    map[rgbval: count how many uses]
   _collectColorNeeds() {
     let lookup = {};
     let rgbItems = [];
+    let votes = {};
     let minColorsPerLine = 9999;
     let maxColorsPerLine = 0;
     for (let y = 0; y < this.height; y++) {
-      let seen = {};
+      let seenPerLine = {};
       for (let x = 0; x < this.width; x++) {
         let k = y * this.pitch + x;
         this.alpha[k] = this.rgbBuff[k*4+3];
@@ -367,7 +353,8 @@ class ImagePlane {
         let g = this.rgbBuff[k*4+1];
         let b = this.rgbBuff[k*4+2];
         let rgbval = r * 0x10000 + g * 0x100 + b;
-        seen[rgbval] = (seen[rgbval] || 0) + 1;
+        votes[rgbval] = (votes[rgbval] || 0) + 1;
+        seenPerLine[rgbval] = (seenPerLine[rgbval] || 0) + 1;
         if (lookup[rgbval] !== undefined) {
           continue;
         }
@@ -375,7 +362,7 @@ class ImagePlane {
         lookup[rgbval] = rgbItems.length;
         rgbItems.push(new rgbColor.RGBColor(rgbval));
       }
-      let perLine = Object.keys(seen).length;
+      let perLine = Object.keys(seenPerLine).length;
       if (perLine < minColorsPerLine) {
         minColorsPerLine = perLine;
       }
@@ -384,7 +371,42 @@ class ImagePlane {
       }
     }
     let density = Math.round((minColorsPerLine + maxColorsPerLine) / 2);
-    return {lookup: lookup, rgbItems: rgbItems, density: density};
+    return {rgbItems: rgbItems, density: density, votes: votes};
+  }
+
+  // for each rgb item, find it in the palette or colorMap. if not found,
+  // add to the color map, or an empty space within the palette.
+  // returned as a hash remapper, and a list of 8-bit color values
+  _remapRGBItems(rgbItems, palette, colorMap) {
+    if (rgbItems.length > 0xff) {
+      throw new Error('TODO');
+    }
+
+    let remap = {};
+    let items = [];
+    for (let i = 0; i < rgbItems.length; i++) {
+      let rgbval = rgbItems[i].toInt();
+      let c;
+      if (palette) {
+        let cval = colorMap.find(rgbval);
+        if (cval == -1) {
+          c = palette.insertWhereAvail(rgbval);
+          if (c == null) {
+            throw new Error(`palette exists, and image ${this.filename} uses a color not found in the colorMap: ${rgbItems[i]}`);
+          }
+        } else {
+          c = palette.find(cval);
+          if (c == null) {
+            throw new Error(`image uses valid colors, but palette is full. color=0x${rgbval.toString(16)}`);
+          }
+        }
+      } else {
+        c = colorMap.extendWith(rgbval);
+      }
+      remap[rgbval] = c;
+      items.push(c);
+    }
+    return {remap:remap, items:items};
   }
 
   then(cb) {

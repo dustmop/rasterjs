@@ -151,14 +151,55 @@ describe('Image', function() {
   });
 
 
-  // Jpg images cannot be used
-  it('jpg cannot be used', function() {
+  // Jpg images
+  it('jpg is down sampled', function() {
     ra.resetState();
-    assert.throws(() => {
-      ra.loadImage('test/testdata/small-fruit.jpg');
-    }, /only 'png' images supported, couldn't load test\/testdata\/small-fruit.jpg/);
+    let img = ra.loadImage('test/testdata/small-fruit.jpg');
+    ra.drawImage(img);
+
+    util.renderCompareTo(ra, 'test/testdata/small-fruit-quant.png');
+
+    // 8-bit data array is using pico8 values
+    let expect = new Uint8Array([
+       1, 1,39, 1, 3,32,27,38,
+       0,30,36,28,31, 5,40,26,
+      37,42, 9,14, 7, 4,45,35,
+      43,54,58,21,24,55,19,44,
+      17,57,59,50,15,18,46,22,
+      53, 6,56,48,47, 8,13,16,
+      41,51,20,10,17,18,52,34,
+      25,29,12,11,23,49,33, 2,
+    ]);
+    assert.deepEqual(expect, ra.clonePlane().data);
   });
 
+  it('jpg boss pic', function() {
+    ra.resetState();
+    let img = ra.loadImage('test/testdata/boss-pic.jpg');
+    ra.drawImage(img);
+    util.renderCompareTo(ra, 'test/testdata/boss-pic-quant.png');
+  });
+
+  it('jpg magma spawn', function() {
+    ra.resetState();
+    let img = ra.loadImage('test/testdata/magma-spawn.jpg');
+    ra.drawImage(img);
+    util.renderCompareTo(ra, 'test/testdata/magma-spawn-quant.png');
+  });
+
+  it('jpg firefly suit', function() {
+    ra.resetState();
+    let img = ra.loadImage('test/testdata/firefly-suit.jpg');
+    ra.drawImage(img);
+    util.renderCompareTo(ra, 'test/testdata/firefly-suit-quant.png');
+  });
+
+  it('jpg space invader', function() {
+    ra.resetState();
+    let img = ra.loadImage('test/testdata/space-invader.jpg');
+    ra.drawImage(img);
+    util.renderCompareTo(ra, 'test/testdata/space-invader-quant.png');
+  });
 
   // Png will too many colors will fail to load
   it('png with too many colors', function() {

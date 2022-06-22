@@ -1,0 +1,5 @@
+Name: Firefly Suit
+Copyright: Justin Nichol, hosted by OpenGameArt.org
+URL: https://opengameart.org/content/firefly-suit
+License: CC-BY-SA 3.0
+Link: https://creativecommons.org/licenses/by-sa/3.0/

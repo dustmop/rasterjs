@@ -1,0 +1,5 @@
+Name: space invader
+Copyright: erokism, hosted at wordpress
+URL: https://wordpress.org/openverse/image/5fee77a1-0e84-45a2-bb4c-6105b7ab91ba
+License: CC BY 2.0
+Link: https://creativecommons.org/licenses/by/2.0/?ref=openverse

@@ -14,6 +14,8 @@ function compareImage(left, right, callback) {
   let ctx = left.getContext('2d');
   let leftImgData = ctx.getImageData(0, 0, left.width, left.height);
 
+  let dataURL = left.toDataURL();
+
   // Assume right is a string, url to an image file
   let goldenImg = document.createElement('img');
   goldenImg.src = right;
@@ -27,6 +29,7 @@ function compareImage(left, right, callback) {
     let leftLen = leftImgData.data.length;
     let rightLen = rightImgData.data.length;
     if (leftLen != rightLen) {
+      console.log(dataURL);
       return callback(`mismatch, length: ${leftLen} <> ${rightLen}`);
     }
 
@@ -36,11 +39,11 @@ function compareImage(left, right, callback) {
       if (leftImgData.data[k] != rightImgData.data[k]) {
         let a = leftImgData.data[k];
         let b = rightImgData.data[k];
-        console.log(`mismatch data[${k}]: ${a} <> ${b}`);
         match = false;
       }
     }
     if (!match ) {
+      console.log(dataURL);
       return callback(`mismatch, data`);
     }
 

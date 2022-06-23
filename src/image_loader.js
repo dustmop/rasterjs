@@ -255,7 +255,8 @@ class ImagePlane {
       this.alpha = new Uint8Array(numPixels);
     }
 
-    if (this.filename.endsWith('.jpg') || this.filename.endsWith('.jpeg')) {
+    if (this.filename &&
+        (this.filename.endsWith('.jpg') || this.filename.endsWith('.jpeg'))) {
       let quant = new quantizer.Quantizer();
       let quantizedRes = quant.colorQuantize(this.rgbBuff);
       this.colorMap.assign(quantizedRes.colors);

@@ -691,6 +691,17 @@ Scene.prototype._ensureColorMap = function() {
   }
 }
 
+Scene.prototype._ensureColorMapPositiveSize = function() {
+  // NOTE: from Scene._makeShape, loading an image will
+  // construct an empty colorMap and assign it to the scene. Once
+  // the image loads, it will fill the colorMap with colors. But
+  // before then, in an async environment, calling this should
+  // fail because the colorMap is empty.
+  if (this.colorMap.size() == 0) {
+    throw new Error(`empty colorMap, wait for images to load`)
+  }
+}
+
 Scene.prototype.usePalette = function(param) {
   // can be called like this:
   //
@@ -710,6 +721,7 @@ Scene.prototype.usePalette = function(param) {
   //   ra.usePalette(5);
   //
   this._ensureColorMap();
+  this._ensureColorMapPositiveSize();
   if (types.isPalette(param)) {
     this.palette = param;
     return this.palette;

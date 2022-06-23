@@ -6,9 +6,10 @@ module.exports = function(config) {
     frameworks: ['mocha', 'webpack'],
     files: [
       'test/web/**/*.js',
+      {pattern: 'test/testdata/*.jpg', watched: false, included: false, served: true},
       {pattern: 'test/testdata/*.png', watched: false, included: false, served: true},
       {pattern: 'test/testdata/*.yaff', watched: false, included: false, served: true},
-      'dist/raster.min.js'
+      'dist/raster.dev.js'
     ],
     plugins: [
       'karma-mocha',

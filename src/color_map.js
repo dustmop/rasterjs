@@ -25,6 +25,19 @@ class Map {
     this._frozen = true;
   }
 
+  toString() {
+    return this._stringify(0, {});
+  }
+
+  _stringify(depth, opts) {
+    let elems = [];
+    for (let i = 0; i < this.collect.length; i++) {
+      let it = this.collect[i];
+      elems.push(`0x${it.toString(16)}`);
+    }
+    return 'ColorMap{' + elems.join(', ') + '}';
+  }
+
   assign(vals, opts) {
     if (this._frozen) {
       throw new Error(`colorMap is frozen, cannot assign`);

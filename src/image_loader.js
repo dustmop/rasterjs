@@ -398,7 +398,9 @@ class ImagePlane {
         } else {
           c = palette.find(cval);
           if (c == null) {
-            throw new Error(`image uses valid colors, but palette is full. color=0x${rgbval.toString(16)}`);
+            // image being loaded uses a color from the colorMap which
+            // is not in the palette
+            c = 0;
           }
         }
       } else {

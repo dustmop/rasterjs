@@ -93,12 +93,11 @@ describe('Color map', function() {
     }, /Error: colorMap is frozen, cannot extend with RGBColor{#000001}/);
   });
 
-  // TODO: useColors(null) crash
-  // TODO: useColors(null) -> drawImage
-  // TODO: useColors(null) -> setTrueColor
-  // TODO: useColors(dos) -> setTrueColor
-  // TODO: useColors(ega)
-  // TODO: useColors(cga)
-  // TODO: useColors(vga)
-  // TODO: useColors(master_system)
+  it('gameboy stringify', function() {
+    ra.resetState();
+    ra.useColors('gameboy');
+    let actual = ra.colorMap.toString();
+    let expect = 'ColorMap{0xRGBColor{#003f00}, 0xRGBColor{#2e7320}, 0xRGBColor{#8cbf0a}, 0xRGBColor{#a0cf0a}}'
+    assert.equal(actual, expect);
+  });
 });

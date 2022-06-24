@@ -295,6 +295,35 @@ describe('Tileset', function() {
     util.renderCompareTo(ra, 'test/testdata/attr_change.png');
   });
 
+  it('attributes save', function() {
+    let tmpdir = util.mkTmpDir();
+    let tmpout = tmpdir + '/actual.png';
+    ra.resetState();
+
+    // Create palette, 4 options, each of size 6
+    let pal = [17,16,14,15,13,12,
+                0,11, 7,10, 9, 2,
+                6, 5, 4, 3, 1, 0,
+               18,20, 8, 5,21,19,
+              ];
+    ra.usePalette(pal);
+
+    // Build attributes
+    let dat = new ra.Plane();
+    dat.setSize(4);
+    dat.fillPattern([[0,1,1,1],
+                     [1,3,3,3],
+                     [2,2,1,0],
+                     [1,3,0,0],
+                    ]);
+    let attrs = ra.useAttributes(dat, {cell_width: 4, cell_height: 4,
+                                       piece_size: 6});
+
+    let surfaces = attrs.serialize();
+    ra._saveSurfacesTo(surfaces, tmpout);
+    util.ensureFilesMatch('test/testdata/attrs_saved.png', tmpout);
+  });
+
   it('tiles save', function() {
     let tmpdir = util.mkTmpDir();
     let tmpout = tmpdir + '/actual.png';

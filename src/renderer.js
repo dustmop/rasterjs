@@ -350,6 +350,7 @@ class Renderer {
     let myColorMap = this._layers[0].colorMap;
     let myTiles = this._layers[0].tiles;
     let myPalette = this._layers[0].palette;
+    let myAttributes = this._layers[0].attrs;
     settings = settings || {};
 
     if (settings.resize && !this.haveRenderedPlaneOnce) {
@@ -379,10 +380,10 @@ class Renderer {
 
       } else if (comp == 'colorMap') {
         let opt = {};
-        if (settings.colorMap && myColorMap.name) {
+        if (settings.colorMap) {
           if (settings.colorMap['*']) {
             opt = settings.colorMap['*'];
-          } else {
+          } else if (myColorMap.name) {
             opt = settings.colorMap[myColorMap.name];
           }
         }
@@ -391,7 +392,8 @@ class Renderer {
 
       } else if (comp == 'palette') {
         if (myPalette) {
-          let surface = myPalette.serialize();
+          let opt = settings.palette || {};
+          let surface = myPalette.serialize(opt);
           callback('palette', surface);
         }
 
@@ -402,6 +404,17 @@ class Renderer {
         } else {
           callback('tileset', null);
         }
+
+      } else if (comp == 'attributes') {
+        if (myAttributes) {
+          let surface = myAttributes.serialize();
+          callback('attributes', surface);
+        } else {
+          callback('tileset', null);
+        }
+
+      } else {
+        throw new Error(`unknown component '${comp}'`);
       }
     }
   }

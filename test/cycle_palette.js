@@ -56,16 +56,30 @@ describe('Cycle palette', function() {
   });
 
 
-  // Image uses color in the colorMap, but palette is full
-  it('error when image overflows palette', function() {
+  // Image uses color in the colorMap, but not in palette
+  it('image uses colors in colorMap, but not in palette', function() {
     ra.resetState();
     ra.useColors('pico8');
     ra.usePalette([8, 0, 2]);
 
-    assert.throws(function() {
-      let img = ra.loadImage('test/testdata/small-fruit.png');
-      ra.drawImage(img);
-    }, /image uses valid colors, but palette is full. color=0xab5236/);
+    let img = ra.loadImage('test/testdata/small-fruit.png');
+    ra.drawImage(img);
+
+    util.renderCompareTo(ra, 'test/testdata/small-fruit-dramatic.png');
+  });
+
+
+  // Image loaded before palette must agree with it
+  it('image loaded before palette is set, needs to agree', function() {
+    ra.resetState();
+    ra.useColors('pico8');
+
+    let img = ra.loadImage('test/testdata/small-fruit.png');
+    ra.drawImage(img);
+    ra.usePalette([8, 0, 2, 4, 14]);
+
+    // TODO: The image should be redrawn to agree with the palette.
+    util.renderCompareTo(ra, 'test/testdata/small-fruit-agree.png');
   });
 
 

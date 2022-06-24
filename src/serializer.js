@@ -94,6 +94,44 @@ class Serializer {
     return rend.render();
   }
 
+  attributesToSurface(source, sizeInfo, opt) {
+    let srcWidth = source.width;
+    let srcHeight = source.height;
+    let srcPitch = source.pitch;
+    let srcData = source.data;
+
+    let sz = 22;
+
+    let width = srcWidth * sz;
+    let height = srcHeight * sz;
+    let unit = sz;
+
+    let target = new plane.Plane();
+    target.setSize(width, height);
+    target.fillColor(0);
+
+    let colors = new colorMap.constructorFrom('quick');
+
+    for (let y = 0; y < srcHeight; y++) {
+      for (let x = 0; x < srcWidth; x++) {
+        let v = srcData[srcPitch*y + x];
+        target.setColor(v);
+        target.fillRect(x*unit, y*unit, unit, unit);
+      }
+    }
+
+    // Components for rendering
+    let components = {
+      plane: target,
+      colorMap: colors,
+    };
+
+    // Render it
+    let rend = new renderer.Renderer();
+    rend.connect(components);
+    return rend.render();
+  }
+
   _isLightColor(rgb) {
     if (types.isRGBColor(rgb)) {
       // pass

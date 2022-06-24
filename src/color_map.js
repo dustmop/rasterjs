@@ -10,6 +10,8 @@ class Map {
     this.collect = collect;
     this.lookup = lookup;
     this.newIndex = this.collect.length;
+    // Customize how console.log displays this object.
+    this[Symbol.for('nodejs.util.inspect.custom')] = this._stringify;
     return this;
   }
 
@@ -33,7 +35,7 @@ class Map {
     let elems = [];
     for (let i = 0; i < this.collect.length; i++) {
       let it = this.collect[i];
-      elems.push(`0x${it.toString(16)}`);
+      elems.push(`${i}: ${it.toHexStr()}`);
     }
     return 'ColorMap{' + elems.join(', ') + '}';
   }

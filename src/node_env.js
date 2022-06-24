@@ -19,6 +19,15 @@ function getOptions() {
   if (runningAsTest()) {
     return {};
   }
+
+  // Skip any command-line args after "--"
+  let cmdlineArgs = process.argv.slice(2);
+  let pos = cmdlineArgs.indexOf('--');
+  if (pos >= 0) {
+    cmdlineArgs = cmdlineArgs.slice(0, pos);
+  }
+
+  // Parse them
   const parser = new argparse.ArgumentParser({});
   parser.add_argument('--num-frames', {type: 'int'});
   parser.add_argument('--save', {type: 'str', dest: 'save_filename'});
@@ -26,7 +35,7 @@ function getOptions() {
   parser.add_argument('--colors', {type: 'str'});
   parser.add_argument('--zoom', {type: 'int'});
   parser.add_argument('-v', {action: 'store_true'});
-  let args = parser.parse_args();
+  let args = parser.parse_args(cmdlineArgs);
   if (args.save_filename) {
     let fsacc = new filesysLocal.FilesysAccess();
     args.display = new saver.SaveImageDisplay(args.save_filename,

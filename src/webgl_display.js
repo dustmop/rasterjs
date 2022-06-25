@@ -9,6 +9,7 @@ class WebGLDisplay {
     this.eventKeypressHandler = null;
     this.eventClickHandler = null;
     this.initialize();
+    this.onReadyHandler = null;
     this._createEventHandlers();
     return this;
   }
@@ -270,6 +271,9 @@ void main() {
     self.currentRunId = id;
     this.waitForContentLoad(function() {
       self._createWebglCanvas();
+      if (self.onReadyHandler) {
+        self.onReadyHandler();
+      }
       self._beginLoop(nextFrame, id, num, exitAfter, finalFunc);
     });
   }
@@ -351,6 +355,8 @@ void main() {
       this.eventKeypressHandler = callback;
     } else if (eventName == 'click') {
       this.eventClickHandler = callback;
+    } else if (eventName == 'ready') {
+      this.onReadyHandler = callback;
     } else {
       throw new Error(`unknown event "${eventName}"`);
     }

@@ -110,12 +110,12 @@ class Serializer {
     target.setSize(width, height);
     target.fillColor(0);
 
-    let colors = new colorMap.constructorFrom('quick');
+    let colors = colorMap.constructFrom('quick');
 
     for (let y = 0; y < srcHeight; y++) {
       for (let x = 0; x < srcWidth; x++) {
         let v = srcData[srcPitch*y + x];
-        target.setColor(v);
+        target.setColor(v + 24);
         target.fillRect(x*unit, y*unit, unit, unit);
       }
     }

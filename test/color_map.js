@@ -97,7 +97,7 @@ describe('Color map', function() {
     ra.resetState();
     ra.useColors('gameboy');
     let actual = ra.colorMap.toString();
-    let expect = 'ColorMap{0xRGBColor{#003f00}, 0xRGBColor{#2e7320}, 0xRGBColor{#8cbf0a}, 0xRGBColor{#a0cf0a}}'
+    let expect = 'ColorMap{0: #003f00, 1: #2e7320, 2: #8cbf0a, 3: #a0cf0a}';
     assert.equal(actual, expect);
   });
 });

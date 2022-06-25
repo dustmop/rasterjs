@@ -36,7 +36,7 @@ describe('Display', function() {
     ra.on('click', function(e) {});
 
     assert.throws(() => {
-      ra.on('ready', function(e) {});
+      ra.on('unknown', function(e) {});
     });
   });
 });

@@ -39,12 +39,71 @@ describe('Display', function() {
       ra.on('unknown', function(e) {});
     });
   });
+
+  it('setGrid with unit', function() {
+    ra.resetState();
+
+    let display = new myDisplay();
+    ra.useDisplay(display);
+
+    ra.setGrid(12);
+    assert.equal(display.gridState, true);
+    assert.equal(ra.config.gridUnit, 12);
+  });
+
+  it('setGrid default unit', function() {
+    ra.resetState();
+
+    let display = new myDisplay();
+    ra.useDisplay(display);
+
+    ra.setGrid(true);
+    assert.equal(display.gridState, true);
+    assert.equal(ra.config.gridUnit, 16);
+  });
+
+  it('setGrid unit then disabled', function() {
+    ra.resetState();
+
+    let display = new myDisplay();
+    ra.useDisplay(display);
+
+    ra.setGrid(12);
+    ra.setGrid(false);
+    assert.equal(display.gridState, false);
+    assert.equal(ra.config.gridUnit, 12);
+  });
+
+  it('setGrid unit not enabled', function() {
+    ra.resetState();
+
+    let display = new myDisplay();
+    ra.useDisplay(display);
+
+    ra.setGrid(12, {enable: false});
+    assert.equal(display.gridState, false);
+    assert.equal(ra.config.gridUnit, 12);
+  });
+
+  it('setGrid unit and empty options', function() {
+    ra.resetState();
+
+    let display = new myDisplay();
+    ra.useDisplay(display);
+
+    ra.setGrid(12, {});
+    assert.equal(display.gridState, true);
+    assert.equal(ra.config.gridUnit, 12);
+  });
+
 });
+
 
 function myDisplay() {
   this.count = 0;
   this.plane = null;
   this.eventHandler = null;
+  this.gridState = null;
   return this;
 }
 
@@ -75,6 +134,7 @@ myDisplay.prototype.setZoom = function(zoomLevel) {
 }
 
 myDisplay.prototype.setGrid = function(state) {
+  this.gridState = state;
 }
 
 myDisplay.prototype.renderLoop = function(nextFrame) {

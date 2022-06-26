@@ -20,6 +20,7 @@ class WebGLDisplay {
     this.displayWidth = 0;
     this.displayHeight = 0;
     this.zoomLevel = 1;
+    this.gridState = false;
     this.currentRunId = null;
   }
 
@@ -224,7 +225,7 @@ void main() {
     gl.uniform1i(imageGridLocation, 1); // texture for grid
 
     var gridEnableLocation = gl.getUniformLocation(program, "u_gridEnable");
-    gl.uniform1i(gridEnableLocation, 1);
+    gl.uniform1i(gridEnableLocation, this.gridState);
 
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, textureList[0]);

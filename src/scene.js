@@ -256,12 +256,12 @@ Scene.prototype.setZoom = function(scale) {
   this.config.zoomScale = scale;
 }
 
-Scene.prototype.setGrid = function(unit) {
-  if (unit) {
-    this.display.setGrid(true);
-  } else {
-    this.display.setGrid(false);
+Scene.prototype.setGrid = function(unit, opt) {
+  let enable = !!unit;
+  if (opt && opt.enable !== undefined) {
+    enable = opt.enable;
   }
+  this.display.setGrid(enable);
   if (this.config.gridUnit) {
     return;
   }

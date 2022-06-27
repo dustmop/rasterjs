@@ -9,27 +9,47 @@ class FilesysAccess {
   }
 
   clear() {
+    this.numToLoad = 0;
+    this.numLoadDone = 0;
+    this.loadFail = null;
   }
 
-  readImageData(filename, imgPlane) {
+  readImageData(filename, imgPlane, useAsync) {
+    this.numToLoad++;
+    if (useAsync) {
+      fs.readFile(filename, (err, bytes) => {
+        if (err) { console.log(err); return; }
+        if (filename.endsWith('.jpg') || filename.endsWith('.jpeg')) {
+          // NOTE: synchronous call
+          this._loadJpegImage(bytes, imgPlane);
+          this._imageHasLoaded(imgPlane);
+          return;
+        }
+        if (filename.endsWith('.png')) {
+          this._loadPngImageAsync(bytes, imgPlane, () => {
+            this._imageHasLoaded(imgPlane);
+          });
+          return;
+        }
+      });
+      return 1; // async
+    }
+
     let bytes;
     try {
       bytes = fs.readFileSync(filename);
-    } catch (e) {
-      throw new Error(`image not found`);
+    } catch (err) {
+      throw new Error(`image not found ${filename}`);
     }
     if (filename.endsWith('.jpg') || filename.endsWith('.jpeg')) {
-      this._loadJpegImage(filename, imgPlane);
-      return 0;
+      this._loadJpegImage(bytes, imgPlane);
+      this._imageHasLoaded(imgPlane);
+      return 0; // success
     }
     if (filename.endsWith('.png')) {
-      let image = PNG.sync.read(bytes);
-      let pitch = image.width;
-      imgPlane.rgbBuff = image.data;
-      imgPlane.width = image.width;
-      imgPlane.pitch = pitch;
-      imgPlane.height = image.height;
-      return 0;
+      this._loadPngImage(bytes, imgPlane);
+      this._imageHasLoaded(imgPlane);
+      return 0; // success
     }
     throw new Error(`invalid image format type: ${filename}`);
   }
@@ -54,18 +74,57 @@ class FilesysAccess {
     fs.writeFileSync(filename, bytes);
   }
 
-  _loadJpegImage(filename, img) {
-    let binData = fs.readFileSync(filename);
-    var rawImageData = jpeg.decode(binData, {useTArray: true});
-    img.width = rawImageData.width;
-    img.height = rawImageData.height;
-    img.rgbBuff = rawImageData.data;
-    img.pitch = img.width;
-    return 1;
+  _loadJpegImage(bytes, img) {
+    var jpegObj = jpeg.decode(bytes, {useTArray: true});
+    img.rgbBuff = jpegObj.data;
+    img.width = jpegObj.width;
+    img.height = jpegObj.height;
+    img.pitch = jpegObj.width;
+  }
+
+  _loadPngImage(bytes, img) {
+    let pngObj = PNG.sync.read(bytes);
+    img.rgbBuff = pngObj.data;
+    img.width = pngObj.width;
+    img.height = pngObj.height;
+    img.pitch = pngObj.width;
+  }
+
+  _loadPngImageAsync(bytes, img, callback) {
+    let pngObj = new PNG();
+    pngObj.write(bytes);
+    pngObj.on('parsed', function() {
+      img.rgbBuff = pngObj.data;
+      img.width = pngObj.width;
+      img.height = pngObj.height;
+      img.pitch = pngObj.width;
+      callback();
+    });
+    pngObj.on('error', function(err) {
+      console.log(err);
+      // TODO: callback
+    });
+  }
+
+  _imageHasLoaded(img) {
+    if (img.whenRead) {
+      img.whenRead();
+    }
+    this.numLoadDone++;
   }
 
   whenLoaded(cb) {
-    cb();
+    let self = this;
+    function checkIfDone() {
+      if (self.loadFail) {
+        throw new Error(`image "${self.loadFail}" not found`);
+      }
+      if (self.numLoadDone == self.numToLoad) {
+        return cb();
+      }
+      setImmediate(checkIfDone);
+    }
+    checkIfDone();
   }
 }
 

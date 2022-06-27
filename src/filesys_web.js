@@ -52,7 +52,7 @@ class FilesysAccess {
       return 1;
     }
     imgElem.src = '/' + filename;
-    return 1;
+    return 1; // async
   }
 
   readText(filename) {

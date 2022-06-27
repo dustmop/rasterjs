@@ -336,15 +336,25 @@ Scene.prototype.insertResource = function(name, imageSurf) {
 }
 
 Scene.prototype.loadImage = function(filepath, opt) {
-  return this._makeShape('load', [filepath, opt]);
+  opt = opt || {};
+  if (!this.colorMap) {
+    verbose.log(`Scene.loadImage: creating an empty colorMap`, 4);
+    this.colorMap = colorMap.constructFrom([]);
+  }
+  return this.imgLoader.loadImage(filepath, opt);
 }
 
-Scene.prototype.makePolygon = function(shape, angle) {
-  return this._makeShape('polygon', [shape]);
+Scene.prototype.makePolygon = function(pointsOrPolygon) {
+  return geometry.convertToPolygon(pointsOrPolygon);
 }
 
-Scene.prototype.rotatePolygon = function(shape, angle) {
-  return this._makeShape('rotate', [shape, angle]);
+Scene.prototype.rotatePolygon = function(pointsOrPolygon, angle) {
+  if (angle === null || angle === undefined) {
+    angle = this.time;
+  }
+  let polygon = geometry.convertToPolygon(pointsOrPolygon);
+  polygon.rotate(angle);
+  return polygon;
 }
 
 Scene.prototype.select = function(x, y, w, h) {
@@ -495,29 +505,6 @@ Scene.prototype.oscil = function(namedOnly) {
   }
   click = click + Math.round(period * begin);
   return max * ((1.0 - Math.cos(click * this.TAU / period)) / 2.0000001);
-}
-
-Scene.prototype._makeShape = function(method, params) {
-  if (method == 'polygon') {
-    let pointsOrPolygon = params[0];
-    return geometry.convertToPolygon(pointsOrPolygon);
-  } else if (method == 'rotate') {
-    let [pointsOrPolygon, angle] = params;
-    if (angle === null || angle === undefined) {
-      angle = this.time;
-    }
-    let polygon = geometry.convertToPolygon(pointsOrPolygon);
-    polygon.rotate(angle);
-    return polygon;
-  } else if (method == 'load') {
-    let [filepath, opt] = params;
-    opt = opt || {};
-    if (!this.colorMap) {
-      verbose.log(`Scene.loadImage: creating an empty colorMap`, 4);
-      this.colorMap = colorMap.constructFrom([]);
-    }
-    return this.imgLoader.loadImage(filepath, opt);
-  }
 }
 
 Scene.prototype.setFont = function(spec, opt) {

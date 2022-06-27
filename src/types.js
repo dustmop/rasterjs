@@ -81,6 +81,16 @@ function isSurface(obj) {
   return obj && obj.width && obj.height && obj.pitch && obj.buff;
 }
 
+function ensureIsOneOf(obj, typesPossible) {
+  for (let i = 0; i < typesPossible.length; i++) {
+    let tp = typesPossible[i];
+    if (obj.constructor.name == tp) {
+      return;
+    }
+  }
+  throw new Error(`unknown type: ${obj.constructor.name}, wanted one of ${typesPossible}`);
+}
+
 module.exports.isPlane   = isPlane;
 module.exports.isNumber  = isNumber;
 module.exports.isInteger = isInteger;
@@ -97,3 +107,4 @@ module.exports.isTileset = isTileset;
 module.exports.isAttributes = isAttributes;
 module.exports.isPalette = isPalette;
 module.exports.isSurface = isSurface;
+module.exports.ensureIsOneOf = ensureIsOneOf;

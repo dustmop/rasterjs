@@ -173,12 +173,14 @@ describe('Image', function() {
     assert.deepEqual(expect, ra.clonePlane().data);
   });
 
+
   it('jpg boss pic', function() {
     ra.resetState();
     let img = ra.loadImage('test/testdata/boss-pic.jpg');
     ra.drawImage(img);
     util.renderCompareTo(ra, 'test/testdata/boss-pic-quant.png');
   });
+
 
   it('jpg magma spawn', function() {
     ra.resetState();
@@ -187,12 +189,14 @@ describe('Image', function() {
     util.renderCompareTo(ra, 'test/testdata/magma-spawn-quant.png');
   });
 
+
   it('jpg firefly suit', function() {
     ra.resetState();
     let img = ra.loadImage('test/testdata/firefly-suit.jpg');
     ra.drawImage(img);
     util.renderCompareTo(ra, 'test/testdata/firefly-suit-quant.png');
   });
+
 
   it('jpg space invader', function() {
     ra.resetState();
@@ -201,6 +205,7 @@ describe('Image', function() {
     util.renderCompareTo(ra, 'test/testdata/space-invader-quant.png');
   });
 
+
   // Png will too many colors will fail to load
   it('png with too many colors', function() {
     ra.resetState();
@@ -208,6 +213,7 @@ describe('Image', function() {
       ra.loadImage('test/testdata/gradient.png');
     }, /too many colors in image test\/testdata\/gradient.png: 576/);
   });
+
 
   // Not found throws an error
   it('not found throws error', function() {
@@ -218,7 +224,37 @@ describe('Image', function() {
   });
 
 
-  // TODO:
-  // test palette.constructFrom()
+  it('draw async', function(success) {
+    ra.resetState();
+    ra.setSize({w: 12, h: 12});
+    ra.fillColor(0);
+    let img = ra.loadImage('test/testdata/fill_clear.png', {async: true});
+    img.then(function() {
+      ra.drawImage(img, 2, 2);
+      util.renderCompareTo(ra, 'test/testdata/draw_image.png', success);
+      success();
+    });
+  });
+
+
+  it('error if not async', function(success) {
+    ra.resetState();
+    ra.setSize({w: 12, h: 12});
+    let img = ra.loadImage('test/testdata/fill_clear.png', {async: true});
+    let gotError = null;
+    try {
+      ra.drawImage(img, 2, 2);
+    } catch(e) {
+      gotError = e.message;
+    }
+    if (gotError == null) {
+      throw new Error('Failed! Expected to get an error, did not get one');
+    }
+    let expectError = 'drawImage: image has been opened, but not yet read';
+    if (gotError != expectError) {
+      throw new Error('Mismatch!');
+    }
+    success();
+  });
 
 });

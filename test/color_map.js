@@ -1,6 +1,7 @@
 var assert = require('assert');
 var util = require('./util.js');
 var ra = require('../src/lib.js');
+var colorMap = require('../src/color_map.js');
 
 describe('Color map', function() {
   it('nes', function() {
@@ -100,4 +101,12 @@ describe('Color map', function() {
     let expect = 'ColorMap{0: #003f00, 1: #2e7320, 2: #8cbf0a, 3: #a0cf0a}';
     assert.equal(actual, expect);
   });
+
+  it('constructFrom', function() {
+    let c = colorMap.constructFrom([0xff0088, 0x0044cc, 0x4466aa]);
+    let expect = 'ColorMap{0: #ff0088, 1: #0044cc, 2: #4466aa}';
+    let actual = c.toString();
+    assert.equal(actual, expect);
+  });
+
 });

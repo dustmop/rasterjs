@@ -37,6 +37,8 @@ class Loader {
       throw new Error(`unknown option value ${opt}`);
     }
 
+    let useAsync = !!opt['async'];
+
     if (this.addedFiles[filename]) {
       let found = this.addedFiles[filename];
       let planePitch = found.width;
@@ -71,32 +73,16 @@ class Loader {
     img.pitch = 0;
     img.data = null;
 
-    // TODO: -1 missing sync, 0 success sync, 1 pending async
-    let ret = this.fsacc.readImageData(filename, img);
-    if (ret == -1) {
-      throw new Error('image not found');
-    }
-
-    // HACK: openImage should return a uint8array, not ArrayBuffer
-    // web_env returns a Uint8Array (but also img.data == null currently)
-    // node_env returns an ArrayBuffer
-    if (img.rgbBuff) {
-      if (img.rgbBuff.constructor.name == 'Buffer') {
-        // pass
-      } else if (img.rgbBuff.constructor.name == 'ArrayBuffer') {
-        img.rgbBuff = new Uint8Array(img.rgbBuff);
-      } else if (img.rgbBuff.constructor.name == 'Uint8Array') {
-        // pass
-      } else if (img.rgbBuff.constructor.name == 'Uint8ClampedArray') {
-        // pass
-      } else {
-        throw `error, unknown type for rgbBuff: ${img.rgbBuff.constructor.name}`;
-      }
-      img.fillData();
-    } else {
+    // 0 success sync, 1 pending async
+    let ret = this.fsacc.readImageData(filename, img, useAsync);
+    if (ret == 1) {
       img.loadState = LOAD_STATE_OPENED; // async
+      this.list.push(img);
+      return img;
     }
 
+    types.ensureIsOneOf(img.rgbBuff, ['Buffer', 'Uint8Array']);
+    img.fillData();
     this.list.push(img);
     return img;
   }

@@ -54,6 +54,8 @@ Scene.prototype._initialize = function () {
   this.PI = this.TAU / 2;
   this.camera = {};
   this.colorMap = null;
+  this.dip = {};
+  this.dip.length = 0;
   this.imgLoader = new imageLoader.Loader(this.fsacc, this);
   this.textLoader = new textLoader.TextLoader(this.fsacc);
   let options = this.env.getOptions();
@@ -578,6 +580,20 @@ Scene.prototype.nge = function() {
   let spec = ['start:i', 'length?i'];
   [start, length] = destructure.from('nge', spec, arguments, null);
   return Array.from(new Array(length), (x,i) => i+start)
+}
+
+Scene.prototype.useDips = function(names) {
+  this._dipNames = names;
+  let make = {};
+  for (let n of names) {
+    make[n] = true;
+  }
+  this.dip = make;
+  this.dip.length = names.length;
+}
+
+Scene.prototype.dipNames = function() {
+  return this._dipNames;
 }
 
 Scene.prototype._initPaletteFromLookAtImage = function(look) {

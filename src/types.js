@@ -4,8 +4,8 @@ const imageLoader = require('./image_loader.js');
 const tiles = require('./tiles.js');
 const attributes = require('./attributes.js');
 const palette = require('./palette.js');
-const renderer = require('./renderer.js');
 const colorMap = require('./color_map.js');
+const interrupts = require('./interrupts.js');
 
 function isNumber(obj) {
   return typeof obj == 'number';
@@ -38,7 +38,7 @@ function isRGBColor(obj) {
 
 function isInterrupts(obj) {
   if (!obj) { return false; }
-  return obj.constructor == renderer.Interrupts;
+  return obj.constructor == interrupts.Interrupts;
 }
 
 function isTileset(obj) {

@@ -324,7 +324,7 @@ describe('Tileset', function() {
     util.ensureFilesMatch('test/testdata/attrs_saved.png', tmpout);
   });
 
-  it('tiles save', function() {
+  it('serialize', function() {
     let tmpdir = util.mkTmpDir();
     let tmpout = tmpdir + '/actual.png';
     ra.resetState();

@@ -132,6 +132,58 @@ class Serializer {
     return rend.render();
   }
 
+  interruptsToSurface(arr, xposTrack, width, height) {
+    xposTrack = xposTrack || {};
+
+    let target = new plane.Plane();
+    target.setSize(Math.floor(width / 2), Math.floor(height / 2));
+    target.fillColor(0);
+    target.setColor(7);
+
+    let colors = colorMap.constructFrom('quick');
+
+    let prev = 0;
+    for (let row of arr) {
+      // TODO: Clean me up
+      let s = row.scanline;
+      if (types.isNumber(s)) {
+        target.setColor(7);
+        target.drawLine(0, s / 2, width, s / 2);
+        let x = (xposTrack[prev] || 0) % width;
+        target.setColor(42);
+        target.drawLine(x / 2, prev / 2, x / 2, s / 2);
+        prev = s;
+      } else {
+        let x = (xposTrack[prev] || 0) % width;
+        target.setColor(42);
+        target.drawLine(x / 2, prev / 2, x / 2, s[0] / 2);
+        for (let n = s[0]; n < s[1]; n++) {
+          target.setColor(4);
+          target.drawLine(0, n / 2, width, n / 2);
+          let x = (xposTrack[prev] || 0);
+          target.setColor(42);
+          target.drawDot(x / 2, n / 2);
+          prev = n;
+        }
+      }
+    }
+    let s = height;
+    let x = (xposTrack[prev] || 0) % width;
+    target.setColor(42);
+    target.drawLine(x / 2, prev / 2, x / 2, s / 2);
+
+    // Components for rendering
+    let components = {
+      plane: target,
+      colorMap: colors,
+    };
+
+    // Render it
+    let rend = new renderer.Renderer();
+    rend.connect(components);
+    return rend.render();
+  }
+
   _isLightColor(rgb) {
     if (types.isRGBColor(rgb)) {
       // pass

@@ -2,6 +2,7 @@ var util = require('./util.js');
 var ra = require('../src/lib.js');
 
 describe('Interrupts', function() {
+
   it('change scroll', function() {
     ra.resetState();
     ra.useColors('pico8');
@@ -20,6 +21,7 @@ describe('Interrupts', function() {
     util.renderCompareTo(ra, 'test/testdata/irq-fruit.png');
   });
 
+
   it('scroll range', function() {
     ra.resetState();
     ra.useColors('pico8');
@@ -36,6 +38,7 @@ describe('Interrupts', function() {
     util.renderCompareTo(ra, 'test/testdata/diag-fruit.png');
   });
 
+
   it('fill color', function() {
     ra.resetState();
     ra.useColors('pico8');
@@ -49,6 +52,26 @@ describe('Interrupts', function() {
     ]);
 
     util.renderCompareTo(ra, 'test/testdata/color_stripes.png');
+  });
+
+
+  it('serialize', function() {
+    let tmpdir = util.mkTmpDir();
+    let tmpout = tmpdir + '/actual.png';
+    ra.resetState();
+    ra.setSize(128, 128);
+
+    let interrupts = ra.useInterrupts([
+      {scanline:       0, irq: () => { ra.setScrollX(0) }},
+      {scanline:      80, irq: () => { ra.setScrollX(80) }},
+      {scanline: [90,99], irq: (ln) => { ra.setScrollX(ln) }},
+    ]);
+
+    ra.renderPrimaryPlane();
+
+    let surfaces = interrupts.serialize();
+    ra._saveSurfacesTo(surfaces, tmpout);
+    util.ensureFilesMatch('test/testdata/interrupts_saved.png', tmpout);
   });
 
 });

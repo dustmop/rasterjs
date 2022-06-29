@@ -12,8 +12,10 @@ const plane = require('./plane.js');
 const tiles = require('./tiles.js');
 const sprites = require('./sprites.js');
 const attributes = require('./attributes.js');
+const interrupts = require('./interrupts.js');
 const rgbColor = require('./rgb_color.js');
 const types = require('./types.js');
+const weak = require('./weak.js');
 const verboseLogger = require('./verbose_logger.js');
 
 ////////////////////////////////////////
@@ -821,7 +823,7 @@ Scene.prototype.useAttributes = function(pl, sizeInfo) {
 
 Scene.prototype.useInterrupts = function(conf) {
   if (types.isArray(conf)) {
-    this.interrupts = new renderer.Interrupts(conf);
+    this.interrupts = new interrupts.Interrupts(conf, new weak.Ref(this));
   } else if (types.isInterrupts(conf)) {
     this.interrupts = conf;
   } else {

@@ -162,6 +162,9 @@ class Renderer {
       }
     }
 
+    // Track the x-position at each scanline
+    let xposTrack = {};
+
     // Per region rendering
     let renderBegin = 0;
     for (let k = 0; k < perIRQs.length + 1; k++) {
@@ -173,6 +176,7 @@ class Renderer {
         scanLine = height;
       }
       if (scanLine > renderBegin) {
+        xposTrack[renderBegin] = layer.camera.x;
         this._renderRegion(layer, 0, renderBegin, width, scanLine);
       }
       // Execute the irq that interrupts rasterization
@@ -182,6 +186,9 @@ class Renderer {
       // Resume rendering at the given scanline
       renderBegin = scanLine;
     }
+
+    // Store x-positions so that they can serialize
+    system.interrupts.xposTrack = xposTrack;
 
     return [layer.rgbSurface, this._gridSurface()];
   }
@@ -346,11 +353,13 @@ class Renderer {
   }
 
   renderComponents(components, settings, callback) {
+    let system = this;
     let myPlane = this._layers[0].plane;
     let myColorMap = this._layers[0].colorMap;
     let myTiles = this._layers[0].tiles;
     let myPalette = this._layers[0].palette;
     let myAttributes = this._layers[0].attrs;
+    let myInterrupts = system.interrupts;
     settings = settings || {};
 
     if (settings.resize && !this.haveRenderedPlaneOnce) {
@@ -410,7 +419,15 @@ class Renderer {
           let surface = myAttributes.serialize();
           callback('attributes', surface);
         } else {
-          callback('tileset', null);
+          callback('attributes', null);
+        }
+
+      } else if (comp == 'interrupts') {
+        if (myInterrupts) {
+          let surface = myInterrupts.serialize();
+          callback('interrupts', surface);
+        } else {
+          callback('interrupts', null);
         }
 
       } else {
@@ -491,55 +508,4 @@ class Renderer {
 }
 
 
-class Interrupts {
-  constructor(arr) {
-    this.arr = arr;
-    this.length = this.arr.length;
-    this._assertInterruptFields();
-    return this;
-  }
-
-  _assertInterruptFields() {
-    for (let k = 0; k < this.arr.length; k++) {
-      let elem = this.arr[k];
-      if (elem.scanline === undefined) {
-        throw new Error(`useInterrupts element ${k} missing field 'scanline'`);
-      }
-      // TODO: scanline must be Number or [Number], and in ascending order
-      if (!elem.irq) {
-        throw new Error(`useInterrupts element ${k} missing field 'irq'`);
-      }
-      if (elem.irq.constructor.name != 'Function') {
-        throw new Error(`useInterrupts element ${k}.irq must be function`);
-      }
-    }
-  }
-
-  shiftDown(line, obj) {
-    let startIndex = obj.startIndex;
-    let endIndex = obj.endIndex || this.arr.length;
-    let deltaValue = null;
-    for (let k = startIndex; k < endIndex; k++) {
-      let elem = this.arr[k];
-      if (k == startIndex) {
-        // first row of our subset
-        deltaValue = line - elem.scanline;
-      }
-      if (types.isNumber(elem.scanline)) {
-        elem.scanline = elem.scanline + deltaValue;
-      } else if (types.isArray(elem.scanline)) {
-        let first = elem.scanline[0];
-        let second = elem.scanline[1];
-        elem.scanline = [first + deltaValue, second + deltaValue];
-      }
-    }
-  }
-
-  get(i) {
-    return this.arr[i];
-  }
-}
-
-
 module.exports.Renderer = Renderer;
-module.exports.Interrupts = Interrupts;

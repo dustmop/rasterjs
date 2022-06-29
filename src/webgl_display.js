@@ -236,6 +236,23 @@ void main() {
     gl.drawArrays(gl.TRIANGLES, 0, 6);
   }
 
+  renderAndDisplayEachComponent(components, settings) {
+    this._renderAndDisplayComponents = components;
+    this._renderAndDisplaySettings = settings;
+
+    let self = this;
+    window.addEventListener('DOMContentLoaded', function(e) {
+      let possible = ['plane', 'colorMap', 'palette', 'tileset',
+                      'attributes', 'interrupts'];
+      for (let i = 0; i < possible.length; i++) {
+        let p = possible[i];
+        if (components.indexOf(p) > -1) {
+          self.enableDisplayElem(`${p}-display`);
+        }
+      }
+    });
+  }
+
   _createEventHandlers() {
     let self = this;
     document.addEventListener('keypress', function(e) {
@@ -337,6 +354,39 @@ void main() {
       // Create the next frame.
       nextFrame();
 
+      if (self._renderAndDisplayComponents) {
+        let comps = self._renderAndDisplayComponents;
+         let settings = self._renderAndDisplaySettings;
+
+        // Hack to run the first IRQ, at scanline 0
+        if (self.renderer.interrupts) {
+          let first = self.renderer.interrupts.arr[0];
+          if (first.scanline == 0) {
+            first.irq(0);
+          }
+        }
+        self.renderer.renderComponents(comps, settings, function(type, surface) {
+          if (Array.isArray(surface)) {
+            surface = surface[0];
+          }
+          if (type == 'palette') {
+            self._putSurfaceToElem(surface, 'palette-display');
+          } else if (type == 'colorMap') {
+            self._putSurfaceToElem(surface, 'colorMap-display');
+          } else if (type == 'plane') {
+            self._putSurfaceToElem(surface, 'plane-display');
+          } else if (type == 'tileset') {
+            self._putSurfaceToElem(surface, 'tileset-display');
+          } else if (type == 'attributes') {
+            self._putSurfaceToElem(surface, 'attributes-display');
+          } else if (type == 'interrupts') {
+            self._putSurfaceToElem(surface, 'interrupts-display');
+          } else {
+            throw new Error(`unknown display type ${type}`);
+          }
+        });
+      }
+
       if (num == 0) {
         if (finalFunc) {
           finalFunc();
@@ -362,6 +412,42 @@ void main() {
       throw new Error(`unknown event "${eventName}"`);
     }
   }
-}
+
+  _putSurfaceToElem(surface, elemID) {
+    let canvasElem = document.getElementById(elemID);
+    if (!canvasElem) {
+      canvasElem = document.createElement('canvas');
+      canvasElem.id = elemID;
+      document.body.appendChild(canvasElem);
+    }
+    if (!surface) {
+      canvasElem.style.display = 'none';
+      return;
+    }
+    if (canvasElem.tagName.toLowerCase() != 'canvas') {
+      let child = canvasElem.querySelector('canvas');
+      if (!child) {
+        child = document.createElement('canvas');
+        canvasElem.appendChild(child);
+      }
+      canvasElem = child;
+    }
+    canvasElem.width = surface.width;
+    canvasElem.height = surface.height;
+
+    let buffer = surface.buff;
+    let array = new Uint8ClampedArray(buffer.buffer, 0, buffer.byteLength);
+    let imageData = new ImageData(array, surface.width, surface.height);
+    let ctx = canvasElem.getContext('2d');
+    ctx.putImageData(imageData, 0, 0);
+  }
+
+  enableDisplayElem(elemID) {
+    let canvasElem = document.getElementById(elemID);
+    if (canvasElem) {
+      canvasElem.style.display = 'block';
+    }
+  }
+};
 
 module.exports.WebGLDisplay = WebGLDisplay;

@@ -339,6 +339,13 @@ Scene.prototype.insertResource = function(name, imageSurf) {
   this.imgLoader.insert(name, imageSurf);
 }
 
+// NOTE: An experimental feature.
+Scene.prototype.experimentalDisplayComponents = function(components, settings) {
+  if (this.display.renderAndDisplayEachComponent) {
+    this.display.renderAndDisplayEachComponent(components, settings);
+  }
+}
+
 Scene.prototype.loadImage = function(filepath, opt) {
   opt = opt || {};
   if (!this.colorMap) {

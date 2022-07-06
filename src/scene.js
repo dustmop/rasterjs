@@ -374,6 +374,14 @@ Scene.prototype.select = function(x, y, w, h) {
   return this.aPlane.select(x, y, w, h);
 }
 
+Scene.prototype.fold = function(fname, paramList) {
+  let params = {};
+  for (let row of paramList) {
+    params = Object.assign(params, row);
+    this[fname].bind(this).call(this, params);
+  }
+}
+
 Scene.prototype._doRender = function(num, exitAfter, drawFunc, finalFunc) {
   let plane = this.aPlane;
 

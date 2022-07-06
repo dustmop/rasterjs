@@ -265,4 +265,12 @@ Plane.prototype.select = function(x, y, w, h) {
   return make;
 }
 
+Plane.prototype.fold = function(fname, paramList) {
+  let params = {};
+  for (let row of paramList) {
+    params = Object.assign(params, row);
+    this[fname].bind(this).call(this, params);
+  }
+}
+
 module.exports.Plane = Plane;

@@ -6,6 +6,7 @@ const attributes = require('./attributes.js');
 const palette = require('./palette.js');
 const colorMap = require('./color_map.js');
 const interrupts = require('./interrupts.js');
+const sprites = require('./sprites.js');
 
 function isNumber(obj) {
   return typeof obj == 'number';
@@ -54,6 +55,11 @@ function isAttributes(obj) {
 function isPalette(obj) {
   if (!obj) { return false; }
   return obj.constructor == palette.Palette;
+}
+
+function isSpriteSheet(obj) {
+  if (!obj) { return false; }
+  return obj.constructor == sprites.SpriteSheet;
 }
 
 function isPlane(obj) {
@@ -106,5 +112,6 @@ module.exports.isPaletteEntry = isPaletteEntry;
 module.exports.isTileset = isTileset;
 module.exports.isAttributes = isAttributes;
 module.exports.isPalette = isPalette;
+module.exports.isSpriteSheet = isSpriteSheet;
 module.exports.isSurface = isSurface;
 module.exports.ensureIsOneOf = ensureIsOneOf;

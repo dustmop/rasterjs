@@ -16,7 +16,7 @@ describe('Sprite', function() {
 
     ra.drawImage(imgBg);
 
-    let sprites = new ra.SpriteList([imgObj0, imgObj1, imgObj2]);
+    let sprites = new ra.SpriteList(3, {chardat: [imgObj0, imgObj1, imgObj2]});
     ra.useSpriteList(sprites);
 
     sprites[0].x = 16;
@@ -46,7 +46,7 @@ describe('Sprite', function() {
 
     let tiles = new ra.Tileset(imgTiles, {tile_width: 16, tile_height: 16});
 
-    let sprites = new ra.SpriteList(tiles);
+    let sprites = new ra.SpriteList(4, tiles);
     ra.useSpriteList(sprites);
 
     sprites[0].x = 16;
@@ -80,7 +80,7 @@ describe('Sprite', function() {
 
     let sheet = new ra.SpriteSheet(imgSheet, {trueColorBorder: '#000cd4'});
 
-    let sprites = new ra.SpriteList(sheet);
+    let sprites = new ra.SpriteList(3, sheet);
     ra.useSpriteList(sprites);
 
     sprites[0].x = 16;
@@ -139,6 +139,49 @@ describe('Sprite', function() {
       },
     ];
     assert.deepEqual(res, expect);
+  });
+
+  it('behind layer', function() {
+    ra.resetState();
+
+    ra.setZoom(4);
+
+    let imgObj = ra.loadImage('test/testdata/small-fruit.png');
+    let imgBg = ra.loadImage('test/testdata/letter_e.png');
+
+    ra.drawImage(imgBg);
+
+    let sprites = new ra.SpriteList(1, {chardat: [imgObj]});
+    ra.useSpriteList(sprites);
+
+    sprites[0].x = 3;
+    sprites[0].y = 4;
+    sprites[0].c = 0;
+    sprites[0].b = 0;
+
+    util.renderCompareTo(ra, 'test/testdata/fruit-behind-scene.png');
+  });
+
+  it('behind with scroll', function() {
+    ra.resetState();
+
+    ra.setZoom(4);
+
+    let imgObj = ra.loadImage('test/testdata/small-fruit.png');
+    let imgBg = ra.loadImage('test/testdata/letter_e.png');
+
+    ra.drawImage(imgBg);
+    ra.setScrollX(4);
+
+    let sprites = new ra.SpriteList(1, {chardat: [imgObj]});
+    ra.useSpriteList(sprites);
+
+    sprites[0].x = 3;
+    sprites[0].y = 4;
+    sprites[0].c = 0;
+    sprites[0].b = 0;
+
+    util.renderCompareTo(ra, 'test/testdata/behind-scroll-scene.png');
   });
 
 });

@@ -299,7 +299,7 @@ class Renderer {
       }
     }
 
-    if (layer.spriteList) {
+    if (layer.spriteList && layer.spriteList.enabled) {
       layer.spriteList.ensureValid();
       let chardat = layer.spriteList.chardat || layer.tiles;
       if (!chardat) {
@@ -307,11 +307,13 @@ class Renderer {
       }
       for (let k = 0; k < layer.spriteList.items.length; k++) {
         let spr = layer.spriteList.items[k];
+        let sx = spr.x;
+        let sy = spr.y;
         // ensure size of sprite is set
-        if ((spr.x === null) || (spr.x === undefined)) {
+        if (sx === null || sx === undefined || sx < 0 || sx >= right) {
           continue;
         }
-        if ((spr.y === null) || (spr.y === undefined)) {
+        if (sy === null || sy === undefined || sy < 0 || sy >= bottom) {
           continue;
         }
         // invisible flag
@@ -325,8 +327,20 @@ class Renderer {
         }
         for (let py = 0; py < obj.height; py++) {
           for (let px = 0; px < obj.width; px++) {
-            let x = px + spr.x;
-            let y = py + spr.y;
+            let x = px + sx;
+            let y = py + sy;
+            if (x >= right || y >= bottom) {
+              continue;
+            }
+            // behind flag
+            if (spr.b === 0) {
+              let lx = (x + scrollX + layer.plane.width) % layer.plane.width;
+              let ly = (y + scrollY + layer.plane.height) % layer.plane.height;
+              let v = layer.plane.get(lx, ly);
+              if (v > 0) {
+                continue;
+              }
+            }
             let t = y*targetPitch + x*4;
             // color value for this pixel
             let c = obj.get(px, py);

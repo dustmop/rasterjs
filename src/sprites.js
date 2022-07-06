@@ -3,8 +3,23 @@ const tiles = require('./tiles.js');
 const types = require('./types.js');
 
 class SpriteList {
-  constructor(chardat) {
-    let numSprites = chardat.length;
+  constructor(numSprites, resource) {
+    // ensure first param is a number
+    if (!types.isNumber(numSprites)) {
+      throw new Error(`first param must be a number, got ${numSprites}`);
+    }
+    // ensure second param is a Tileset, or SpriteSheet, or has `chardat`
+    let chardat;
+    if (resource === null || resource === undefined) {
+      // pass
+    } else if (types.isTileset(resource) || types.isSpriteSheet(resource)) {
+      chardat = resource;
+    } else if (types.isObject(resource) && types.isArray(resource.chardat)) {
+      chardat = new ArrayWrapper(resource.chardat);
+    } else {
+      throw new Error(`second param must be Tileset, or SpriteSheet, or object with 'chardat' array`);
+    }
+
     let items = new Array(numSprites);
     for (let i = 0; i < items.length; i++) {
       let item = new Sprite();
@@ -13,10 +28,8 @@ class SpriteList {
     }
     this.items = items;
     this.length = items.length;
-    if (types.isArray(chardat)) {
-      chardat = new ArrayWrapper(chardat);
-    }
     this.chardat = chardat;
+    this.enabled = true;
     return this;
   }
 
@@ -60,9 +73,9 @@ class Sprite {
 // x, y   position
 // c      character
 // m      mix
-// a      attribute (which piece of the palette)
+// a      attribute (which piece of the palette) // TODO
 // i      invisible
-// h, v   flips
+// h, v   flips     // TODO
 // b      behind
 
 class SpriteSheet {

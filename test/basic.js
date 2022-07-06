@@ -66,7 +66,7 @@ describe('Basic', function() {
     ra.resetState();
 
     ra.setSize(14);
-    ra.fillColor(54);
+    ra.fillColor(0);
     ra.setColor(31);
     ra.fold('fillRect', [{x: 1, y: 1, w: 3, h: 12}, {w: 10, h: 3}, {y: 10},
                          {y: 6, w: 8, h: 2}]);

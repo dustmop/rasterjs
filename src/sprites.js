@@ -75,7 +75,7 @@ class Sprite {
 // m      mix
 // a      attribute (which piece of the palette) // TODO
 // i      invisible
-// h, v   flips     // TODO
+// h, v   flips
 // b      behind
 
 class SpriteSheet {

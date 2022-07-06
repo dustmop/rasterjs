@@ -154,8 +154,8 @@ describe('Sprite', function() {
     let sprites = new ra.SpriteList(1, {chardat: [imgObj]});
     ra.useSpriteList(sprites);
 
-    sprites[0].x = 3;
-    sprites[0].y = 4;
+    sprites[0].x = 4;
+    sprites[0].y = 3;
     sprites[0].c = 0;
     sprites[0].b = 0;
 
@@ -176,12 +176,76 @@ describe('Sprite', function() {
     let sprites = new ra.SpriteList(1, {chardat: [imgObj]});
     ra.useSpriteList(sprites);
 
-    sprites[0].x = 3;
-    sprites[0].y = 4;
+    sprites[0].x = 4;
+    sprites[0].y = 3;
     sprites[0].c = 0;
     sprites[0].b = 0;
 
     util.renderCompareTo(ra, 'test/testdata/behind-scroll-scene.png');
+  });
+
+  it('hflip', function() {
+    ra.resetState();
+
+    ra.setZoom(4);
+
+    let imgObj = ra.loadImage('test/testdata/small-fruit.png');
+    let imgBg = ra.loadImage('test/testdata/letter_e.png');
+
+    ra.drawImage(imgBg);
+
+    let sprites = new ra.SpriteList(1, {chardat: [imgObj]});
+    ra.useSpriteList(sprites);
+
+    sprites[0].x = 4;
+    sprites[0].y = 3;
+    sprites[0].c = 0;
+    sprites[0].h = true;
+
+    util.renderCompareTo(ra, 'test/testdata/fruit-hflip-scene.png');
+  });
+
+  it('vflip', function() {
+    ra.resetState();
+
+    ra.setZoom(4);
+
+    let imgObj = ra.loadImage('test/testdata/small-fruit.png');
+    let imgBg = ra.loadImage('test/testdata/letter_e.png');
+
+    ra.drawImage(imgBg);
+
+    let sprites = new ra.SpriteList(1, {chardat: [imgObj]});
+    ra.useSpriteList(sprites);
+
+    sprites[0].x = 4;
+    sprites[0].y = 3;
+    sprites[0].c = 0;
+    sprites[0].v = true;
+
+    util.renderCompareTo(ra, 'test/testdata/fruit-vflip-scene.png');
+  });
+
+  it('both flip', function() {
+    ra.resetState();
+
+    ra.setZoom(4);
+
+    let imgObj = ra.loadImage('test/testdata/small-fruit.png');
+    let imgBg = ra.loadImage('test/testdata/letter_e.png');
+
+    ra.drawImage(imgBg);
+
+    let sprites = new ra.SpriteList(1, {chardat: [imgObj]});
+    ra.useSpriteList(sprites);
+
+    sprites[0].x = 4;
+    sprites[0].y = 3;
+    sprites[0].c = 0;
+    sprites[0].h = true;
+    sprites[0].v = true;
+
+    util.renderCompareTo(ra, 'test/testdata/fruit-both-flip-scene.png');
   });
 
 });

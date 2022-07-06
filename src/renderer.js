@@ -343,7 +343,9 @@ class Renderer {
             }
             let t = y*targetPitch + x*4;
             // color value for this pixel
-            let c = obj.get(px, py);
+            let rx = spr.h ? obj.width  - px - 1 : px;
+            let ry = spr.v ? obj.height - py - 1 : py;
+            let c = obj.get(rx, ry);
             if (c > 0) {
               let rgb = this._toColor(c);
               if (spr.m) {

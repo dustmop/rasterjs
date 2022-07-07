@@ -144,6 +144,13 @@ Plane.prototype.put = function(x, y, v) {
   this.data[this._offs + k] = Math.floor(v);
 }
 
+Plane.prototype.fill = function(v) {
+  this._prepare();
+  for (let k = 0; k < this.data.length; k++) {
+    this.data[k] = Math.floor(v);
+  }
+}
+
 Plane.prototype.putSequence = function(seq) {
   this._prepare();
   this._offs = this.offsetTop * this.pitch + this.offsetLeft || 0;

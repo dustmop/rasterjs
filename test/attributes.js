@@ -55,6 +55,31 @@ describe('Attributes', function() {
     util.renderCompareTo(ra, 'test/testdata/attr_change.png');
   });
 
+  it('without tiles', function() {
+    ra.resetState();
+    ra.useColors('quick');
+
+    ra.setSize(36, 36);
+    ra.fillPattern([[0, 1, 1, 0],
+                    [2, 0, 0, 2],
+                    [3, 1, 2, 3],
+                    [0, 1, 3, 3]]);
+
+    let palette = [28, 36, 44, 52,
+                   26, 34, 42, 50];
+    ra.usePalette(palette);
+
+    let attrs = new ra.Plane();
+    attrs.setSize(6, 6);
+    attrs.fill(0);
+    attrs.put(2, 0, 1);
+    attrs.put(4, 3, 1);
+    attrs.put(1, 5, 1);
+    ra.useAttributes(attrs, {cell_width: 6, cell_height: 6, piece_size: 4});
+
+    util.renderCompareTo(ra, 'test/testdata/attrs_colorize.png');
+  });
+
   it('serialize', function() {
     let tmpdir = util.mkTmpDir();
     let tmpout = tmpdir + '/actual.png';

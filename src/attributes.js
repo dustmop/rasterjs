@@ -4,6 +4,14 @@ const types = require('./types.js');
 
 class Attributes {
   constructor(source, sizeInfo) {
+    // TOOD: cell_width, cell_height -> cell_dim
+    // TODO: indexed or container
+    // sizeInfo looks like:
+    // {
+    //   cell_width:  8,
+    //   cell_height: 8,
+    //   piece_size:  4, // num of colors in palette piece
+    // }
     if (!source && !sizeInfo) {
       throw new Error(`Attributes expects an argument`);
     }

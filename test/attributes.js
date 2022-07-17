@@ -109,4 +109,9 @@ describe('Attributes', function() {
     util.ensureFilesMatch('test/testdata/attrs_saved.png', tmpout);
   });
 
+  // TODO: Test normalizePaletteAttributes will downcolor the plane
+
+  // TODO: Test that winner will keep previous value if it works
+
+  // TODO: Test no winner, use ranking
 });

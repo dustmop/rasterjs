@@ -56,6 +56,7 @@ Scene.prototype._initialize = function () {
   this.PI = this.TAU / 2;
   this.camera = {};
   this.colorMap = null;
+  this._hasRenderedOnce = false;
   this.dip = {};
   this.dip.length = 0;
   this.imgLoader = new imageLoader.Loader(this.fsacc, this);
@@ -396,6 +397,13 @@ Scene.prototype._doRender = function(num, exitAfter, drawFunc, finalFunc) {
   }
   this.renderer.connect(this.provide());
 
+  if (this.attrs && !this._hasRenderedOnce) {
+    // TODO: Instead of only doing this once, do it every
+    // frame but make it efficient.
+    this.normalizePaletteAttributes();
+    this._hasRenderedOnce = true;
+  }
+
   let renderID = makeRenderID();
 
   let self = this;
@@ -720,6 +728,13 @@ Scene.prototype._ensureColorMapPositiveSize = function() {
   if (this.colorMap.size() == 0) {
     throw new Error(`empty colorMap, wait for images to load`)
   }
+}
+
+Scene.prototype.normalizePaletteAttributes = function() {
+  if (!this.attrs || !this.palette) {
+    throw new Error(`need palette and attributes`);
+  }
+  this.attrs.ensureConsistentPlanePalette(this.aPlane, this.palette);
 }
 
 Scene.prototype.usePalette = function(param) {

@@ -71,6 +71,70 @@ class Attributes {
     }
   }
 
+  ensureConsistentPlanePalette(plane, palette) {
+    let num_cell_x = plane.width  / this.sizeInfo.cell_width;
+    let num_cell_y = plane.height / this.sizeInfo.cell_height;
+
+    for (let i = 0; i < num_cell_y; i++) {
+      for (let j = 0; j < num_cell_x; j++) {
+        let pal_index_needs = this._collectColorNeeds(plane, j, i);
+        let color_needs = this._lookupPaletteColors(pal_index_needs, palette);
+        let was = this.source.get(j, i);
+        let cell_value = this._discoverCellValue(color_needs, was, palette);
+        this._downColorize(plane, j, i, this.sizeInfo.piece_size);
+        this.source.put(j, i, cell_value);
+      }
+    }
+  }
+
+  _collectColorNeeds(plane, cell_x, cell_y) {
+    let collect = {};
+    for (let i = 0; i < this.sizeInfo.cell_height; i++) {
+      for (let j = 0; j < this.sizeInfo.cell_width; j++) {
+        let x = j + cell_x * this.sizeInfo.cell_width;
+        let y = i + cell_y * this.sizeInfo.cell_height;
+        collect[plane.get(x, y)] = true;
+      }
+    }
+    let needs = Object.keys(collect);
+    needs.sort((a,b) => a - b);
+    return needs;
+  }
+
+  _lookupPaletteColors(pal_index_needs, palette) {
+    let colors = [];
+    for (let i = 0; i < pal_index_needs.length; i++) {
+      colors.push(palette[pal_index_needs[i]].cval);
+    }
+    return colors;
+  }
+
+  _discoverCellValue(color_needs, was, palette) {
+    let match = palette.findNearPieces(color_needs, this.sizeInfo.piece_size);
+    if (match.winners.length) {
+      // If the value of the cell matches a winner, keep using it.
+      // Otherwise use the first winner.
+      // TODO: Test me
+      let pos = match.winners.indexOf(was);
+      return match.winners[pos > -1 ? pos : 0];
+    }
+    // TODO: Test me
+    return match.ranking[0].value;
+  }
+
+  _downColorize(plane, cell_x, cell_y, piece_size) {
+    let collect = {};
+    for (let i = 0; i < this.sizeInfo.cell_height; i++) {
+      for (let j = 0; j < this.sizeInfo.cell_width; j++) {
+        let x = j + cell_x * this.sizeInfo.cell_width;
+        let y = i + cell_y * this.sizeInfo.cell_height;
+        let v = plane.get(x, y);
+        v = v % piece_size;
+        plane.put(x, y, v);
+      }
+    }
+  }
+
   _getColorNeeds(tile, palette) {
     let needSet = {};
     for (let y = 0; y < tile.height; y++) {

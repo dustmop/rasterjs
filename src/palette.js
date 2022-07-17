@@ -92,6 +92,34 @@ class Palette {
     }
   }
 
+  findNearPieces(needs, piece_size) {
+    let num_pieces = this.items.length / piece_size;
+    let winners = [];
+    let ranking = [];
+    for (let p = 0; p < num_pieces; p++) {
+      // Get list of cotent in this piece
+      let content = [];
+      for (let i = 0; i < piece_size; i++) {
+        let k = i + p*piece_size;
+        content.push(this.items[k].cval);
+      }
+      // See if needs completely matches the content, if so, add to winners.
+      // Otherwise, keep score and add it to ranking.
+      let score = needs.filter(x => content.includes(x)).length;
+      if (score == needs.length) {
+        winners.push(p);
+      } else {
+        ranking.push({value: p, score: score});
+      }
+    }
+    // Sort the ranking by score, from highest to lowest.
+    ranking.sort((a,b) => b.score - a.score);
+    return {
+      winners: winners,
+      ranking: ranking,
+    };
+  }
+
   cycle(args) {
     let spec = ['!name', 'startIndex?i', 'endIndex?i',
                 'values?any', 'incStep?i', 'slow?i', 'click?a'];

@@ -47,11 +47,11 @@ class FilesysAccess {
     if (filename.startsWith('SLOW:')) {
       setTimeout(() => {
         filename = filename.slice(5);
-        imgElem.src = '/' + filename;
+        imgElem.src = filename;
       }, 50);
       return 1;
     }
-    imgElem.src = '/' + filename;
+    imgElem.src = filename;
     return 1; // async
   }
 

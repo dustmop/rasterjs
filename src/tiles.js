@@ -217,6 +217,13 @@ class Tile {
       process.stdout.write('\n');
     }
   }
+
+  fill(v) {
+    for (let k = 0; k < this.data.length; k++) {
+      this.data[k] = Math.floor(v);
+    }
+  }
+
 }
 
 module.exports.Tile = Tile;

@@ -36,13 +36,13 @@ Move the x,y coordinate system's origin to the center of the plane, instead of t
 
 ### useColors(colorMap)
 
-Assigns the colorMap to use for displaying the scene. May either be the name of a pre-existing color set, or a list of rgb values.
+Assigns the colorMap to use for displaying the scene. May either be the name of a pre-existing colorMap, or a list of rgb values.
 
 If not invoked, the current default colorMap is this:
 
 ![](asset/quick-colormap.png)
 
-Names of pre-existing color sets:
+Names of pre-existing colorMaps:
 
 `quick`: The current default colorMap, shown above. 64 colors, a quick and simple rainbow palette.
 
@@ -50,7 +50,7 @@ Names of pre-existing color sets:
 
 `nes`: Colors used by the NES 8-bit console.
 
-`grey`: A grey scale color set.
+`grey`: Grey scale colors, from black to white.
 
 `gameboy`: Colors used by the Gameboy handheld console.
 

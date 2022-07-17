@@ -21,6 +21,7 @@ Drawable.prototype.getMethods = function() {
 
 Drawable.prototype.drawLine_params = ['x0:n', 'y0:n', 'x1:n', 'y1:n', 'cc?b'];
 Drawable.prototype.drawLine = function(x0, y0, x1, y1, cc) {
+  this._prepare();
   cc = cc ? 1 : 0;
   let res = algorithm.renderLine(this, x0, y0, x1, y1, cc);
   this.putSequence(res);

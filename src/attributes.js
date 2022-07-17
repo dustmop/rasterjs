@@ -49,7 +49,7 @@ class Attributes {
       throw new Error(`Attributes expects a Plane as an argument`);
     }
     if (!source.data) {
-      throw new Error(`invalid source, data is null`);
+      source.ensureReady();
     }
     this.source = source;
     this.sizeInfo = sizeInfo;

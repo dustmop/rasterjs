@@ -166,18 +166,16 @@ Change the display. See `useDisplay` in the docs for supported displays.
 Change the zoom level.
 
 ```
---colors [colorSet]
+--colors [colorMap]
 ```
 
-Use a specific colorSet. See `useColors` in the docs for supported colorSets.
+Use a specific colorMap. See `useColors` in the docs for the names of built-in colorMaps.
 
 # Colors
 
-The current default colorset for raster.js is the "quick" palette, shown here:
+The default colorMap for raster.js is the "quick" colors, shown here:
 
-![](asset/quick-colorset.png)
-
-This is likely to change in a future version. Users should either add `ra.useColors('quick')` to their code, or be prepared to update the colors they use once this change happens.
+![](asset/quick-colormap.png)
 
 # API
 

@@ -57,6 +57,8 @@ Scene.prototype._initialize = function () {
   this.camera = {};
   this.colorMap = null;
   this._hasRenderedOnce = false;
+  this._inspectScanline = null;
+  this._inspectCallback = null;
   this.dip = {};
   this.dip.length = 0;
   this.imgLoader = new imageLoader.Loader(this.fsacc, this);
@@ -347,6 +349,13 @@ Scene.prototype.experimentalDisplayComponents = function(components, settings) {
   }
 }
 
+Scene.prototype.experimentalInspectScanline = function(scanline) {
+  this._inspectScanline = scanline;
+  if (this.renderer) {
+    this.renderer.setInspector(this._inspectScanline, this._inspectCallback);
+  }
+}
+
 Scene.prototype.loadImage = function(filepath, opt) {
   opt = opt || {};
   if (!this.colorMap) {
@@ -403,6 +412,8 @@ Scene.prototype._doRender = function(num, exitAfter, drawFunc, finalFunc) {
     this.normalizePaletteAttributes();
     this._hasRenderedOnce = true;
   }
+
+  this.renderer.setInspector(this._inspectScanline, this._inspectCallback);
 
   let renderID = makeRenderID();
 
@@ -554,10 +565,17 @@ Scene.prototype.setTileset = function(which) {
 }
 
 Scene.prototype.on = function(eventName, callback) {
-  let allowed = ['keypress', 'click', 'ready'];
+  let allowed = ['keypress', 'click', 'ready', 'render'];
   if (!allowed.includes(eventName)) {
     let expect = allowed.map((n)=>`"${n}"`).join(', ');
     throw new Error(`unknown event "${eventName}", only ${expect} supported`);
+  }
+  if (eventName == 'render') {
+    this._inspectCallback = callback;
+    if (this.renderer) {
+      this.renderer.setInspector(this._inspectScanline, this._inspectCallback);
+    }
+    return;
   }
   this.display.handleEvent(eventName, callback);
 }

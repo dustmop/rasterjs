@@ -38,6 +38,8 @@ class Renderer {
     this.interrupts = null;
     this.grid = null;
     this.haveRenderedPlaneOnce = false;
+    this._inspectScanline = null;
+    this._inspectCallback = null;
   }
 
   connect(input) {
@@ -105,6 +107,11 @@ class Renderer {
       throw new Error(`switchComponent can only be used for "tiles"`);
     }
     this._layers[layerNum].tiles = obj;
+  }
+
+  setInspector(scanline, callback) {
+    this._inspectScanline = scanline;
+    this._inspectCallback = callback;
   }
 
   render() {
@@ -196,6 +203,15 @@ class Renderer {
   _renderRegion(layer, left, top, right, bottom) {
     // If plane has not been rendered yet, do so now.
     layer.plane.ensureReady();
+
+    // Dispatch any inspector events
+    if (this._inspectScanline !== null && this._inspectCallback !== null) {
+      if (this._inspectScanline >= top && this._inspectScanline < bottom) {
+        let eventObj = {
+        };
+        this._inspectCallback(eventObj);
+      }
+    }
 
     let source = layer.plane.data;
     let sourcePitch = layer.plane.pitch;

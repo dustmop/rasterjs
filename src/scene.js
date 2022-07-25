@@ -61,7 +61,7 @@ Scene.prototype._initialize = function () {
   this._inspectCallback = null;
   this.dip = {};
   this.dip.length = 0;
-  this.imgLoader = new imageLoader.Loader(this.fsacc, this);
+  this.imgLoader = new imageLoader.Loader(this.fsacc, new weak.Ref(this));
   this.textLoader = new textLoader.TextLoader(this.fsacc);
   let options = this.env.getOptions();
   this.numFrames = options.num_frames || -1;
@@ -639,7 +639,7 @@ Scene.prototype.dipNames = function() {
   return this._dipNames;
 }
 
-Scene.prototype._initPaletteFromLookAtImage = function(look) {
+Scene.prototype._initPaletteFromLookOfImage = function(look) {
   let size = look.max() + 1;
   let items = [];
   for (let i = 0; i < size; i++) {
@@ -649,7 +649,7 @@ Scene.prototype._initPaletteFromLookAtImage = function(look) {
   }
   // Assign the palette to the scene
   let saveService = this.saveService;
-  let pal = new palette.Palette(items, saveService, this);
+  let pal = new palette.Palette(items, saveService, new weak.Ref(this));
   this.palette = pal;
   return this.palette;
 }
@@ -695,7 +695,7 @@ Scene.prototype._initPaletteFromPlane = function(shouldSort, optSize) {
     }
     // Assigin the palette to the scene
     let saveService = this.saveService;
-    let pal = new palette.Palette(items, saveService, this);
+    let pal = new palette.Palette(items, saveService, new weak.Ref(this));
     this.palette = pal;
   }
   return this.palette;
@@ -714,7 +714,7 @@ Scene.prototype._paletteFromColorMap = function(optSize) {
       let ent = new palette.PaletteEntry(rgb, i, colors);
       all.push(ent);
     }
-    this.palette = new palette.Palette(all, saveService, this);
+    this.palette = new palette.Palette(all, saveService, new weak.Ref(this));
   }
   return this.palette;
 }
@@ -778,8 +778,8 @@ Scene.prototype.usePalette = function(param) {
   if (types.isPalette(param)) {
     this.palette = param;
     return this.palette;
-  } else if (types.isLookAtImage(param)) {
-    return this._initPaletteFromLookAtImage(param);
+  } else if (types.isLookOfImage(param)) {
+    return this._initPaletteFromLookOfImage(param);
   } else if (!param) {
     return this._initPaletteFromPlane();
   } else if (types.isObject(param)) {
@@ -816,7 +816,7 @@ Scene.prototype._constructPaletteFromVals = function(vals) {
     ent = new palette.PaletteEntry(rgb, cval, colors);
     all.push(ent);
   }
-  this.palette = new palette.Palette(all, saveService, this);
+  this.palette = new palette.Palette(all, saveService, new weak.Ref(this));
   return this.palette;
 }
 

@@ -1,10 +1,12 @@
 class Ref {
   constructor(obj) {
-    this._obj = obj;
+    this._derefer = function() {
+      return obj;
+    };
   }
 
   deref() {
-    return this._obj;
+    return this._derefer();
   }
 }
 

@@ -3,6 +3,7 @@ const algorithm = require('./algorithm.js');
 const quantizer = require('./quantizer.js');
 const palette = require('./palette.js');
 const types = require('./types.js');
+const weak = require('./weak.js');
 const verboseLogger = require('./verbose_logger.js');
 
 let verbose = new verboseLogger.Logger();
@@ -14,14 +15,14 @@ const LOAD_STATE_FILLED = 3;
 const LOAD_STATE_ERROR = -1;
 
 class Loader {
-  constructor(fsacc, scene) {
-    if (!scene) {
-      throw new Error('needs non-null scene object')
+  constructor(fsacc, refScene) {
+    if (!types.isWeakRef(refScene)) {
+      throw new Error('needs weak ref for scene object')
     }
     this.list = [];
     this.addedFiles = {};
     this.fsacc = fsacc;
-    this.scene = scene;
+    this.refScene = refScene;
     return this;
   }
 
@@ -38,6 +39,8 @@ class Loader {
     }
 
     let useAsync = !!opt['async'];
+    let colorMap = this.refScene.deref().colorMap;
+    let palette = this.refScene.deref().palette;
 
     if (this.addedFiles[filename]) {
       let found = this.addedFiles[filename];
@@ -49,7 +52,8 @@ class Loader {
       imgPlane.width = found.width;
       imgPlane.pitch = planePitch;
       imgPlane.height = found.height;
-      imgPlane.colorMap = this.scene.colorMap;
+      imgPlane.colorMap = colorMap;
+      imgPlane.palette = palette;
       imgPlane.loadState = LOAD_STATE_READ;
       imgPlane.fillData();
       return imgPlane;
@@ -58,11 +62,11 @@ class Loader {
     let self = this;
 
     let img = new ImagePlane();
-    img.parentLoader = this;
+    img.refLoader = new weak.Ref(this);
     img.filename = filename;
     img.id = this.list.length;
-    img.colorMap = this.scene.colorMap;
-    img.palette = this.scene.palette;
+    img.colorMap = colorMap;
+    img.palette = palette;
     img.sortUsingHSV = sortUsingHSV;
     img.left = 0;
     img.top = 0;
@@ -95,10 +99,10 @@ class Loader {
   }
 }
 
-class LookAtImage {
+class LookOfImage {
   constructor(items, density) {
     if (!density) {
-      throw new Error(`LookAtImage needs density parameter`);
+      throw new Error(`LookOfImage needs density parameter`);
     }
     // Clone the list of items
     this._items = items.slice();
@@ -128,7 +132,7 @@ class LookAtImage {
 
 class ImagePlane {
   constructor() {
-    this.parentLoader = null;
+    this.refLoader = null;
     this.filename = null;
     this.id = null;
     this.slice = null;
@@ -145,7 +149,7 @@ class ImagePlane {
 
   whenRead() {
     this.loadState = LOAD_STATE_READ;
-    let collect = this.parentLoader;
+    let collect = this.refLoader.deref();
     for (let img of collect.list) {
       if (img.loadState == LOAD_STATE_ERROR) {
         continue;
@@ -163,7 +167,7 @@ class ImagePlane {
 
   select(x, y, w, h) {
     let make = new ImagePlane();
-    make.parentLoader = this.parentLoader;
+    make.refLoader = this.refLoader;
     make.filename = this.filename;
     make.id = this.id;
     make.left = x;
@@ -182,7 +186,7 @@ class ImagePlane {
 
   clone() {
     let make = new ImagePlane();
-    make.parentLoader = this.parentLoader;
+    make.refLoader = this.refLoader;
     make.filename = this.filename;
     make.id = this.id;
     make.left = 0;
@@ -266,9 +270,9 @@ class ImagePlane {
     verbose.log(`loading image with rgb map: ${JSON.stringify(res.remap)}`, 6);
 
     // Look of the image, see the used color values
-    this.look = new LookAtImage(res.items, needs.density);
+    this.look = new LookOfImage(res.items, needs.density);
     //
-    // # Why is this a LookAtImage object?
+    // # Why is this a LookOfImage object?
     //
     // This object represents the colors used by the loaded image,
     // sorted according to where they are seen in the image (upper
@@ -279,7 +283,7 @@ class ImagePlane {
     // by constructing a palette large enough to hold all used values.
     //
     // This second use case implies that this value can't be a plain
-    // array, but needs to be some sort tof object.
+    // array, but needs to be some sort of object.
     //
     // # Why do it this way instead of calling this a palette?
     //
@@ -399,7 +403,8 @@ class ImagePlane {
   }
 
   then(cb) {
-    this.parentLoader.fsacc.whenLoaded(cb);
+    let loader = this.refLoader.deref();
+    loader.fsacc.whenLoaded(cb);
   }
 
   numColors() {
@@ -409,4 +414,4 @@ class ImagePlane {
 
 module.exports.Loader = Loader;
 module.exports.ImagePlane = ImagePlane;
-module.exports.LookAtImage = LookAtImage;
+module.exports.LookOfImage = LookOfImage;

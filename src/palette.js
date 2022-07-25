@@ -5,11 +5,11 @@ const serializer = require('./serializer.js');
 
 
 class Palette {
-  constructor(items, fsacc, parentScene) {
+  constructor(items, fsacc, refScene) {
     if (fsacc != null && !fsacc.saveTo) {
       throw new Error('Palette given invalid fsacc');
     }
-    this.parentScene = parentScene;
+    this.refScene = refScene;
     this.items = items;
     for (let i = 0; i < items.length; i++) {
       if (items[i].constructor != PaletteEntry) {
@@ -126,13 +126,14 @@ class Palette {
     let [startIndex, endIndex, values, incStep, slow, click] = (
       destructure.from('cycle', spec, arguments, null));
 
-    if (this.parentScene == null) {
-      throw new Error('parentScene is not set');
+    if (this.refScene == null) {
+      throw new Error('refScene is not set');
     }
+    let ra = this.refScene.deref();
 
     if (!values) {
-      values = this.parentScene.nge(0, this.length);
-    } else if (types.isLookAtImage(values)) {
+      values = ra.nge(0, this.length);
+    } else if (types.isLookOfImage(values)) {
       if (!incStep) {
         incStep = values.density();
       }
@@ -142,7 +143,7 @@ class Palette {
     endIndex = endIndex || this.length;
     incStep = Math.max(1, Math.floor(incStep));
     slow = Math.max(1, Math.floor(slow));
-    click = click !== null ? click : this.parentScene.timeClick;
+    click = click !== null ? click : ra.timeClick;
 
     let param = Math.floor(click / slow);
     let numColors = endIndex - startIndex;
@@ -179,9 +180,9 @@ class Palette {
   }
 }
 
-function constructFrom(vals, offset, colors, fsacc, parentScene) {
-  if (!parentScene) {
-    throw new Error('constructFrom: parentScene is null');
+function constructFrom(vals, offset, colors, fsacc, refScene) {
+  if (!refScene) {
+    throw new Error('constructFrom: refScene is null');
   }
   let all = [];
   let ent;
@@ -202,7 +203,7 @@ function constructFrom(vals, offset, colors, fsacc, parentScene) {
     ent = new PaletteEntry(rgb, cval, colors);
     all.push(ent);
   }
-  return new Palette(all, fsacc, parentScene);
+  return new Palette(all, fsacc, refScene);
 }
 
 

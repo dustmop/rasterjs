@@ -81,7 +81,8 @@ class Sprite {
 class SpriteSheet {
   constructor(pl, info) {
     // TODO: Needs better error handling
-    let loaderScene = pl.parentLoader.scene;
+    let loader = pl.refLoader.deref();
+    let loaderScene = loader.refScene.deref();
     loaderScene._ensureColorMap();
     let colorMap = loaderScene.colorMap;
     let rgbBorder = new rgbColor.RGBColor(info.trueColorBorder);

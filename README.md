@@ -1,17 +1,20 @@
 # Raster.js
 
-raster.js is a retro style graphics library, for making pixel art, exploring 2d demo effects, and creative coding.
+raster.js is a retro graphics framework
+
+It lets you create graphics that immitate vintage computers and ancient game hardware, using javascript. It is great for making pixel art, exploring 2d demo effects, and creative coding.
 
 It aims to serve as a tool for prototyping, experimentation, and learning about how old school graphics worked. It provides precise pixel control, and portability across multiple javascript environments and rendering contexts.
 
 # Features
 
 * Pixel based, hard edges, no anti-aliasing
-* Limited palette, default 64 colors, expandable to 256
-* Runs in multiple places: in browser, in node.js, on raspberry pi
+* Limited 8-bit palette, default 64 colors, expandable to 256
+* Runs in multiple places: in browser using webgl, in node.js using SDL, on raspberry pi using dispmanx
 * Easy utilities for saving gifs and pngs
 * Colors presets for machines such as the NES, ZX Spectrum, Pico-8, Gameboy, DOS, and more
-* Features that immitate ancient hardware such as color attributes, and rasterization interrupts
+* Features that immitate ancient hardware such as color attributes and rasterization interrupts
+* Ability to recreate classic effects like parallax and palette cycling using programming interfaces similar to what was used back in the day
 
 # Example Usage
 

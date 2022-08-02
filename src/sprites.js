@@ -32,12 +32,6 @@ class SpriteList {
     this.enabled = true;
     return this;
   }
-
-  ensureValid() {
-    for (let item of this.items) {
-      item._ensureIntPos();
-    }
-  }
 }
 
 
@@ -56,16 +50,10 @@ class Sprite {
     return item;
   }
 
-  _ensureIntPos() {
-    this.x = Math.floor(this.x);
-    this.y = Math.floor(this.y);
-  }
-
   assign(other) {
     for (let k of Object.keys(other)) {
       this[k] = other[k];
     }
-    this._ensureIntPos();
   }
 }
 

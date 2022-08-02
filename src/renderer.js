@@ -316,15 +316,14 @@ class Renderer {
     }
 
     if (layer.spriteList && layer.spriteList.enabled) {
-      layer.spriteList.ensureValid();
       let chardat = layer.spriteList.chardat || layer.tiles;
       if (!chardat) {
         throw new Error('cannot render sprites without character data')
       }
       for (let k = 0; k < layer.spriteList.items.length; k++) {
         let spr = layer.spriteList.items[k];
-        let sx = spr.x;
-        let sy = spr.y;
+        let sx = Math.floor(spr.x);
+        let sy = Math.floor(spr.y);
         // ensure size of sprite is set
         if (sx === null || sx === undefined || sx < 0 || sx >= right) {
           continue;

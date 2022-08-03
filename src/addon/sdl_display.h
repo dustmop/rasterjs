@@ -30,6 +30,10 @@ class SDLDisplay : public Napi::ObjectWrap<SDLDisplay> {
   Napi::Value AppQuit(const Napi::CallbackInfo& info);
   Napi::Value ReadImage(const Napi::CallbackInfo& info);
 
+  void execOneFrame(Napi::Env env, Napi::Function eachFrameFunc, int numRender, bool exitAfter);
+  Napi::Object rendererObj;
+  Napi::Function renderFunc;
+
   bool hasWriteBuffer;
   Napi::Reference<Napi::Value> writeBuffer;
 

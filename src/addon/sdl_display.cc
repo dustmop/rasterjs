@@ -159,14 +159,14 @@ Napi::Value SDLDisplay::RenderLoop(const Napi::CallbackInfo& info) {
   // Get the stored plane object, retrieve its basic data.
   napi_value rendererVal;
   napi_get_reference_value(env, this->rendererRef, &rendererVal);
-  Napi::Object rendererObj = Napi::Object(env, rendererVal);
-  Napi::Value renderFuncVal = rendererObj.Get("render");
+  this->rendererObj = Napi::Object(env, rendererVal);
+  Napi::Value renderFuncVal = this->rendererObj.Get("render");
 
   if (!renderFuncVal.IsFunction()) {
     printf("renderer.render() not found\n");
     exit(1);
   }
-  Napi::Function renderFunc = renderFuncVal.As<Napi::Function>();
+  this->renderFunc = renderFuncVal.As<Napi::Function>();
 
   // Calculate texture and window size.
   int viewWidth = this->displayWidth;
@@ -226,6 +226,55 @@ Napi::Value SDLDisplay::RenderLoop(const Napi::CallbackInfo& info) {
       viewHeight);
   SDL_SetTextureBlendMode(this->textureHandle, SDL_BLENDMODE_BLEND);
 
+  this->isRunning = true;
+  this->execOneFrame(env, eachFrameFunc, numRender, exitAfter);
+  return info.Env().Null();
+}
+
+void SDLDisplay::execOneFrame(Napi::Env env, Napi::Function eachFrameFunc, int numRender, bool exitAfter) {
+  if (!this->isRunning) {
+    // Exit the RenderLoop
+    return;
+  }
+
+  // Get OS events, such as exiting app, and keyboard input
+  SDL_Event event;
+  if (SDL_PollEvent(&event)) {
+    switch (event.type) {
+    case SDL_QUIT:
+      this->isRunning = false;
+      return;
+    case SDL_KEYDOWN:
+      if (event.key.keysym.sym == SDLK_ESCAPE) {
+        this->isRunning = false;
+        return;
+      } else if (!this->keyHandleFunc.IsEmpty()) {
+        int code = event.key.keysym.sym;
+        std::string s(1, char(code));
+        Napi::String str = Napi::String::New(env, s);
+        Napi::Object obj = Napi::Object::New(env);
+        obj["key"] = str;
+        napi_value val = obj;
+        this->keyHandleFunc.Call({val});
+      }
+    case SDL_WINDOWEVENT_CLOSE:
+      this->isRunning = false;
+      return;
+    }
+  }
+
+  if (numRender == 0) {
+    if (exitAfter) {
+      // Number of frames have completed, exit the app.
+      return;
+    }
+    // This was a show() call, keep window open.
+    SDL_Delay(16);
+    return this->execOneFrame(env, eachFrameFunc, numRender, exitAfter);
+  }
+
+  SDL_RenderClear(this->rendererHandle);
+
   // Create an empty object for js function calls
   napi_value result;
   napi_value self;
@@ -233,219 +282,178 @@ Napi::Value SDLDisplay::RenderLoop(const Napi::CallbackInfo& info) {
   status = napi_create_object(env, &self);
   if (status != napi_ok) {
     printf("napi_create_object(self) failed to create\n");
-    return Napi::Number::New(env, -1);
+    return;
   }
 
-  // A basic main loop to handle events
-  this->isRunning = true;
-  SDL_Event event;
-  while (this->isRunning) {
-    // Get OS events, such as exiting app, and keyboard input
-    if (SDL_PollEvent(&event)) {
-      switch (event.type) {
-      case SDL_QUIT:
-        this->isRunning = false;
-        break;
-      case SDL_KEYDOWN:
-        if (event.key.keysym.sym == SDLK_ESCAPE) {
-          this->isRunning = false;
-        } else if (!this->keyHandleFunc.IsEmpty()) {
-          int code = event.key.keysym.sym;
-          std::string s(1, char(code));
-          Napi::String str = Napi::String::New(env, s);
-          Napi::Object obj = Napi::Object::New(env);
-          obj["key"] = str;
-          napi_value val = obj;
-          this->keyHandleFunc.Call({val});
-        }
-        break;
-      case SDL_WINDOWEVENT_CLOSE:
-        this->isRunning = false;
-        break;
-      default:
-        break;
-      }
+  // Call the draw function.
+  napi_value funcResult;
+  status = napi_call_function(env, self, eachFrameFunc, 0, NULL, &funcResult);
+
+  if (status != napi_ok) {
+    if (status == napi_pending_exception) {
+      // Function call failed.
+      napi_status s;
+      s = napi_get_and_clear_last_exception(env, &result);
+      napi_valuetype valuetype;
+      napi_typeof(env, result, &valuetype);
+      // Convert the error to a string, display it.
+      napi_value errval;
+      napi_coerce_to_string(env, result, &errval);
+      display_napi_value(env, errval);
+      return;
     }
-
-    if (numRender == 0) {
-      if (exitAfter) {
-        // Number of frames have completed, exit the app.
-        break;
-      }
-      // This was a show() call, keep window open.
-      SDL_Delay(16);
-      continue;
+    napi_status err;
+    const napi_extended_error_info* errInfo = NULL;
+    err = napi_get_last_error_info(env, &errInfo);
+    if (err != napi_ok) {
+      printf("Encountered an error getting error code: %d\n", err);
+      return;
     }
+    printf("Err code %d: %s\n", status, errInfo->error_message);
+    return;
+  }
 
-    SDL_RenderClear(this->rendererHandle);
-
-    // Call the draw function.
-    napi_value funcResult;
-    status = napi_call_function(env, self, eachFrameFunc, 0, NULL, &funcResult);
-
-    if (status != napi_ok) {
-      if (status == napi_pending_exception) {
-        // Function call failed.
-        napi_status s;
-        s = napi_get_and_clear_last_exception(env, &result);
-        napi_valuetype valuetype;
-        napi_typeof(env, result, &valuetype);
-        // Convert the error to a string, display it.
-        napi_value errval;
-        napi_coerce_to_string(env, result, &errval);
-        display_napi_value(env, errval);
-        break;
-      }
-      napi_status err;
-      const napi_extended_error_info* errInfo = NULL;
-      err = napi_get_last_error_info(env, &errInfo);
-      if (err != napi_ok) {
-        printf("Encountered an error getting error code: %d\n", err);
-        break;
-      }
-      printf("Err code %d: %s\n", status, errInfo->error_message);
-      break;
-    }
-
-    // Call the render function.
-    napi_value resVal;
-    status = napi_call_function(env, rendererObj, renderFunc, 0, NULL, &resVal);
-    if (status != napi_ok) {
-      if (status == napi_pending_exception) {
-        napi_value result;
-        // Function call failed.
-        napi_status s;
-        s = napi_get_and_clear_last_exception(env, &result);
-        napi_valuetype valuetype;
-        napi_typeof(env, result, &valuetype);
-        // Display error with stack trace.
-        Napi::Object errObj = Napi::Object(env, result);
-        Napi::Value stackVal = errObj.Get("stack");
-        Napi::String stackStr = stackVal.ToString();
-        printf("%s\n", stackStr.Utf8Value().c_str());
-        exit(1);
-      }
-      napi_status err;
-      const napi_extended_error_info* errInfo = NULL;
-      err = napi_get_last_error_info(env, &errInfo);
-      if (err != napi_ok) {
-        printf("Encountered an error getting error code: %d\n", err);
-        exit(1);
-      }
-      printf("rendering failed: status code %d\n", status);
+  // Call the render function.
+  napi_value resVal;
+  status = napi_call_function(env, this->rendererObj, this->renderFunc,
+                              0, NULL, &resVal);
+  if (status != napi_ok) {
+    if (status == napi_pending_exception) {
+      napi_value result;
+      // Function call failed.
+      napi_status s;
+      s = napi_get_and_clear_last_exception(env, &result);
+      napi_valuetype valuetype;
+      napi_typeof(env, result, &valuetype);
+      // Display error with stack trace.
+      Napi::Object errObj = Napi::Object(env, result);
+      Napi::Value stackVal = errObj.Get("stack");
+      Napi::String stackStr = stackVal.ToString();
+      printf("%s\n", stackStr.Utf8Value().c_str());
       exit(1);
     }
-
-    Napi::Object resObj = Napi::Object(env, resVal);
-    Napi::Value surfaceVal = resObj.As<Napi::Array>()[uint32_t(0)];
-    Napi::Object surfaceObj = surfaceVal.As<Napi::Object>();
-
-    unsigned char* gridRawBuff = NULL;
-    int gridPitch = 0;
-
-    Napi::Object gridLayerObj;
-    Napi::Value gridLayerVal = resObj.As<Napi::Array>()[uint32_t(1)];
-    if (!gridLayerVal.IsNull()) {
-      gridLayerObj = gridLayerVal.As<Napi::Object>();
-      if (!gridLayerObj.IsNull()) {
-        Napi::Value gridBuffVal = gridLayerObj.Get("buff");
-        if (!gridBuffVal.IsNull()) {
-          this->hasGrid = 1;
-          Napi::TypedArray typeArr = gridBuffVal.As<Napi::TypedArray>();
-          Napi::ArrayBuffer arrBuff = typeArr.ArrayBuffer();
-          void* untypedData = arrBuff.Data();
-          gridRawBuff = (unsigned char*)untypedData;
-        }
-        Napi::Value gridPitchVal = gridLayerObj.Get("pitch");
-        gridPitch = gridPitchVal.As<Napi::Number>().Int32Value();
-        Napi::Value gridWidthVal = gridLayerObj.Get("width");
-        this->gridWidth = gridWidthVal.As<Napi::Number>().Int32Value();
-        Napi::Value gridHeightVal = gridLayerObj.Get("height");
-        this->gridHeight = gridHeightVal.As<Napi::Number>().Int32Value();
-      }
-    }
-
-    // Convert front surface into the raw data buffer
-    Napi::Value bufferVal = surfaceObj.Get("buff");
-    if (!bufferVal.IsTypedArray()) {
-      printf("surfaceObj.buff expected a TypedArray, did not get one!\n");
+    napi_status err;
+    const napi_extended_error_info* errInfo = NULL;
+    err = napi_get_last_error_info(env, &errInfo);
+    if (err != napi_ok) {
+      printf("Encountered an error getting error code: %d\n", err);
       exit(1);
     }
+    printf("rendering failed: status code %d\n", status);
+    exit(1);
+  }
+
+  Napi::Object resObj = Napi::Object(env, resVal);
+  Napi::Value surfaceVal = resObj.As<Napi::Array>()[uint32_t(0)];
+  Napi::Object surfaceObj = surfaceVal.As<Napi::Object>();
+
+  unsigned char* gridRawBuff = NULL;
+  int gridPitch = 0;
+
+  Napi::Object gridLayerObj;
+  Napi::Value gridLayerVal = resObj.As<Napi::Array>()[uint32_t(1)];
+  if (!gridLayerVal.IsNull()) {
+    gridLayerObj = gridLayerVal.As<Napi::Object>();
+    if (!gridLayerObj.IsNull()) {
+      Napi::Value gridBuffVal = gridLayerObj.Get("buff");
+      if (!gridBuffVal.IsNull()) {
+        this->hasGrid = 1;
+        Napi::TypedArray typeArr = gridBuffVal.As<Napi::TypedArray>();
+        Napi::ArrayBuffer arrBuff = typeArr.ArrayBuffer();
+        void* untypedData = arrBuff.Data();
+        gridRawBuff = (unsigned char*)untypedData;
+      }
+      Napi::Value gridPitchVal = gridLayerObj.Get("pitch");
+      gridPitch = gridPitchVal.As<Napi::Number>().Int32Value();
+      Napi::Value gridWidthVal = gridLayerObj.Get("width");
+      this->gridWidth = gridWidthVal.As<Napi::Number>().Int32Value();
+      Napi::Value gridHeightVal = gridLayerObj.Get("height");
+      this->gridHeight = gridHeightVal.As<Napi::Number>().Int32Value();
+    }
+  }
+
+  // Convert front surface into the raw data buffer
+  Napi::Value bufferVal = surfaceObj.Get("buff");
+  if (!bufferVal.IsTypedArray()) {
+    printf("surfaceObj.buff expected a TypedArray, did not get one!\n");
+    exit(1);
+  }
+  Napi::TypedArray typeArr = bufferVal.As<Napi::TypedArray>();
+  Napi::ArrayBuffer arrBuff = typeArr.ArrayBuffer();
+  void* untypedData = arrBuff.Data();
+  unsigned char* rawBuff = (unsigned char*)untypedData;
+
+  int viewWidth = this->displayWidth;
+  int viewPitch = viewWidth * RGB_PIXEL_SIZE;
+  Napi::Value realPitchNum = surfaceObj.Get("pitch");
+  if (realPitchNum.IsNumber()) {
+    viewPitch = realPitchNum.As<Napi::Number>().Int32Value();
+  }
+
+  // Send the raw data from the plane's buffer to the texture
+  if (rawBuff) {
+    SDL_UpdateTexture(this->textureHandle, NULL, rawBuff, viewPitch);
+  } else {
+    printf("no data buffer!\n");
+    return;
+  }
+
+  if (gridRawBuff) {
+    if (!this->gridHandle) {
+      // Create the texture that the grid is mapped to
+      this->gridHandle = SDL_CreateTexture(
+          this->rendererHandle,
+          SDL_PIXELFORMAT_ABGR8888,
+          SDL_TEXTUREACCESS_STREAMING,
+          this->gridWidth,
+          this->gridHeight);
+      SDL_SetTextureBlendMode(this->gridHandle, SDL_BLENDMODE_BLEND);
+    }
+    SDL_UpdateTexture(this->gridHandle, NULL, gridRawBuff, gridPitch);
+  }
+
+  SDL_RenderCopy(this->rendererHandle, this->textureHandle, NULL, NULL);
+  if (this->gridHandle) {
+    SDL_RenderCopy(this->rendererHandle, this->gridHandle, NULL, NULL);
+  }
+
+  if (this->hasWriteBuffer) {
+    // TODO: 2 is only true if high dpi is enabled
+    int width = this->displayWidth * this->zoomLevel * 2;
+    int height = this->displayHeight * this->zoomLevel * 2;
+    SDL_Rect rect;
+    rect.x = rect.y = 0;
+    rect.w = width;
+    rect.h = height;
+    int savePitch = width * 4;
+    int saveSize = width * height * 4;
+    u8* saveBuff = (u8*)malloc(saveSize);
+    SDL_RenderReadPixels(this->rendererHandle,
+                         &rect,
+                         SDL_PIXELFORMAT_ABGR8888,
+                         saveBuff,
+                         savePitch);
+    // Copy the result into the hook buffer.
+    Napi::Value bufferVal = this->writeBuffer.Value();
     Napi::TypedArray typeArr = bufferVal.As<Napi::TypedArray>();
     Napi::ArrayBuffer arrBuff = typeArr.ArrayBuffer();
     void* untypedData = arrBuff.Data();
     unsigned char* rawBuff = (unsigned char*)untypedData;
-
-    int viewPitch = viewWidth * RGB_PIXEL_SIZE;
-    Napi::Value realPitchNum = surfaceObj.Get("pitch");
-    if (realPitchNum.IsNumber()) {
-      viewPitch = realPitchNum.As<Napi::Number>().Int32Value();
+    for (size_t k = 0; k < arrBuff.ByteLength(); k++) {
+      rawBuff[k] = saveBuff[k];
     }
-
-    // Send the raw data from the plane's buffer to the texture
-    if (rawBuff) {
-      SDL_UpdateTexture(this->textureHandle, NULL, rawBuff, viewPitch);
-    } else {
-      printf("no data buffer!\n");
-      return Napi::Number::New(env, 0);
-    }
-
-    if (gridRawBuff) {
-      if (!this->gridHandle) {
-        // Create the texture that the grid is mapped to
-        this->gridHandle = SDL_CreateTexture(
-            this->rendererHandle,
-            SDL_PIXELFORMAT_ABGR8888,
-            SDL_TEXTUREACCESS_STREAMING,
-            this->gridWidth,
-            this->gridHeight);
-        SDL_SetTextureBlendMode(this->gridHandle, SDL_BLENDMODE_BLEND);
-      }
-      SDL_UpdateTexture(this->gridHandle, NULL, gridRawBuff, gridPitch);
-    }
-
-    SDL_RenderCopy(this->rendererHandle, this->textureHandle, NULL, NULL);
-    if (this->gridHandle) {
-      SDL_RenderCopy(this->rendererHandle, this->gridHandle, NULL, NULL);
-    }
-
-    if (this->hasWriteBuffer) {
-      // TODO: 2 is only true if high dpi is enabled
-      int width = this->displayWidth * this->zoomLevel * 2;
-      int height = this->displayHeight * this->zoomLevel * 2;
-      SDL_Rect rect;
-      rect.x = rect.y = 0;
-      rect.w = width;
-      rect.h = height;
-      int savePitch = width * 4;
-      int saveSize = width * height * 4;
-      u8* saveBuff = (u8*)malloc(saveSize);
-      SDL_RenderReadPixels(this->rendererHandle,
-                           &rect,
-                           SDL_PIXELFORMAT_ABGR8888,
-                           saveBuff,
-                           savePitch);
-      // Copy the result into the hook buffer.
-      Napi::Value bufferVal = this->writeBuffer.Value();
-      Napi::TypedArray typeArr = bufferVal.As<Napi::TypedArray>();
-      Napi::ArrayBuffer arrBuff = typeArr.ArrayBuffer();
-      void* untypedData = arrBuff.Data();
-      unsigned char* rawBuff = (unsigned char*)untypedData;
-      for (size_t k = 0; k < arrBuff.ByteLength(); k++) {
-        rawBuff[k] = saveBuff[k];
-      }
-      free(saveBuff);
-      return Napi::Number::New(env, 0);
-    }
-
-    // Swap buffers to display
-    SDL_RenderPresent(this->rendererHandle);
-
-    if (numRender > 0) {
-      numRender--;
-    }
+    free(saveBuff);
+    return;
   }
-  return Napi::Number::New(env, 0);
+
+  // Swap buffers to display
+  SDL_RenderPresent(this->rendererHandle);
+
+  if (numRender > 0) {
+    numRender--;
+  }
+
+  this->execOneFrame(env, eachFrameFunc, numRender, exitAfter);
 }
 
 Napi::Value SDLDisplay::AppQuit(const Napi::CallbackInfo& info) {

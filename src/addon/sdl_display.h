@@ -17,6 +17,7 @@ class SDLDisplay : public Napi::ObjectWrap<SDLDisplay> {
   static void InitClass(Napi::Env env, Napi::Object exports);
   static Napi::Object NewInstance(Napi::Env env, Napi::Value arg);
   SDLDisplay(const Napi::CallbackInfo& info);
+  void execOneFrame(const Napi::CallbackInfo& info);
 
  private:
   Napi::Value Initialize(const Napi::CallbackInfo& info);
@@ -30,17 +31,19 @@ class SDLDisplay : public Napi::ObjectWrap<SDLDisplay> {
   Napi::Value AppQuit(const Napi::CallbackInfo& info);
   Napi::Value ReadImage(const Napi::CallbackInfo& info);
 
-  void execOneFrame(Napi::Env env, Napi::Function eachFrameFunc, int numRender, bool exitAfter);
-  Napi::Object rendererObj;
-  Napi::Function renderFunc;
+  void next(Napi::Env env);
+
+  napi_ref rendererRef;
+  Napi::FunctionReference renderFunc;
+  Napi::FunctionReference eachFrameFunc;
+  int numRender;
+  bool exitAfter;
 
   bool hasWriteBuffer;
   Napi::Reference<Napi::Value> writeBuffer;
 
   Napi::FunctionReference keyHandleFunc;
-  bool isRunning;
   int sdlInitialized;
-  napi_ref rendererRef;
   int zoomLevel;
   int hasGrid;
   int gridWidth;

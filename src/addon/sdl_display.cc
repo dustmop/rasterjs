@@ -1,5 +1,6 @@
 #include "sdl_display.h"
 #include "type.h"
+#include "waiter.h"
 
 #include <SDL.h>
 
@@ -151,22 +152,21 @@ Napi::Value SDLDisplay::InsteadWriteBuffer(const Napi::CallbackInfo& info) {
 Napi::Value SDLDisplay::RenderLoop(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
-  Napi::Function eachFrameFunc = info[0].As<Napi::Function>();
+  this->eachFrameFunc = Napi::Persistent(info[0].As<Napi::Function>());
   // info[1] == id
-  int numRender = info[2].ToNumber().Int32Value();
-  bool exitAfter = info[3].ToBoolean();
+  this->numRender = info[2].ToNumber().Int32Value();
+  this->exitAfter = info[3].ToBoolean();
 
   // Get the stored plane object, retrieve its basic data.
   napi_value rendererVal;
   napi_get_reference_value(env, this->rendererRef, &rendererVal);
-  this->rendererObj = Napi::Object(env, rendererVal);
-  Napi::Value renderFuncVal = this->rendererObj.Get("render");
+  Napi::Object rendererObj = Napi::Object(env, rendererVal);
+  Napi::Value renderFuncVal = rendererObj.Get("render");
 
   if (!renderFuncVal.IsFunction()) {
     printf("renderer.render() not found\n");
     exit(1);
   }
-  this->renderFunc = renderFuncVal.As<Napi::Function>();
 
   // Calculate texture and window size.
   int viewWidth = this->displayWidth;
@@ -226,27 +226,23 @@ Napi::Value SDLDisplay::RenderLoop(const Napi::CallbackInfo& info) {
       viewHeight);
   SDL_SetTextureBlendMode(this->textureHandle, SDL_BLENDMODE_BLEND);
 
-  this->isRunning = true;
-  this->execOneFrame(env, eachFrameFunc, numRender, exitAfter);
+  this->execOneFrame(info);
   return info.Env().Null();
 }
 
-void SDLDisplay::execOneFrame(Napi::Env env, Napi::Function eachFrameFunc, int numRender, bool exitAfter) {
-  if (!this->isRunning) {
-    // Exit the RenderLoop
-    return;
-  }
+void SDLDisplay::execOneFrame(const CallbackInfo& info) {
+  Napi::Env env = info.Env();
 
   // Get OS events, such as exiting app, and keyboard input
   SDL_Event event;
   if (SDL_PollEvent(&event)) {
     switch (event.type) {
     case SDL_QUIT:
-      this->isRunning = false;
+      // exit render loop!
       return;
     case SDL_KEYDOWN:
       if (event.key.keysym.sym == SDLK_ESCAPE) {
-        this->isRunning = false;
+        // exit render loop!
         return;
       } else if (!this->keyHandleFunc.IsEmpty()) {
         int code = event.key.keysym.sym;
@@ -257,20 +253,22 @@ void SDLDisplay::execOneFrame(Napi::Env env, Napi::Function eachFrameFunc, int n
         napi_value val = obj;
         this->keyHandleFunc.Call({val});
       }
+      break;
     case SDL_WINDOWEVENT_CLOSE:
-      this->isRunning = false;
+      // exit render loop!
       return;
     }
   }
 
-  if (numRender == 0) {
-    if (exitAfter) {
+  // TODO: Clean up this logic.
+  if (this->numRender == 0) {
+    if (this->exitAfter) {
       // Number of frames have completed, exit the app.
       return;
     }
     // This was a show() call, keep window open.
     SDL_Delay(16);
-    return this->execOneFrame(env, eachFrameFunc, numRender, exitAfter);
+    return this->next(env);
   }
 
   SDL_RenderClear(this->rendererHandle);
@@ -287,7 +285,8 @@ void SDLDisplay::execOneFrame(Napi::Env env, Napi::Function eachFrameFunc, int n
 
   // Call the draw function.
   napi_value funcResult;
-  status = napi_call_function(env, self, eachFrameFunc, 0, NULL, &funcResult);
+
+  funcResult = this->eachFrameFunc.Call(self, 0, NULL);
 
   if (status != napi_ok) {
     if (status == napi_pending_exception) {
@@ -315,8 +314,18 @@ void SDLDisplay::execOneFrame(Napi::Env env, Napi::Function eachFrameFunc, int n
 
   // Call the render function.
   napi_value resVal;
-  status = napi_call_function(env, this->rendererObj, this->renderFunc,
-                              0, NULL, &resVal);
+
+  napi_value rendererVal;
+  napi_get_reference_value(env, this->rendererRef, &rendererVal);
+  Napi::Object rendererObj = Napi::Object(env, rendererVal);
+  Napi::Value renderFuncVal = rendererObj.Get("render");
+  if (!renderFuncVal.IsFunction()) {
+    printf("renderer.render() not found\n");
+    exit(1);
+  }
+  Napi::Function renderFunc = renderFuncVal.As<Napi::Function>();
+
+  resVal = renderFunc.Call(rendererObj, 0, NULL);
   if (status != napi_ok) {
     if (status == napi_pending_exception) {
       napi_value result;
@@ -449,14 +458,31 @@ void SDLDisplay::execOneFrame(Napi::Env env, Napi::Function eachFrameFunc, int n
   // Swap buffers to display
   SDL_RenderPresent(this->rendererHandle);
 
-  if (numRender > 0) {
-    numRender--;
+  if (this->numRender > 0) {
+    this->numRender--;
   }
 
-  this->execOneFrame(env, eachFrameFunc, numRender, exitAfter);
+  this->next(env);
+}
+
+
+static void BeginNextFrame(const CallbackInfo& info) {
+    void* data = info.Data();
+    SDLDisplay* self = (SDLDisplay*)data;
+    self->execOneFrame(info);
+}
+
+
+void SDLDisplay::next(Napi::Env env) {
+  Napi::Function cont = Napi::Function::New(env, BeginNextFrame,
+                                            "<unknown>", this);
+  WaitWorker* w = new WaitWorker(cont, 1);
+  w->Queue();
 }
 
 Napi::Value SDLDisplay::AppQuit(const Napi::CallbackInfo& info) {
-  this->isRunning = false;
+  // TODO: Improve this logic
+  this->numRender = 0;
+  this->exitAfter = true;
   return info.Env().Null();
 }

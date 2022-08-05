@@ -39,11 +39,12 @@ SDLDisplay::SDLDisplay(const Napi::CallbackInfo& info)
   this->softwareTarget = NULL;
   this->windowHandle = NULL;
   this->rendererHandle = NULL;
-  this->textureHandle = NULL;
-  this->gridHandle = NULL;
-  this->hasGrid = 0;
+  this->mainLayer0 = NULL;
+  this->mainLayer1 = NULL;
+  this->gridLayer = NULL;
   this->gridWidth = 0;
   this->gridHeight = 0;
+  this->dataSources = NULL;
 };
 
 Napi::Object SDLDisplay::NewInstance(Napi::Env env, Napi::Value arg) {
@@ -113,11 +114,9 @@ Napi::Value SDLDisplay::SetGrid(const Napi::CallbackInfo& info) {
   Napi::Value arg = info[0];
   bool value = arg.ToBoolean();
   if (value) {
-    this->hasGrid = 1;
-    SDL_SetTextureAlphaMod(this->gridHandle, 0xff);
+    SDL_SetTextureAlphaMod(this->gridLayer, 0xff);
   } else {
-    this->hasGrid = 0;
-    SDL_SetTextureAlphaMod(this->gridHandle, 0x00);
+    SDL_SetTextureAlphaMod(this->gridLayer, 0x00);
   }
   return Napi::Number::New(env, 0);
 }
@@ -162,10 +161,72 @@ Napi::Value SDLDisplay::RenderLoop(const Napi::CallbackInfo& info) {
   napi_get_reference_value(env, this->rendererRef, &rendererVal);
   Napi::Object rendererObj = Napi::Object(env, rendererVal);
   Napi::Value renderFuncVal = rendererObj.Get("render");
-
   if (!renderFuncVal.IsFunction()) {
     printf("renderer.render() not found\n");
     exit(1);
+  }
+
+  // Call `renderer.render()`
+  Napi::Function renderFunc = renderFuncVal.As<Napi::Function>();
+  Napi::Value resVal = renderFunc.Call(rendererObj, 0, NULL);
+
+  int numDataSources = 0;
+  this->dataSources = (unsigned char**)malloc(sizeof(unsigned char*)*3);
+  this->dataSources[0] = NULL;
+  this->dataSources[1] = NULL;
+  this->dataSources[2] = NULL;
+  int realPitch = 0;
+  // TODO: Ensure layers are same size.
+  // TODO: Ensure layers use same pitch.
+
+  Napi::Object resObj = Napi::Object(env, resVal);
+  numDataSources = resObj.Get("length").ToNumber().Int32Value();
+
+  // For now, only handle up to 3 sources (2 layers + 1 grid).
+  if (numDataSources > 3) {
+    numDataSources = 3;
+  }
+
+  // Collect all data sources
+  this->gridIndex = -1;
+  for (int n = 0; n < numDataSources; n++) {
+    Napi::Value surfaceVal = resObj.As<Napi::Array>()[uint32_t(n)];
+    if (surfaceVal.IsNull()) {
+      // grid layer, must appear last in the result
+      if (n != numDataSources - 1) {
+        printf("null element returned by render() at index %d intead of %d",
+               n, numDataSources - 1);
+        exit(1);
+      }
+      dataSources[n] = NULL;
+      this->gridIndex = n;
+      break;
+    }
+    Napi::Object surfaceObj = surfaceVal.As<Napi::Object>();
+
+    Napi::Value realPitchNum = surfaceObj.Get("pitch");
+    if (realPitchNum.IsNumber()) {
+      realPitch = realPitchNum.As<Napi::Number>().Int32Value();
+    }
+
+    Napi::Value bufferVal = surfaceObj.Get("buff");
+    if (!bufferVal.IsTypedArray()) {
+      printf("bufferVal expected a TypedArray, did not get one!\n");
+      exit(1);
+    }
+    Napi::TypedArray typeArr = bufferVal.As<Napi::TypedArray>();
+    Napi::ArrayBuffer arrBuff = typeArr.ArrayBuffer();
+
+    if (n == numDataSources - 1) {
+      // grid layer
+      this->gridWidth = surfaceObj.Get("width").As<Napi::Number>().Int32Value();
+      this->gridHeight = surfaceObj.Get("height").As<Napi::Number>().Int32Value();
+      this->gridPitch = surfaceObj.Get("pitch").As<Napi::Number>().Int32Value();
+      this->gridRawBuff = (unsigned char*)arrBuff.Data();
+      break;
+    }
+
+    dataSources[n] = (unsigned char*)arrBuff.Data();
   }
 
   // Calculate texture and window size.
@@ -217,14 +278,23 @@ Napi::Value SDLDisplay::RenderLoop(const Napi::CallbackInfo& info) {
     return Napi::Number::New(env, -1);
   }
 
-  // Create the texture that the plane is mapped to
-  this->textureHandle = SDL_CreateTexture(
+  // Create the texture for layer 0 (lower)
+  this->mainLayer0 = SDL_CreateTexture(
       this->rendererHandle,
       SDL_PIXELFORMAT_ABGR8888,
       SDL_TEXTUREACCESS_STREAMING,
       viewWidth,
       viewHeight);
-  SDL_SetTextureBlendMode(this->textureHandle, SDL_BLENDMODE_BLEND);
+  SDL_SetTextureBlendMode(this->mainLayer0, SDL_BLENDMODE_BLEND);
+
+  // Create the texture for layer 1 (upper)
+  this->mainLayer1 = SDL_CreateTexture(
+      this->rendererHandle,
+      SDL_PIXELFORMAT_ABGR8888,
+      SDL_TEXTUREACCESS_STREAMING,
+      viewWidth,
+      viewHeight);
+  SDL_SetTextureBlendMode(this->mainLayer1, SDL_BLENDMODE_BLEND);
 
   this->execOneFrame(info);
   return info.Env().Null();
@@ -285,145 +355,68 @@ void SDLDisplay::execOneFrame(const CallbackInfo& info) {
 
   // Call the draw function.
   napi_value funcResult;
-
   funcResult = this->eachFrameFunc.Call(self, 0, NULL);
-
-  if (status != napi_ok) {
-    if (status == napi_pending_exception) {
-      // Function call failed.
-      napi_status s;
-      s = napi_get_and_clear_last_exception(env, &result);
-      napi_valuetype valuetype;
-      napi_typeof(env, result, &valuetype);
-      // Convert the error to a string, display it.
-      napi_value errval;
-      napi_coerce_to_string(env, result, &errval);
-      display_napi_value(env, errval);
-      return;
-    }
-    napi_status err;
-    const napi_extended_error_info* errInfo = NULL;
-    err = napi_get_last_error_info(env, &errInfo);
-    if (err != napi_ok) {
-      printf("Encountered an error getting error code: %d\n", err);
-      return;
-    }
-    printf("Err code %d: %s\n", status, errInfo->error_message);
+  if (env.IsExceptionPending()) {
     return;
   }
 
   // Call the render function.
   napi_value resVal;
-
-  napi_value rendererVal;
-  napi_get_reference_value(env, this->rendererRef, &rendererVal);
-  Napi::Object rendererObj = Napi::Object(env, rendererVal);
+  napi_get_reference_value(env, this->rendererRef, &resVal);
+  Napi::Object rendererObj = Napi::Object(env, resVal);
   Napi::Value renderFuncVal = rendererObj.Get("render");
   if (!renderFuncVal.IsFunction()) {
     printf("renderer.render() not found\n");
     exit(1);
   }
   Napi::Function renderFunc = renderFuncVal.As<Napi::Function>();
-
   resVal = renderFunc.Call(rendererObj, 0, NULL);
-  if (status != napi_ok) {
-    if (status == napi_pending_exception) {
-      napi_value result;
-      // Function call failed.
-      napi_status s;
-      s = napi_get_and_clear_last_exception(env, &result);
-      napi_valuetype valuetype;
-      napi_typeof(env, result, &valuetype);
-      // Display error with stack trace.
-      Napi::Object errObj = Napi::Object(env, result);
-      Napi::Value stackVal = errObj.Get("stack");
-      Napi::String stackStr = stackVal.ToString();
-      printf("%s\n", stackStr.Utf8Value().c_str());
-      exit(1);
-    }
-    napi_status err;
-    const napi_extended_error_info* errInfo = NULL;
-    err = napi_get_last_error_info(env, &errInfo);
-    if (err != napi_ok) {
-      printf("Encountered an error getting error code: %d\n", err);
-      exit(1);
-    }
-    printf("rendering failed: status code %d\n", status);
-    exit(1);
-  }
 
+  // Get the pitch of the first layer, assume it is constant.
+  // TODO: Fix this assumption
   Napi::Object resObj = Napi::Object(env, resVal);
   Napi::Value surfaceVal = resObj.As<Napi::Array>()[uint32_t(0)];
   Napi::Object surfaceObj = surfaceVal.As<Napi::Object>();
+  Napi::Value realPitchNum = surfaceObj.Get("pitch");
 
-  unsigned char* gridRawBuff = NULL;
-  int gridPitch = 0;
-
-  Napi::Object gridLayerObj;
-  Napi::Value gridLayerVal = resObj.As<Napi::Array>()[uint32_t(1)];
-  if (!gridLayerVal.IsNull()) {
-    gridLayerObj = gridLayerVal.As<Napi::Object>();
-    if (!gridLayerObj.IsNull()) {
-      Napi::Value gridBuffVal = gridLayerObj.Get("buff");
-      if (!gridBuffVal.IsNull()) {
-        this->hasGrid = 1;
-        Napi::TypedArray typeArr = gridBuffVal.As<Napi::TypedArray>();
-        Napi::ArrayBuffer arrBuff = typeArr.ArrayBuffer();
-        void* untypedData = arrBuff.Data();
-        gridRawBuff = (unsigned char*)untypedData;
-      }
-      Napi::Value gridPitchVal = gridLayerObj.Get("pitch");
-      gridPitch = gridPitchVal.As<Napi::Number>().Int32Value();
-      Napi::Value gridWidthVal = gridLayerObj.Get("width");
-      this->gridWidth = gridWidthVal.As<Napi::Number>().Int32Value();
-      Napi::Value gridHeightVal = gridLayerObj.Get("height");
-      this->gridHeight = gridHeightVal.As<Napi::Number>().Int32Value();
-    }
-  }
-
-  // Convert front surface into the raw data buffer
-  Napi::Value bufferVal = surfaceObj.Get("buff");
-  if (!bufferVal.IsTypedArray()) {
-    printf("surfaceObj.buff expected a TypedArray, did not get one!\n");
-    exit(1);
-  }
-  Napi::TypedArray typeArr = bufferVal.As<Napi::TypedArray>();
-  Napi::ArrayBuffer arrBuff = typeArr.ArrayBuffer();
-  void* untypedData = arrBuff.Data();
-  unsigned char* rawBuff = (unsigned char*)untypedData;
-
+  int viewHeight = this->displayHeight;
   int viewWidth = this->displayWidth;
   int viewPitch = viewWidth * RGB_PIXEL_SIZE;
-  Napi::Value realPitchNum = surfaceObj.Get("pitch");
   if (realPitchNum.IsNumber()) {
     viewPitch = realPitchNum.As<Napi::Number>().Int32Value();
   }
 
   // Send the raw data from the plane's buffer to the texture
-  if (rawBuff) {
-    SDL_UpdateTexture(this->textureHandle, NULL, rawBuff, viewPitch);
+  if (this->dataSources[0]) {
+    SDL_UpdateTexture(this->mainLayer0, NULL, this->dataSources[0], viewPitch);
   } else {
     printf("no data buffer!\n");
     return;
   }
+  if (this->dataSources[1]) {
+    SDL_UpdateTexture(this->mainLayer1, NULL, this->dataSources[1], viewPitch);
+  }
 
-  if (gridRawBuff) {
-    if (!this->gridHandle) {
+  if (this->gridRawBuff) {
+    if (!this->gridLayer) {
       // Create the texture that the grid is mapped to
-      this->gridHandle = SDL_CreateTexture(
+      this->gridLayer = SDL_CreateTexture(
           this->rendererHandle,
           SDL_PIXELFORMAT_ABGR8888,
           SDL_TEXTUREACCESS_STREAMING,
           this->gridWidth,
           this->gridHeight);
-      SDL_SetTextureBlendMode(this->gridHandle, SDL_BLENDMODE_BLEND);
+      SDL_SetTextureBlendMode(this->gridLayer, SDL_BLENDMODE_BLEND);
     }
-    SDL_UpdateTexture(this->gridHandle, NULL, gridRawBuff, gridPitch);
+    SDL_UpdateTexture(this->gridLayer, NULL, this->gridRawBuff, this->gridPitch);
   }
 
-  SDL_RenderCopy(this->rendererHandle, this->textureHandle, NULL, NULL);
-  if (this->gridHandle) {
-    SDL_RenderCopy(this->rendererHandle, this->gridHandle, NULL, NULL);
+  SDL_RenderCopy(this->rendererHandle, this->mainLayer0, NULL, NULL);
+  if (this->mainLayer1 && this->dataSources[1]) {
+    SDL_RenderCopy(this->rendererHandle, this->mainLayer1, NULL, NULL);
+  }
+  if (this->gridLayer) {
+    SDL_RenderCopy(this->rendererHandle, this->gridLayer, NULL, NULL);
   }
 
   if (this->hasWriteBuffer) {

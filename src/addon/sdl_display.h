@@ -45,18 +45,23 @@ class SDLDisplay : public Napi::ObjectWrap<SDLDisplay> {
   Napi::FunctionReference keyHandleFunc;
   int sdlInitialized;
   int zoomLevel;
-  int hasGrid;
+
+  int gridIndex;
   int gridWidth;
   int gridHeight;
+  int gridPitch;
+  unsigned char* gridRawBuff;
 
+  unsigned char** dataSources;
   int displayWidth;
   int displayHeight;
 
   SDL_Surface* softwareTarget;
   SDL_Window* windowHandle;
   SDL_Renderer* rendererHandle;
-  SDL_Texture* textureHandle;
-  SDL_Texture* gridHandle;
+  SDL_Texture* mainLayer0;
+  SDL_Texture* mainLayer1;
+  SDL_Texture* gridLayer;
 };
 
 #endif

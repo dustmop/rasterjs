@@ -2,7 +2,7 @@
 
 raster.js is a retro graphics framework
 
-It lets you create graphics that immitate vintage computers and ancient game hardware, using javascript. It is great for making pixel art, exploring 2d demo effects, and creative coding.
+It lets you create graphics that imitate vintage computers and ancient game hardware, using javascript. It is great for making pixel art, exploring 2d demo effects, and creative coding.
 
 It aims to serve as a tool for prototyping, experimentation, and learning about how old school graphics worked. It provides precise pixel control, and portability across multiple javascript environments and rendering contexts.
 
@@ -13,7 +13,7 @@ It aims to serve as a tool for prototyping, experimentation, and learning about 
 * Runs in multiple places: in browser using webgl, in node.js using SDL, on raspberry pi using dispmanx
 * Easy utilities for saving gifs and pngs
 * Colors presets for machines such as the NES, ZX Spectrum, Pico-8, Gameboy, DOS, and more
-* Features that immitate ancient hardware such as color attributes and rasterization interrupts
+* Features that imitate ancient hardware such as color attributes and rasterization interrupts
 * Ability to recreate classic effects like parallax and palette cycling using programming interfaces similar to what was used back in the day
 
 # Example Usage
@@ -142,7 +142,7 @@ ra.run(draw);
 
 # Command-line options
 
-When running from a node.js script, you can pass command-line parameters to modify raster.js's behavior.
+When running from a node.js script, you can pass command-line parameters to modify raster.js's behaviour.
 
 ```
 --num-frames [num]
@@ -182,7 +182,7 @@ The default colorMap for raster.js is the "quick" colors, shown here:
 
 # API
 
-See [the docs](docs.md) for the full documentation of the methods avaiable in raster.js.
+See [the docs](docs.md) for the full documentation of the methods available in raster.js.
 
 # Coming soon
 

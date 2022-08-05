@@ -42,10 +42,15 @@ class Renderer {
     this._inspectCallback = null;
   }
 
-  connect(input) {
+  connect(inputList) {
     if (this.isConnected) {
       return;
     }
+
+    if (!types.isArray(inputList)) {
+      throw new Error(`connect needs a list of layers`)
+    }
+    let input = inputList[0];
 
     let layer = this._layers[0];
     let allow = ['plane', 'colorMap', 'size', 'camera',
@@ -91,6 +96,17 @@ class Renderer {
     this.grid        = input.grid;
     this.interrupts  = input.interrupts;
     this.isConnected = true;
+
+    if (inputList.length > 1) {
+      let input = inputList[1];
+      if (this._layers.length == 1) {
+        this._layers.push({});
+        let upper = this._layers[1];
+        upper.plane = input.plane;
+        upper.conf = this._layers[0].conf;
+        upper.colorMap = this._layers[0].colorMap;
+      }
+    }
   }
 
   flushBuffer() {
@@ -103,10 +119,13 @@ class Renderer {
   }
 
   switchComponent(layerNum, compName, obj) {
-    if (compName != 'tiles') {
-      throw new Error(`switchComponent can only be used for "tiles"`);
+    if (compName == 'tiles') {
+      this._layers[layerNum].tiles = obj;
+    } else if (compName == 'camera') {
+      this._layers[layerNum].camera = obj;
+    } else {
+      throw new Error(`switchComponent can only be used for "camera","tiles"`);
     }
-    this._layers[layerNum].tiles = obj;
   }
 
   setInspector(scanline, callback) {
@@ -115,9 +134,15 @@ class Renderer {
   }
 
   render() {
-    let system = this;
-    let layer = this._layers[0];
+    let res = [];
+    for (let i = 0; i < this._layers.length; i++) {
+      res.push(this._renderLayer(this._layers[i], i == 0, this));
+    }
+    res.push(this._gridSurface());
+    return res;
+  }
 
+  _renderLayer(layer, isBg, system) {
     // Calculate size of the buffer to render.
     let width = (layer.size && layer.size.width);
     let height = (layer.size && layer.size.height);
@@ -147,8 +172,7 @@ class Renderer {
 
     // If no interrupts, render everything at once.
     if (!system.interrupts) {
-      return [this._renderRegion(layer, 0, 0, width, height),
-              this._gridSurface()];
+      return this._renderRegion(layer, isBg, 0, 0, width, height);
     }
 
     // Otherwise, collect IRQs per each scanline
@@ -184,7 +208,7 @@ class Renderer {
       }
       if (scanLine > renderBegin) {
         xposTrack[renderBegin] = layer.camera.x;
-        this._renderRegion(layer, 0, renderBegin, width, scanLine);
+        this._renderRegion(layer, isBg, 0, renderBegin, width, scanLine);
       }
       // Execute the irq that interrupts rasterization
       if (k < perIRQs.length) {
@@ -197,10 +221,10 @@ class Renderer {
     // Store x-positions so that they can serialize
     system.interrupts.xposTrack = xposTrack;
 
-    return [layer.rgbSurface, this._gridSurface()];
+    return layer.rgbSurface;
   }
 
-  _renderRegion(layer, left, top, right, bottom) {
+  _renderRegion(layer, isBg, left, top, right, bottom) {
     // If plane has not been rendered yet, do so now.
     layer.plane.ensureReady();
 
@@ -303,14 +327,19 @@ class Renderer {
           let rgb;
           if (layer.attrs) {
             let c = layer.attrs.realizeIndexedColor(source[s], x, y);
-            rgb = this._toColor(c);
+            rgb = this._toColor(layer, c);
           } else {
-            rgb = this._toColor(source[s]);
+            rgb = this._toColor(layer, source[s]);
           }
           layer.rgbSurface.buff[t+0] = rgb.r;
           layer.rgbSurface.buff[t+1] = rgb.g;
           layer.rgbSurface.buff[t+2] = rgb.b;
-          layer.rgbSurface.buff[t+3] = 0xff;
+          // TODO: Incorrect
+          if (!isBg && source[s] == 0) {
+            layer.rgbSurface.buff[t+3] = 0x00;
+          } else {
+            layer.rgbSurface.buff[t+3] = 0xff;
+          }
         }
       }
     }
@@ -362,7 +391,7 @@ class Renderer {
             let ry = spr.v ? obj.height - py - 1 : py;
             let c = obj.get(rx, ry);
             if (c > 0) {
-              let rgb = this._toColor(c);
+              let rgb = this._toColor(layer, c);
               if (spr.m) {
                 layer.rgbSurface.buff[t+0] += rgb.r;
                 layer.rgbSurface.buff[t+1] += rgb.g;
@@ -408,10 +437,10 @@ class Renderer {
 
         if (!this.innerPlaneRenderer) {
           this.innerPlaneRenderer = new Renderer();
-          let components = {
+          let components = [{
             plane: myPlane,
             colorMap: myColorMap,
-          }
+          }];
           this.innerPlaneRenderer.connect(components);
         }
         let surfaces = this.innerPlaneRenderer.render();
@@ -512,13 +541,12 @@ class Renderer {
         height: this.grid.height,
         buff: this.grid.buff,
         pitch: this.grid.pitch,
-      }
+      };
     }
     return null;
   }
 
-  _toColor(c) {
-    let layer = this._layers[0];
+  _toColor(layer, c) {
     let rgb;
     if (c !== 0 && !c) {
       throw new Error(`invalid color ${c}`);

@@ -108,7 +108,7 @@ Rotates the given polygon by the given angle, returning a new polygon.
 
 ### oscil({period, begin, max, click})
 
-Produce an oscilating wave value that varies between 0.0 and 1.0 in a sinusoidal motion. Parameters to `oscil` must be named parameters only, positional parameters are not allowed.
+Produce an oscillating wave value that varies between 0.0 and 1.0 in a sinusoidal motion. Parameters to `oscil` must be named parameters only, positional parameters are not allowed.
 
 `period`: The period of the motion, in clicks. Larger means a slower motion. Default is 60
 
@@ -313,9 +313,9 @@ quit
 nextFrame
 ```
 
-### run(renderFunc)
+### run(drawFunc)
 
-Render the plane to the display. The render function is called once per frame, before the display is updated with the new frame.
+Continually render to the display. The function `drawFunc` is called once per frame, before rendering begins.
 
 ### show(renderFunc)
 

@@ -83,10 +83,10 @@ class Serializer {
     }
 
     // Components for rendering
-    let components = {
+    let components = [{
       plane: target,
       colorMap: colors,
-    };
+    }];
 
     // Render it
     let rend = new renderer.Renderer();
@@ -121,10 +121,10 @@ class Serializer {
     }
 
     // Components for rendering
-    let components = {
+    let components = [{
       plane: target,
       colorMap: colors,
-    };
+    }];
 
     // Render it
     let rend = new renderer.Renderer();
@@ -173,10 +173,10 @@ class Serializer {
     target.drawLine(x / 2, prev / 2, x / 2, s / 2);
 
     // Components for rendering
-    let components = {
+    let components = [{
       plane: target,
       colorMap: colors,
-    };
+    }];
 
     // Render it
     let rend = new renderer.Renderer();

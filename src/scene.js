@@ -43,6 +43,9 @@ function Scene(env) {
   this.spriteList = null;
 
   this.aPlane = new plane.Plane();
+  this.upperPlane = null;
+  this.upperCamera = null;
+  this.lowerCamera = null;
   this.numFrames = FRAMES_LOOP_FOREVER;
   this._initialize();
   return this;
@@ -218,6 +221,26 @@ Scene.prototype.setSize = function(w, h, opt) {
   this.renderer.clear();
 }
 
+Scene.prototype.setComponent = function(compname, obj, opts) {
+  opts = opts || {};
+  if (compname == 'camera') {
+    if (!this.lowerCamera) {
+      this.lowerCamera = this.camera;
+    }
+    if (!this.upperCamera) {
+      this.upperCamera = {x:0, y:0};
+    }
+    let layer = opts.layer;
+    if (layer == 0) {
+      this.camera = this.lowerCamera;
+      this.renderer.switchComponent(layer, 'camera', this.camera);
+    } else if (layer == 1) {
+      this.camera = this.upperCamera;
+      this.renderer.switchComponent(layer, 'camera', this.camera);
+    }
+  }
+}
+
 Scene.prototype.setScrollX = function(x) {
   this.camera.x = Math.floor(x);
 }
@@ -231,6 +254,9 @@ Scene.prototype.resetState = function() {
   this.height = null;
   this.colorMap = null;
   this.aPlane.clear();
+  this.upperPlane = null;
+  this.upperCamera = null;
+  this.lowerCamera = null;
   this.renderer.clear();
   this.fsacc.clear();
   this.time = 0.0;
@@ -720,10 +746,19 @@ Scene.prototype._paletteFromColorMap = function(optSize) {
 }
 
 Scene.prototype.usePlane = function(pl) {
-  if (!types.isPlane(pl)) {
-    throw new Error(`usePlane requires a Plane`);
+  if (types.isArray(pl)) {
+    // pass
+  } else {
+    if (!types.isPlane(pl)) {
+      throw new Error(`usePlane requires a Plane`);
+    }
+    pl = [pl];
   }
-  this.aPlane = pl;
+  this.aPlane = pl[0];
+  if (pl.length > 1) {
+    this.upperPlane = pl[1];
+    this.upperCamera = null;
+  }
   this._removeMethods();
   this._removeAdditionalMethods();
   // TODO: test me
@@ -912,7 +947,17 @@ Scene.prototype.provide = function() {
   if (this.spriteList) {
     prov.spriteList = this.spriteList;
   }
-  return prov;
+  let res = [prov];
+  // Upper layer hack
+  if (this.upperPlane) {
+    let upper = {};
+    upper.plane = this.upperPlane;
+    if (this.upperCamera) {
+      upper.camera = this.upperCamera;
+    }
+    res.push(upper);
+  }
+  return res;
 }
 
 Scene.prototype._saveSurfacesTo = function(surfaces, filename) {

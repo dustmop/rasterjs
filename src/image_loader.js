@@ -46,8 +46,8 @@ class Loader {
       let found = this.addedFiles[filename];
       let planePitch = found.width;
       let imgPlane = new ImagePlane();
-      imgPlane.top = found.top || 0;
-      imgPlane.left = found.left || 0;
+      imgPlane.offsetTop = found.offsetTop || 0;
+      imgPlane.offsetLeft = found.offsetLeft || 0;
       imgPlane.rgbBuff = found.buff;
       imgPlane.width = found.width;
       imgPlane.pitch = planePitch;
@@ -68,8 +68,8 @@ class Loader {
     img.colorMap = colorMap;
     img.palette = palette;
     img.sortUsingHSV = sortUsingHSV;
-    img.left = 0;
-    img.top = 0;
+    img.offsetLeft = 0;
+    img.offsetTop = 0;
     img.loadState = LOAD_STATE_NONE;
     // resources.openImage assigns these:
     img.width = 0;
@@ -170,8 +170,8 @@ class ImagePlane {
     make.refLoader = this.refLoader;
     make.filename = this.filename;
     make.id = this.id;
-    make.left = x;
-    make.top = y;
+    make.offsetLeft = x;
+    make.offsetTop = y;
     make.width = w;
     make.height = h;
     make.pitch = this.pitch;
@@ -189,8 +189,8 @@ class ImagePlane {
     make.refLoader = this.refLoader;
     make.filename = this.filename;
     make.id = this.id;
-    make.left = 0;
-    make.top = 0;
+    make.offsetLeft = this.offsetLeft;
+    make.offsetTop = this.offsetTop;
     make.width = this.width;
     make.height = this.height;
     make.pitch = this.pitch;

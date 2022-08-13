@@ -257,4 +257,27 @@ describe('Image', function() {
     success();
   });
 
+
+  it('select and draw', function() {
+    ra.resetState();
+    ra.useColors('quick');
+
+    let img = ra.loadImage('test/testdata/draw_all.png');
+    ra.drawImage(img);
+
+    // get just the square
+    let squareSelect = ra.select({x: 16, y: 43, w: 7, h: 7});
+    assert.equal(squareSelect.get(0, 0), 0x25);
+    assert.equal(squareSelect.get(1, 1), 0);
+
+    squareSelect.put(2, 2, 0x25);
+    ra.drawImage(squareSelect, 0, 0);
+    ra.drawImage(squareSelect, 25, 15);
+
+    let insideCircleTarget = ra.select({x: 25, y: 25, w: 8, h: 5});
+    insideCircleTarget.drawImage(squareSelect, 1, 1);
+
+    util.renderCompareTo(ra, 'test/testdata/draw_copied.png');
+  });
+
 });

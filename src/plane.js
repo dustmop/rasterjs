@@ -228,8 +228,8 @@ Plane.prototype.putImage = function(img, baseX, baseY) {
   this._prepare();
   let offsetTop = this.offsetTop || 0;
   let offsetLeft = this.offsetLeft || 0;
-  let imageTop = img.top || 0;
-  let imageLeft = img.left || 0;
+  let imageTop = img.offsetTop || 0;
+  let imageLeft = img.offsetLeft || 0;
   let imageHeight = img.height;
   let imageWidth = img.width;
   let imagePitch = img.pitch;
@@ -240,17 +240,20 @@ Plane.prototype.putImage = function(img, baseX, baseY) {
   }
   baseX = Math.floor(baseX) + offsetLeft;
   baseY = Math.floor(baseY) + offsetTop;
-  for (let y = imageTop; y < imageHeight; y++) {
-    for (let x = imageLeft; x < imageWidth; x++) {
+
+  for (let b = 0; b < imageHeight; b++) {
+    for (let a = 0; a < imageWidth; a++) {
+      let y = b + imageTop;
+      let x = a + imageLeft;
       let j = y*imagePitch + x;
-      let putX = x + baseX;
-      let putY = y + baseY;
+      let putX = a + baseX;
+      let putY = b + baseY;
       if (putX < 0 || putX >= this.width + offsetLeft ||
           putY < 0 || putY >= this.height + offsetTop) {
         continue;
       }
       let k = putY*this.pitch + putX;
-      if (imageAlpha && imageAlpha[j] >= 0x80) {
+      if (!imageAlpha || imageAlpha[j] >= 0x80) {
         this.data[k] = imageData[j];
       }
     }

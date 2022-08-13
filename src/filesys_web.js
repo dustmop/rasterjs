@@ -13,37 +13,42 @@ class FilesysAccess {
   readImageData(filename, imgPlane) {
     let self = this;
 
-    // Wait for the image to load
+    // wait for the image to load
     this.numToLoad++;
 
-    // The html node for loading the Image.
+    // html node for loading the Image
     let imgElem = new Image;
     imgElem.onload = function() {
-      // Get the pixel data and save it on the resource.
+      // get the pixel data and save it on the resource
       let canvas = document.createElement('canvas');
       canvas.width = imgElem.width;
       canvas.height = imgElem.height;
       let ctx = canvas.getContext('2d');
       ctx.drawImage(imgElem, 0, 0, imgElem.width, imgElem.height);
       let pixels = ctx.getImageData(0, 0, imgElem.width, imgElem.height);
-      // Assign to the imagePlane being opened
+      // assign to the imagePlane being opened
       imgPlane.rgbBuff = pixels.data;
       imgPlane.width = pixels.width;
       // TODO: Fix me
       imgPlane.pitch = pixels.width;
       imgPlane.height = pixels.height;
-      // Down-sample the rgb buffer into the data, then finish
+      // callback for when image loading, down-sample RGB to 8-bit values
       if (imgPlane.whenRead) {
         imgPlane.whenRead();
       }
       self.numLoadDone++;
     }
+    // handle errors
     imgElem.onerror = function() {
       imgPlane.loadState = -1;
       self.loadFail = filename;
       self.numLoadDone++;
     }
 
+    // allow cross origin image loading
+    imgElem.crossOrigin = 'Anonymous';
+
+    // artificially slow down image loading, used by tests
     if (filename.startsWith('SLOW:')) {
       setTimeout(() => {
         filename = filename.slice(5);

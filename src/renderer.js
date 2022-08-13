@@ -349,7 +349,8 @@ class Renderer {
       if (!chardat) {
         throw new Error('cannot render sprites without character data')
       }
-      for (let k = 0; k < layer.spriteList.items.length; k++) {
+      // draw back-to-front so that sprite[i] is above sprite[j] where i < j
+      for (let k = layer.spriteList.items.length - 1; k >= 0; k--) {
         let spr = layer.spriteList.items[k];
         let sx = Math.floor(spr.x);
         let sy = Math.floor(spr.y);

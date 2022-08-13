@@ -248,4 +248,32 @@ describe('Sprite', function() {
     util.renderCompareTo(ra, 'test/testdata/fruit-both-flip-scene.png');
   });
 
+  it('overlap sprite layering', function() {
+    ra.resetState();
+
+    ra.setZoom(4);
+
+    // obj0 is the smaller ship
+    let imgObj0 = ra.loadImage('test/testdata/valgrind-obj0.png');
+    // obj1 is the longer ship
+    let imgObj1 = ra.loadImage('test/testdata/valgrind-obj1.png');
+
+    ra.setSize(24, 36);
+    ra.fillColor(0);
+
+    let sprites = new ra.SpriteList(3, {chardat: [imgObj0, imgObj1]});
+    ra.useSpriteList(sprites);
+
+    // smaller ship appears at index 0, should appear on top
+    sprites[0].x = 1;
+    sprites[0].y = 1;
+    sprites[0].c = 0;
+    // longer ship should appear on the bottom
+    sprites[1].x = 0;
+    sprites[1].y = 2;
+    sprites[1].c = 1;
+
+    util.renderCompareTo(ra, 'test/testdata/overlap-sprites.png');
+  });
+
 });

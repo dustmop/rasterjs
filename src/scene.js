@@ -410,6 +410,10 @@ Scene.prototype.select = function(x, y, w, h) {
   return this.aPlane.select(x, y, w, h);
 }
 
+Scene.prototype.xform = function(name) {
+  return this.aPlane.xform(name);
+}
+
 Scene.prototype.fold = function(fname, paramList) {
   let params = {};
   for (let row of paramList) {

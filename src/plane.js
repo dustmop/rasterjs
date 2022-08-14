@@ -151,6 +151,45 @@ Plane.prototype.fill = function(v) {
   }
 }
 
+Plane.prototype.xform = function(kind) {
+  if (kind == 'hflip') {
+    // TODO: get pitch from the env
+    let newPitch = this.width;
+    let numPixels = this.height * newPitch;
+    let buff = new Uint8Array(numPixels);
+    for (let y = 0; y < this.height; y++) {
+      for (let x = 0; x < this.width; x++) {
+        let j = y * newPitch + x;
+        buff[j] = this.get(this.width - x - 1, y);
+      }
+    }
+    let make = new Plane();
+    make.data = buff;
+    make.pitch = newPitch;
+    make.width = this.width;
+    make.height = this.height;
+    return make;
+  } else if (kind == 'vflip') {
+    // TODO: get pitch from the env
+    let newPitch = this.width;
+    let numPixels = this.height * newPitch;
+    let buff = new Uint8Array(numPixels);
+    for (let y = 0; y < this.height; y++) {
+      for (let x = 0; x < this.width; x++) {
+        let j = y * newPitch + x;
+        buff[j] = this.get(x, this.height - y - 1);
+      }
+    }
+    let make = new Plane();
+    make.data = buff;
+    make.pitch = newPitch;
+    make.width = this.width;
+    make.height = this.height;
+    return make;
+  }
+  throw new Error(`unknown xform: "${kind}"`);
+}
+
 Plane.prototype.putSequence = function(seq) {
   this._prepare();
   this._offs = this.offsetTop * this.pitch + this.offsetLeft || 0;

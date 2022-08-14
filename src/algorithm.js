@@ -187,11 +187,11 @@ function nearestNeighborSurface(input, zoomLevel) {
   for (let y = 0; y < input.height; y++) {
     for (let x = 0; x < input.width; x++) {
       // Read value
-      let rgb = readRGBColor(input, x, y);
+      let rgba = readRGBAColor(input, x, y);
       for (let i = 0; i < zoomLevel; i++) {
         for (let j = 0; j < zoomLevel; j++) {
           // Write value
-          writeRGBColor(make, x*zoomLevel+j, y*zoomLevel+i, rgb);
+          writeRGBAColor(make, x*zoomLevel+j, y*zoomLevel+i, rgba);
         }
       }
     }
@@ -215,24 +215,54 @@ function makeSurface(width, height) {
 }
 
 
-function readRGBColor(surface, x, y) {
+function mergeIntoSurface(dest, sour) {
+  if (dest.width != sour.width) {
+    throw new Error(`cannot mege incompatible layers, dest.width=${dest.width} <> source.width=${sour.width}`);
+  }
+  if (dest.height != sour.height) {
+    throw new Error(`cannot mege incompatible layers, dest.height=${dest.height} <> source.height=${sour.height}`);
+  }
+  for (let y = 0; y < sour.height; y++) {
+    for (let x = 0; x < sour.width; x++) {
+      let k = y*sour.pitch + x*4;
+      let r = sour.buff[k+0];
+      let g = sour.buff[k+1];
+      let b = sour.buff[k+2];
+      let alpha = sour.buff[k+3];
+
+      let j = y*dest.pitch + x*4;
+      dest.buff[j+0] = _blend(dest.buff[j+0], sour.buff[k+0], alpha);
+      dest.buff[j+1] = _blend(dest.buff[j+1], sour.buff[k+1], alpha);
+      dest.buff[j+2] = _blend(dest.buff[j+2], sour.buff[k+2], alpha);
+      dest.buff[j+3] = 0xff;
+    }
+  }
+}
+
+
+function _blend(mine, their, opacity) {
+  let left = mine * (0xff - opacity);
+  let rite = their * opacity;
+  return Math.floor((left + rite) / 0xff);
+}
+
+
+function readRGBAColor(surface, x, y) {
   let k = y*surface.pitch + x*4;
   let r = surface.buff[k+0];
   let g = surface.buff[k+1];
   let b = surface.buff[k+2];
-  return r * 0x10000 + g * 0x100 + b;
+  let a = surface.buff[k+3];
+  return [r, g, b, a];
 }
 
 
-function writeRGBColor(surface, x, y, rgb) {
-  let r = Math.floor(rgb / 0x10000) % 0x100;
-  let g = Math.floor(rgb / 0x100)   % 0x100;
-  let b = Math.floor(rgb / 0x1)     % 0x100;
+function writeRGBAColor(surface, x, y, rgba) {
   let k = y*surface.pitch + x*4;
-  surface.buff[k+0] = r;
-  surface.buff[k+1] = g;
-  surface.buff[k+2] = b;
-  surface.buff[k+3] = 0xff;
+  surface.buff[k+0] = rgba[0];
+  surface.buff[k+1] = rgba[1];
+  surface.buff[k+2] = rgba[2];
+  surface.buff[k+3] = rgba[3];
 }
 
 
@@ -708,3 +738,5 @@ module.exports.isHalfwayValue = isHalfwayValue;
 module.exports.flood = flood;
 module.exports.nearestNeighbor = nearestNeighbor;
 module.exports.nearestNeighborSurface = nearestNeighborSurface;
+module.exports.makeSurface = makeSurface;
+module.exports.mergeIntoSurface = mergeIntoSurface;

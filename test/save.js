@@ -168,4 +168,21 @@ describe('Save', function() {
     });
   });
 
+  it('multiple layers', function(success) {
+    let tmpdir = util.mkTmpDir();
+    let tmpout = tmpdir + '/actual.png';
+    let script = 'test/testdata/scripts/layer.js';
+    let cmd = `node ${script} --save ${tmpout}`;
+    let cwd = process.cwd();
+    child_process.exec(cmd, function(error, stdout, stderr) {
+      if (error) {
+        throw error;
+      }
+      let goldenPath = 'test/testdata/sunset_layers.png';
+      assert.ok(util.compareFiles(goldenPath, tmpout), `Failed file comparison, expect: ${goldenPath}, actual: ${tmpout}`);
+      success();
+    });
+  });
+
+
 });

@@ -63,8 +63,11 @@ class FilesysAccess {
     return file;
   }
 
-  saveTo(filename, surfaces) {
-    let surf = surfaces[0];
+  saveTo(filename, surfList) {
+    if (!Array.isArray(surfList)) {
+      throw new Error(`type error, saveTo expects an Array of Surfaces`);
+    }
+    let surf = surfList[0];
     let image = {
       width: surf.width,
       height: surf.height,

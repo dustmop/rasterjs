@@ -79,19 +79,29 @@ class SaveImageDisplay {
       nextFrame();
       let frameNum = leftPad(count, 3, '0');
       let outFile = `${this.tmpdir}/${frameNum}.png`;
-      let res = this.renderer.render();
-      let surface = res[0];
-      if (this.zoomLevel > 1) {
-        surface = algorithm.nearestNeighborSurface(surface, this.zoomLevel);
-        res[0] = surface;
+      let renderedLayers = this.renderer.render();
+
+      let targetWidth = this.width * this.zoomLevel;
+      let targetHeight = this.height * this.zoomLevel;
+      let create = algorithm.makeSurface(targetWidth, targetHeight);
+
+      for (let i = 0; i < renderedLayers.length; i++) {
+        let surface = renderedLayers[i];
+        if (surface == null) {
+          continue;
+        } else if (i == renderedLayers.length - 1) {
+          // grid merged with alpha
+          algorithm.mergeIntoSurface(create, surface);
+          continue;
+        } else if (this.zoomLevel > 1) {
+          // upscale the surface
+          surface = algorithm.nearestNeighborSurface(surface, this.zoomLevel);
+        }
+        algorithm.mergeIntoSurface(create, surface);
       }
 
-      let gridSurface = res[1];
-      if (gridSurface && gridSurface.buff) {
-        this._overlayGrid(surface, gridSurface);
-      }
-      this.saveService.saveTo(outFile, res);
-      bufferList.push(surface.buff);
+      this.saveService.saveTo(outFile, [create]);
+      bufferList.push(create.buff);
       this.renderer.flushBuffer();
     }
 
@@ -146,27 +156,6 @@ class SaveImageDisplay {
 
   handleEvent(eventName, callback) {
     // pass
-  }
-
-  _overlayGrid(surface, gridSurf) {
-    let left = surface.buff;
-    let rite = gridSurf.buff;
-    let pitch = surface.pitch;
-    for (let y = 0; y < surface.height; y++) {
-      for (let x = 0; x < surface.width; x++) {
-        let k = y*pitch + x*4;
-        let alpha = rite[k+3];
-        left[k+0] = this._blend(left[k+0], rite[k+0], alpha);
-        left[k+1] = this._blend(left[k+1], rite[k+1], alpha);
-        left[k+2] = this._blend(left[k+2], rite[k+2], alpha);
-      }
-    }
-  }
-
-  _blend(mine, their, opacity) {
-    let left = mine * (0x100 - opacity);
-    let rite = their * opacity;
-    return Math.floor((left + rite) / 0x100);
   }
 }
 

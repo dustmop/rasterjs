@@ -67,7 +67,7 @@ Napi::Value SDLDisplay::Initialize(const Napi::CallbackInfo& info) {
 
 Napi::Value SDLDisplay::Name(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  return Napi::String::New(env, "fake");
+  return Napi::String::New(env, "sdl");
 }
 
 Napi::Value SDLDisplay::SetSize(const Napi::CallbackInfo& info) {

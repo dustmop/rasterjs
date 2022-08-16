@@ -72,7 +72,7 @@ class FilesysAccess {
       width: surf.width,
       height: surf.height,
       data: surf.buff,
-    }
+    };
     let bytes = PNG.sync.write(image);
     fs.writeFileSync(filename, bytes);
   }

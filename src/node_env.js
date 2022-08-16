@@ -17,7 +17,8 @@ function makeDisplay(name) {
     if (display.name() == 'fake') {
       return new httpDisplay.HTTPDisplay();
     }
-  }
+    return display
+  };
   if (name == 'fake' || name == 'sdl') {
     // TOOD: fix this, so that either can be used
     return cppmodule.display();

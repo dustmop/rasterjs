@@ -21,6 +21,7 @@ class SDLDisplay : public Napi::ObjectWrap<SDLDisplay> {
 
  private:
   Napi::Value Initialize(const Napi::CallbackInfo& info);
+  Napi::Value Name(const Napi::CallbackInfo& info);
   Napi::Value SetSize(const Napi::CallbackInfo& info);
   Napi::Value SetRenderer(const Napi::CallbackInfo& info);
   Napi::Value SetZoom(const Napi::CallbackInfo& info);

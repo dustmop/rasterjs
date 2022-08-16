@@ -19,6 +19,7 @@ void SDLDisplay::InitClass(Napi::Env env, Napi::Object exports) {
       env,
       "Display",
       {InstanceMethod("initialize", &SDLDisplay::Initialize),
+       InstanceMethod("name", &SDLDisplay::Name),
        InstanceMethod("setSize", &SDLDisplay::SetSize),
        InstanceMethod("setRenderer", &SDLDisplay::SetRenderer),
        InstanceMethod("setZoom", &SDLDisplay::SetZoom),
@@ -62,6 +63,11 @@ Napi::Value SDLDisplay::Initialize(const Napi::CallbackInfo& info) {
     this->sdlInitialized = 1;
   }
   return Napi::Number::New(env, 0);
+}
+
+Napi::Value SDLDisplay::Name(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  return Napi::String::New(env, "fake");
 }
 
 Napi::Value SDLDisplay::SetSize(const Napi::CallbackInfo& info) {

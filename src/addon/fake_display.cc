@@ -11,6 +11,7 @@ void SDLDisplay::InitClass(Napi::Env env, Napi::Object exports) {
       env,
       "Display",
       {InstanceMethod("initialize", &SDLDisplay::Initialize),
+       InstanceMethod("name", &SDLDisplay::Name),
        InstanceMethod("setSize", &SDLDisplay::SetSize),
        InstanceMethod("setRenderer", &SDLDisplay::SetRenderer),
        InstanceMethod("setZoom", &SDLDisplay::SetZoom),
@@ -34,10 +35,25 @@ Napi::Object SDLDisplay::NewInstance(Napi::Env env, Napi::Value arg) {
   return scope.Escape(napi_value(obj)).ToObject();
 }
 
-Napi::Value SDLDisplay::Initialize(const Napi::CallbackInfo& info) {
+void fail() {
   printf("SDLDisplay cannot run, because the raster.js native add-on\n");
-  printf("was built without SDL support.\n");
+  printf("was built without SDL support\n");
+  printf("\n");
+  printf("you can still run scripts using `--save` and the default\n");
+  printf("display (same as `--display http`)\n");
+  printf("\n");
+  printf("this problem can be fixed by installing the SDL\n");
+  printf("development libraries, then running `npm install raster` again\n");
+  printf("see: https://github.com/dustmop/rasterjs#building\n");
+}
+
+Napi::Value SDLDisplay::Initialize(const Napi::CallbackInfo& info) {
   return info.Env().Null();
+}
+
+Napi::Value SDLDisplay::Name(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  return Napi::String::New(env, "fake");
 }
 
 Napi::Value SDLDisplay::SetSize(const Napi::CallbackInfo& info) {
@@ -66,6 +82,7 @@ Napi::Value SDLDisplay::InsteadWriteBuffer(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value SDLDisplay::RenderLoop(const Napi::CallbackInfo& info) {
+  fail();
   return info.Env().Null();
 }
 

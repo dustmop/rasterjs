@@ -93,6 +93,24 @@ function isWeakRef(obj) {
   return obj.constructor == weak.Ref;
 }
 
+function isDisplayObject(obj) {
+  let needMethods = ['initialize',
+                     'handleEvent',
+                     'setSize',
+                     'setRenderer',
+                     'setZoom',
+                     'setGrid',
+                     'renderLoop'];
+  for (let methodName of needMethods) {
+    let method = obj[methodName];
+    if (!method || !types.isFunction(method)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+
 function ensureIsOneOf(obj, typesPossible) {
   for (let i = 0; i < typesPossible.length; i++) {
     let tp = typesPossible[i];
@@ -121,4 +139,5 @@ module.exports.isPalette = isPalette;
 module.exports.isSpriteSheet = isSpriteSheet;
 module.exports.isSurface = isSurface;
 module.exports.isWeakRef = isWeakRef;
+module.exports.isDisplayObject = isDisplayObject;
 module.exports.ensureIsOneOf = ensureIsOneOf;

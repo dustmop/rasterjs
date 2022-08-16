@@ -28,7 +28,7 @@ function Scene(env) {
   this._addMethods();
   this.env = env;
   this.fsacc = env.makeFilesysAccess();
-  this.display = env.makeDisplay();
+  this.display = null;
   this.saveService = this.fsacc;
 
   this.renderer = new renderer.Renderer();
@@ -70,6 +70,9 @@ Scene.prototype._initialize = function () {
   this.numFrames = options.num_frames || -1;
   if (options.display) {
     this.useDisplay(options.display);
+  } else {
+    // default display
+    this.display = this.env.makeDisplay();
   }
   this.display.initialize();
   if (options.colors) {
@@ -336,7 +339,20 @@ Scene.prototype.useColors = function(obj) {
 }
 
 Scene.prototype.useDisplay = function(nameOrDisplay) {
-  if (types.isObject(nameOrDisplay)) {
+  if (types.isString(nameOrDisplay)) {
+    // name of a built-in string
+    if (nameOrDisplay == 'ascii') {
+      this.display = new asciiDisplay.AsciiDisplay();
+    } else {
+      this.display = this.env.makeDisplay(nameOrDisplay);
+      if (!this.display) {
+        throw new Error(`unknown built-in display name "${nameOrDisplay}"`);
+      }
+    }
+  } else if (types.isDisplayObject(nameOrDisplay)) {
+    // custom display object
+    this.display = nameOrDisplay;
+  } else if (types.isObject(nameOrDisplay)) {
     // NOTE: An experimental feature.
     let opt = nameOrDisplay;
     if (opt.displayElemID) {
@@ -346,16 +362,6 @@ Scene.prototype.useDisplay = function(nameOrDisplay) {
     throw new Error(`illegal param for useDisplay: ${JSON.stringify(opt)}`);
   }
 
-  if (types.isString(nameOrDisplay)) {
-    if (nameOrDisplay == 'ascii') {
-      this.display = new asciiDisplay.AsciiDisplay();
-    } else {
-      throw new Error(`unknown built-in display name "${nameOrDisplay}"`);
-    }
-  } else {
-    this._assertDisplayObject(nameOrDisplay);
-    this.display = nameOrDisplay;
-  }
   this.display.initialize();
 }
 
@@ -608,26 +614,6 @@ Scene.prototype.on = function(eventName, callback) {
     return;
   }
   this.display.handleEvent(eventName, callback);
-}
-
-Scene.prototype._assertDisplayObject = function(obj) {
-  let needMethods = ['initialize',
-                     'handleEvent',
-                     'setSize',
-                     'setRenderer',
-                     'setZoom',
-                     'setGrid',
-                     'renderLoop'];
-  let failures = [];
-  for (let methodName of needMethods) {
-    let method = obj[methodName];
-    if (!method || !types.isFunction(method)) {
-      failures.push(methodName);
-    }
-  }
-  if (failures.length) {
-    throw new Error(`invalid display: missing ${JSON.stringify(failures)}`);
-  }
 }
 
 Scene.prototype.resize = function(x, y) {

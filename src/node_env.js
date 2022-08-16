@@ -3,14 +3,27 @@ const argparse = require('argparse');
 const path = require('path');
 const saver = require('./save_image_display.js');
 const filesysLocal = require('./filesys_local.js');
+const httpDisplay = require('./http_display.js');
 
 function makeFilesysAccess() {
   let fsacc = new filesysLocal.FilesysAccess();
   return fsacc;
 }
 
-function makeDisplay() {
-  return cppmodule.display();
+function makeDisplay(name) {
+  if (!name) {
+    // default
+    let display = cppmodule.display();
+    if (display.name() == 'fake') {
+      return new httpDisplay.HTTPDisplay();
+    }
+  }
+  if (name == 'fake' || name == 'sdl') {
+    // TOOD: fix this, so that either can be used
+    return cppmodule.display();
+  } else if (name == 'http') {
+    return new httpDisplay.HTTPDisplay();
+  }
 }
 
 function getOptions() {

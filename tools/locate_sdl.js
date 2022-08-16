@@ -15,8 +15,8 @@ var SYSTEM_PATHS = [
 ];
 
 function locateSDL(mode) {
-  if (mode != 'include' && mode != 'lib') {
-    throw new Error(`illegal mode "${mode}", use "include" or "lib"`);
+  if (mode != 'include' && mode != 'lib' && mode != 'symbol') {
+    throw new Error(`illegal mode "${mode}", use "include", "lib", or "symbol"`);
   }
   if (process.platform == 'darwin') {
     return locateSDLMacos(mode);
@@ -34,24 +34,38 @@ function locateSDLMacos(mode) {
     if (mode == 'include') {
       root = root.replace('/lib', '/include');
       basename = 'SDL2';
-    } else {
+    } else if (mode == 'lib') {
+      basename = 'libSDL2.dylib';
+    } else if (mode == 'symbol') {
       basename = 'libSDL2.dylib';
     }
     let locate = path.posix.join(root, basename);
     if (fs.existsSync(locate)) {
+      if (mode == 'symbol') {
+        return 'SDL_FOUND';
+      }
       return locate;
     }
   }
-  throw 'Not found';
+  if (mode == 'symbol') {
+    return 'SDL_NOT_FOUND';
+  }
+  return '';
 }
 
 function locateSDLWindows(mode) {
   if (mode == 'include') {
     let dir = getWindowsSDLDir('c:/SDL/');
     return path.posix.join(dir, "/include/SDL2");
-  } else {
+  } else if (mode == 'lib') {
     let dir = getWindowsSDLDir('c:/SDL/');
     return path.posix.join(dir, "/lib/libSDL2.dll.a");
+  } else if (mode == 'symbol') {
+    let dir = getWindowsSDLDir('c:/SDL/');
+    if (fs.existsSync(path.posix.join(dir, "/lib/libSDL2.dll.a"))) {
+      return 'SDL_FOUND';
+    }
+    return 'SDL_NOT_FOUND';
   }
 }
 

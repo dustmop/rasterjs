@@ -1,7 +1,8 @@
+#ifdef SDL_FOUND
+
 #include "sdl_display.h"
 #include "type.h"
 #include "waiter.h"
-
 #include <SDL.h>
 
 using namespace Napi;
@@ -479,3 +480,5 @@ Napi::Value SDLDisplay::AppQuit(const Napi::CallbackInfo& info) {
   this->exitAfter = true;
   return info.Env().Null();
 }
+
+#endif

@@ -14,6 +14,7 @@
       "cflags_cc!": [ "-fno-exceptions" ],
       "sources": [
         "src/addon/native.cc",
+        "src/addon/fake_display.cc",
         "src/addon/sdl_display.cc",
       ],
       "include_dirs": [
@@ -29,6 +30,7 @@
         "ENABLE_IMAGE",
         "ENABLE_TTF",
         "NAPI_DISABLE_CPP_EXCEPTIONS",
+        "<!(node ./tools/locate_sdl symbol)",
       ]
     }
   ]

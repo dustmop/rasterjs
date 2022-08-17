@@ -103,7 +103,7 @@ function isDisplayObject(obj) {
                      'renderLoop'];
   for (let methodName of needMethods) {
     let method = obj[methodName];
-    if (!method || !types.isFunction(method)) {
+    if (!method || !isFunction(method)) {
       return false;
     }
   }

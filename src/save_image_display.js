@@ -46,6 +46,10 @@ class SaveImageDisplay {
     // not handle any events
   }
 
+  appQuit() {
+    this.stopRunning = true;
+  }
+
   renderLoop(nextFrame) {
     let width = this.width;
     let height = this.height;
@@ -55,6 +59,7 @@ class SaveImageDisplay {
     } catch (e) {
     }
 
+    this.stopRunning = false;
     let hasTemplate = false;
 
     let numFrames = this.numFrames;
@@ -76,6 +81,9 @@ class SaveImageDisplay {
     let bufferList = [];
     let doneCount = 0;
     for (let count = 0; count < numFrames; count++) {
+      if (this.stopRunning) {
+        break;
+      }
       nextFrame();
       let frameNum = leftPad(count, 3, '0');
       let outFile = `${this.tmpdir}/${frameNum}.png`;

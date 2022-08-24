@@ -307,6 +307,29 @@ void main() {
     let self = this;
     let gridHaveCopied = false;
 
+    let comps = self._renderAndDisplayComponents;
+    let settings = self._renderAndDisplaySettings;
+    self.renderer.onRenderComponents(comps, settings, function(type, surface) {
+      if (Array.isArray(surface)) {
+        surface = surface[0];
+      }
+      if (type == 'palette') {
+        self._putSurfaceToElem(surface, 'palette-display');
+      } else if (type == 'colorMap') {
+        self._putSurfaceToElem(surface, 'colorMap-display');
+      } else if (type == 'plane') {
+        self._putSurfaceToElem(surface, 'plane-display');
+      } else if (type == 'tileset') {
+        self._putSurfaceToElem(surface, 'tileset-display');
+      } else if (type == 'attributes') {
+        self._putSurfaceToElem(surface, 'attributes-display');
+      } else if (type == 'interrupts') {
+        self._putSurfaceToElem(surface, 'interrupts-display');
+      } else {
+        throw new Error(`unknown display type ${type}`);
+      }
+    });
+
     let renderIt = function() {
       // Did the app quit?
       if (self.currentRunId != id) {
@@ -355,8 +378,6 @@ void main() {
       nextFrame();
 
       if (self._renderAndDisplayComponents) {
-        let comps = self._renderAndDisplayComponents;
-         let settings = self._renderAndDisplaySettings;
 
         // Hack to run the first IRQ, at scanline 0
         if (self.renderer.interrupts) {
@@ -365,26 +386,6 @@ void main() {
             first.irq(0);
           }
         }
-        self.renderer.renderComponents(comps, settings, function(type, surface) {
-          if (Array.isArray(surface)) {
-            surface = surface[0];
-          }
-          if (type == 'palette') {
-            self._putSurfaceToElem(surface, 'palette-display');
-          } else if (type == 'colorMap') {
-            self._putSurfaceToElem(surface, 'colorMap-display');
-          } else if (type == 'plane') {
-            self._putSurfaceToElem(surface, 'plane-display');
-          } else if (type == 'tileset') {
-            self._putSurfaceToElem(surface, 'tileset-display');
-          } else if (type == 'attributes') {
-            self._putSurfaceToElem(surface, 'attributes-display');
-          } else if (type == 'interrupts') {
-            self._putSurfaceToElem(surface, 'interrupts-display');
-          } else {
-            throw new Error(`unknown display type ${type}`);
-          }
-        });
       }
 
       if (num == 0) {

@@ -234,6 +234,14 @@ class Renderer {
         let eventObj = {
         };
         this._inspectCallback(eventObj);
+
+        if (this._onRenderComponents) {
+          this.renderComponents(
+            this._onRenderComponents,
+            this._onRenderSettings,
+            this._onRenderCallback,
+          );
+        }
       }
     }
 
@@ -411,6 +419,13 @@ class Renderer {
     }
 
     return layer.rgbSurface;
+  }
+
+  onRenderComponents(components, settings, callback) {
+    this._onRenderComponents = components;
+    this._onRenderSettings = settings;
+    this._onRenderCallback = callback;
+    this.renderComponents(components, settings, callback);
   }
 
   renderComponents(components, settings, callback) {

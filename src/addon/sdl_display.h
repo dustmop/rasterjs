@@ -2,6 +2,7 @@
 #define SDL_DISPLAY_H
 
 #include <napi.h>
+#include <chrono>
 
 struct GfxTarget;
 struct Image;
@@ -32,6 +33,10 @@ class SDLDisplay : public Napi::ObjectWrap<SDLDisplay> {
   Napi::Value AppQuit(const Napi::CallbackInfo& info);
   Napi::Value ReadImage(const Napi::CallbackInfo& info);
 
+  Napi::Value SetInstrumentation(const Napi::CallbackInfo& info);
+  Napi::Value SetVeryVerboseTiming(const Napi::CallbackInfo& info);
+  void frameInstrumentation();
+
   void next(Napi::Env env);
 
   napi_ref rendererRef;
@@ -46,6 +51,15 @@ class SDLDisplay : public Napi::ObjectWrap<SDLDisplay> {
   Napi::FunctionReference keyHandleFunc;
   int sdlInitialized;
   int zoomLevel;
+
+  int instrumentation;
+  int veryVerboseTiming;
+
+  int startupFrameCount;
+  std::chrono::time_point<std::chrono::high_resolution_clock> frameStartTime;
+  int tookTimeUs;
+  int minDelta;
+  int maxDelta;
 
   int gridIndex;
   int gridWidth;

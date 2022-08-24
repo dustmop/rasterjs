@@ -2,7 +2,7 @@
 
 #include "sdl_display.h"
 #include "type.h"
-#include "waiter.h"
+#include "present_frame.h"
 #include <SDL.h>
 
 using namespace Napi;
@@ -24,6 +24,8 @@ void SDLDisplay::InitClass(Napi::Env env, Napi::Object exports) {
        InstanceMethod("setRenderer", &SDLDisplay::SetRenderer),
        InstanceMethod("setZoom", &SDLDisplay::SetZoom),
        InstanceMethod("setGrid", &SDLDisplay::SetGrid),
+       InstanceMethod("setInstrumentation", &SDLDisplay::SetInstrumentation),
+       InstanceMethod("setVeryVerboseTiming", &SDLDisplay::SetVeryVerboseTiming),
        InstanceMethod("handleEvent", &SDLDisplay::HandleEvent),
        InstanceMethod("renderLoop", &SDLDisplay::RenderLoop),
        InstanceMethod("appQuit", &SDLDisplay::AppQuit),
@@ -47,6 +49,16 @@ SDLDisplay::SDLDisplay(const Napi::CallbackInfo& info)
   this->gridWidth = 0;
   this->gridHeight = 0;
   this->dataSources = NULL;
+  // TODO: properties instead of setters
+  this->instrumentation = false;
+  this->veryVerboseTiming = false;
+  // timing the performance each frame
+  this->tookTimeUs = 0;
+  this->maxDelta = -9999999;
+  this->minDelta = 9999999;
+  // TODO: lock fps at 60
+  // TODO: implement for the web
+  // TODO: allow caller to access performance
 };
 
 Napi::Object SDLDisplay::NewInstance(Napi::Env env, Napi::Value arg) {
@@ -128,6 +140,18 @@ Napi::Value SDLDisplay::SetGrid(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, 0);
 }
 
+Napi::Value SDLDisplay::SetInstrumentation(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  this->instrumentation = info[0].ToNumber().Int32Value();
+  return info.Env().Null();
+}
+
+Napi::Value SDLDisplay::SetVeryVerboseTiming(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  this->veryVerboseTiming = info[0].ToNumber().Int32Value();
+  return info.Env().Null();
+}
+
 Napi::Value SDLDisplay::HandleEvent(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   Napi::String eventName = info[0].ToString();
@@ -162,6 +186,9 @@ Napi::Value SDLDisplay::RenderLoop(const Napi::CallbackInfo& info) {
   // info[1] == id
   this->numRender = info[2].ToNumber().Int32Value();
   this->exitAfter = info[3].ToBoolean();
+
+  // track the first few frames
+  this->startupFrameCount = 0;
 
   // Get the stored plane object, retrieve its basic data.
   napi_value rendererVal;
@@ -307,8 +334,57 @@ Napi::Value SDLDisplay::RenderLoop(const Napi::CallbackInfo& info) {
   return info.Env().Null();
 }
 
+void SDLDisplay::frameInstrumentation() {
+  int frameLengthUs;
+  typedef std::chrono::high_resolution_clock Clock;
+
+  auto prevLengthUs = this->frameStartTime;
+  this->frameStartTime = Clock::now();
+
+  long frameLengthNano = std::chrono::duration_cast<std::chrono::nanoseconds>(this->frameStartTime - prevLengthUs).count();
+  frameLengthUs = frameLengthNano / 1000;
+
+  // don't count frame stats before SDL stabilizes
+  if (this->startupFrameCount < 10) {
+    if (this->startupFrameCount < 3) {
+      this->startupFrameCount++;
+      return;
+    } else if (frameLengthUs < 14000) {
+      this->startupFrameCount++;
+      return;
+    }
+    this->startupFrameCount++;
+  }
+
+  if (!this->veryVerboseTiming) {
+    return;
+  }
+
+  // very verbose timing
+  int deltaUs = frameLengthUs - 16667;
+  if (deltaUs > this->maxDelta) {
+    this->maxDelta = deltaUs;
+  }
+  if (deltaUs < this->minDelta) {
+    this->minDelta = deltaUs;
+  }
+
+  float performance = (this->tookTimeUs * 1.0 / frameLengthUs) * 100.0;
+  printf("took time:     %d microseconds\n", this->tookTimeUs);
+  printf("frame length:  %d microsec\n", frameLengthUs);
+  printf(" max delta:    %d microsec\n", maxDelta);
+  printf(" min delta:    %d microsec\n", minDelta);
+  printf("* perf:        %.2f%%\n", performance);
+  printf("\n");
+}
+
+
 void SDLDisplay::execOneFrame(const CallbackInfo& info) {
   Napi::Env env = info.Env();
+
+  if (this->instrumentation) {
+    this->frameInstrumentation();
+  }
 
   // Get OS events, such as exiting app, and keyboard input
   SDL_Event event;
@@ -455,9 +531,6 @@ void SDLDisplay::execOneFrame(const CallbackInfo& info) {
     return;
   }
 
-  // Swap buffers to display
-  SDL_RenderPresent(this->rendererHandle);
-
   if (this->numRender > 0) {
     this->numRender--;
   }
@@ -476,7 +549,13 @@ static void BeginNextFrame(const CallbackInfo& info) {
 void SDLDisplay::next(Napi::Env env) {
   Napi::Function cont = Napi::Function::New(env, BeginNextFrame,
                                             "<unknown>", this);
-  WaitWorker* w = new WaitWorker(cont, 1);
+  // time how long this frame took to execute and render
+  typedef std::chrono::high_resolution_clock Clock;
+  auto finishTime = Clock::now();
+  long durationNano = std::chrono::duration_cast<std::chrono::nanoseconds>(finishTime - this->frameStartTime).count();
+  this->tookTimeUs = (durationNano / 1000);
+  // asynchronously present the frame to SDL
+  PresentFrame* w = new PresentFrame(cont, this->rendererHandle);
   w->Queue();
 }
 

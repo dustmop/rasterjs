@@ -12,15 +12,15 @@ function makeFilesysAccess() {
 
 function makeDisplay(name) {
   if (!name) {
-    // default
+    // default: detect the display. use either `sdl` (default) or `http`
     let display = cppmodule.display();
     if (display.name() == 'fake') {
       return new httpDisplay.HTTPDisplay();
     }
     return display
   };
-  if (name == 'fake' || name == 'sdl') {
-    // TOOD: fix this, so that either can be used
+  if (name == 'sdl') {
+    // force the `sdl` backend, even if it is `fake`
     return cppmodule.display();
   } else if (name == 'http') {
     return new httpDisplay.HTTPDisplay();

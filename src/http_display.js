@@ -11,6 +11,10 @@ class HTTPDisplay {
     this._image = null;
   }
 
+  name() {
+    return 'http';
+  }
+
   setSize(width, height) {
   }
 

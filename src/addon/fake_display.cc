@@ -39,7 +39,7 @@ void fail() {
   printf("was built without SDL support\n");
   printf("\n");
   printf("you can still run scripts using `--save` and the default\n");
-  printf("display (same as `--display http`)\n");
+  printf("display (same as `--display http`) and `--display ascii`\n");
   printf("\n");
   printf("this problem can be fixed by installing the SDL\n");
   printf("development libraries, then running `npm install raster` again\n");

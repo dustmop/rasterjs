@@ -28,9 +28,11 @@ class AsciiDisplay {
   }
 
   renderLoop(nextFrame) {
+    let _res = this.renderer.render();
     let plane = this.renderer.getFirstPlane();
     let buffer = plane.data;
     let pitch = plane.pitch;
+
     for (let y = 0; y < plane.height; y++) {
       let line = '';
       for (let x = 0; x < plane.width; x++) {

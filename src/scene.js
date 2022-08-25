@@ -360,6 +360,8 @@ Scene.prototype.useDisplay = function(nameOrDisplay) {
       return;
     }
     throw new Error(`illegal param for useDisplay: ${JSON.stringify(opt)}`);
+  } else {
+    throw new Error(`illegal param for useDisplay: ${JSON.stringify(nameOrDisplay)}`);
   }
 
   this.display.initialize();
@@ -443,8 +445,6 @@ Scene.prototype._doRender = function(num, exitAfter, drawFunc, finalFunc) {
   this.renderer.connect(this.provide());
 
   if (this.attrs && !this._hasRenderedOnce) {
-    // TODO: Instead of only doing this once, do it every
-    // frame but make it efficient.
     this.normalizePaletteAttributes();
     this._hasRenderedOnce = true;
   }
@@ -777,7 +777,11 @@ Scene.prototype.normalizePaletteAttributes = function() {
   if (!this.attrs || !this.palette) {
     throw new Error(`need palette and attributes`);
   }
-  this.attrs.ensureConsistentPlanePalette(this.aPlane, this.palette);
+  // don't ensure the plane is consistent if it is a pattern table
+  // TODO: rewrite attributes, it has many problems
+  if (!this.tiles) {
+    this.attrs.ensureConsistentPlanePalette(this.aPlane, this.palette);
+  }
 }
 
 Scene.prototype.usePalette = function(param) {

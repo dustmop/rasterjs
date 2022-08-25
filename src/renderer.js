@@ -229,7 +229,15 @@ class Renderer {
     layer.plane.ensureReady();
 
     // Dispatch any inspector events
-    if (this._inspectScanline !== null && this._inspectCallback !== null) {
+    if (!this._inspectScanline && !top) {
+      if (this._onRenderComponents) {
+        this.renderComponents(
+          this._onRenderComponents,
+          this._onRenderSettings,
+          this._onRenderCallback,
+        );
+      }
+    } else if (this._inspectScanline && this._inspectCallback) {
       if (this._inspectScanline >= top && this._inspectScanline < bottom) {
         let eventObj = {
         };

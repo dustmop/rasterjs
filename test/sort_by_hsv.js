@@ -20,7 +20,7 @@ describe('HSV sort', function() {
     }
     rgbItems = algorithm.sortByHSV(rgbItems);
     let actual = rgbItems.toString();
-    let expect = 'RGBColor{#b08840},RGBColor{#c08020},RGBColor{#d0a040},RGBColor{#d8c030},RGBColor{#60c080},RGBColor{#40d020},RGBColor{#204070},RGBColor{#e040a0}';
+    let expect = 'RGBColor{#b08840},RGBColor{#d0a040},RGBColor{#c08020},RGBColor{#d8c030},RGBColor{#40d020},RGBColor{#60c080},RGBColor{#204070},RGBColor{#e040a0}';
     assert.equal(expect, actual);
   });
 });

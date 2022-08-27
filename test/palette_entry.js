@@ -171,25 +171,25 @@ describe('Palette entry', function() {
       actual.push(colors[i].hex());
     }
     let expect = [
-      "0x444444",
-      "0x000000",
-      "0x4d0e05",
-      "0xaaaaaa",
-      "0xeaeaea",
-      "0xeb0000",
-      "0xffbaaf",
-      "0x463511",
-      "0x8f6a20",
-      "0xd3b139",
-      "0xf3da94",
-      "0x806c8a",
-      "0x494349",
-      "0x180b0f",
-      "0x231418",
-      "0x2e1d23",
-      "0x34292e",
-      "0x493b43",
-      "0x5b4951"
+      '0x444444',
+      '0x000000',
+      '0xaaaaaa',
+      '0xeaeaea',
+      '0xffbaaf',
+      '0xf3da94',
+      '0x463511',
+      '0x8f6a20',
+      '0x4d0e05',
+      '0xeb0000',
+      '0xd3b139',
+      '0x494349',
+      '0x806c8a',
+      '0x493b43',
+      '0x5b4951',
+      '0x34292e',
+      '0x2e1d23',
+      '0x231418',
+      '0x180b0f'
     ];
     assert.deepEqual(expect, actual);
   });

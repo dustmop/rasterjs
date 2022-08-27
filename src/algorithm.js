@@ -100,7 +100,7 @@ function sortByHSV(items) {
   let colors = [];
   for (let rgb of items) {
     let [h, s, v] = rgbToHSV(rgb.r, rgb.g, rgb.b);
-    let k = Math.floor(h * 10) * 10000 + Math.floor(v * 1000) + s;
+    let k = Math.floor(h * 8) * 1000 + Math.floor(s * 64) + v;
     colors.push({key: k, rgb: rgb});
   }
   // Sort those colors
@@ -740,3 +740,4 @@ module.exports.nearestNeighbor = nearestNeighbor;
 module.exports.nearestNeighborSurface = nearestNeighborSurface;
 module.exports.makeSurface = makeSurface;
 module.exports.mergeIntoSurface = mergeIntoSurface;
+module.exports.rgbToHSV = rgbToHSV;

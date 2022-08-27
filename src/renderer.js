@@ -445,6 +445,7 @@ class Renderer {
     let myAttributes = this._layers[0].attrs;
     let myInterrupts = system.interrupts;
     settings = settings || {};
+    components = components || [];
 
     if (settings.resize && !this.haveRenderedPlaneOnce) {
       let width = settings.resize.width;

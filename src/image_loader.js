@@ -107,12 +107,14 @@ class LookOfImage {
     // Clone the list of items
     this._items = items.slice();
     this._density = density;
+    // TODO: all, rows
     this.length = items.length;
     this._min = Math.min(...items);
     this._max = Math.max(...items);
     return this;
   }
 
+  // replace with `allToInts` or `rowsToInts`
   toInts() {
     return this._items;
   }
@@ -127,6 +129,10 @@ class LookOfImage {
 
   density() {
     return this._density;
+  }
+
+  find(cv) {
+    return this._items.indexOf(cv);
   }
 }
 
@@ -237,6 +243,7 @@ class ImagePlane {
     this.data[k] = Math.floor(v);
   }
 
+  // TODO: make wrapper of this that's convenient to pass a filename / Image to
   fillData() {
     this.loadState = LOAD_STATE_FILLED;
     if (this.data == null) {
@@ -265,12 +272,12 @@ class ImagePlane {
       needs.rgbItems = algorithm.sortByHSV(needs.rgbItems);
     }
 
-    let res = this._remapRGBItems(needs.rgbItems, this.palette, this.colorMap);
+    let remapArrayMap = this._remapRGBItems(needs.rgbItems, this.palette, this.colorMap);
 
-    verbose.log(`loading image with rgb map: ${JSON.stringify(res.remap)}`, 6);
+    verbose.log(`loading image with rgb map: ${JSON.stringify(remapArrayMap.remap)}`, 6);
 
     // Look of the image, see the used color values
-    this.look = new LookOfImage(res.items, needs.density);
+    this.look = new LookOfImage(remapArrayMap.items, needs.density);
     //
     // # Why is this a LookOfImage object?
     //
@@ -313,7 +320,7 @@ class ImagePlane {
         let g = this.rgbBuff[k*4+1];
         let b = this.rgbBuff[k*4+2];
         let rgbval = r * 0x10000 + g * 0x100 + b;
-        let c = res.remap[rgbval];
+        let c = remapArrayMap.remap[rgbval];
         this.data[k] = c;
       }
     }
@@ -381,9 +388,14 @@ class ImagePlane {
       if (palette) {
         let cval = colorMap.find(rgbval);
         if (cval == -1) {
+          // TODO: can this be simplified?
           c = palette.insertWhereAvail(rgbval);
           if (c == null) {
-            throw new Error(`palette exists, and image ${this.filename} uses a color not found in the colorMap: ${rgbItems[i]}`);
+            // TODO: ensure this works everywhere
+            // color found which is not in palette, just put it in colorMap
+            // and use `0` for the color-value
+            colorMap.extendWith(rgbval);
+            c = 0;
           }
         } else {
           c = palette.find(cval);

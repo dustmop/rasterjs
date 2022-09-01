@@ -2,6 +2,9 @@ const rgbColor = require('./rgb_color.js');
 const destructure = require('./destructure.js');
 const types = require('./types.js');
 const serializer = require('./serializer.js');
+const verboseLogger = require('./verbose_logger.js');
+
+let verbose = new verboseLogger.Logger();
 
 
 class Palette {
@@ -23,6 +26,7 @@ class Palette {
       this[i] = this.items[i];
     }
     this.fsacc = fsacc;
+    this._uncoveredNum = 0;
     // Customize how console.log displays this object.
     this[Symbol.for('nodejs.util.inspect.custom')] = this._stringify;
     return this;
@@ -58,6 +62,10 @@ class Palette {
     let elems = [];
     for (let i = 0; i < this.items.length; i++) {
       let it = this.items[i];
+      if (!it) {
+        elems.push(`${i}:null`);
+        continue
+      }
       elems.push(`${i}:[${it.cval}]=${it.hex()}`);
     }
     return 'Palette{' + elems.join(', ') + '}';
@@ -121,22 +129,44 @@ class Palette {
   }
 
   cycle(args) {
+    let myArgs = arguments;
+    let firstArg = myArgs[0];
+    if (types.isLookOfImage(firstArg)) {
+      let look = firstArg;
+      let opt = arguments[1] || {};
+      let params = {};
+      params.startIndex = opt.startIndex || this._uncoveredNum;
+      params.values = look.toInts();
+      params.incStep = look.density();
+      //params.stepReason = ` [look.density = ${values.density()}]`;
+      params.endIndex = look.density() + params.startIndex;
+      if (opt.click) {
+        params.click = opt.click;
+      }
+      this._cycleParams(params);
+      return;
+    }
+    this._cycleParams(myArgs[0]);
+  }
+
+  _cycleParams(args) {
     let spec = ['!name', 'startIndex?i', 'endIndex?i',
                 'values?any', 'incStep?i', 'slow?i', 'click?a'];
     let [startIndex, endIndex, values, incStep, slow, click] = (
       destructure.from('cycle', spec, arguments, null));
+    let stepReason = '';
 
     if (this.refScene == null) {
       throw new Error('refScene is not set');
     }
     let ra = this.refScene.deref();
 
+    // TODO: uncovered will always override 0, but it defaults to 0
+    startIndex = startIndex || this._uncoveredNum;
+
     if (!values) {
       values = ra.nge(0, this.length);
     } else if (types.isLookOfImage(values)) {
-      if (!incStep) {
-        incStep = values.density();
-      }
       values = values.toInts();
     }
 
@@ -145,13 +175,84 @@ class Palette {
     slow = Math.max(1, Math.floor(slow));
     click = click !== null ? click : ra.timeClick;
 
-    let param = Math.floor(click / slow);
+    click = Math.floor(click / slow);
     let numColors = endIndex - startIndex;
+
+    if (!this._hasDisplayedCycleCall) {
+      verbose.log(`palette.cycle(
+  values = ${values},
+  startIndex = ${startIndex}, endIndex = ${endIndex}, incStep = ${incStep}${stepReason},
+  click = ${click} / numColors = ${numColors}
+)`, 6);
+    }
+
     for (let k = 0; k < numColors; k++) {
       let index = k + startIndex;
-      let n = (k + (param*incStep)) % values.length;
+      let n = (k + (click*incStep)) % values.length;
       let r = values[n];
+      if (!this._hasDisplayedCycleCall) {
+        verbose.log(`entry[${index}].setColor(${r})`, 6);
+      }
       this.items[index].setColor(r);
+    }
+
+    //this._hasDisplayedCycleCall = true;
+  }
+
+  agreeWithMe(pl) {
+    if (!types.isPlane(pl)) {
+      throw new Error(`agreeWithMe needs a Plane`);
+    }
+
+    let remap = {};
+    for (let i = 0; i < this.items.length; i++) {
+      let cval = this.items[i].cval;
+      // palette with multiple uses will only map to the first
+      // TODO: this doesn't work with attributes, need ambiguity info
+      remap[cval] = i;
+    }
+
+    for (let y = 0; y < pl.height; y++) {
+      for (let x = 0; x < pl.width; x++) {
+        let v = pl.get(x, y);
+        v = remap[v];
+        pl.put(x, y, v);
+      }
+    }
+  }
+
+  agreeWithThem(coverageLook) {
+    if (!types.isLookOfImage(coverageLook)) {
+      throw new Error(`agreeWithThem needs a LookOfImage`);
+    }
+    let entries = this.items;
+
+    // get all uncovered palette entries
+    let replace = [];
+    for (let i = 0; i < entries.length; i++) {
+      let cv = entries[i].cval;
+      let index = coverageLook.find(cv);
+      if (index != -1) {
+        continue;
+      }
+      replace.push(entries[i]);
+    }
+    this._uncoveredNum = replace.length;
+
+    // get all covered palette values
+    let coveredVals = coverageLook.toInts();
+    // TODO: replace with `allToInts` or `rowsToInts`
+    let follow = [];
+    for (let i = 0; i < coveredVals.length; i++) {
+      follow.push(entries[coveredVals[i]]);
+    }
+
+    // concat them together and build this palette
+    replace = replace.concat(follow);
+    this.items = replace;
+    this.length = this.items.length;
+    for (let i = 0; i < this.items.length; i++) {
+      this[i] = this.items[i];
     }
   }
 

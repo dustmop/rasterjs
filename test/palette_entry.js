@@ -268,7 +268,7 @@ describe('Palette entry', function() {
       }
     });
 
-    // Cycle using the look of the loaded colormap
+    // Cycle using the set of values from the loaded colormap
     palette.cycle({values: cycleColors.look, incStep: 1, click: 1});
     util.renderCompareTo(ra, 'test/testdata/cycle-after1.png');
 
@@ -278,9 +278,13 @@ describe('Palette entry', function() {
     palette.cycle({values: cycleColors.look, incStep: 1, click: 3});
     util.renderCompareTo(ra, 'test/testdata/cycle-after3.png');
 
-    // The incStep defaults to 2, which is the look.density()
-    palette.cycle({values: cycleColors.look, click: 1});
-    util.renderCompareTo(ra, 'test/testdata/cycle-after2.png');
+    // Cycle using the look as a sequence meant for cycling
+    palette.reset();
+    palette.cycle(cycleColors.look);
+    util.renderCompareTo(ra, 'test/testdata/cycle-look0.png');
+
+    palette.cycle(cycleColors.look, {click: 1});
+    util.renderCompareTo(ra, 'test/testdata/cycle-look1.png');
   });
 
 });

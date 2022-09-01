@@ -784,7 +784,7 @@ Scene.prototype.normalizePaletteAttributes = function() {
   }
 }
 
-Scene.prototype.usePalette = function(param) {
+Scene.prototype.usePalette = function(param, opt) {
   // can be called like this:
   //
   //   // Construct a palette from what was drawn to the plane
@@ -804,17 +804,29 @@ Scene.prototype.usePalette = function(param) {
   //
   this._ensureColorMap();
   this._ensureColorMapPositiveSize();
+  // TODO: This function needs major work.
   if (types.isPalette(param)) {
     this.palette = param;
     return this.palette;
   } else if (types.isLookOfImage(param)) {
-    return this._initPaletteFromLookOfImage(param);
+    this.palette = this._initPaletteFromLookOfImage(param);
+    if (opt && opt.coverage) {
+      this.palette = this._applyCoverageToPalette(opt.coverage, this.palette);
+      // coverage implies agreement with me
+      this._recolorPlaneToMatchPalette();
+      return this.palette;
+    }
+    return this.palette;
   } else if (!param) {
     return this._initPaletteFromPlane();
   } else if (types.isObject(param)) {
     return this._initPaletteFromPlane(param.sort, param.size);
   } else if (types.isArray(param)) {
-    return this._constructPaletteFromVals(param);
+    this._constructPaletteFromVals(param);
+    if ((opt || {}).agree) {
+      this._recolorPlaneToMatchPalette();
+    }
+    return this.palette;
   } else if (types.isInteger(param)) {
     let vals = new Array(param);
     vals.fill(0);
@@ -823,9 +835,10 @@ Scene.prototype.usePalette = function(param) {
   throw new Error(`usePalette: unsupported param ${param}`);
 }
 
-Scene.prototype._constructPaletteFromVals = function(vals) {
+Scene.prototype._constructPaletteFromVals = function(vals, opt) {
   let colors = this.colorMap;
   let saveService = this.saveService;
+
   let all = [];
   let ent;
   for (let i = 0; i < vals.length; i++) {
@@ -847,6 +860,19 @@ Scene.prototype._constructPaletteFromVals = function(vals) {
   }
   this.palette = new palette.Palette(all, saveService, new weak.Ref(this));
   return this.palette;
+}
+
+Scene.prototype._recolorPlaneToMatchPalette = function() {
+  // TODO: verbose.log here
+  this.palette.agreeWithMe(this.aPlane);
+}
+
+Scene.prototype._applyCoverageToPalette = function(coverageLook, palette) {
+  if (!types.isLookOfImage(coverageLook)) {
+    throw new Error(`LookOfImage required, got ${coverageLook}`);
+  }
+  palette.agreeWithThem(coverageLook);
+  return palette;
 }
 
 Scene.prototype.useTileset = function(something, sizeInfo) {

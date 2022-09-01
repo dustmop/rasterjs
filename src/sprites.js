@@ -61,7 +61,7 @@ class Sprite {
 // x, y   position
 // c      character
 // m      mix
-// a      attribute (which piece of the palette) // TODO
+// a      attribute (which piece of the palette)
 // i      invisible
 // h, v   flips
 // b      behind

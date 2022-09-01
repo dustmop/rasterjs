@@ -365,6 +365,10 @@ class Renderer {
       if (!chardat) {
         throw new Error('cannot render sprites without character data')
       }
+
+      // TODO: assuming the default piece_size, FIXME
+      let piece_size = 8;
+
       // draw back-to-front so that sprite[i] is above sprite[j] where i < j
       for (let k = layer.spriteList.items.length - 1; k >= 0; k--) {
         let spr = layer.spriteList.items[k];
@@ -408,6 +412,10 @@ class Renderer {
             let ry = spr.v ? obj.height - py - 1 : py;
             let c = obj.get(rx, ry);
             if (c > 0) {
+              if (spr.a !== null && spr.a !== undefined) {
+                // TODO: test me!
+                c = (c % piece_size) + Math.floor(spr.a) * piece_size;
+              }
               let rgb = this._toColor(layer, c);
               if (spr.m) {
                 layer.rgbSurface.buff[t+0] += rgb.r;

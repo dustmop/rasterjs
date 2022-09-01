@@ -3,15 +3,23 @@ const types = require('./types.js');
 
 
 class Attributes {
-  constructor(source, sizeInfo) {
+  // TODO: use arguments instead, optional arguments
+  // Attributes()
+  // Attributes(plane)
+  // Attributes(w, h)
+  // Attributes(palette)
+  constructor(source, palette, sizeInfo) {
     // TOOD: cell_width, cell_height -> cell_dim
     // TODO: indexed or container
     // sizeInfo looks like:
     // {
     //   cell_width:  8,
     //   cell_height: 8,
-    //   piece_size:  4, // num of colors in palette piece
     // }
+    // TODO: source is a Plane, Attributes can also own Grid of values
+    if (!palette && !types.isPalette) {
+      throw new Error(`palette must be null or a Palette`);
+    }
     if (!source && !sizeInfo) {
       throw new Error(`Attributes expects an argument`);
     }
@@ -24,26 +32,17 @@ class Attributes {
     if (!sizeInfo.cell_height) {
       throw new Error(`invalid Attributes detail: missing cell_height`);
     }
-    if (!sizeInfo.piece_size) {
-      throw new Error(`invalid Attributes detail: missing piece_size`);
-    }
     if (!Math.trunc(sizeInfo.cell_width) != 0) {
       throw new Error(`Attributes's cell_width must be integer`);
     }
     if (!Math.trunc(sizeInfo.cell_height) != 0) {
       throw new Error(`Attributes's cell_height must be integer`);
     }
-    if (!Math.trunc(sizeInfo.piece_size) != 0) {
-      throw new Error(`Attributes's piece_size must be integer`);
-    }
     if (sizeInfo.cell_width <= 0) {
       throw new Error(`Attributes's cell_width must be > 0`);
     }
     if (sizeInfo.cell_height <= 0) {
       throw new Error(`Attributes's cell_height must be > 0`);
-    }
-    if (sizeInfo.piece_size <= 0) {
-      throw new Error(`Attributes's piece_size must be > 0`);
     }
     if (types.isInteger(source)) {
       throw new Error(`Attributes expects a Plane as an argument`);
@@ -57,17 +56,19 @@ class Attributes {
   }
 
   ensureConsistentTileset(tiles, palette) {
+    let piece_size = this._getPieceSize();
+
     for (let j = 0; j < tiles.numTiles; j++) {
       let tile = tiles.get(j);
 
       // Get tile's color needs, pick a palette piece, then recolor
       let colorNeeds = this._getColorNeeds(tile, palette);
-      let pieceNum = this._choosePalettePiece(colorNeeds, palette);
+      let pieceNum = this._choosePalettePiece(colorNeeds, palette, piece_size);
       if (pieceNum === null) {
         console.log(`[error] illegal tile, no palette: tileNum=${j}`);
         continue;
       }
-      this._recolorTile(pieceNum, palette, tile);
+      this._recolorTile(pieceNum, palette, tile, piece_size);
     }
   }
 
@@ -75,15 +76,37 @@ class Attributes {
     let num_cell_x = plane.width  / this.sizeInfo.cell_width;
     let num_cell_y = plane.height / this.sizeInfo.cell_height;
 
+    let piece_size = this._getPieceSize();
+
     for (let i = 0; i < num_cell_y; i++) {
       for (let j = 0; j < num_cell_x; j++) {
         let pal_index_needs = this._collectColorNeeds(plane, j, i);
         let color_needs = this._lookupPaletteColors(pal_index_needs, palette);
         let was = this.source.get(j, i);
-        let cell_value = this._discoverCellValue(color_needs, was, palette);
-        this._downColorize(plane, j, i, this.sizeInfo.piece_size);
+        let cell_value = this._discoverCellValue(color_needs, was,
+                                                 palette, piece_size);
+        this._downColorize(plane, j, i, piece_size);
         this.source.put(j, i, cell_value);
       }
+    }
+  }
+
+  _getPieceSize() {
+    // TODO: cascade attribute palette spritelist colorMap (quick = 8)
+    // TODO: order?
+    if (this.sizeInfo.piece_size) {
+      // TODO: test me
+      return this.sizeInfo.piece_size;
+    } else if (this.palette && this.palette.size_info) {
+      // TODO: test me
+      return this.palette.size_info;
+    } else {
+      // TODO: assume colorMap is 'quick'
+      // TODO: test me
+      return 8;
+      // TODO: spriteList
+      // TODO: get a component map that we can iterate?
+      // TODO: `partnerComponents` will update upon `useComponent` call
     }
   }
 
@@ -109,8 +132,8 @@ class Attributes {
     return colors;
   }
 
-  _discoverCellValue(color_needs, was, palette) {
-    let match = palette.findNearPieces(color_needs, this.sizeInfo.piece_size);
+  _discoverCellValue(color_needs, was, palette, piece_size) {
+    let match = palette.findNearPieces(color_needs, piece_size);
     if (match.winners.length) {
       // If the value of the cell matches a winner, keep using it.
       // Otherwise use the first winner.
@@ -154,10 +177,10 @@ class Attributes {
     return needs;
   }
 
-  _choosePalettePiece(colorNeeds, palette) {
+  _choosePalettePiece(colorNeeds, palette, piece_size) {
     let candidates = [];
 
-    let pieceSize = this.sizeInfo.piece_size;
+    let pieceSize = piece_size;
     // TODO: Handle non-even division
     let numOpt = palette.length / pieceSize;
 
@@ -186,8 +209,8 @@ class Attributes {
     return null;
   }
 
-  _recolorTile(pieceNum, palette, tile) {
-    let pieceSize = this.sizeInfo.piece_size;
+  _recolorTile(pieceNum, palette, tile, piece_size) {
+    let pieceSize = piece_size;
     // for each pixel
     for (let y = 0; y < tile.height; y++) {
       for (let x = 0; x < tile.width; x++) {

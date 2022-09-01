@@ -888,10 +888,11 @@ Scene.prototype.useTileset = function(something, sizeInfo) {
 
 Scene.prototype.useAttributes = function(pl, sizeInfo) {
   if (!this.palette) {
+    // TODO: Attributes without a palette just slices up colorMap
     throw new Error('cannot useAttributes without a palette');
   }
   // TODO: validate sizeInfo
-  this.attrs = new attributes.Attributes(pl, sizeInfo);
+  this.attrs = new attributes.Attributes(pl, this.palette, sizeInfo);
   if (this.tiles) {
     this.attrs.ensureConsistentTileset(this.tiles, this.palette);
   }

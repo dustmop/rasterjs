@@ -810,8 +810,8 @@ Scene.prototype.usePalette = function(param, opt) {
     return this.palette;
   } else if (types.isLookOfImage(param)) {
     this.palette = this._initPaletteFromLookOfImage(param);
-    if (opt && opt.coverage) {
-      this.palette = this._applyCoverageToPalette(opt.coverage, this.palette);
+    if (opt && opt.upon) {
+      this.palette = this._coverUponPalette(opt.upon, this.palette);
       // coverage implies agreement with me
       this._recolorPlaneToMatchPalette();
       return this.palette;
@@ -867,7 +867,7 @@ Scene.prototype._recolorPlaneToMatchPalette = function() {
   this.palette.agreeWithMe(this.aPlane);
 }
 
-Scene.prototype._applyCoverageToPalette = function(coverageLook, palette) {
+Scene.prototype._coverUponPalette = function(coverageLook, palette) {
   if (!types.isLookOfImage(coverageLook)) {
     throw new Error(`LookOfImage required, got ${coverageLook}`);
   }

@@ -74,7 +74,7 @@ class FilesysAccess {
   }
 
   saveTo() {
-    throw new Error('cannot save image');
+    console.log('(image saving not supported)');
   }
 
   whenLoaded(cb) {

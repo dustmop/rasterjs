@@ -138,11 +138,23 @@ class Palette {
       params.startIndex = opt.startIndex || this._uncoveredNum;
       params.values = look.toInts();
       params.incStep = look.density();
+      params.slow = opt.slow || null;
       //params.stepReason = ` [look.density = ${values.density()}]`;
       params.endIndex = look.density() + params.startIndex;
       if (opt.click) {
         params.click = opt.click;
       }
+
+      if (opt.upon !== null && opt.upon !== undefined) {
+        let cycleUpon = opt.upon;
+        if (cycleUpon !== 0) {
+          throw new Error(`not implemented: palette.cycle(look, {upon}) except for {upon: 0}`);
+        }
+        // create list of upon values, add to params
+        // these upon will change the iteration order for cycle
+        params.upon = look._items.slice(0, look._density);
+      }
+
       this._cycleParams(params);
       return;
     }
@@ -151,8 +163,8 @@ class Palette {
 
   _cycleParams(args) {
     let spec = ['!name', 'startIndex?i', 'endIndex?i',
-                'values?any', 'incStep?i', 'slow?i', 'click?a'];
-    let [startIndex, endIndex, values, incStep, slow, click] = (
+                'values?any', 'incStep?i', 'slow?i', 'click?a', 'upon?a'];
+    let [startIndex, endIndex, values, incStep, slow, click, upon] = (
       destructure.from('cycle', spec, arguments, null));
     let stepReason = '';
 
@@ -160,6 +172,10 @@ class Palette {
       throw new Error('refScene is not set');
     }
     let ra = this.refScene.deref();
+
+    if (startIndex && upon) {
+      throw new Error(`cannot use {upon} with {startIndex}`);
+    }
 
     // TODO: uncovered will always override 0, but it defaults to 0
     startIndex = startIndex || this._uncoveredNum;
@@ -188,6 +204,9 @@ class Palette {
 
     for (let k = 0; k < numColors; k++) {
       let index = k + startIndex;
+      if (upon) {
+        index = upon[k];
+      }
       let n = (k + (click*incStep)) % values.length;
       let r = values[n];
       if (!this._hasDisplayedCycleCall) {

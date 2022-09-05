@@ -27,9 +27,9 @@ class Renderer {
         camera: null,
         plane: null,
         colorMap: null,
-        tiles: null,
+        tileset: null,
         palette: null,
-        attrs: null,
+        attributes: null,
         size: null,
         spriteList: null,
       }
@@ -54,7 +54,7 @@ class Renderer {
 
     let layer = this._layers[0];
     let allow = ['plane', 'colorMap', 'size', 'camera',
-                 'tiles', 'palette', 'attrs', 'interrupts', 'spriteList',
+                 'tileset', 'palette', 'attributes', 'interrupts', 'spriteList',
                  'font', 'grid'];
     let keys = Object.keys(input);
     for (let k of keys) {
@@ -71,14 +71,14 @@ class Renderer {
     if (!input.colorMap || !types.isColorMap(input.colorMap)) {
       throw new Error(`input.colorMap must be a non-null colorMap`);
     }
-    if (input.tiles && !types.isTileset(input.tiles)) {
-      throw new Error(`input.tiles must be a Tileset, got ${input.tiles}`);
+    if (input.tileset && !types.isTileset(input.tileset)) {
+      throw new Error(`input.tiles must be a Tileset, got ${input.tileset}`);
     }
     if (input.palette && !types.isPalette(input.palette)) {
       throw new Error(`input.palette must be a Palette, got ${input.palette}`);
     }
-    if (input.attrs && !types.isAttributes(input.attrs)) {
-      throw new Error(`input.attrs must be a Attributes`);
+    if (input.attributes && !types.isAttributes(input.attributes)) {
+      throw new Error(`input.attributes must be a Attributes`);
     }
     if (input.interrupts && !types.isInterrupts(input.interrupts)) {
       throw new Error(`input.interrupts must be a Interrupts`);
@@ -89,9 +89,9 @@ class Renderer {
     layer.camera   = input.camera;
     // TODO: colorMap should be 'global'
     layer.colorMap = input.colorMap;
-    layer.tiles    = input.tiles;
+    layer.tileset  = input.tileset;
     layer.palette  = input.palette;
-    layer.attrs    = input.attrs;
+    layer.attributes = input.attributes;
     layer.spriteList = input.spriteList;
     this.grid        = input.grid;
     this.interrupts  = input.interrupts;
@@ -119,12 +119,12 @@ class Renderer {
   }
 
   switchComponent(layerNum, compName, obj) {
-    if (compName == 'tiles') {
-      this._layers[layerNum].tiles = obj;
+    if (compName == 'tileset') {
+      this._layers[layerNum].tileset = obj;
     } else if (compName == 'camera') {
       this._layers[layerNum].camera = obj;
     } else {
-      throw new Error(`switchComponent can only be used for "camera","tiles"`);
+      throw new Error(`switchComponent can only be used for "camera","tileset"`);
     }
   }
 
@@ -147,12 +147,12 @@ class Renderer {
     let width = (layer.size && layer.size.width);
     let height = (layer.size && layer.size.height);
     if (!width || !height) {
-      if (!layer.tiles) {
+      if (!layer.tileset) {
         width = layer.plane.width;
         height = layer.plane.height;
       } else {
-        width = layer.plane.width * layer.tiles.tileWidth;
-        height = layer.plane.height * layer.tiles.tileHeight;
+        width = layer.plane.width * layer.tileset.tileWidth;
+        height = layer.plane.height * layer.tileset.tileHeight;
       }
     }
 
@@ -258,27 +258,27 @@ class Renderer {
     let sourceWidth = layer.plane.width;
     let sourceHeight = layer.plane.height;
 
-    if (layer.tiles != null) {
+    if (layer.tileset != null) {
       // Calculate the size
-      let tileSize = layer.tiles.tileWidth * layer.tiles.tileHeight;
+      let tileSize = layer.tileset.tileWidth * layer.tileset.tileHeight;
       let numPoints = layer.plane.height * layer.plane.width;
-      sourceWidth = layer.plane.width * layer.tiles.tileWidth;
-      sourceHeight = layer.plane.height * layer.tiles.tileHeight;
-      sourcePitch = layer.tiles.tileWidth * layer.plane.width;
+      sourceWidth = layer.plane.width * layer.tileset.tileWidth;
+      sourceHeight = layer.plane.height * layer.tileset.tileHeight;
+      sourcePitch = layer.tileset.tileWidth * layer.plane.width;
       source = new Uint8Array(numPoints * tileSize);
 
       for (let yTile = 0; yTile < layer.plane.height; yTile++) {
         for (let xTile = 0; xTile < layer.plane.width; xTile++) {
           let k = yTile*layer.plane.pitch + xTile;
           let c = layer.plane.data[k];
-          let t = layer.tiles.get(c);
+          let t = layer.tileset.get(c);
           if (t === undefined) {
             throw new Error(`invalid tile number ${c} at ${xTile},${yTile}`);
           }
           for (let i = 0; i < t.height; i++) {
             for (let j = 0; j < t.width; j++) {
-              let y = yTile * layer.tiles.tileHeight + i;
-              let x = xTile * layer.tiles.tileWidth + j;
+              let y = yTile * layer.tileset.tileHeight + i;
+              let x = xTile * layer.tileset.tileWidth + j;
               let n = y * sourceWidth + x;
               source[n] = t.get(j, i);
             }
@@ -341,8 +341,8 @@ class Renderer {
           let s = y*sourcePitch + x;
           let t = i*targetPitch + j*4;
           let rgb;
-          if (layer.attrs) {
-            let c = layer.attrs.realizeIndexedColor(source[s], x, y);
+          if (layer.attributes) {
+            let c = layer.attributes.realizeIndexedColor(source[s], x, y);
             rgb = this._toColor(layer, c);
           } else {
             rgb = this._toColor(layer, source[s]);
@@ -361,7 +361,7 @@ class Renderer {
     }
 
     if (layer.spriteList && layer.spriteList.enabled) {
-      let chardat = layer.spriteList.chardat || layer.tiles;
+      let chardat = layer.spriteList.chardat || layer.tileset;
       if (!chardat) {
         throw new Error('cannot render sprites without character data')
       }
@@ -448,9 +448,9 @@ class Renderer {
     let system = this;
     let myPlane = this._layers[0].plane;
     let myColorMap = this._layers[0].colorMap;
-    let myTiles = this._layers[0].tiles;
+    let myTiles = this._layers[0].tileset;
     let myPalette = this._layers[0].palette;
-    let myAttributes = this._layers[0].attrs;
+    let myAttributes = this._layers[0].attributes;
     let myInterrupts = system.interrupts;
     settings = settings || {};
     components = components || [];

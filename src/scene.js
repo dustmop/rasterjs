@@ -37,8 +37,8 @@ function Scene(env) {
   this.colorMap = null;
   this.camera = {};
   this.palette = null;
-  this.tiles = null;
-  this.attrs = null;
+  this.tileset = null;
+  this.attributes = null;
   this.interrupts = null;
   this.spriteList = null;
   this.aPlane = new plane.Plane();
@@ -271,8 +271,8 @@ Scene.prototype.resetState = function() {
   this.timeClick = 0;
   this.camera = {};
   this.palette = null;
-  this.tiles = null;
-  this.attrs = null;
+  this.tileset = null;
+  this.attributes = null;
   this.interrupts = null;
   this.spriteList = null;
   this.rgbBuffer = null;
@@ -439,17 +439,17 @@ Scene.prototype._doRender = function(num, exitAfter, drawFunc, finalFunc) {
   let plane = this.aPlane;
 
   if (!this.width || !this.height) {
-    if (!this.tiles) {
+    if (!this.tileset) {
       this.width = plane.width;
       this.height = plane.height;
     } else {
-      this.width = plane.width * this.tiles.tileWidth;
-      this.height = plane.height * this.tiles.tileHeight;
+      this.width = plane.width * this.tileset.tileWidth;
+      this.height = plane.height * this.tileset.tileHeight;
     }
   }
   this._renderer.connect(this.provide());
 
-  if (this.attrs && !this._hasRenderedOnce) {
+  if (this.attributes && !this._hasRenderedOnce) {
     this.normalizePaletteAttributes();
     this._hasRenderedOnce = true;
   }
@@ -598,11 +598,13 @@ Scene.prototype.setFont = function(spec, opt) {
 }
 
 Scene.prototype.setTileset = function(which) {
+  // TODO: remove, use setComponent() instead
   if (which < 0 || which >= this.tilesetBanks.length) {
     throw new Error(`invalid tileset number ${which}`);
   }
-  this.tiles = this.tilesetBanks[which];
-  this._renderer.switchComponent(0, 'tiles', this.tiles);
+  this.tileset = this.tilesetBanks[which];
+  // TODO:
+  this._renderer.switchComponent(0, 'tileset', this.tileset);
 }
 
 Scene.prototype.on = function(eventName, callback) {
@@ -654,6 +656,7 @@ Scene.prototype.useDips = function(names) {
   }
   this.dip = make;
   this.dip.length = names.length;
+  return this.dip;
 }
 
 Scene.prototype.dipNames = function() {
@@ -779,13 +782,13 @@ Scene.prototype._ensureColorMapPositiveSize = function() {
 }
 
 Scene.prototype.normalizePaletteAttributes = function() {
-  if (!this.attrs || !this.palette) {
+  if (!this.attributes || !this.palette) {
     throw new Error(`need palette and attributes`);
   }
   // don't ensure the plane is consistent if it is a pattern table
   // TODO: rewrite attributes, it has many problems
-  if (!this.tiles) {
-    this.attrs.ensureConsistentPlanePalette(this.aPlane, this.palette);
+  if (!this.tileset) {
+    this.attributes.ensureConsistentPlanePalette(this.aPlane, this.palette);
   }
 }
 
@@ -887,10 +890,10 @@ Scene.prototype.useTileset = function(something, sizeInfo) {
   if (types.isObject(something) && sizeInfo == null) {
     // Construct a tileset from the current plane.
     sizeInfo = something;
-    this.tiles = new tiles.Tileset(this.aPlane, sizeInfo, {dedup: true});
-    this.aPlane = this.tiles.patternTable;
+    this.tileset = new tiles.Tileset(this.aPlane, sizeInfo, {dedup: true});
+    this.aPlane = this.tileset.patternTable;
   } else if (types.isTileset(something)) {
-    this.tiles = something;
+    this.tileset = something;
   } else if (types.isArray(something)) {
     // TODO: list of Tileset objects
     // TODO: perhaps remove this functionality
@@ -901,20 +904,20 @@ Scene.prototype.useTileset = function(something, sizeInfo) {
       allBanks.push(tileset);
     }
     this.tilesetBanks = allBanks;
-    this.tiles = allBanks[0];
+    this.tileset = allBanks[0];
   } else if (types.isPlane(something)) {
     let img = something;
-    this.tiles = new tiles.Tileset(img, sizeInfo);
+    this.tileset = new tiles.Tileset(img, sizeInfo);
   } else if (types.isNumber(something)) {
     let numTiles = something;
-    this.tiles = new tiles.Tileset(numTiles, sizeInfo);
+    this.tileset = new tiles.Tileset(numTiles, sizeInfo);
   } else {
     throw new Error(`cannot construct tileset from ${something}`);
   }
-  if (this.attrs) {
-    this.attrs.ensureConsistentTileset(this.tiles, this.palette);
+  if (this.attributes) {
+    this.attributes.ensureConsistentTileset(this.tileset, this.palette);
   }
-  return this.tiles;
+  return this.tileset;
 }
 
 Scene.prototype.useAttributes = function(pl, sizeInfo) {
@@ -923,11 +926,11 @@ Scene.prototype.useAttributes = function(pl, sizeInfo) {
     throw new Error('cannot useAttributes without a palette');
   }
   // TODO: validate sizeInfo
-  this.attrs = new attributes.Attributes(pl, this.palette, sizeInfo);
-  if (this.tiles) {
-    this.attrs.ensureConsistentTileset(this.tiles, this.palette);
+  this.attributes = new attributes.Attributes(pl, this.palette, sizeInfo);
+  if (this.tileset) {
+    this.attributes.ensureConsistentTileset(this.tileset, this.palette);
   }
-  return this.attrs;
+  return this.attributes;
 }
 
 Scene.prototype.useInterrupts = function(conf) {
@@ -950,14 +953,14 @@ Scene.prototype.provide = function() {
   if (this.camera) {
     prov.camera = this.camera;
   }
-  if (this.tiles) {
-    prov.tiles = this.tiles;
+  if (this.tileset) {
+    prov.tileset = this.tileset;
   }
   if (this.palette) {
     prov.palette = this.palette;
   }
-  if (this.attrs) {
-    prov.attrs = this.attrs;
+  if (this.attributes) {
+    prov.attributes = this.attributes;
   }
   if (this.interrupts) {
     prov.interrupts = this.interrupts;
@@ -991,7 +994,9 @@ Scene.prototype._saveSurfacesTo = function(surfaces, filename) {
 }
 
 Scene.prototype.useSpriteList = function(sprites) {
+  // TODO: handle multiple different arguments
   this.spriteList = sprites;
+  return this.spriteList;
 }
 
 module.exports.Scene = Scene;

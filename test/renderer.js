@@ -19,7 +19,7 @@ describe('Render components', function() {
                        [5, 5, 1, 0],
                        [6, 4, 2, 2]]);
 
-    let renderer = ra.renderer;
+    let renderer = ra._renderer;
     renderer.connect(ra.provide());
 
     let numGot = 0;

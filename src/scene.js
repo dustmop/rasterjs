@@ -26,27 +26,28 @@ let verbose = new verboseLogger.Logger();
 
 function Scene(env) {
   this._addMethods();
-  this.env = env;
-  this.fsacc = env.makeFilesysAccess();
-  this.display = null;
-  this.saveService = this.fsacc;
+  this._env = env;
+  this._fsacc = env.makeFilesysAccess();
+  this._display = null;
+  this._saveService = this._fsacc;
 
-  this.renderer = new renderer.Renderer();
+  this._renderer = new renderer.Renderer();
+  this._font = null;
 
   this.colorMap = null;
   this.camera = {};
-  this.font = null;
   this.palette = null;
   this.tiles = null;
   this.attrs = null;
   this.interrupts = null;
   this.spriteList = null;
-
   this.aPlane = new plane.Plane();
-  this.upperPlane = null;
-  this.upperCamera = null;
-  this.lowerCamera = null;
-  this.numFrames = FRAMES_LOOP_FOREVER;
+
+  this._upperPlane = null;
+  this._upperCamera = null;
+  this._lowerCamera = null;
+  this._numFrames = FRAMES_LOOP_FOREVER;
+
   this._initialize();
   return this;
 }
@@ -64,17 +65,17 @@ Scene.prototype._initialize = function () {
   this._inspectCallback = null;
   this.dip = {};
   this.dip.length = 0;
-  this.imgLoader = new imageLoader.Loader(this.fsacc, new weak.Ref(this));
-  this.textLoader = new textLoader.TextLoader(this.fsacc);
-  let options = this.env.getOptions();
-  this.numFrames = options.num_frames || -1;
+  this._imgLoader = new imageLoader.Loader(this._fsacc, new weak.Ref(this));
+  this._textLoader = new textLoader.TextLoader(this._fsacc);
+  let options = this._env.getOptions();
+  this._numFrames = options.num_frames || -1;
   if (options.display) {
     this.useDisplay(options.display);
   } else {
     // default display
-    this.display = this.env.makeDisplay();
+    this._display = this._env.makeDisplay();
   }
-  this.display.initialize();
+  this._display.initialize();
   if (options.colors) {
     this.useColors(options.colors);
   }
@@ -221,25 +222,25 @@ Scene.prototype.setSize = function(w, h, opt) {
   }
   // TODO: allow resizing? Need to understand how display vs plane size
   // interact when one or the other is changed
-  this.renderer.clear();
+  this._renderer.clear();
 }
 
 Scene.prototype.setComponent = function(compname, obj, opts) {
   opts = opts || {};
   if (compname == 'camera') {
-    if (!this.lowerCamera) {
-      this.lowerCamera = this.camera;
+    if (!this._lowerCamera) {
+      this._lowerCamera = this.camera;
     }
-    if (!this.upperCamera) {
-      this.upperCamera = {x:0, y:0};
+    if (!this._upperCamera) {
+      this._upperCamera = {x:0, y:0};
     }
     let layer = opts.layer;
     if (layer == 0) {
-      this.camera = this.lowerCamera;
-      this.renderer.switchComponent(layer, 'camera', this.camera);
+      this.camera = this._lowerCamera;
+      this._renderer.switchComponent(layer, 'camera', this.camera);
     } else if (layer == 1) {
-      this.camera = this.upperCamera;
-      this.renderer.switchComponent(layer, 'camera', this.camera);
+      this.camera = this._upperCamera;
+      this._renderer.switchComponent(layer, 'camera', this.camera);
     }
   }
 }
@@ -257,11 +258,11 @@ Scene.prototype.resetState = function() {
   this.height = null;
   this.colorMap = null;
   this.aPlane.clear();
-  this.upperPlane = null;
-  this.upperCamera = null;
-  this.lowerCamera = null;
-  this.renderer.clear();
-  this.fsacc.clear();
+  this._upperPlane = null;
+  this._upperCamera = null;
+  this._lowerCamera = null;
+  this._renderer.clear();
+  this._fsacc.clear();
   this.time = 0.0;
   this.timeClick = 0;
   this.camera = {};
@@ -285,7 +286,7 @@ Scene.prototype._initConfig = function() {
 }
 
 Scene.prototype.then = function(cb) {
-  this.fsacc.whenLoaded(cb);
+  this._fsacc.whenLoaded(cb);
 }
 
 Scene.prototype.setZoom = function(scale) {
@@ -297,7 +298,7 @@ Scene.prototype.setGrid = function(unit, opt) {
   if (opt && opt.enable !== undefined) {
     enable = opt.enable;
   }
-  this.display.setGrid(enable);
+  this._display.setGrid(enable);
   if (this.config.gridUnit) {
     return;
   }
@@ -309,10 +310,10 @@ Scene.prototype.setGrid = function(unit, opt) {
   let width = this.width || this.aPlane.width;
   let height = this.height || this.aPlane.height;
 
-  if (this.renderer) {
+  if (this._renderer) {
     // TODO: It is possible to get here with 0 width and 0 height if
     // setGrid is called before setSize / drawImage.
-    this.renderer.grid = {
+    this._renderer.grid = {
       zoom: this.config.zoomScale,
       width: width,
       height: height,
@@ -342,21 +343,21 @@ Scene.prototype.useDisplay = function(nameOrDisplay) {
   if (types.isString(nameOrDisplay)) {
     // name of a built-in string
     if (nameOrDisplay == 'ascii') {
-      this.display = new asciiDisplay.AsciiDisplay();
+      this._display = new asciiDisplay.AsciiDisplay();
     } else {
-      this.display = this.env.makeDisplay(nameOrDisplay);
-      if (!this.display) {
+      this._display = this._env.makeDisplay(nameOrDisplay);
+      if (!this._display) {
         throw new Error(`unknown built-in display name "${nameOrDisplay}"`);
       }
     }
   } else if (types.isDisplayObject(nameOrDisplay)) {
     // custom display object
-    this.display = nameOrDisplay;
+    this._display = nameOrDisplay;
   } else if (types.isObject(nameOrDisplay)) {
     // NOTE: An experimental feature.
     let opt = nameOrDisplay;
     if (opt.displayElemID) {
-      this.display.elemID = opt.displayElemID;
+      this._display.elemID = opt.displayElemID;
       return;
     }
     throw new Error(`illegal param for useDisplay: ${JSON.stringify(opt)}`);
@@ -364,7 +365,7 @@ Scene.prototype.useDisplay = function(nameOrDisplay) {
     throw new Error(`illegal param for useDisplay: ${JSON.stringify(nameOrDisplay)}`);
   }
 
-  this.display.initialize();
+  this._display.initialize();
 }
 
 // TODO: Re-organize the methods in this file, into topics.
@@ -373,20 +374,20 @@ Scene.prototype.insertResource = function(name, imageSurf) {
   if (!types.isSurface(imageSurf)) {
     throw new Error(`insertResource: expects surface`);
   }
-  this.imgLoader.insert(name, imageSurf);
+  this._imgLoader.insert(name, imageSurf);
 }
 
 // NOTE: An experimental feature.
 Scene.prototype.experimentalDisplayComponents = function(components, settings) {
-  if (this.display.renderAndDisplayEachComponent) {
-    this.display.renderAndDisplayEachComponent(components, settings);
+  if (this._display.renderAndDisplayEachComponent) {
+    this._display.renderAndDisplayEachComponent(components, settings);
   }
 }
 
 Scene.prototype.experimentalInspectScanline = function(scanline) {
   this._inspectScanline = scanline;
-  if (this.renderer) {
-    this.renderer.setInspector(this._inspectScanline, this._inspectCallback);
+  if (this._renderer) {
+    this._renderer.setInspector(this._inspectScanline, this._inspectCallback);
   }
 }
 
@@ -396,7 +397,7 @@ Scene.prototype.loadImage = function(filepath, opt) {
     verbose.log(`Scene.loadImage: creating an empty colorMap`, 4);
     this.colorMap = colorMap.constructFrom([]);
   }
-  return this.imgLoader.loadImage(filepath, opt);
+  return this._imgLoader.loadImage(filepath, opt);
 }
 
 Scene.prototype.makePolygon = function(pointsOrPolygon) {
@@ -442,23 +443,23 @@ Scene.prototype._doRender = function(num, exitAfter, drawFunc, finalFunc) {
       this.height = plane.height * this.tiles.tileHeight;
     }
   }
-  this.renderer.connect(this.provide());
+  this._renderer.connect(this.provide());
 
   if (this.attrs && !this._hasRenderedOnce) {
     this.normalizePaletteAttributes();
     this._hasRenderedOnce = true;
   }
 
-  this.renderer.setInspector(this._inspectScanline, this._inspectCallback);
+  this._renderer.setInspector(this._inspectScanline, this._inspectCallback);
 
   let renderID = makeRenderID();
 
   let self = this;
   self.then(function() {
-    self.display.setSize(self.width, self.height);
-    self.display.setRenderer(self.renderer);
-    self.display.setZoom(self.config.zoomScale);
-    self.display.renderLoop(function() {
+    self._display.setSize(self.width, self.height);
+    self._display.setRenderer(self._renderer);
+    self._display.setZoom(self.config.zoomScale);
+    self._display.renderLoop(function() {
       if (drawFunc) {
         try {
           drawFunc();
@@ -495,7 +496,7 @@ Scene.prototype.showFrame = function(callback) {
 
 Scene.prototype.save = function(savepath) {
   let res = this.renderPrimaryPlane();
-  let saveService = this.saveService;
+  let saveService = this._saveService;
   if (!saveService) {
     throw new Error('cannot save plane without save service');
   }
@@ -503,8 +504,8 @@ Scene.prototype.save = function(savepath) {
 }
 
 Scene.prototype.renderPrimaryPlane = function() {
-  this.renderer.connect(this.provide());
-  let res = this.renderer.render();
+  this._renderer.connect(this.provide());
+  let res = this._renderer.render();
   if (res[0].width == 0 || res[0].height == 0 || res[0].pitch == 0) {
     throw new Error(`invalid scene: ${JSON.stringify(res)}`);
   }
@@ -512,7 +513,7 @@ Scene.prototype.renderPrimaryPlane = function() {
 }
 
 Scene.prototype.quit = function() {
-  this.display.appQuit();
+  this._display.appQuit();
 }
 
 Scene.prototype.nextFrame = function() {
@@ -584,12 +585,12 @@ Scene.prototype.oscil = function(namedOnly) {
 Scene.prototype.setFont = function(spec, opt) {
   if (spec.startsWith('font:')) {
     let name = spec.split(':')[1];
-    this.font = this.textLoader.createFontResource(name);
+    this._font = this._textLoader.createFontResource(name);
   } else {
     let filename = spec;
-    this.font = this.textLoader.loadFont(filename, opt);
+    this._font = this._textLoader.loadFont(filename, opt);
   }
-  this.aPlane.font = this.font;
+  this.aPlane.font = this._font;
 }
 
 Scene.prototype.setTileset = function(which) {
@@ -597,7 +598,7 @@ Scene.prototype.setTileset = function(which) {
     throw new Error(`invalid tileset number ${which}`);
   }
   this.tiles = this.tilesetBanks[which];
-  this.renderer.switchComponent(0, 'tiles', this.tiles);
+  this._renderer.switchComponent(0, 'tiles', this.tiles);
 }
 
 Scene.prototype.on = function(eventName, callback) {
@@ -608,12 +609,12 @@ Scene.prototype.on = function(eventName, callback) {
   }
   if (eventName == 'render') {
     this._inspectCallback = callback;
-    if (this.renderer) {
-      this.renderer.setInspector(this._inspectScanline, this._inspectCallback);
+    if (this._renderer) {
+      this._renderer.setInspector(this._inspectScanline, this._inspectCallback);
     }
     return;
   }
-  this.display.handleEvent(eventName, callback);
+  this._display.handleEvent(eventName, callback);
 }
 
 Scene.prototype.resize = function(x, y) {
@@ -664,7 +665,7 @@ Scene.prototype._initPaletteFromLookOfImage = function(look) {
     items.push(ent);
   }
   // Assign the palette to the scene
-  let saveService = this.saveService;
+  let saveService = this._saveService;
   let pal = new palette.Palette(items, saveService, new weak.Ref(this));
   this.palette = pal;
   return this.palette;
@@ -710,7 +711,7 @@ Scene.prototype._initPaletteFromPlane = function(shouldSort, optSize) {
       }
     }
     // Assigin the palette to the scene
-    let saveService = this.saveService;
+    let saveService = this._saveService;
     let pal = new palette.Palette(items, saveService, new weak.Ref(this));
     this.palette = pal;
   }
@@ -722,7 +723,7 @@ Scene.prototype._paletteFromColorMap = function(optSize) {
     verbose.log(`constructing palette from colorMap`, 4);
     let colors = this.colorMap;
     let size = optSize || colors.size();
-    let saveService = this.saveService;
+    let saveService = this._saveService;
     let all = [];
     for (let i = 0; i < size; i++) {
       let rgb = colors.get(i);
@@ -746,8 +747,8 @@ Scene.prototype.usePlane = function(pl) {
   }
   this.aPlane = pl[0];
   if (pl.length > 1) {
-    this.upperPlane = pl[1];
-    this.upperCamera = null;
+    this._upperPlane = pl[1];
+    this._upperCamera = null;
   }
   this._removeMethods();
   this._removeAdditionalMethods();
@@ -837,7 +838,7 @@ Scene.prototype.usePalette = function(param, opt) {
 
 Scene.prototype._constructPaletteFromVals = function(vals, opt) {
   let colors = this.colorMap;
-  let saveService = this.saveService;
+  let saveService = this._saveService;
 
   let all = [];
   let ent;
@@ -970,11 +971,11 @@ Scene.prototype.provide = function() {
   }
   let res = [prov];
   // Upper layer hack
-  if (this.upperPlane) {
+  if (this._upperPlane) {
     let upper = {};
-    upper.plane = this.upperPlane;
-    if (this.upperCamera) {
-      upper.camera = this.upperCamera;
+    upper.plane = this._upperPlane;
+    if (this._upperCamera) {
+      upper.camera = this._upperCamera;
     }
     res.push(upper);
   }
@@ -982,7 +983,7 @@ Scene.prototype.provide = function() {
 }
 
 Scene.prototype._saveSurfacesTo = function(surfaces, filename) {
-  this.fsacc.saveTo(filename, surfaces);
+  this._fsacc.saveTo(filename, surfaces);
 }
 
 Scene.prototype.useSpriteList = function(sprites) {

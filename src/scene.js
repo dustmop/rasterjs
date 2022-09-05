@@ -82,6 +82,10 @@ Scene.prototype._initialize = function () {
   if (options.zoom) {
     this.setZoom(options.zoom);
   }
+  if (options.time_click) {
+    this.timeClick = options.time_click;
+    this.time = this.timeClick / 60.0;
+  }
 }
 
 Scene.prototype.Plane = function() {
@@ -486,7 +490,7 @@ Scene.prototype.show = function(drawFunc, finalFunc) {
 }
 
 Scene.prototype.run = function(drawFunc) {
-  this._doRender(this.numFrames, true, drawFunc, null);
+  this._doRender(this._numFrames, true, drawFunc, null);
 }
 
 Scene.prototype.showFrame = function(callback) {

@@ -217,16 +217,16 @@ describe('Palette entry', function() {
     });
     util.renderCompareTo(ra, 'test/testdata/cycle-before.png');
 
-    palette.cycle({values: [4, 5, 6, 7], click: 1});
+    palette.cycle({values: [4, 5, 6, 7], tick: 1});
     util.renderCompareTo(ra, 'test/testdata/cycle-after1.png');
 
-    palette.cycle({values: [4, 5, 6, 7], click: 2});
+    palette.cycle({values: [4, 5, 6, 7], tick: 2});
     util.renderCompareTo(ra, 'test/testdata/cycle-after2.png');
 
-    palette.cycle({values: [4, 5, 6, 7], click: 3});
+    palette.cycle({values: [4, 5, 6, 7], tick: 3});
     util.renderCompareTo(ra, 'test/testdata/cycle-after3.png');
 
-    palette.cycle({values: [4, 5, 6, 7], click: 4});
+    palette.cycle({values: [4, 5, 6, 7], tick: 4});
     util.renderCompareTo(ra, 'test/testdata/cycle-colors.png');
   });
 
@@ -269,13 +269,13 @@ describe('Palette entry', function() {
     });
 
     // Cycle using the set of values from the loaded colormap
-    palette.cycle({values: cycleColors.look, incStep: 1, click: 1});
+    palette.cycle({values: cycleColors.look, incStep: 1, tick: 1});
     util.renderCompareTo(ra, 'test/testdata/cycle-after1.png');
 
-    palette.cycle({values: cycleColors.look, incStep: 1, click: 2});
+    palette.cycle({values: cycleColors.look, incStep: 1, tick: 2});
     util.renderCompareTo(ra, 'test/testdata/cycle-after2.png');
 
-    palette.cycle({values: cycleColors.look, incStep: 1, click: 3});
+    palette.cycle({values: cycleColors.look, incStep: 1, tick: 3});
     util.renderCompareTo(ra, 'test/testdata/cycle-after3.png');
 
     // Cycle using the look as a sequence meant for cycling
@@ -283,7 +283,7 @@ describe('Palette entry', function() {
     palette.cycle(cycleColors.look);
     util.renderCompareTo(ra, 'test/testdata/cycle-look0.png');
 
-    palette.cycle(cycleColors.look, {click: 1});
+    palette.cycle(cycleColors.look, {tick: 1});
     util.renderCompareTo(ra, 'test/testdata/cycle-look1.png');
   });
 

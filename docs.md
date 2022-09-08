@@ -106,17 +106,17 @@ Rotates the given polygon by the given angle, returning a new polygon.
 
 `returns` a polygon
 
-### oscil({period, begin, max, click})
+### oscil({period, begin, max, tick})
 
 Produce an oscillating wave value that varies between 0.0 and 1.0 in a sinusoidal motion. Parameters to `oscil` must be named parameters only, positional parameters are not allowed.
 
-`period`: The period of the motion, in clicks. Larger means a slower motion. Default is 60
+`period`: The period of the motion, in ticks. Larger means a slower motion. Default is 60
 
 `begin`: How far into the motion to begin, as a fraction between 0.0 and 1.0. Default is 0.0
 
 `max`: Maximum value to be returned, representing the distance from valley to peak. Default 1.0
 
-`click`: Parameter used as input. Default is `ra.timeClick`
+`tick`: Parameter used as input. Default is `ra.timeTick`
 
 ### on(eventName, callback)
 
@@ -128,7 +128,7 @@ Handle events caused by user interaction. Only eventName that is currently handl
 width
 height
 time
-timeClick
+timeTick
 TAU
 ```
 
@@ -140,7 +140,7 @@ Width and height of the scene, equivalent to the display size.
 
 The number of seconds since the scene begin, as a floating point value.
 
-### timeClick
+### timeTick
 
 The number of frames that have rendered so far, increasing by 1 per frame.
 

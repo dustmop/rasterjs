@@ -19,31 +19,31 @@ describe('Oscil', function() {
   });
   it('little bit later', function() {
     ra.resetState();
-    ra.timeClick = 10;
+    ra.timeTick = 10;
     let n = ra.oscil();
     assert.almostEqual(n, 0.25);
   });
   it('max', function() {
     ra.resetState();
-    ra.timeClick = 10;
+    ra.timeTick = 10;
     let n = ra.oscil({max: 100});
     assert.almostEqual(n, 25, {epsilon: 0.01});
   });
   it('period', function() {
     ra.resetState();
-    ra.timeClick = 10;
+    ra.timeTick = 10;
     let n = ra.oscil({period: 120});
     assert.almostEqual(n, 0.067);
   });
   it('begin', function() {
     ra.resetState();
-    ra.timeClick = 10;
+    ra.timeTick = 10;
     let n = ra.oscil({begin: 0.5});
     assert.almostEqual(n, 0.75);
   });
-  it('click', function() {
+  it('tick', function() {
     ra.resetState();
-    let n = ra.oscil({click: 10});
+    let n = ra.oscil({tick: 10});
     assert.almostEqual(n, 0.25);
   });
   it('cannot use positional', function() {

@@ -141,8 +141,8 @@ class Palette {
       params.slow = opt.slow || null;
       //params.stepReason = ` [look.density = ${values.density()}]`;
       params.endIndex = look.density() + params.startIndex;
-      if (opt.click) {
-        params.click = opt.click;
+      if (opt.tick) {
+        params.tick = opt.tick;
       }
 
       if (opt.upon !== null && opt.upon !== undefined) {
@@ -163,8 +163,8 @@ class Palette {
 
   _cycleParams(args) {
     let spec = ['!name', 'startIndex?i', 'endIndex?i',
-                'values?any', 'incStep?i', 'slow?i', 'click?a', 'upon?a'];
-    let [startIndex, endIndex, values, incStep, slow, click, upon] = (
+                'values?any', 'incStep?i', 'slow?i', 'tick?a', 'upon?a'];
+    let [startIndex, endIndex, values, incStep, slow, tick, upon] = (
       destructure.from('cycle', spec, arguments, null));
     let stepReason = '';
 
@@ -189,16 +189,16 @@ class Palette {
     endIndex = endIndex || this.length;
     incStep = Math.max(1, Math.floor(incStep));
     slow = Math.max(1, Math.floor(slow));
-    click = click !== null ? click : ra.timeClick;
+    tick = tick !== null ? tick : ra.timeTick;
 
-    click = Math.floor(click / slow);
+    tick = Math.floor(tick / slow);
     let numColors = endIndex - startIndex;
 
     if (!this._hasDisplayedCycleCall) {
       verbose.log(`palette.cycle(
   values = ${values},
   startIndex = ${startIndex}, endIndex = ${endIndex}, incStep = ${incStep}${stepReason},
-  click = ${click} / numColors = ${numColors}
+  tick = ${tick} / numColors = ${numColors}
 )`, 6);
     }
 
@@ -207,7 +207,7 @@ class Palette {
       if (upon) {
         index = upon[k];
       }
-      let n = (k + (click*incStep)) % values.length;
+      let n = (k + (tick*incStep)) % values.length;
       let r = values[n];
       if (!this._hasDisplayedCycleCall) {
         verbose.log(`entry[${index}].setColor(${r})`, 6);

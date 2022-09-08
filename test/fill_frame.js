@@ -17,7 +17,7 @@ describe('Fill', function() {
     ra.setSize({w: 8, h: 8});
     ra.fillFrame(function(mem, x, y) {
       let i = y*mem.pitch + x;
-      if (ra.oscil({period:54, click:i*76}) > 0.5) {
+      if (ra.oscil({period:54, tick:i*76}) > 0.5) {
         return 0x22;
       }
     });
@@ -29,7 +29,7 @@ describe('Fill', function() {
     ra.setSize({w: 8, h: 8});
     ra.fillFrame(function(x, y) {
       let i = y*ra.width + x;
-      if (ra.oscil({period:54, click:i*76}) > 0.5) {
+      if (ra.oscil({period:54, tick:i*76}) > 0.5) {
         return 0x22;
       }
     });

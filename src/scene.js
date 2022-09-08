@@ -55,7 +55,7 @@ function Scene(env) {
 Scene.prototype._initialize = function () {
   this._initConfig();
   this.time = 0.0;
-  this.timeClick = 0;
+  this.timeTick = 0;
   this.TAU = 6.283185307179586;
   this.PI = this.TAU / 2;
   this.camera = {};
@@ -82,9 +82,9 @@ Scene.prototype._initialize = function () {
   if (options.zoom) {
     this.setZoom(options.zoom);
   }
-  if (options.time_click) {
-    this.timeClick = options.time_click;
-    this.time = this.timeClick / 60.0;
+  if (options.time_tick) {
+    this.timeTick = options.time_tick;
+    this.time = this.timeTick / 60.0;
   }
 }
 
@@ -268,7 +268,7 @@ Scene.prototype.resetState = function() {
   this._renderer.clear();
   this._fsacc.clear();
   this.time = 0.0;
-  this.timeClick = 0;
+  this.timeTick = 0;
   this.camera = {};
   this.palette = null;
   this.tileset = null;
@@ -523,8 +523,8 @@ Scene.prototype.quit = function() {
 Scene.prototype.nextFrame = function() {
   var self = this;
   self.then(function() {
-    self.timeClick += 1;
-    self.time = self.timeClick / 60.0;
+    self.timeTick += 1;
+    self.time = self.timeTick / 60.0;
     self.aPlane.nextFrame();
   });
 }
@@ -571,19 +571,19 @@ Scene.prototype.clonePlane = function() {
 }
 
 Scene.prototype.oscil = function(namedOnly) {
-  let spec = ['!name', 'period?i=60', 'begin?n', 'max?n=1.0', 'click?a'];
-  let [period, begin, max, click] = destructure.from(
+  let spec = ['!name', 'period?i=60', 'begin?n', 'max?n=1.0', 'tick?a'];
+  let [period, begin, max, tick] = destructure.from(
     'oscil', spec, arguments, null);
 
   period = period || 60;
   if (begin === undefined) {
     begin = 0.0;
   }
-  if (click === null) {
-    click = this.timeClick;
+  if (tick === null) {
+    tick = this.timeTick;
   }
-  click = click + Math.round(period * begin);
-  return max * ((1.0 - Math.cos(click * this.TAU / period)) / 2.0000001);
+  tick = tick + Math.round(period * begin);
+  return max * ((1.0 - Math.cos(tick * this.TAU / period)) / 2.0000001);
 }
 
 Scene.prototype.setFont = function(spec, opt) {

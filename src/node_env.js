@@ -48,7 +48,7 @@ function getOptions() {
   parser.add_argument('--display', {type: 'str'});
   parser.add_argument('--colors', {type: 'str'});
   parser.add_argument('--zoom', {type: 'int'});
-  parser.add_argument('--time-click', {type: 'int', dest: 'time_click'});
+  parser.add_argument('--time-tick', {type: 'int', dest: 'time_tick'});
   parser.add_argument('-v', {action: 'store_true'});
   let args = parser.parse_args(cmdlineArgs);
   if (args.save_filename) {

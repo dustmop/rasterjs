@@ -62,7 +62,7 @@ describe('Cycle palette', function() {
     palette.cycle(input.look);
     util.renderCompareTo(ra, 'test/testdata/green-fruit.png');
 
-    palette.cycle(input.look, {click: 1});
+    palette.cycle(input.look, {tick: 1});
     util.renderCompareTo(ra, 'test/testdata/golden-fruit.png');
   });
 
@@ -81,7 +81,7 @@ describe('Cycle palette', function() {
     let actual = palette.toString();
     assert.equal(expect, actual);
 
-    palette.cycle(input.look, {upon: 0, click: 4});
+    palette.cycle(input.look, {upon: 0, tick: 4});
     util.renderCompareTo(ra, 'test/testdata/golden-fruit.png');
   });
 
@@ -97,7 +97,7 @@ describe('Cycle palette', function() {
 
     let palette = ra.usePalette(fruit.look);
     assert.throws(function() {
-      palette.cycle(input.look, {upon: 0, click: 4, startIndex: 1});
+      palette.cycle(input.look, {upon: 0, tick: 4, startIndex: 1});
     }, /Error: cannot use {upon} with {startIndex}/);
   });
 
@@ -113,7 +113,7 @@ describe('Cycle palette', function() {
 
     let palette = ra.usePalette(fruit.look);
     assert.throws(function() {
-      palette.cycle(input.look, {upon: 1, click: 4});
+      palette.cycle(input.look, {upon: 1, tick: 4});
     }, /not implemented: palette.cycle\(look, {upon}\) except for {upon: 0}/);
   });
 

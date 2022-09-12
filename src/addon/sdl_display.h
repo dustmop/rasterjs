@@ -38,6 +38,7 @@ class SDLDisplay : public Napi::ObjectWrap<SDLDisplay> {
   void frameInstrumentation();
 
   void next(Napi::Env env);
+  void nextWithoutPresent(Napi::Env env);
 
   napi_ref rendererRef;
   Napi::FunctionReference renderFunc;

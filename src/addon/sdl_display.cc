@@ -3,6 +3,7 @@
 #include "sdl_display.h"
 #include "type.h"
 #include "present_frame.h"
+#include "wait_frame.h"
 #include <SDL.h>
 
 using namespace Napi;
@@ -426,8 +427,7 @@ void SDLDisplay::execOneFrame(const CallbackInfo& info) {
       return;
     }
     // This was a show() call, keep window open.
-    SDL_Delay(16);
-    return this->next(env);
+    return this->nextWithoutPresent(env);
   }
 
   SDL_RenderClear(this->rendererHandle);
@@ -565,6 +565,13 @@ void SDLDisplay::next(Napi::Env env) {
   this->tookTimeUs = (durationNano / 1000);
   // asynchronously present the frame to SDL
   PresentFrame* w = new PresentFrame(cont, this->rendererHandle);
+  w->Queue();
+}
+
+void SDLDisplay::nextWithoutPresent(Napi::Env env) {
+  Napi::Function cont = Napi::Function::New(env, BeginNextFrame,
+                                            "<unknown>", this);
+  WaitFrame* w = new WaitFrame(cont, 16);
   w->Queue();
 }
 

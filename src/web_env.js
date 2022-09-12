@@ -31,6 +31,11 @@ function runningUnderKarma() {
   return window.__karma__ !== undefined;
 }
 
+function handleErrorGracefully(err, display) {
+  // TODO: dispatch the err to display
+}
+
 module.exports.makeDisplay = makeDisplay;
 module.exports.makeFilesysAccess = makeFilesysAccess;
 module.exports.getOptions = getOptions;
+module.exports.handleErrorGracefully = handleErrorGracefully;

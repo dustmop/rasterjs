@@ -27,6 +27,8 @@ function makeDisplay(name) {
   }
 }
 
+var _fullStackTrace = false;
+
 function getOptions() {
   // If running as a test, don't parse command-line arguments. This allows
   // the test runner to process its own arguments instead.
@@ -49,6 +51,7 @@ function getOptions() {
   parser.add_argument('--colors', {type: 'str'});
   parser.add_argument('--zoom', {type: 'int'});
   parser.add_argument('--time-tick', {type: 'int', dest: 'time_tick'});
+  parser.add_argument('--full-trace', {action: 'store_true', dest: 'full'})
   parser.add_argument('-v', {action: 'store_true'});
   let args = parser.parse_args(cmdlineArgs);
   if (args.save_filename) {
@@ -56,6 +59,7 @@ function getOptions() {
     args.display = new saver.SaveImageDisplay(args.save_filename,
                                               args.num_frames, fsacc);
   }
+  _fullStackTrace = args.full;
   return args;
 }
 
@@ -64,6 +68,48 @@ function runningAsTest() {
   return (args[0].endsWith('/node') && args[1].endsWith('/mocha'));
 }
 
+function handleErrorGracefully(err, _display) {
+  if (_fullStackTrace) {
+    console.log(err);
+    process.exit(1);
+  }
+  let trace = _removeStackUntilAboveRasterScene(err);
+  process.stderr.write(trace);
+  process.exit(1);
+}
+
+function _removeStackUntilAboveRasterScene(err) {
+  let lines = err.stack.split('\n');
+  lines = lines.slice(1); // remove reason
+  let target = 'rasterjs/src/scene.js:';
+  let target2 = 'rasterjs/src/';
+  let st = 0;
+  let i = 0;
+  let build = [];
+  while (i < lines.length) {
+    if (st == 0) {
+      if (lines[i].indexOf(target) > -1) {
+        // found the first line within scene impl
+        st = 1;
+        continue;
+      }
+    } else if (st == 1) {
+      if (lines[i].indexOf(target) == -1) {
+        // found following line *without* scene
+        st = 2;
+        continue;
+      }
+    } else if (st == 2) {
+      if (lines[i].indexOf(target2) == -1) {
+        build.push(lines[i]);
+      }
+    }
+    i++;
+  }
+  return err.name + ': ' + err.message + '\n' + build.join('\n');
+}
+
 module.exports.makeDisplay = makeDisplay;
 module.exports.makeFilesysAccess = makeFilesysAccess;
 module.exports.getOptions = getOptions;
+module.exports.handleErrorGracefully = handleErrorGracefully;

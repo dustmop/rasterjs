@@ -203,6 +203,9 @@ Napi::Value SDLDisplay::RenderLoop(const Napi::CallbackInfo& info) {
   // Call `renderer.render()`
   Napi::Function renderFunc = renderFuncVal.As<Napi::Function>();
   Napi::Value resVal = renderFunc.Call(rendererObj, 0, NULL);
+  if (env.IsExceptionPending()) {
+    return info.Env().Null();
+  }
 
   int numDataSources = 0;
   this->dataSources = (unsigned char**)malloc(sizeof(unsigned char*)*3);
@@ -405,6 +408,9 @@ void SDLDisplay::execOneFrame(const CallbackInfo& info) {
         obj["key"] = str;
         napi_value val = obj;
         this->keyHandleFunc.Call({val});
+        if (env.IsExceptionPending()) {
+            return;
+        }
       }
       break;
     case SDL_WINDOWEVENT_CLOSE:
@@ -454,6 +460,9 @@ void SDLDisplay::execOneFrame(const CallbackInfo& info) {
   }
   Napi::Function renderFunc = renderFuncVal.As<Napi::Function>();
   resVal = renderFunc.Call(rendererObj, 0, NULL);
+  if (env.IsExceptionPending()) {
+    return;
+  }
 
   // Get the pitch of the first layer, assume it is constant.
   // TODO: Fix this assumption
@@ -540,9 +549,9 @@ void SDLDisplay::execOneFrame(const CallbackInfo& info) {
 
 
 static void BeginNextFrame(const CallbackInfo& info) {
-    void* data = info.Data();
-    SDLDisplay* self = (SDLDisplay*)data;
-    self->execOneFrame(info);
+  void* data = info.Data();
+  SDLDisplay* self = (SDLDisplay*)data;
+  self->execOneFrame(info);
 }
 
 

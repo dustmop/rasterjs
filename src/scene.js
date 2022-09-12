@@ -436,6 +436,14 @@ Scene.prototype.fold = function(fname, paramList) {
 }
 
 Scene.prototype._doRender = function(num, exitAfter, drawFunc, finalFunc) {
+  try {
+    this._doRenderSafely(num, exitAfter, drawFunc, finalFunc);
+  } catch (e) {
+    this._env.handleErrorGracefully(e, this._display);
+  }
+}
+
+Scene.prototype._doRenderSafely = function(num, exitAfter, drawFunc, finalFunc) {
   let plane = this.aPlane;
 
   if (!this.width || !this.height) {
@@ -465,12 +473,7 @@ Scene.prototype._doRender = function(num, exitAfter, drawFunc, finalFunc) {
     self._display.setZoom(self.config.zoomScale);
     self._display.renderLoop(function() {
       if (drawFunc) {
-        try {
-          drawFunc();
-        } catch(e) {
-          console.log(e);
-          throw e;
-        }
+        drawFunc();
       }
       self.nextFrame();
     }, renderID, num, exitAfter, finalFunc);

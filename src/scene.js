@@ -86,6 +86,11 @@ Scene.prototype._initialize = function () {
     this.timeTick = options.time_tick;
     this.time = this.timeTick / 60.0;
   }
+  Object.defineProperty(this, 'timeClick', {
+    get() {
+      throw new Error(`ra.timeClick is invalid, use ra.timeTick instead`);
+    }
+  });
 }
 
 Scene.prototype.Plane = function() {

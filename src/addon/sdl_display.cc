@@ -142,13 +142,11 @@ Napi::Value SDLDisplay::SetGrid(const Napi::CallbackInfo& info) {
 }
 
 Napi::Value SDLDisplay::SetInstrumentation(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
   this->instrumentation = info[0].ToNumber().Int32Value();
   return info.Env().Null();
 }
 
 Napi::Value SDLDisplay::SetVeryVerboseTiming(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
   this->veryVerboseTiming = info[0].ToNumber().Int32Value();
   return info.Env().Null();
 }
@@ -433,7 +431,6 @@ void SDLDisplay::execOneFrame(const CallbackInfo& info) {
   SDL_RenderClear(this->rendererHandle);
 
   // Create an empty object for js function calls
-  napi_value result;
   napi_value self;
   napi_status status;
   status = napi_create_object(env, &self);

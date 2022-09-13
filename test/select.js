@@ -84,4 +84,36 @@ describe('Select', function() {
     util.renderCompareTo(ra, 'test/testdata/green_square.png');
   });
 
+  it('works with fillPattern', function() {
+    ra.resetState();
+
+    ra.setSize(10);
+
+    ra.fillColor(25);
+    ra.setColor(43);
+
+    let sel = ra.select({x: 1, y: 1, w: 6, h: 6});
+    sel.fillPattern([[7, 8, 9],
+                     [4, 5, 6],
+                     [1, 2, 3]]);
+
+    util.renderCompareTo(ra, 'test/testdata/select_with_pattern.png');
+  });
+
+  it('works with fillFrame', function() {
+    ra.resetState();
+
+    ra.setSize(10);
+
+    ra.fillColor(25);
+    ra.setColor(43);
+
+    let sel = ra.select({x: 1, y: 1, w: 6, h: 6});
+    sel.fillFrame((x, y) => {
+      return (x+1) * (y+1) + 16;
+    });
+
+    util.renderCompareTo(ra, 'test/testdata/select_with_frame.png');
+  });
+
 });

@@ -111,6 +111,15 @@ function isDisplayObject(obj) {
 }
 
 
+function ensureKeys(obj, allowed) {
+  let keys = Object.keys(obj);
+  for (let i = 0; i < keys.length; i++) {
+    if (allowed.indexOf(keys[i]) == -1) {
+      throw new Error(`unknown key "${keys[i]}"`);
+    }
+  }
+}
+
 function ensureIsOneOf(obj, typesPossible) {
   for (let i = 0; i < typesPossible.length; i++) {
     let tp = typesPossible[i];
@@ -140,4 +149,5 @@ module.exports.isSpriteSheet = isSpriteSheet;
 module.exports.isSurface = isSurface;
 module.exports.isWeakRef = isWeakRef;
 module.exports.isDisplayObject = isDisplayObject;
+module.exports.ensureKeys = ensureKeys;
 module.exports.ensureIsOneOf = ensureIsOneOf;

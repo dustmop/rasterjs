@@ -6,7 +6,7 @@ describe('Fill', function() {
   it('basic', function() {
     ra.resetState();
     ra.setSize({w: 8, h: 8});
-    ra.fillFrame(function(mem, x, y) {
+    ra.fillFrame(function(x, y) {
       return x + y;
     });
     util.renderCompareTo(ra, 'test/testdata/fill_basic.png');
@@ -15,8 +15,8 @@ describe('Fill', function() {
   it('using oscil', function() {
     ra.resetState();
     ra.setSize({w: 8, h: 8});
-    ra.fillFrame(function(mem, x, y) {
-      let i = y*mem.pitch + x;
+    ra.fillFrame(function(x, y) {
+      let i = y*ra.width + x;
       if (ra.oscil({period:54, tick:i*76}) > 0.5) {
         return 0x22;
       }
@@ -40,13 +40,13 @@ describe('Fill', function() {
     ra.resetState();
     ra.setSize({w: 8, h: 8});
     // Draw upper left
-    ra.fillFrame(function(mem, x, y) {
+    ra.fillFrame(function(x, y) {
       if (x + y < 6) {
         return 0x21;
       }
     });
     // A second call to draw lower right
-    ra.fillFrame(function(mem, x, y) {
+    ra.fillFrame(function(x, y) {
       if (x + y > 11) {
         return 0x22;
       }
@@ -58,7 +58,7 @@ describe('Fill', function() {
     ra.resetState();
     ra.setSize({w: 8, h: 8});
     // Draw upper left
-    ra.fillFrame(function(mem, x, y) {
+    ra.fillFrame(function(x, y) {
       if (x + y < 6) {
         return 0x21;
       }
@@ -66,7 +66,7 @@ describe('Fill', function() {
     // Fill the background
     ra.fillColor(4);
     // A second call to draw lower right
-    ra.fillFrame(function(mem, x, y) {
+    ra.fillFrame(function(x, y) {
       if (x + y > 11) {
         return 0x22;
       }
@@ -81,8 +81,8 @@ describe('Fill', function() {
     ra.drawDot(0, 7);
     ra.setColor(20);
     ra.drawDot(1, 7);
-    ra.fillFrame(function(mem, x, y) {
-      return 1 + mem.get(x, (y + 7) % 8);
+    ra.fillFrame(function(x, y) {
+      return 1 + ra.get(x, (y + 7) % 8);
     });
     util.renderCompareTo(ra, 'test/testdata/fill_draw_dot.png');
   });
@@ -92,64 +92,72 @@ describe('Fill', function() {
     ra.setSize({w: 8, h: 8});
     ra.setColor(0x20);
     ra.drawLine(0, 7, 4, 7);
-    ra.fillFrame(function(mem, x, y) {
-      return 1 + mem.get(x, (y + 7) % 8);
+    ra.fillFrame(function(x, y) {
+      return 1 + ra.get(x, (y + 7) % 8);
     });
     util.renderCompareTo(ra, 'test/testdata/fill_draw_line.png');
   });
 
-  it ('function(mem) with for loops', function() {
+  it ('traverse rowwise', function() {
     ra.resetState();
-    ra.setSize({w: 10, h: 6});
-    ra.fillFrame(function(mem) {
-      for (let y = 0; y < mem.height; y++) {
-        for (let x = 0; x < mem.width; x++) {
-          let i = x + y * mem.pitch;
-          mem[i] = 16 + y + Math.floor(Math.pow(x+1, y+1));
+    ra.setSize({w: 8, h: 4});
+    let idx = 0;
+    ra.fillFrame({traverse: 'rowwise'}, (x, y) => {
+      let n = Math.floor(idx / 8) + 1;
+      let m = (idx % 8) + 1;
+      idx++;
+      return 16 + n + Math.floor(Math.pow(m, n));
+    });
+    util.renderCompareTo(ra, 'test/testdata/fill_rowwise.png');
+  });
+
+  it ('traverse columnar', function() {
+    ra.resetState();
+    ra.setSize({w: 8, h: 4});
+    let idx = 0;
+    ra.fillFrame({traverse: 'columnar'}, (x, y) => {
+      let n = Math.floor(idx / 8) + 1;
+      let m = (idx % 8) + 1;
+      idx++;
+      return 16 + n + Math.floor(Math.pow(m, n));
+    });
+    util.renderCompareTo(ra, 'test/testdata/fill_columnar.png');
+  });
+
+  it ('unknown key', function() {
+    ra.resetState();
+    ra.setSize({w: 8, h: 4});
+    assert.throws(() => {
+      ra.fillFrame({missing: 'error'}, (x, y) => {
+      });
+    }, /unknown key "missing"/);
+  });
+
+  it('buffer update', function() {
+    ra.resetState();
+
+    ra.setSize({w: 13, h: 13});
+    ra.fillColor(0);
+
+    ra.setColor(7);
+    ra.drawLine({x0: 2, y0: 2, x1:  4, y1: 2});
+    ra.drawLine({x0: 3, y0: 2, x1:  3, y1: 8});
+    ra.drawLine({x0: 2, y0: 9, x1:  9, y1: 9});
+    ra.drawLine({x0: 8, y0: 3, x1:  8, y1: 9});
+    ra.drawLine({x0: 8, y0: 5, x1: 10, y1: 5});
+
+    ra.fillFrame({buffer: true}, function(x, y) {
+      if (ra.get(x, y) == 7) { return null; }
+      for (let i = -1; i <= 1; i++) {
+        for (let j = -1; j <= 1; j++) {
+          if (ra.get(x+i, y+j) == 7) {
+            return 37;
+          }
         }
       }
     });
-    util.renderCompareTo(ra, 'test/testdata/fill_for_loop.png');
-  });
 
-  it('from previous memory', function() {
-    ra.resetState();
-
-    ra.setSize({w: 7, h: 7});
-    ra.fillColor(0);
-
-    ra.fillFrame(function(mem) {
-      mem.put(1, 1, 0x30);
-      mem.put(1, 5, 0x36);
-    });
-
-    let oldA = null;
-    let oldB = null;
-    let newA = null;
-    let newB = null;
-
-    ra.nextFrame();
-
-    ra.fillColor(0);
-    ra.fillFrame({previous: true}, function(mem) {
-      oldA = mem.getPrevious(1, 1);
-      oldB = mem.getPrevious(1, 5);
-      let avg = Math.floor((oldA + oldB) / 2);
-
-      newA = mem.get(1, 1);
-      newB = mem.get(1, 5);
-
-      mem.put(1, 1, colorClamp(oldA - 8));
-      mem.put(1, 5, colorClamp(oldB - 8));
-      mem.put(1, 3, avg);
-    });
-
-    util.renderCompareTo(ra, 'test/testdata/fill_prev.png');
-
-    assert.equal(oldA, 0x30);
-    assert.equal(newA, 0);
-    assert.equal(oldB, 0x36);
-    assert.equal(newB, 0);
+    util.renderCompareTo(ra, 'test/testdata/glow_effect.png');
   });
 
 });

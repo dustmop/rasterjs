@@ -1,6 +1,7 @@
 const algorithm = require('./algorithm.js');
 const drawable = require('./drawable.js');
 const destructure = require('./destructure.js');
+const types = require('./types.js');
 
 function Plane() {
   this.clear();
@@ -38,10 +39,16 @@ Plane.prototype.replace = function(other) {
 }
 
 Plane.prototype.setColor = function(color) {
+  if (!types.isInteger(color)) {
+    throw new Error(`plane.setColor needs integer`);
+  }
   this.frontColor = color;
 }
 
 Plane.prototype.fillColor = function(color) {
+  if (!types.isInteger(color)) {
+    throw new Error(`plane.fillColor needs integer`);
+  }
   this.bgColor = color;
   this._needErase = true;
   if (this.isSelection) {
@@ -93,12 +100,6 @@ Plane.prototype.resize = function(x, y) {
   let scaleX = x / this.width;
   let scaleY = y / this.height;
   return algorithm.nearestNeighbor(this, scaleX, scaleY);
-}
-
-Plane.prototype.nextFrame = function() {
-  if (this.mem) {
-    this.mem._didFrame = false;
-  }
 }
 
 Plane.prototype._prepare = function() {

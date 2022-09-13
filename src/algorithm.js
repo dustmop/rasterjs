@@ -119,18 +119,20 @@ function sortByHSV(items) {
   return build;
 }
 
-function flood(mem, initX, initY, color) {
-  let target = mem[initY*mem.pitch+initX];
+function flood(pl, initX, initY, color) {
+  let top = pl.offsetTop || 0;
+  let left = pl.offsetLeft || 0;
+  let target = pl.data[(top+initY)*pl.pitch+(left+initX)];
   let queue = [{x:initX,y:initY}];
   let i = 0;
   while (queue.length > 0) {
     let node = queue.shift();
     // Inside?
-    let value = mem[node.y*mem.pitch+node.x];
+    let value = pl.data[(top+node.y)*pl.pitch+(left+node.x)];
     if (value != target) {
       continue;
     }
-    mem[node.y*mem.pitch+node.x] = color;
+    pl.data[(top+node.y)*pl.pitch+(left+node.x)] = color;
     // West
     if (node.x > 0) {
       queue.push({x:node.x-1, y:node.y});
@@ -140,11 +142,11 @@ function flood(mem, initX, initY, color) {
       queue.push({x:node.x, y:node.y-1});
     }
     // East
-    if (node.x < mem.x_dim - 1) {
+    if (node.x < pl.width - 1) {
       queue.push({x:node.x+1, y:node.y});
     }
     // South
-    if (node.y < mem.y_dim - 1) {
+    if (node.y < pl.height - 1) {
       queue.push({x:node.x, y:node.y+1});
     }
   }

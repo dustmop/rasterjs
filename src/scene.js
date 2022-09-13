@@ -533,7 +533,6 @@ Scene.prototype.nextFrame = function() {
   self.then(function() {
     self.timeTick += 1;
     self.time = self.timeTick / 60.0;
-    self.aPlane.nextFrame();
   });
 }
 

@@ -28,6 +28,22 @@ describe('Basic', function() {
     util.renderCompareTo(ra, 'test/testdata/solid-blue.png');
   });
 
+  it('fill color needs int', function() {
+    ra.resetState();
+    ra.setSize(8, 8);
+    assert.throws(() => {
+      ra.fillColor('hi');
+    }, /plane.fillColor needs integer/);
+  });
+
+  it('set color needs int', function() {
+    ra.resetState();
+    ra.setSize(8, 8);
+    assert.throws(() => {
+      ra.setColor('hi');
+    }, /plane.setColor needs integer/);
+  });
+
   it('do not wrap', function() {
     ra.resetState();
     ra.setSize(18);

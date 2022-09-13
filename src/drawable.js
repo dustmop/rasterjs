@@ -1,6 +1,6 @@
 const algorithm = require('./algorithm.js');
 const geometry = require('./geometry.js');
-const frameMemory = require('./frame_memory.js');
+const types = require('./types.js');
 
 function Drawable() {
   return this;
@@ -37,18 +37,18 @@ Drawable.prototype.fillPattern_params = ['dots:any'];
 Drawable.prototype.fillPattern = function(dots) {
   this._prepare();
   let buffer = this.data;
+  let left = this.offsetLeft || 0;
+  let top = this.offsetTop || 0;
+  let patHeight = dots.length;
+  let patWidth = dots[0].length;
 
-  let height = dots.length;
-  let width = dots[0].length;
-  let mem = frameMemory.NewFrameMemory(this.offsetLeft, this.offsetTop, this.width, this.height);
-  for (let y = 0; y < mem.y_dim; y++) {
-    for (let x = 0; x < mem.x_dim; x++) {
-      let i = y % height;
-      let j = x % width;
-      mem[y*mem.pitch+x] = dots[i][j];
+  for (let y = 0; y < this.height; y++) {
+    for (let x = 0; x < this.width; x++) {
+      let i = y % patHeight;
+      let j = x % patWidth;
+      buffer[(y+top)*this.pitch+(x+left)] = dots[i][j];
     }
   }
-  mem.copyTo(buffer, this);
 }
 
 Drawable.prototype.fillSquare_params = ['x:i', 'y:i', 'size:i'];
@@ -173,63 +173,76 @@ Drawable.prototype.drawPolygon = function(polygon, x, y) {
 Drawable.prototype.fillFlood_params = ['x:i', 'y:i'];
 Drawable.prototype.fillFlood = function(x, y) {
   this._prepare();
-  let buffer = this.data;
-
-  let mem = frameMemory.NewFrameMemory(this.offsetLeft, this.offsetTop, this.width, this.height);
-  mem.from(buffer, this);
-  algorithm.flood(mem, x, y, this.frontColor);
-  mem.copyTo(buffer, this);
+  algorithm.flood(this, x, y, this.frontColor);
 }
 
 Drawable.prototype.fillFrame_params = ['options?o', 'fillerFunc:f'];
 Drawable.prototype.fillFrame = function(options, fillerFunc) {
-  if (this.mem == null) {
-    this.mem = frameMemory.NewFrameMemory(this.offsetLeft, this.offsetTop,
-                                          this.width, this.height);
+  // validate options given
+  if (options) {
+    types.ensureKeys(options, ['traverse', 'buffer']);
   }
-  if (options && options.previous && !this.mem._didFrame) {
-    this.mem.createBackBuffer();
-    // If buffer is created from an unknown previous frame, load the contents
-    for (let y = 0; y < this.height; y++) {
-      for (let x = 0; x < this.width; x++) {
-        let k = y*this.width + x;
-        let j = y*this.pitch + x;
-        this.mem._backBuffer[k] = this.data[j];
-      }
+
+  // validate traverse option
+  let traverseRows = true;
+  if (options && options.traverse) {
+    if (options.traverse == 'rowwise') {
+      traverseRows = true;
+    } else if (options.traverse == 'columnar') {
+      traverseRows = false;
+    } else {
+      throw Error(`invalid {traverse: ${option.traverse}}`);
     }
+  }
+
+  // validate callback
+  if (fillerFunc.length != 2) {
+    throw Error('invalid callback: wants 2 params, got ${fillerFunc.length}');
   }
 
   this._prepare();
   let buffer = this.data;
-  this.mem.from(buffer, this);
+  let _replaceBuffer = null;
 
-  // Invoke the callback
-  if (fillerFunc.length == 1) {
-    fillerFunc(this.mem);
-  } else if (fillerFunc.length == 2) {
-    for (let y = 0; y < this.mem.y_dim; y++) {
-      for (let x = 0; x < this.mem.x_dim; x++) {
+  if (options && options.buffer) {
+    _replaceBuffer = new Array(this.data.length);
+    _replaceBuffer.fill(null);
+    buffer = _replaceBuffer;
+  }
+
+  let top = this.offsetTop || 0;
+  let left = this.offsetLeft || 0;
+
+  if (traverseRows) {
+    for (let y = 0; y < this.height; y++) {
+      for (let x = 0; x < this.width; x++) {
         let ret = fillerFunc(x, y);
         if (ret !== null && ret !== undefined) {
-          this.mem[x + y*this.mem.pitch] = ret;
-        }
-      }
-    }
-  } else if (fillerFunc.length == 3) {
-    for (let y = 0; y < this.mem.y_dim; y++) {
-      for (let x = 0; x < this.mem.x_dim; x++) {
-        let ret = fillerFunc(this.mem, x, y);
-        if (ret !== null && ret !== undefined) {
-          this.mem[x + y*this.mem.pitch] = ret;
+          buffer[(x+left) + (y+top)*this.pitch] = ret;
         }
       }
     }
   } else {
-    throw 'Invalid arguments for fillFrame: length = ' + fillerFunc.length;
+    for (let x = 0; x < this.width; x++) {
+      for (let y = 0; y < this.height; y++) {
+        let ret = fillerFunc(x, y);
+        if (ret !== null && ret !== undefined) {
+          buffer[(x+left) + (y+top)*this.pitch] = ret;
+        }
+      }
+    }
   }
 
-  this.mem.copyTo(buffer, this);
-  this.mem._didFrame = true;
+  if (_replaceBuffer) {
+    for (let y = 0; y < this.height; y++) {
+      for (let x = 0; x < this.width; x++) {
+        let v = _replaceBuffer[(x+left) + (y+top)*this.pitch];
+        if (v !== null) {
+          this.data[(x+left) + (y+top)*this.pitch] = v;
+        }
+      }
+    }
+  }
 }
 
 Drawable.prototype.drawImage_params = ['img:a', 'x?i', 'y?i'];

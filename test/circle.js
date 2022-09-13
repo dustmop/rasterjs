@@ -9,7 +9,7 @@ describe('Circle', function() {
     ra.fillColor(0);
     ra.setSize({w: 58, h: 27});
 
-    ra.fillFrame(function(mem, x, y) {
+    ra.fillFrame(function(x, y) {
       if (x + y & 1) {
         return 0x01;
       }

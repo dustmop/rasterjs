@@ -39,16 +39,17 @@ Plane.prototype.replace = function(other) {
 }
 
 Plane.prototype.setColor = function(color) {
-  if (!types.isInteger(color)) {
+  if (!types.isNumber(color)) {
     throw new Error(`plane.setColor needs integer`);
   }
-  this.frontColor = color;
+  this.frontColor = Math.floor(color);
 }
 
 Plane.prototype.fillColor = function(color) {
-  if (!types.isInteger(color)) {
+  if (!types.isNumber(color)) {
     throw new Error(`plane.fillColor needs integer`);
   }
+  color = Math.floor(color);
   this.bgColor = color;
   this._needErase = true;
   if (this.isSelection) {

@@ -147,10 +147,10 @@ describe('Fill', function() {
     ra.drawLine({x0: 8, y0: 5, x1: 10, y1: 5});
 
     ra.fillFrame({buffer: true}, function(x, y) {
-      if (ra.get(x, y) == 7) { return null; }
+      if (ra.get(x, y)) { return null; }
       for (let i = -1; i <= 1; i++) {
         for (let j = -1; j <= 1; j++) {
-          if (ra.get(x+i, y+j) == 7) {
+          if (ra.get(x+i, y+j)) {
             return 37;
           }
         }

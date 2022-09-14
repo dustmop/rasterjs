@@ -28,20 +28,24 @@ describe('Basic', function() {
     util.renderCompareTo(ra, 'test/testdata/solid-blue.png');
   });
 
-  it('fill color needs int', function() {
+  it('fill color needs number', function() {
     ra.resetState();
     ra.setSize(8, 8);
     assert.throws(() => {
       ra.fillColor('hi');
     }, /plane.fillColor needs integer/);
+    ra.fillColor(3.5);
+    assert.equal(ra.aPlane.bgColor, 3);
   });
 
-  it('set color needs int', function() {
+  it('set color needs number', function() {
     ra.resetState();
     ra.setSize(8, 8);
     assert.throws(() => {
       ra.setColor('hi');
     }, /plane.setColor needs integer/);
+    ra.setColor(7.1);
+    assert.equal(ra.aPlane.frontColor, 7);
   });
 
   it('do not wrap', function() {

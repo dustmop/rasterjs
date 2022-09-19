@@ -138,7 +138,7 @@ class Renderer {
     for (let i = 0; i < this._layers.length; i++) {
       res.push(this._renderLayer(this._layers[i], i == 0, this));
     }
-    res.push(this._gridSurface());
+    res.grid = this._gridSurface();
     return res;
   }
 

@@ -97,14 +97,13 @@ class SaveImageDisplay {
         let surface = renderedLayers[i];
         if (surface == null) {
           continue;
-        } else if (i == renderedLayers.length - 1) {
-          // grid merged with alpha
-          algorithm.mergeIntoSurface(create, surface);
-          continue;
         } else if (this.zoomLevel > 1) {
-          // upscale the surface
           surface = algorithm.nearestNeighborSurface(surface, this.zoomLevel);
         }
+        algorithm.mergeIntoSurface(create, surface);
+      }
+      let surface = renderedLayers.grid;
+      if (surface) {
         algorithm.mergeIntoSurface(create, surface);
       }
 

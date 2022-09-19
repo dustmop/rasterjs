@@ -178,6 +178,31 @@ Napi::Value SDLDisplay::InsteadWriteBuffer(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, 0);
 }
 
+unsigned char* surfaceToRawBuffer(Napi::Value surfaceVal) {
+  if (surfaceVal.IsNull()) {
+    //this->gridIndex = n;
+    return NULL;
+  }
+  Napi::Object surfaceObj = surfaceVal.As<Napi::Object>();
+
+  int realPitch = 0;
+
+  Napi::Value realPitchNum = surfaceObj.Get("pitch");
+  if (realPitchNum.IsNumber()) {
+    realPitch = realPitchNum.As<Napi::Number>().Int32Value();
+  }
+
+  Napi::Value bufferVal = surfaceObj.Get("buff");
+  if (!bufferVal.IsTypedArray()) {
+    printf("bufferVal expected a TypedArray, did not get one!\n");
+    return NULL;
+  }
+  Napi::TypedArray typeArr = bufferVal.As<Napi::TypedArray>();
+  Napi::ArrayBuffer arrBuff = typeArr.ArrayBuffer();
+
+  return (unsigned char*)arrBuff.Data();
+}
+
 Napi::Value SDLDisplay::RenderLoop(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
@@ -211,7 +236,6 @@ Napi::Value SDLDisplay::RenderLoop(const Napi::CallbackInfo& info) {
   this->dataSources[0] = NULL;
   this->dataSources[1] = NULL;
   this->dataSources[2] = NULL;
-  int realPitch = 0;
   // TODO: Ensure layers are same size.
   // TODO: Ensure layers use same pitch.
 
@@ -219,50 +243,23 @@ Napi::Value SDLDisplay::RenderLoop(const Napi::CallbackInfo& info) {
   numDataSources = resObj.Get("length").ToNumber().Int32Value();
 
   // For now, only handle up to 3 sources (2 layers + 1 grid).
-  if (numDataSources > 3) {
-    numDataSources = 3;
+  if (numDataSources > 2) {
+    numDataSources = 2;
   }
 
   // Collect all data sources
   this->gridIndex = -1;
   for (int n = 0; n < numDataSources; n++) {
     Napi::Value surfaceVal = resObj.As<Napi::Array>()[uint32_t(n)];
-    if (surfaceVal.IsNull()) {
-      // grid layer, must appear last in the result
-      if (n != numDataSources - 1) {
-        printf("null element returned by render() at index %d intead of %d",
-               n, numDataSources - 1);
-        exit(1);
-      }
-      dataSources[n] = NULL;
-      this->gridIndex = n;
-      break;
-    }
+    dataSources[n] = surfaceToRawBuffer(surfaceVal);
+  }
+  Napi::Value surfaceVal = resObj.Get("grid");
+  if (!surfaceVal.IsNull()) {
     Napi::Object surfaceObj = surfaceVal.As<Napi::Object>();
-
-    Napi::Value realPitchNum = surfaceObj.Get("pitch");
-    if (realPitchNum.IsNumber()) {
-      realPitch = realPitchNum.As<Napi::Number>().Int32Value();
-    }
-
-    Napi::Value bufferVal = surfaceObj.Get("buff");
-    if (!bufferVal.IsTypedArray()) {
-      printf("bufferVal expected a TypedArray, did not get one!\n");
-      exit(1);
-    }
-    Napi::TypedArray typeArr = bufferVal.As<Napi::TypedArray>();
-    Napi::ArrayBuffer arrBuff = typeArr.ArrayBuffer();
-
-    if (n == numDataSources - 1) {
-      // grid layer
-      this->gridWidth = surfaceObj.Get("width").As<Napi::Number>().Int32Value();
-      this->gridHeight = surfaceObj.Get("height").As<Napi::Number>().Int32Value();
-      this->gridPitch = surfaceObj.Get("pitch").As<Napi::Number>().Int32Value();
-      this->gridRawBuff = (unsigned char*)arrBuff.Data();
-      break;
-    }
-
-    dataSources[n] = (unsigned char*)arrBuff.Data();
+    this->gridWidth = surfaceObj.Get("width").As<Napi::Number>().Int32Value();
+    this->gridHeight = surfaceObj.Get("height").As<Napi::Number>().Int32Value();
+    this->gridPitch = surfaceObj.Get("pitch").As<Napi::Number>().Int32Value();
+    this->gridRawBuff = surfaceToRawBuffer(surfaceVal);
   }
 
   // Calculate texture and window size.

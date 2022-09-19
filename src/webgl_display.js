@@ -114,21 +114,23 @@ void main() {
 precision mediump float;
 
 uniform sampler2D u_image0;
+uniform sampler2D u_image1;
+
 uniform sampler2D u_imageGrid;
 uniform bool u_gridEnable;
 
 varying vec2 v_texcoord;
 
 void main() {
-   vec4 left = texture2D(u_image0, v_texcoord);
+   vec4 layer0 = texture2D(u_image0, v_texcoord);
+   vec4 layer1 = texture2D(u_image1, v_texcoord);
+   layer0 = vec4(mix(layer0.rgb, layer1.rgb, layer1.a), 1.0);
 
-   if (!u_gridEnable) {
-      gl_FragColor = left;
-   } else {
-      vec4 rite = texture2D(u_imageGrid, v_texcoord);
-      vec3 combined = mix(left.rgb, rite.rgb, rite.a);
-      gl_FragColor = vec4(combined, left.a);
+   if (u_gridEnable) {
+      vec4 layerGrid = texture2D(u_imageGrid, v_texcoord);
+      layer0 = vec4(mix(layer0.rgb, layerGrid.rgb, layerGrid.a), 1.0);
    }
+   gl_FragColor = layer0;
 }
 `;
 
@@ -176,53 +178,29 @@ void main() {
     gl.viewport(0, 0, this.canvas.width, this.canvas.height);
     gl.clear(gl.COLOR_BUFFER_BIT);
 
+    let bufs = {
+      positionBuffer: positionBuffer,
+      positionLocation: positionLocation,
+      texcoordBuffer: texcoordBuffer,
+      texcoordLocation: texcoordLocation,
+    };
+
+    let texWidth = this.displayWidth;
+    let texHeight = this.displayHeight;
     var textureList = [];
-
-    {
-      // Create texture for the front buffer
-      var texture = gl.createTexture();
-      gl.bindTexture(gl.TEXTURE_2D, texture);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA,
-                    this.displayWidth, this.displayHeight,
-                    0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-
-      // let's assume all images are not a power of 2
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-
-      // Setup the attributes to pull data from our buffers
-      gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-      gl.enableVertexAttribArray(positionLocation);
-      gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
-      gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
-      gl.enableVertexAttribArray(texcoordLocation);
-      gl.vertexAttribPointer(texcoordLocation, 2, gl.FLOAT, false, 0, 0);
-      textureList.push(texture);
+    for (let i = 0; i < 2; i++) {
+      textureList.push(this._makeTexture(gl, texWidth, texHeight, bufs));
     }
-
-    {
-      // Create texture for the grid
-      var texture = gl.createTexture();
-      gl.bindTexture(gl.TEXTURE_2D, texture);
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA,
-                    this.displayWidth*this.zoomLevel,
-                    this.displayHeight*this.zoomLevel,
-                    0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-
-      // let's assume all images are not a power of 2
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-      textureList.push(texture);
-    }
+    texWidth = this.displayWidth * this.zoomLevel;
+    texHeight = this.displayHeight * this.zoomLevel;
+    let gridTexture = this._makeTexture(gl, texWidth, texHeight, bufs);
 
     var image0Location = gl.getUniformLocation(program, "u_image0");
+    var image1Location = gl.getUniformLocation(program, "u_image1");
     var imageGridLocation = gl.getUniformLocation(program, "u_imageGrid");
     gl.uniform1i(image0Location, 0); // texture unit 0
-    gl.uniform1i(imageGridLocation, 1); // texture for grid
+    gl.uniform1i(image1Location, 1); // texture unit 1
+    gl.uniform1i(imageGridLocation, 7); // texture for grid
 
     var gridEnableLocation = gl.getUniformLocation(program, "u_gridEnable");
     gl.uniform1i(gridEnableLocation, this.gridState);
@@ -231,9 +209,35 @@ void main() {
     gl.bindTexture(gl.TEXTURE_2D, textureList[0]);
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, textureList[1]);
+    gl.activeTexture(gl.TEXTURE7);
+    gl.bindTexture(gl.TEXTURE_2D, gridTexture);
 
     // draw the quad (2 triangles, 6 vertices)
     gl.drawArrays(gl.TRIANGLES, 0, 6);
+  }
+
+  _makeTexture(gl, width, height, bufs) {
+    // Create texture for the front buffer
+    var texture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA,
+                  width, height,
+                  0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+
+    // let's assume all images are not a power of 2
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+    // Setup the attributes to pull data from our buffers
+    gl.bindBuffer(gl.ARRAY_BUFFER, bufs.positionBuffer);
+    gl.enableVertexAttribArray(bufs.positionLocation);
+    gl.vertexAttribPointer(bufs.positionLocation, 2, gl.FLOAT, false, 0, 0);
+    gl.bindBuffer(gl.ARRAY_BUFFER, bufs.texcoordBuffer);
+    gl.enableVertexAttribArray(bufs.texcoordLocation);
+    gl.vertexAttribPointer(bufs.texcoordLocation, 2, gl.FLOAT, false, 0, 0);
+    return texture;
   }
 
   renderAndDisplayEachComponent(components, settings) {
@@ -303,6 +307,7 @@ void main() {
   _beginLoop(nextFrame, id, num, exitAfter, finalFunc) {
     let gl = this.gl;
     let frontBuffer = null;
+    let topBuffer = null;
     let gridLayer = null;
     let self = this;
     let gridHaveCopied = false;
@@ -339,7 +344,8 @@ void main() {
       // Get the data buffer from the plane.
       let res = self.renderer.render();
       frontBuffer = res[0].buff;
-      gridLayer = res[1];
+      topBuffer = res[1].buff;
+      gridLayer = res.grid;
 
       // Render front buffer to the display
       if (frontBuffer) {
@@ -358,10 +364,25 @@ void main() {
                          gl.RGBA, gl.UNSIGNED_BYTE, frontBuffer);
       }
 
+      if (topBuffer) {
+        gl.activeTexture(gl.TEXTURE1);
+
+        let numPoints = self.displayWidth * self.displayHeight;
+        let numBytes = numPoints*4;
+        if (numBytes != topBuffer.length) {
+          let msg = 'invalid buffer size for display: ';
+          throw new Error(msg);
+        }
+
+        gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0,
+                         self.displayWidth, self.displayHeight,
+                         gl.RGBA, gl.UNSIGNED_BYTE, topBuffer);
+      }
+
       // Render grid, only needs to be done once
       if (gridLayer && !gridHaveCopied) {
         gridHaveCopied = true;
-        gl.activeTexture(gl.TEXTURE1);
+        gl.activeTexture(gl.TEXTURE7);
         gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0,
                          gridLayer.width, gridLayer.height,
                          gl.RGBA, gl.UNSIGNED_BYTE, gridLayer.buff);

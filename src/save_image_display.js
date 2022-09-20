@@ -1,3 +1,4 @@
+const baseDisplay = require('./base_display.js');
 const cppmodule = require('../build/Release/native');
 const GIFEncoder = require('gif-encoder-2');
 const { createWriteStream, readdirSync } = require('fs');
@@ -10,64 +11,38 @@ const util = require('util');
 const randstr = require('randomstring');
 const algorithm = require('./algorithm');
 
-class SaveImageDisplay {
+class SaveImageDisplay extends baseDisplay.BaseDisplay {
   constructor(targetPath, numFrames, saveService) {
+    super();
     this.targetPath = targetPath;
-    this.numFrames = numFrames;
+    this._numFrames = numFrames;
     this.isGif = this.targetPath.endsWith('gif');
     this.saveService = saveService;
-    this.zoomLevel = 1;
-    return this;
+    this._zoomLevel = 1;
   }
 
   initialize() {
-    this.tmpdir = path.join(os.tmpdir(), 'raster-save-' + randstr.generate(8));
+    this._tmpdir = path.join(os.tmpdir(), 'raster-save-' + randstr.generate(8));
   }
 
-  setSize(w, h) {
-    this.width = w;
-    this.height = h;
-  }
-
-  setRenderer(renderer) {
-    this.renderer = renderer;
-  }
-
-  setZoom(zoomLevel) {
-    this.zoomLevel = zoomLevel;
-  }
-
-  setGrid(state) {
-    // TODO: support enabling and disabling for --save
-  }
-
-  handleEvent(eventName, callback) {
-    // save image display does not use an event loop, so it can
-    // not handle any events
-  }
-
-  appQuit() {
-    this.stopRunning = true;
-  }
-
-  renderLoop(nextFrame) {
-    let width = this.width;
-    let height = this.height;
+  renderLoop(runID, nextFrame) {
+    let width = this._width;
+    let height = this._height;
 
     try {
-      fs.mkdirSync(this.tmpdir);
+      fs.mkdirSync(this._tmpdir);
     } catch (e) {
     }
 
-    this.stopRunning = false;
+    this._quit = false;
     let hasTemplate = false;
 
-    let numFrames = this.numFrames;
+    let numFrames = this._numFrames;
     if (!numFrames || numFrames < 0) {
       numFrames = 64;
     }
     if (!this.isGif) {
-      if (this.numFrames) {
+      if (this._numFrames > 1) {
         if (!this.targetPath.includes('%02d')) {
           throw new Error(`saving a png to multiple frames requires template string, use "%02d" for --save`)
         }
@@ -86,19 +61,19 @@ class SaveImageDisplay {
       }
       nextFrame();
       let frameNum = leftPad(count, 3, '0');
-      let outFile = `${this.tmpdir}/${frameNum}.png`;
-      let renderedLayers = this.renderer.render();
+      let outFile = `${this._tmpdir}/${frameNum}.png`;
+      let renderedLayers = this._renderer.render();
 
-      let targetWidth = this.width * this.zoomLevel;
-      let targetHeight = this.height * this.zoomLevel;
+      let targetWidth = this._width * this._zoomLevel;
+      let targetHeight = this._height * this._zoomLevel;
       let create = algorithm.makeSurface(targetWidth, targetHeight);
 
       for (let i = 0; i < renderedLayers.length; i++) {
         let surface = renderedLayers[i];
         if (surface == null) {
           continue;
-        } else if (this.zoomLevel > 1) {
-          surface = algorithm.nearestNeighborSurface(surface, this.zoomLevel);
+        } else if (this._zoomLevel > 1) {
+          surface = algorithm.nearestNeighborSurface(surface, this._zoomLevel);
         }
         algorithm.mergeIntoSurface(create, surface);
       }
@@ -109,18 +84,18 @@ class SaveImageDisplay {
 
       this.saveService.saveTo(outFile, [create]);
       bufferList.push(create.buff);
-      this.renderer.flushBuffer();
+      this._renderer.flushBuffer();
     }
 
     // Wait for each frame to render.
     if (this.isGif) {
       // Actually write the gif.
       const self = this;
-      this.createGif(width*this.zoomLevel, height*this.zoomLevel,
+      this.createGif(width*this._zoomLevel, height*this._zoomLevel,
                      bufferList, this.targetPath);
     } else if (!hasTemplate) {
       // Copy the first frame to our target path.
-      let infile = `${this.tmpdir}/000.png`;
+      let infile = `${this._tmpdir}/000.png`;
       let outfile = this.targetPath;
       fs.copyFileSync(infile, outfile);
     } else {
@@ -128,7 +103,7 @@ class SaveImageDisplay {
       for (let count = 0; count < numFrames; count++) {
         let frameNum = leftPad(count, 3, '0');
         let param = leftPad(count, 2, '0');
-        let infile = `${this.tmpdir}/${frameNum}.png`;
+        let infile = `${this._tmpdir}/${frameNum}.png`;
         let outfile = this.targetPath.replace('%02d', param);
         fs.copyFileSync(infile, outfile);
       }
@@ -159,10 +134,6 @@ class SaveImageDisplay {
       encoder.addFrame(ctx);
     }
     encoder.finish();
-  }
-
-  handleEvent(eventName, callback) {
-    // pass
   }
 }
 

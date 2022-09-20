@@ -3,38 +3,38 @@
 
 #ifdef SDL_FOUND
 
-  #include "sdl_display.h"
+  #include "sdl_backend.h"
 
-  // SDLDisplay compiled into this add-on if the library is found
+  // SDLBackend compiled into this add-on if the library is found
 
   void initialize(Napi::Env env, Napi::Object exports) {
-    SDLDisplay::InitClass(env, exports);
+    SDLBackend::InitClass(env, exports);
   }
 
-  Napi::Object CreateDisplay(const Napi::CallbackInfo& info) {
-    return SDLDisplay::NewInstance(info.Env(), info[0]);
+  Napi::Object CreateBackend(const Napi::CallbackInfo& info) {
+    return SDLBackend::NewInstance(info.Env(), info[0]);
   }
 
 #else
 
-  #include "fake_display.h"
+  #include "fake_backend.h"
 
-  // FakeDisplay cannot actually display anything
+  // FakeBackend cannot actually display anything
 
   void initialize(Napi::Env env, Napi::Object exports) {
-    FakeDisplay::InitClass(env, exports);
+    FakeBackend::InitClass(env, exports);
   }
 
-  Napi::Object CreateDisplay(const Napi::CallbackInfo& info) {
-    return FakeDisplay::NewInstance(info.Env(), info[0]);
+  Napi::Object CreateBackend(const Napi::CallbackInfo& info) {
+    return FakeBackend::NewInstance(info.Env(), info[0]);
   }
 
 #endif
 
 
 Napi::Object InitAll(Napi::Env env, Napi::Object exports) {
-  exports.Set("display",
-      Napi::Function::New(env, CreateDisplay, "CreateDisplay"));
+  exports.Set("backend",
+      Napi::Function::New(env, CreateBackend, "CreateBackend"));
   Napi::HandleScope scope(env);
   initialize(env, exports);
   return exports;

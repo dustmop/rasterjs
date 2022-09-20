@@ -1,6 +1,6 @@
 #ifdef SDL_FOUND
 
-#include "sdl_display.h"
+#include "sdl_backend.h"
 #include "type.h"
 #include "present_frame.h"
 #include "wait_frame.h"
@@ -15,29 +15,30 @@ typedef unsigned char u8;
 const int RGB_PIXEL_SIZE = 4;
 
 
-void SDLDisplay::InitClass(Napi::Env env, Napi::Object exports) {
+void SDLBackend::InitClass(Napi::Env env, Napi::Object exports) {
   Napi::Function func = DefineClass(
       env,
       "Display",
-      {InstanceMethod("initialize", &SDLDisplay::Initialize),
-       InstanceMethod("name", &SDLDisplay::Name),
-       InstanceMethod("setSize", &SDLDisplay::SetSize),
-       InstanceMethod("setRenderer", &SDLDisplay::SetRenderer),
-       InstanceMethod("setZoom", &SDLDisplay::SetZoom),
-       InstanceMethod("setGrid", &SDLDisplay::SetGrid),
-       InstanceMethod("setInstrumentation", &SDLDisplay::SetInstrumentation),
-       InstanceMethod("setVeryVerboseTiming", &SDLDisplay::SetVeryVerboseTiming),
-       InstanceMethod("handleEvent", &SDLDisplay::HandleEvent),
-       InstanceMethod("renderLoop", &SDLDisplay::RenderLoop),
-       InstanceMethod("appQuit", &SDLDisplay::AppQuit),
-       InstanceMethod("insteadWriteBuffer", &SDLDisplay::InsteadWriteBuffer),
+      {InstanceMethod("initialize", &SDLBackend::Initialize),
+       InstanceMethod("name", &SDLBackend::Name),
+       InstanceMethod("setSize", &SDLBackend::SetSize),
+       InstanceMethod("setRenderer", &SDLBackend::SetRenderer),
+       InstanceMethod("setCallbacks", &SDLBackend::SetCallbacks),
+       InstanceMethod("setZoom", &SDLBackend::SetZoom),
+       InstanceMethod("setGrid", &SDLBackend::SetGrid),
+       InstanceMethod("setInstrumentation", &SDLBackend::SetInstrumentation),
+       InstanceMethod("setVeryVerboseTiming", &SDLBackend::SetVeryVerboseTiming),
+       InstanceMethod("handleEvent", &SDLBackend::HandleEvent),
+       InstanceMethod("renderLoop", &SDLBackend::RenderLoop),
+       InstanceMethod("appQuit", &SDLBackend::AppQuit),
+       InstanceMethod("insteadWriteBuffer", &SDLBackend::InsteadWriteBuffer),
   });
   g_displayConstructor = Napi::Persistent(func);
   g_displayConstructor.SuppressDestruct();
 }
 
-SDLDisplay::SDLDisplay(const Napi::CallbackInfo& info)
-    : Napi::ObjectWrap<SDLDisplay>(info) {
+SDLBackend::SDLBackend(const Napi::CallbackInfo& info)
+    : Napi::ObjectWrap<SDLBackend>(info) {
   this->sdlInitialized = 0;
   this->zoomLevel = 1;
   this->hasWriteBuffer = 0;
@@ -62,13 +63,13 @@ SDLDisplay::SDLDisplay(const Napi::CallbackInfo& info)
   // TODO: allow caller to access performance
 };
 
-Napi::Object SDLDisplay::NewInstance(Napi::Env env, Napi::Value arg) {
+Napi::Object SDLBackend::NewInstance(Napi::Env env, Napi::Value arg) {
   Napi::EscapableHandleScope scope(env);
   Napi::Object obj = g_displayConstructor.New({arg});
   return scope.Escape(napi_value(obj)).ToObject();
 }
 
-Napi::Value SDLDisplay::Initialize(const Napi::CallbackInfo& info) {
+Napi::Value SDLBackend::Initialize(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if( SDL_Init( SDL_INIT_VIDEO ) < 0 ) {
     printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
@@ -78,12 +79,12 @@ Napi::Value SDLDisplay::Initialize(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, 0);
 }
 
-Napi::Value SDLDisplay::Name(const Napi::CallbackInfo& info) {
+Napi::Value SDLBackend::Name(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   return Napi::String::New(env, "sdl");
 }
 
-Napi::Value SDLDisplay::SetSize(const Napi::CallbackInfo& info) {
+Napi::Value SDLBackend::SetSize(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   if (info.Length() < 2) {
@@ -97,7 +98,7 @@ Napi::Value SDLDisplay::SetSize(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, 0);
 }
 
-Napi::Value SDLDisplay::SetRenderer(const Napi::CallbackInfo& info) {
+Napi::Value SDLBackend::SetRenderer(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   if (!this->sdlInitialized) {
@@ -115,7 +116,17 @@ Napi::Value SDLDisplay::SetRenderer(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, 0);
 }
 
-Napi::Value SDLDisplay::SetZoom(const Napi::CallbackInfo& info) {
+Napi::Value SDLBackend::SetCallbacks(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+
+  this->numRender = info[0].ToNumber().Int32Value();
+  this->exitAfter = info[1].ToBoolean();
+  // finalFunc    = info[2]
+
+  return Napi::Number::New(env, 0);
+}
+
+Napi::Value SDLBackend::SetZoom(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if (info.Length() < 1) {
     printf("SetZoom needs zoom\n");
@@ -125,7 +136,7 @@ Napi::Value SDLDisplay::SetZoom(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, 0);
 }
 
-Napi::Value SDLDisplay::SetGrid(const Napi::CallbackInfo& info) {
+Napi::Value SDLBackend::SetGrid(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if (info.Length() < 1) {
     printf("SetGrid needs state\n");
@@ -141,17 +152,17 @@ Napi::Value SDLDisplay::SetGrid(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, 0);
 }
 
-Napi::Value SDLDisplay::SetInstrumentation(const Napi::CallbackInfo& info) {
+Napi::Value SDLBackend::SetInstrumentation(const Napi::CallbackInfo& info) {
   this->instrumentation = info[0].ToNumber().Int32Value();
   return info.Env().Null();
 }
 
-Napi::Value SDLDisplay::SetVeryVerboseTiming(const Napi::CallbackInfo& info) {
+Napi::Value SDLBackend::SetVeryVerboseTiming(const Napi::CallbackInfo& info) {
   this->veryVerboseTiming = info[0].ToNumber().Int32Value();
   return info.Env().Null();
 }
 
-Napi::Value SDLDisplay::HandleEvent(const Napi::CallbackInfo& info) {
+Napi::Value SDLBackend::HandleEvent(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   Napi::String eventName = info[0].ToString();
   if (eventName.Utf8Value() == std::string("keypress")) {
@@ -171,7 +182,7 @@ void display_napi_value(Napi::Env env, napi_value value) {
   printf("%s\n", buffer);
 }
 
-Napi::Value SDLDisplay::InsteadWriteBuffer(const Napi::CallbackInfo& info) {
+Napi::Value SDLBackend::InsteadWriteBuffer(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   this->writeBuffer = Napi::Persistent(info[0]);
   this->hasWriteBuffer = 1;
@@ -203,13 +214,11 @@ unsigned char* surfaceToRawBuffer(Napi::Value surfaceVal) {
   return (unsigned char*)arrBuff.Data();
 }
 
-Napi::Value SDLDisplay::RenderLoop(const Napi::CallbackInfo& info) {
+Napi::Value SDLBackend::RenderLoop(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
-  this->eachFrameFunc = Napi::Persistent(info[0].As<Napi::Function>());
-  // info[1] == id
-  this->numRender = info[2].ToNumber().Int32Value();
-  this->exitAfter = info[3].ToBoolean();
+  Napi::Value runIDVal = info[0];
+  this->eachFrameFunc = Napi::Persistent(info[1].As<Napi::Function>());
 
   // track the first few frames
   this->startupFrameCount = 0;
@@ -333,7 +342,7 @@ Napi::Value SDLDisplay::RenderLoop(const Napi::CallbackInfo& info) {
   return info.Env().Null();
 }
 
-void SDLDisplay::frameInstrumentation() {
+void SDLBackend::frameInstrumentation() {
   int frameLengthUs;
   typedef std::chrono::high_resolution_clock Clock;
 
@@ -378,7 +387,7 @@ void SDLDisplay::frameInstrumentation() {
 }
 
 
-void SDLDisplay::execOneFrame(const CallbackInfo& info) {
+void SDLBackend::execOneFrame(const CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   if (this->instrumentation) {
@@ -544,12 +553,12 @@ void SDLDisplay::execOneFrame(const CallbackInfo& info) {
 
 static void BeginNextFrame(const CallbackInfo& info) {
   void* data = info.Data();
-  SDLDisplay* self = (SDLDisplay*)data;
+  SDLBackend* self = (SDLBackend*)data;
   self->execOneFrame(info);
 }
 
 
-void SDLDisplay::next(Napi::Env env) {
+void SDLBackend::next(Napi::Env env) {
   Napi::Function cont = Napi::Function::New(env, BeginNextFrame,
                                             "<unknown>", this);
   // time how long this frame took to execute and render
@@ -562,14 +571,14 @@ void SDLDisplay::next(Napi::Env env) {
   w->Queue();
 }
 
-void SDLDisplay::nextWithoutPresent(Napi::Env env) {
+void SDLBackend::nextWithoutPresent(Napi::Env env) {
   Napi::Function cont = Napi::Function::New(env, BeginNextFrame,
                                             "<unknown>", this);
   WaitFrame* w = new WaitFrame(cont, 16);
   w->Queue();
 }
 
-Napi::Value SDLDisplay::AppQuit(const Napi::CallbackInfo& info) {
+Napi::Value SDLBackend::AppQuit(const Napi::CallbackInfo& info) {
   // TODO: Improve this logic
   this->numRender = 0;
   this->exitAfter = true;

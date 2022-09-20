@@ -219,10 +219,10 @@ function makeSurface(width, height) {
 
 function mergeIntoSurface(dest, sour) {
   if (dest.width != sour.width) {
-    throw new Error(`cannot mege incompatible layers, dest.width=${dest.width} <> source.width=${sour.width}`);
+    throw new Error(`cannot merge incompatible layers, dest.width=${dest.width} <> source.width=${sour.width}`);
   }
   if (dest.height != sour.height) {
-    throw new Error(`cannot mege incompatible layers, dest.height=${dest.height} <> source.height=${sour.height}`);
+    throw new Error(`cannot merge incompatible layers, dest.height=${dest.height} <> source.height=${sour.height}`);
   }
   for (let y = 0; y < sour.height; y++) {
     for (let x = 0; x < sour.width; x++) {

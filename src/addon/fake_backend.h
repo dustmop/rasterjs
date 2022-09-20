@@ -3,11 +3,11 @@
 
 #include <napi.h>
 
-class FakeDisplay : public Napi::ObjectWrap<FakeDisplay> {
+class FakeBackend : public Napi::ObjectWrap<FakeBackend> {
  public:
   static void InitClass(Napi::Env env, Napi::Object exports);
   static Napi::Object NewInstance(Napi::Env env, Napi::Value arg);
-  FakeDisplay(const Napi::CallbackInfo& info);
+  FakeBackend(const Napi::CallbackInfo& info);
 
  private:
   Napi::Value Initialize(const Napi::CallbackInfo& info);

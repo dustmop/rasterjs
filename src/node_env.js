@@ -4,26 +4,32 @@ const path = require('path');
 const saver = require('./save_image_display.js');
 const filesysLocal = require('./filesys_local.js');
 const httpDisplay = require('./http_display.js');
+const sdlDisplay = require('./sdl_display.js');
 
 function makeFilesysAccess() {
   let fsacc = new filesysLocal.FilesysAccess();
   return fsacc;
 }
 
+function detectDisplayBackend() {
+  // default: detect the display. use either `sdl` (default) or `http`
+  let backend = cppmodule.backend();
+  if (backend.name() == 'fake') {
+    return new httpDisplay.HTTPDisplay();
+  }
+  return backend;
+};
+
 function makeDisplay(name) {
   if (!name) {
-    // default: detect the display. use either `sdl` (default) or `http`
-    let display = cppmodule.display();
-    if (display.name() == 'fake') {
-      return new httpDisplay.HTTPDisplay();
-    }
-    return display
-  };
-  if (name == 'sdl') {
+    return new sdlDisplay.SDLDisplay(detectDisplayBackend());
+  } else if (name == 'sdl') {
     // force the `sdl` backend, even if it is `fake`
     return cppmodule.display();
   } else if (name == 'http') {
     return new httpDisplay.HTTPDisplay();
+  } else {
+    throw new Error(`unknown display name "${name}"`);
   }
 }
 

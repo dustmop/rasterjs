@@ -1,3 +1,4 @@
+const baseDisplay = require('./base_display.js');
 const colorMap = require('./color_map.js');
 const drawable = require('./drawable.js');
 const destructure = require('./destructure.js');
@@ -101,6 +102,8 @@ Scene.prototype.Plane = function() {
   p._addMethods(true);
   return p;
 }
+
+Scene.prototype.Display = baseDisplay.Display;
 
 Scene.prototype.Tileset = function() {
   if (new.target === undefined) {
@@ -476,7 +479,8 @@ Scene.prototype._doRenderSafely = function(num, exitAfter, drawFunc, finalFunc) 
     self._display.setSize(self.width, self.height);
     self._display.setRenderer(self._renderer);
     self._display.setZoom(self.config.zoomScale);
-    self._display.renderLoop(function() {
+    self._display.setCallbacks(num, exitAfter, finalFunc);
+    self._display.renderLoop(renderID, function() {
       if (drawFunc) {
         drawFunc();
       }

@@ -14,8 +14,8 @@
       "cflags_cc!": [ "-fno-exceptions" ],
       "sources": [
         "src/addon/native.cc",
-        "src/addon/fake_display.cc",
-        "src/addon/sdl_display.cc",
+        "src/addon/fake_backend.cc",
+        "src/addon/sdl_backend.cc",
       ],
       "include_dirs": [
         "<!@(node -p \"require('node-addon-api').include\")",

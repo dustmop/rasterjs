@@ -1,5 +1,5 @@
-#ifndef SDL_DISPLAY_H
-#define SDL_DISPLAY_H
+#ifndef SDL_BACKEND_H
+#define SDL_BACKEND_H
 
 #include <napi.h>
 #include <chrono>
@@ -13,30 +13,33 @@ struct SDL_Renderer;
 struct SDL_Texture;
 struct SDL_Surface;
 
-class SDLDisplay : public Napi::ObjectWrap<SDLDisplay> {
+class SDLBackend : public Napi::ObjectWrap<SDLBackend> {
  public:
   static void InitClass(Napi::Env env, Napi::Object exports);
   static Napi::Object NewInstance(Napi::Env env, Napi::Value arg);
-  SDLDisplay(const Napi::CallbackInfo& info);
+  SDLBackend(const Napi::CallbackInfo& info);
   void execOneFrame(const Napi::CallbackInfo& info);
 
  private:
   Napi::Value Initialize(const Napi::CallbackInfo& info);
   Napi::Value Name(const Napi::CallbackInfo& info);
+
   Napi::Value SetSize(const Napi::CallbackInfo& info);
   Napi::Value SetRenderer(const Napi::CallbackInfo& info);
   Napi::Value SetZoom(const Napi::CallbackInfo& info);
   Napi::Value SetGrid(const Napi::CallbackInfo& info);
+  Napi::Value SetCallbacks(const Napi::CallbackInfo& info);
+
   Napi::Value HandleEvent(const Napi::CallbackInfo& info);
-  Napi::Value InsteadWriteBuffer(const Napi::CallbackInfo& info);
   Napi::Value RenderLoop(const Napi::CallbackInfo& info);
   Napi::Value AppQuit(const Napi::CallbackInfo& info);
-  Napi::Value ReadImage(const Napi::CallbackInfo& info);
 
+
+  Napi::Value InsteadWriteBuffer(const Napi::CallbackInfo& info);
   Napi::Value SetInstrumentation(const Napi::CallbackInfo& info);
   Napi::Value SetVeryVerboseTiming(const Napi::CallbackInfo& info);
-  void frameInstrumentation();
 
+  void frameInstrumentation();
   void next(Napi::Env env);
   void nextWithoutPresent(Napi::Env env);
 

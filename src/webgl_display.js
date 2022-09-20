@@ -1,9 +1,11 @@
+const baseDisplay = require('./base_display.js');
 const compile = require('./compile.js');
 
 const SHARPEN = 2;
 
-class WebGLDisplay {
+class WebGLDisplay extends baseDisplay.BaseDisplay {
   constructor() {
+    super();
     this.elemID = null;
     this.canvas = null;
     this.eventKeypressHandler = null;
@@ -11,26 +13,20 @@ class WebGLDisplay {
     this.initialize();
     this.onReadyHandler = null;
     this._createEventHandlers();
-    return this;
   }
 
   initialize() {
     this.elemID = null;
     this.imgAssets = [];
-    this.displayWidth = 0;
-    this.displayHeight = 0;
-    this.zoomLevel = 1;
+    this._width = 0;
+    this._height = 0;
+    this._zoomLevel = 1;
     this.gridState = false;
     this.currentRunId = null;
   }
 
-  setSize(width, height) {
-    this.displayWidth = width;
-    this.displayHeight = height;
-  }
-
   setRenderer(renderer) {
-    this.renderer = renderer;
+    this._renderer = renderer;
     this._hasDocumentBody = false;
     let self = this;
     window.addEventListener('DOMContentLoaded', function() {
@@ -41,10 +37,6 @@ class WebGLDisplay {
     }
   }
 
-  setZoom(zoomLevel) {
-    this.zoomLevel = zoomLevel;
-  }
-
   setGrid(state) {
     this.gridState = state;
     let gl = this.gl;
@@ -53,6 +45,12 @@ class WebGLDisplay {
       var gridEnableLocation = gl.getUniformLocation(program, "u_gridEnable");
       gl.uniform1i(gridEnableLocation, this.gridState);
     }
+  }
+
+  setCallbacks(num, exitAfter, finalFunc) {
+    this._numFrames = num;
+    this._exitAfter = exitAfter;
+    this._finalFunc = finalFunc;
   }
 
   _createWebglCanvas() {
@@ -86,8 +84,8 @@ class WebGLDisplay {
       return;
     }
 
-    var elemWidth = this.displayWidth * this.zoomLevel;
-    var elemHeight = this.displayHeight * this.zoomLevel;
+    var elemWidth = this._width * this._zoomLevel;
+    var elemHeight = this._height * this._zoomLevel;
 
     // Canvas's coordinate system.
     this.canvas.width = elemWidth * SHARPEN;
@@ -185,14 +183,14 @@ void main() {
       texcoordLocation: texcoordLocation,
     };
 
-    let texWidth = this.displayWidth;
-    let texHeight = this.displayHeight;
+    let texWidth = this._width;
+    let texHeight = this._height;
     var textureList = [];
     for (let i = 0; i < 2; i++) {
       textureList.push(this._makeTexture(gl, texWidth, texHeight, bufs));
     }
-    texWidth = this.displayWidth * this.zoomLevel;
-    texHeight = this.displayHeight * this.zoomLevel;
+    texWidth = this._width * this._zoomLevel;
+    texHeight = this._height * this._zoomLevel;
     let gridTexture = this._makeTexture(gl, texWidth, texHeight, bufs);
 
     var image0Location = gl.getUniformLocation(program, "u_image0");
@@ -270,7 +268,7 @@ void main() {
       if (self.eventClickHandler) {
         let x = Math.floor(e.offsetX / self.zoomLevel);
         let y = Math.floor(e.offsetY / self.zoomLevel);
-        if (x >= 0 && x < self.displayWidth && y >= 0 && y < self.displayHeight) {
+        if (x >= 0 && x < self._width && y >= 0 && y < self._height) {
           self.eventClickHandler({x: x, y: y});
         }
       }
@@ -288,7 +286,7 @@ void main() {
     }, 0);
   }
 
-  renderLoop(nextFrame, id, num, exitAfter, finalFunc) {
+  renderLoop(id, nextFrame) {
     let self = this;
     self.currentRunId = id;
     this.waitForContentLoad(function() {
@@ -296,7 +294,7 @@ void main() {
       if (self.onReadyHandler) {
         self.onReadyHandler();
       }
-      self._beginLoop(nextFrame, id, num, exitAfter, finalFunc);
+      self._beginLoop(nextFrame, id, self._numFrames, self._exitAfter, self._finalFunc);
     });
   }
 
@@ -314,7 +312,7 @@ void main() {
 
     let comps = self._renderAndDisplayComponents;
     let settings = self._renderAndDisplaySettings;
-    self.renderer.onRenderComponents(comps, settings, function(type, surface) {
+    self._renderer.onRenderComponents(comps, settings, function(type, surface) {
       if (Array.isArray(surface)) {
         surface = surface[0];
       }
@@ -342,16 +340,16 @@ void main() {
       }
 
       // Get the data buffer from the plane.
-      let res = self.renderer.render();
+      let res = self._renderer.render();
       frontBuffer = res[0].buff;
-      topBuffer = res[1].buff;
+      topBuffer = res[1] && res[1].buff;
       gridLayer = res.grid;
 
       // Render front buffer to the display
       if (frontBuffer) {
         gl.activeTexture(gl.TEXTURE0);
 
-        let numPoints = self.displayWidth * self.displayHeight;
+        let numPoints = self._width * self._height;
         let numBytes = numPoints*4;
         if (numBytes != frontBuffer.length) {
           let msg = 'invalid buffer size for display: ';
@@ -360,14 +358,14 @@ void main() {
         }
 
         gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0,
-                         self.displayWidth, self.displayHeight,
+                         self._width, self._height,
                          gl.RGBA, gl.UNSIGNED_BYTE, frontBuffer);
       }
 
       if (topBuffer) {
         gl.activeTexture(gl.TEXTURE1);
 
-        let numPoints = self.displayWidth * self.displayHeight;
+        let numPoints = self._width * self._height;
         let numBytes = numPoints*4;
         if (numBytes != topBuffer.length) {
           let msg = 'invalid buffer size for display: ';
@@ -375,7 +373,7 @@ void main() {
         }
 
         gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0,
-                         self.displayWidth, self.displayHeight,
+                         self._width, self._height,
                          gl.RGBA, gl.UNSIGNED_BYTE, topBuffer);
       }
 
@@ -401,8 +399,8 @@ void main() {
       if (self._renderAndDisplayComponents) {
 
         // Hack to run the first IRQ, at scanline 0
-        if (self.renderer.interrupts) {
-          let first = self.renderer.interrupts.arr[0];
+        if (self._renderer.interrupts) {
+          let first = self._renderer.interrupts.arr[0];
           if (first.scanline == 0) {
             first.irq(0);
           }

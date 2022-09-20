@@ -1,10 +1,13 @@
+const baseDisplay = require('./base_display.js');
+
 const DONT_SHARPEN = 1;
 
-class TwoDeeDisplay {
+class TwoDeeDisplay extends baseDisplay.BaseDisplay {
   constructor() {
+    super();
     this.canvas = null;
-    this.displayWidth = 0;
-    this.displayHeight = 0;
+    this._width = 0;
+    this._height = 0;
     this.sysEventHandler = null;
     this._createEventHandlers();
     return this;
@@ -13,13 +16,8 @@ class TwoDeeDisplay {
   initialize() {
   }
 
-  setSize(width, height) {
-    this.displayWidth = width;
-    this.displayHeight = height;
-  }
-
   setRenderer(renderer) {
-    this.renderer = renderer;
+    this._renderer = renderer;
     this._hasDocumentBody = false;
     let self = this;
     window.addEventListener('DOMContentLoaded', function() {
@@ -36,6 +34,12 @@ class TwoDeeDisplay {
 
   setGrid(state) {
     this.gridState = state;
+  }
+
+  setCallbacks(num, exitAfter, finalFunc) {
+    this._numFrames = num;
+    this._exitAfter = exitAfter;
+    this._finalFunc = finalFunc;
   }
 
   _createEventHandlers() {
@@ -64,8 +68,8 @@ class TwoDeeDisplay {
       }
     }
 
-    var elemWidth = this.displayWidth;
-    var elemHeight = this.displayHeight;
+    var elemWidth = this._width;
+    var elemHeight = this._height;
 
     // Canvas's coordinate system.
     this.canvas.width = elemWidth * DONT_SHARPEN;
@@ -91,11 +95,11 @@ class TwoDeeDisplay {
     }, 0);
   }
 
-  renderLoop(nextFrame, id, num, exitAfter, finalFunc) {
+  renderLoop(id, nextFrame) {
     let self = this;
     this.waitForContentLoad(function() {
       self._create2dCanvas();
-      self._beginLoop(nextFrame, id, num, exitAfter, finalFunc);
+      self._beginLoop(nextFrame, id, self._numFrames, self._exitAfter, self._finalFunc);
     });
   }
 
@@ -108,14 +112,14 @@ class TwoDeeDisplay {
 
     let renderIt = function() {
       // Get the data buffer from the plane.
-      let res = self.renderer.render();
+      let res = self._renderer.render();
       if (!frontBuffer) {
         frontBuffer = res[0].buff;
       }
 
       if (frontBuffer) {
         let buff = Uint8ClampedArray.from(frontBuffer);
-        let image = new ImageData(buff, self.displayWidth, self.displayHeight);
+        let image = new ImageData(buff, self._width, self._height);
         ctx.putImageData(image, 0, 0);
         if (num > 0) {
           num--;

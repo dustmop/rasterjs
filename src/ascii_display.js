@@ -1,35 +1,9 @@
-class AsciiDisplay {
-  constructor() {
-    this.renderer = null;
-    return this;
-  }
+const baseDisplay = require('./base_display.js');
 
-  initialize() {
-  }
-
-  setSize(width, height) {
-    // pass
-  }
-
-  setRenderer(renderer) {
-    this.renderer = renderer;
-  }
-
-  setZoom(zoom) {
-  }
-
-  setGrid(state) {
-    // pass
-  }
-
-  handleEvent(eventName, callback) {
-    // ascii display does not use an event loop, so it can not handle
-    // any events
-  }
-
-  renderLoop(nextFrame) {
-    let _res = this.renderer.render();
-    let plane = this.renderer.getFirstPlane();
+class AsciiDisplay extends baseDisplay.BaseDisplay {
+  renderLoop(runID, nextFrame) {
+    let _res = this._renderer.render();
+    let plane = this._renderer.getFirstPlane();
     let buffer = plane.data;
     let pitch = plane.pitch;
 

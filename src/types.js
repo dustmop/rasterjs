@@ -1,5 +1,6 @@
 const rgbColor = require('./rgb_color.js');
 const plane = require('./plane.js');
+const baseDisplay = require('./base_display.js');
 const imageLoader = require('./image_loader.js');
 const tiles = require('./tiles.js');
 const attributes = require('./attributes.js');
@@ -94,22 +95,8 @@ function isWeakRef(obj) {
 }
 
 function isDisplayObject(obj) {
-  let needMethods = ['initialize',
-                     'handleEvent',
-                     'setSize',
-                     'setRenderer',
-                     'setZoom',
-                     'setGrid',
-                     'renderLoop'];
-  for (let methodName of needMethods) {
-    let method = obj[methodName];
-    if (!method || !isFunction(method)) {
-      return false;
-    }
-  }
-  return true;
+  return obj instanceof baseDisplay.BaseDisplay;
 }
-
 
 function ensureKeys(obj, allowed) {
   let keys = Object.keys(obj);

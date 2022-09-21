@@ -25,7 +25,7 @@ function makeDisplay(name) {
     return new sdlDisplay.SDLDisplay(detectDisplayBackend());
   } else if (name == 'sdl') {
     // force the `sdl` backend, even if it is `fake`
-    return cppmodule.display();
+    return new sdlDisplay.SDLDisplay(cppmodule.backend());
   } else if (name == 'http') {
     return new httpDisplay.HTTPDisplay();
   } else {

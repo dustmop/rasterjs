@@ -103,7 +103,7 @@ Scene.prototype.Plane = function() {
   return p;
 }
 
-Scene.prototype.Display = baseDisplay.Display;
+Scene.prototype.Display = baseDisplay.BaseDisplay;
 
 Scene.prototype.Tileset = function() {
   if (new.target === undefined) {

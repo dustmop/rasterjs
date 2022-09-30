@@ -52,11 +52,6 @@ describe('Components', function() {
   it('attributes', function() {
     ra.resetState();
     let detail = {cell_width: 8, cell_height: 8, piece_size: 6};
-    // no palette in use
-    assert.throws(() => {
-      let tiles = ra.useAttributes();
-    }, /cannot useAttributes without a palette/);
-    ra.usePalette();
     // error, null constructor does not exist
     assert.throws(() => {
       let tiles = ra.useAttributes();

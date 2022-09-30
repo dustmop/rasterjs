@@ -39,8 +39,8 @@ class Loader {
     }
 
     let useAsync = !!opt['async'];
-    let colorMap = this.refScene.deref().colorMap;
     let palette = this.refScene.deref().palette;
+    palette.ensureExpandingIfCurrentlyPending();
 
     if (this.addedFiles[filename]) {
       let found = this.addedFiles[filename];
@@ -52,7 +52,6 @@ class Loader {
       imgPlane.width = found.width;
       imgPlane.pitch = planePitch;
       imgPlane.height = found.height;
-      imgPlane.colorMap = colorMap;
       imgPlane.palette = palette;
       imgPlane.loadState = LOAD_STATE_READ;
       imgPlane.fillData();
@@ -65,13 +64,11 @@ class Loader {
     img.refLoader = new weak.Ref(this);
     img.filename = filename;
     img.id = this.list.length;
-    img.colorMap = colorMap;
     img.palette = palette;
     img.sortUsingHSV = sortUsingHSV;
     img.offsetLeft = 0;
     img.offsetTop = 0;
     img.loadState = LOAD_STATE_NONE;
-    // resources.openImage assigns these:
     img.width = 0;
     img.height = 0;
     img.pitch = 0;
@@ -147,7 +144,6 @@ class ImagePlane {
     this.data = null;
     this.alpha = null;
     this.rgbBuff = null;
-    this.colorMap = null;
     this.palette = null;
     this.sortUsingHSV = false;
     return this;
@@ -184,7 +180,6 @@ class ImagePlane {
     make.data = this.data;
     make.alpha = this.alpha;
     make.rgbBuff = this.rgbBuff;
-    make.colorMap = this.colorMap;
     make.palette = this.palette;
     make.sortUsingHSV = this.sortUsingHSV;
     return make;
@@ -200,7 +195,6 @@ class ImagePlane {
     make.width = this.width;
     make.height = this.height;
     make.pitch = this.pitch;
-    make.colorMap = this.colorMap;
     make.palette = this.palette;
     make.sortUsingHSV = this.sortUsingHSV;
     // Deep copy `make.data`, NOTE: no alpha nor rgbBuff
@@ -256,7 +250,7 @@ class ImagePlane {
         (this.filename.endsWith('.jpg') || this.filename.endsWith('.jpeg'))) {
       let quant = new quantizer.Quantizer();
       let quantizedRes = quant.colorQuantize(this.rgbBuff);
-      this.colorMap.assign(quantizedRes.colors);
+      this.palette.setRGBMap(quantizedRes.colors);
       this.rgbBuff = quantizedRes.rgbBuff;
     }
 
@@ -272,12 +266,12 @@ class ImagePlane {
       needs.rgbItems = algorithm.sortByHSV(needs.rgbItems);
     }
 
-    let remapArrayMap = this._remapRGBItems(needs.rgbItems, this.palette, this.colorMap);
+    let map = this._translateRGBItems(needs.rgbItems, this.palette);
 
-    verbose.log(`loading image with rgb map: ${JSON.stringify(remapArrayMap.remap)}`, 6);
+    verbose.log(`loading image with rgb map: ${JSON.stringify(map.xlat)}`, 6);
 
     // Look of the image, see the used color values
-    this.look = new LookOfImage(remapArrayMap.items, needs.density);
+    this.look = new LookOfImage(map.items, needs.density);
     //
     // # Why is this a LookOfImage object?
     //
@@ -320,7 +314,10 @@ class ImagePlane {
         let g = this.rgbBuff[k*4+1];
         let b = this.rgbBuff[k*4+2];
         let rgbval = r * 0x10000 + g * 0x100 + b;
-        let c = remapArrayMap.remap[rgbval];
+        let c = map.xlat[rgbval];
+        if (map.inverter) {
+          c = map.inverter[c] || 0;
+        }
         this.data[k] = c;
       }
     }
@@ -372,46 +369,40 @@ class ImagePlane {
     return {rgbItems: rgbItems, density: density, votes: votes};
   }
 
-  // for each rgb item, find it in the palette or colorMap. if not found,
-  // add to the color map, or an empty space within the palette.
-  // returned as a hash remapper, and a list of 8-bit color values
-  _remapRGBItems(rgbItems, palette, colorMap) {
-    if (rgbItems.length > 0xff) {
-      throw new Error('TODO');
-    }
-
-    let remap = {};
+  // for each rgb item, find its position in the rgbmap. If it is not
+  // found, add it if the palette is expandable; if the palette is
+  // pending then it is expandable. Otherwise, round it to the nearest
+  // color, and return that colors position.
+  _translateRGBItems(rgbItems, palette) {
+    let xlat = {};
     let items = [];
     for (let i = 0; i < rgbItems.length; i++) {
       let rgbval = rgbItems[i].toInt();
-      let c;
-      if (palette) {
-        let cval = colorMap.find(rgbval);
-        if (cval == -1) {
-          // TODO: can this be simplified?
-          c = palette.insertWhereAvail(rgbval);
-          if (c == null) {
-            // TODO: ensure this works everywhere
-            // color found which is not in palette, just put it in colorMap
-            // and use `0` for the color-value
-            colorMap.extendWith(rgbval);
-            c = 0;
-          }
+      let c = palette.locateRGB(rgbval);
+      if (c == null) {
+        if (palette.isExpandable()) {
+          c = palette.addRGBMap(rgbval);
         } else {
-          c = palette.find(cval);
-          if (c == null) {
-            // image being loaded uses a color from the colorMap which
-            // is not in the palette
-            c = 0;
-          }
+          // TODO: Implement me!
+          throw new Error(`IMPLEMENT ME: palette.roundNearestColor`);
+          c = palette.roundNearestColor(rgbval);
         }
-      } else {
-        c = colorMap.extendWith(rgbval);
       }
-      remap[rgbval] = c;
+      xlat[rgbval] = c;
       items.push(c);
     }
-    return {remap:remap, items:items};
+
+    let inverter = null;
+    if (palette._entries) {
+      inverter = {};
+      // if there's palette entries, create an inverter for them
+      for (let i = 0; i < palette._entries.length; i++) {
+        let cv = palette._entries[i];
+        inverter[cv] = i;
+      }
+    }
+
+    return {xlat:xlat, items:items, inverter:inverter};
   }
 
   then(cb) {

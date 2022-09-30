@@ -1,5 +1,4 @@
 const baseDisplay = require('./base_display.js');
-const colorMap = require('./color_map.js');
 const drawable = require('./drawable.js');
 const destructure = require('./destructure.js');
 const algorithm = require('./algorithm.js');
@@ -30,14 +29,12 @@ function Scene(env) {
   this._env = env;
   this._fsacc = env.makeFilesysAccess();
   this._display = null;
-  this._saveService = this._fsacc;
 
   this._renderer = new renderer.Renderer();
-  this._font = null;
-
-  this.colorMap = null;
-  this.camera = {};
   this.palette = null;
+
+  this._font = null;
+  this.camera = {};
   this.tileset = null;
   this.attributes = null;
   this.interrupts = null;
@@ -60,14 +57,16 @@ Scene.prototype._initialize = function () {
   this.TAU = 6.283185307179586;
   this.PI = this.TAU / 2;
   this.camera = {};
-  this.colorMap = null;
   this._hasRenderedOnce = false;
   this._inspectScanline = null;
   this._inspectCallback = null;
   this.dip = {};
   this.dip.length = 0;
+
   this._imgLoader = new imageLoader.Loader(this._fsacc, new weak.Ref(this));
   this._textLoader = new textLoader.TextLoader(this._fsacc);
+  this._initPalette();
+
   let options = this._env.getOptions();
   this._numFrames = options.num_frames || -1;
   if (options.display) {
@@ -92,6 +91,12 @@ Scene.prototype._initialize = function () {
       throw new Error(`ra.timeClick is invalid, use ra.timeTick instead`);
     }
   });
+}
+
+Scene.prototype._initPalette = function() {
+  this.palette = new palette.Palette();
+  this.palette.giveFeatures(this._fsacc, new weak.Ref(this));
+  this.palette.setPending();
 }
 
 Scene.prototype.Plane = function() {
@@ -159,11 +164,11 @@ Scene.prototype._addMethods = function() {
     }
   }
   this.setColor = function(n) {
-    self._ensureColorMap();
+    self.palette.ensureRGBMap();
     self.aPlane.setColor(n);
   }
   this.fillColor = function(n) {
-    self._ensureColorMap();
+    self.palette.ensureRGBMap();
     self.aPlane.fillColor(n);
   }
 }
@@ -207,15 +212,15 @@ Scene.prototype._translateArguments = function(params, args) {
 
 Scene.prototype.setTrueColor = function(rgb) {
   rgb = new rgbColor.RGBColor(rgb);
-  this._ensureColorMap();
-  let color = this.colorMap.extendWith(rgb);
+  this.palette.ensureRGBMap();
+  let color = this.palette.addRGBMap(rgb);
   this.aPlane.setColor(color);
 }
 
 Scene.prototype.fillTrueColor = function(rgb) {
   rgb = new rgbColor.RGBColor(rgb);
-  this._ensureColorMap();
-  let color = this.colorMap.extendWith(rgb);
+  this.palette.ensureRGBMap();
+  let color = this.palette.addRGBMap(rgb);
   this.aPlane.fillColor(color);
 }
 
@@ -268,7 +273,6 @@ Scene.prototype.setScrollY = function(y) {
 Scene.prototype.resetState = function() {
   this.width = null;
   this.height = null;
-  this.colorMap = null;
   this.aPlane.clear();
   this._upperPlane = null;
   this._upperCamera = null;
@@ -278,12 +282,12 @@ Scene.prototype.resetState = function() {
   this.time = 0.0;
   this.timeTick = 0;
   this.camera = {};
-  this.palette = null;
   this.tileset = null;
   this.attributes = null;
   this.interrupts = null;
   this.spriteList = null;
   this.rgbBuffer = null;
+  this._initPalette();
   this._initConfig();
   this._addMethods();
 }
@@ -343,12 +347,7 @@ Scene.prototype.originAtCenter = function() {
 }
 
 Scene.prototype.useColors = function(obj) {
-  if (this.colorMap) {
-    let name = this.colorMap.name;
-    throw new Error(`cannot use colorMap "${obj}", already using "${name}"`);
-  }
-  this.colorMap = colorMap.constructFrom(obj);
-  return this.colorMap;
+  this.palette.setRGBMap(palette.constructRGBMapFrom(obj));
 }
 
 Scene.prototype.useDisplay = function(nameOrDisplay) {
@@ -405,10 +404,6 @@ Scene.prototype.experimentalInspectScanline = function(scanline) {
 
 Scene.prototype.loadImage = function(filepath, opt) {
   opt = opt || {};
-  if (!this.colorMap) {
-    verbose.log(`Scene.loadImage: creating an empty colorMap`, 4);
-    this.colorMap = colorMap.constructFrom([]);
-  }
   return this._imgLoader.loadImage(filepath, opt);
 }
 
@@ -512,11 +507,10 @@ Scene.prototype.showFrame = function(callback) {
 
 Scene.prototype.save = function(savepath) {
   let res = this.renderPrimaryPlane();
-  let saveService = this._saveService;
-  if (!saveService) {
-    throw new Error('cannot save plane without save service');
+  if (!this._fsacc) {
+    throw new Error('cannot save plane without filesys access');
   }
-  saveService.saveTo(savepath, res);
+  this._fsacc.saveTo(savepath, res);
 }
 
 Scene.prototype.renderPrimaryPlane = function() {
@@ -639,7 +633,9 @@ Scene.prototype.resize = function(x, y) {
 }
 
 Scene.prototype.eyedrop = function(x, y) {
-  this._ensureColorMap();
+  // TODO: fix me, test me
+  this.palette.ensureRGBMap();
+  throw new Error(`TODO: eyedrop`);
   this._paletteFromColorMap();
   let c = this.aPlane.get(x, y);
   return this.palette.get(c);
@@ -674,50 +670,61 @@ Scene.prototype.dipNames = function() {
   return this._dipNames;
 }
 
-Scene.prototype._initPaletteFromLookOfImage = function(look) {
+Scene.prototype._newPaletteFromLookOfImage = function(look) {
   let size = look.max() + 1;
   let items = [];
   for (let i = 0; i < size; i++) {
-    let rgb = new rgbColor.RGBColor(this.colorMap.get(i));
-    let ent = new palette.PaletteEntry(rgb, i, this.colorMap);
-    items.push(ent);
+    items.push(i);
   }
   // Assign the palette to the scene
-  let saveService = this._saveService;
-  let pal = new palette.Palette(items, saveService, new weak.Ref(this));
-  this.palette = pal;
+  this.palette._entries = items;
+  // TODO: can we use giveFeatures instead
+  this.palette._fsacc = this._fsacc;
+  this.palette._refScene = new weak.Ref(this);
   return this.palette;
 }
 
-Scene.prototype._initPaletteFromPlane = function(shouldSort, optSize) {
-  this._paletteFromColorMap(optSize);
+Scene.prototype._newPaletteEntries = function(vals, shouldSort, optSize) {
+  this._paletteSetIdentityEntries(optSize);
+  // TODO: can we use giveFeatures instead
+  this.palette._fsacc = this._fsacc;
+  this.palette._refScene = new weak.Ref(this);
+  if (vals != null) {
+    this.palette._entries = new Array(vals.length).fill(0);
+    for (let i = 0; i < vals.length; i++) {
+      this.palette._entries[i] = toNum(vals[i]);
+    }
+  }
   if (shouldSort) {
-    let remap = {};
-    let vals = [];
-    for (let i = 0; i < this.palette.length; i++) {
-      let rgb = this.palette[i].rgb;
-      remap[rgb.toInt()] = i;
-      vals.push(rgb);
+    let original = {};
+    let rgbItems = [];
+    for (let i = 0; i < this.palette._rgbmap.length; i++) {
+      let rgbval = this.palette._rgbmap[i];
+      original[rgbval] = i;
+      rgbItems.push(new rgbColor.RGBColor(rgbval));
     }
     // Remove the first color, treat it as the background
-    let bgColor = vals[0];
-    vals = vals.slice(1);
+    let bgColor = rgbItems[0];
+    rgbItems = rgbItems.slice(1);
     // Sort by HSV
-    vals = algorithm.sortByHSV(vals);
+    rgbItems = algorithm.sortByHSV(rgbItems);
     // Put the background color in front
-    vals = [bgColor].concat(vals);
-    // Build the palette items
+    rgbItems = [bgColor].concat(rgbItems);
+    // Assign rgbmap
+    let newmap = [];
+    for (let k = 0; k < rgbItems.length; k++) {
+      newmap.push(rgbItems[k].toInt());
+    }
+    this.palette._rgbmap = newmap;
+    // Where did colors move to
     let recolor = {};
-    let items = [];
-    for (let i = 0; i < vals.length; i++) {
-      let orig = remap[vals[i].toInt()];
-      let ent = new palette.PaletteEntry(vals[i], i, this.colorMap);
-      ent.cval = orig;
-      let reset = this.colorMap.get(ent.cval);
-      rgbColor.ensureIs(reset);
-      ent.rgb = reset;
-      recolor[orig] = i;
-      items.push(ent);
+    for (let k = 0; k < rgbItems.length; k++) {
+      let from = original[rgbItems[k].toInt()];
+      recolor[from] = k;
+    }
+    // Assign the entries to the palette
+    for (let i = 0; i < rgbItems.length; i++) {
+      this.palette._entries[i] = i;
     }
     // Remap the colors in the data buffer
     let pl = this.aPlane;
@@ -728,30 +735,26 @@ Scene.prototype._initPaletteFromPlane = function(shouldSort, optSize) {
         pl.data[k] = recolor[c];
       }
     }
-    // Assigin the palette to the scene
-    let saveService = this._saveService;
-    let pal = new palette.Palette(items, saveService, new weak.Ref(this));
-    this.palette = pal;
   }
   return this.palette;
 }
 
-Scene.prototype._paletteFromColorMap = function(optSize) {
+Scene.prototype._paletteSetIdentityEntries = function(optSize) {
   if (!this.palette) {
-    verbose.log(`constructing palette from colorMap`, 4);
-    let colors = this.colorMap;
-    let size = optSize || colors.size();
-    let saveService = this._saveService;
-    let all = [];
-    for (let i = 0; i < size; i++) {
-      let rgb = colors.get(i);
-      rgbColor.ensureIs(rgb);
-      let ent = new palette.PaletteEntry(rgb, i, colors);
-      all.push(ent);
-    }
-    this.palette = new palette.Palette(all, saveService, new weak.Ref(this));
+    throw new Error(`palette cannot be null!`);
   }
-  return this.palette;
+  if (!this.palette._rgbmap) {
+    throw new Error(`palette.rgbmap cannot be null!`);
+  }
+  if (!this.palette._entries) {
+    let colors = this.palette._rgbmap;
+    let size = optSize || colors.length;
+    let items = [];
+    for (let i = 0; i < size; i++) {
+      items.push(i);
+    }
+    this.palette._entries = items;
+  }
 }
 
 Scene.prototype.usePlane = function(pl) {
@@ -774,14 +777,8 @@ Scene.prototype.usePlane = function(pl) {
   return this.aPlane;
 }
 
-Scene.prototype._ensureColorMap = function() {
-  if (!this.colorMap) {
-    verbose.log(`creating default colorMap`, 4);
-    this.colorMap = colorMap.makeDefault();
-  }
-}
-
 Scene.prototype._ensureColorMapPositiveSize = function() {
+  throw new Error(`TODO: ensure ColorMap Positive Value`);
   // NOTE: from Scene._makeShape, loading an image will
   // construct an empty colorMap and assign it to the scene. Once
   // the image loads, it will fill the colorMap with colors. But
@@ -821,14 +818,43 @@ Scene.prototype.usePalette = function(param, opt) {
   //   // Number of colors in the palette.
   //   ra.usePalette(5);
   //
-  this._ensureColorMap();
-  this._ensureColorMapPositiveSize();
-  // TODO: This function needs major work.
-  if (types.isPalette(param)) {
-    this.palette = param;
+  this.palette.ensureRGBMap();
+  if (!param) {
+    // identity palette entries
+    return this._newPaletteEntries(null, false, null);
+
+  } else if (types.isObject(param)) {
+    // options for palette entries, sort & size
+    return this._newPaletteEntries(null, param.sort, param.size);
+
+  } else if (types.isInteger(param)) {
+    // size of the entries list
+    let vals = new Array(param).fill(0);
+    return this._newPaletteEntries(vals, false, null);
+
+  } else if (types.isArray(param)) {
+    // values to use for palette entries
+    this._newPaletteEntries(param, false, null);
+    if ((opt || {}).agree) {
+      this._recolorPlaneToMatchPalette();
+    }
     return this.palette;
+
+  } else if (types.isPalette(param)) {
+    let keepRGBMap = this.palette._rgbmap || param._rgbmap;
+    // copy a palette, keep rgbmap
+    // TODO: what about other fields?
+    // TODO: what is the actual use case here?
+    this.palette = param;
+    this.palette._rgbmap = keepRGBMap;
+    return this.palette;
+
   } else if (types.isLookOfImage(param)) {
-    this.palette = this._initPaletteFromLookOfImage(param);
+    // palette entries created from an image.look
+    this.palette = this._newPaletteFromLookOfImage(param);
+    if (!this.palette._rgbmap) {
+      throw new Error(`FIX ME`);
+    }
     if (opt && opt.upon) {
       this.palette = this._coverUponPalette(opt.upon, this.palette);
       // coverage implies agreement with me
@@ -836,49 +862,9 @@ Scene.prototype.usePalette = function(param, opt) {
       return this.palette;
     }
     return this.palette;
-  } else if (!param) {
-    return this._initPaletteFromPlane();
-  } else if (types.isObject(param)) {
-    return this._initPaletteFromPlane(param.sort, param.size);
-  } else if (types.isArray(param)) {
-    this._constructPaletteFromVals(param);
-    if ((opt || {}).agree) {
-      this._recolorPlaneToMatchPalette();
-    }
-    return this.palette;
-  } else if (types.isInteger(param)) {
-    let vals = new Array(param);
-    vals.fill(0);
-    return this._constructPaletteFromVals(vals);
   }
+
   throw new Error(`usePalette: unsupported param ${param}`);
-}
-
-Scene.prototype._constructPaletteFromVals = function(vals, opt) {
-  let colors = this.colorMap;
-  let saveService = this._saveService;
-
-  let all = [];
-  let ent;
-  for (let i = 0; i < vals.length; i++) {
-    let cval = vals[i];
-    if (cval === null) {
-      let rgb = new rgbColor.RGBColor(0);
-      ent = new palette.PaletteEntry(rgb, -1, colors);
-      ent.isAvail = true;
-      all.push(ent);
-      continue;
-    }
-    if (cval >= colors.size()) {
-      throw new Error(`illegal color value ${cval}, colorMap only has ${colors.size()}`);
-    }
-    let rgb = colors.get(cval);
-    rgbColor.ensureIs(rgb);
-    ent = new palette.PaletteEntry(rgb, cval, colors);
-    all.push(ent);
-  }
-  this.palette = new palette.Palette(all, saveService, new weak.Ref(this));
-  return this.palette;
 }
 
 Scene.prototype._recolorPlaneToMatchPalette = function() {
@@ -891,6 +877,7 @@ Scene.prototype._coverUponPalette = function(coverageLook, palette) {
     throw new Error(`LookOfImage required, got ${coverageLook}`);
   }
   palette.agreeWithThem(coverageLook);
+  palette._rgbmap = this.palette._rgbmap;
   return palette;
 }
 
@@ -956,10 +943,8 @@ Scene.prototype.useInterrupts = function(conf) {
 }
 
 Scene.prototype.provide = function() {
-  this._ensureColorMap();
   let prov = {};
   prov.plane = this.aPlane;
-  prov.colorMap = this.colorMap;
   prov.size = {width: this.width, height: this.height};
   if (this.camera) {
     prov.camera = this.camera;
@@ -1008,6 +993,17 @@ Scene.prototype.useSpriteList = function(sprites) {
   // TODO: handle multiple different arguments
   this.spriteList = sprites;
   return this.spriteList;
+}
+
+function toNum(n) {
+  if (n == null) {
+    return 0;
+  } else if (types.isNumber(n)) {
+    return n;
+  } else if (types.isRGBColor(n)) {
+    return n.toInt();
+  }
+  throw new Error(`toNum: unknown type of ${n}`);
 }
 
 module.exports.Scene = Scene;

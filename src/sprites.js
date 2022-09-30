@@ -71,10 +71,10 @@ class SpriteSheet {
     // TODO: Needs better error handling
     let loader = pl.refLoader.deref();
     let loaderScene = loader.refScene.deref();
-    loaderScene._ensureColorMap();
-    let colorMap = loaderScene.colorMap;
+    let palette = loaderScene.palette;
+    palette.ensureRGBMap();
     let rgbBorder = new rgbColor.RGBColor(info.trueColorBorder);
-    let border = colorMap.find(rgbBorder.toInt());
+    let border = palette.locateRGB(rgbBorder.toInt());
     this._parseSpriteSheet(pl, border);
     return this;
   }

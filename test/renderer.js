@@ -25,9 +25,9 @@ describe('Render components', function() {
     let numGot = 0;
     let gotPalette = null;
     let gotTileset = null;
-    renderer.renderComponents(['colorMap', 'tileset'], null, (type, surf) => {
+    renderer.renderComponents(['palette', 'tileset'], null, (type, surf) => {
       numGot++;
-      if (type == 'colorMap') {
+      if (type == 'palette') {
         gotPalette = surf;
       } else if (type == 'tileset') {
         gotTileset = surf;

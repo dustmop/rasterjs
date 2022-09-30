@@ -1,9 +1,9 @@
 var assert = require('assert');
 var util = require('./util.js');
 var ra = require('../src/lib.js');
-var colorMap = require('../src/color_map.js');
+var palette = require('../src/palette.js');
 
-describe('Color map', function() {
+describe('rgbmap', function() {
   it('nes', function() {
     ra.resetState();
     ra.setSize({w: 8, h: 8})
@@ -68,43 +68,18 @@ describe('Color map', function() {
     util.renderCompareTo(ra, 'test/testdata/colors_custom.png');
   });
 
-  it('no dups', function() {
-    ra.resetState();
-    ra.setSize({w: 8, h: 8})
-    assert.throws(function() {
-      ra.useColors([1, 2, 3, 3]);
-    }, /Error: duplicate color in set: RGBColor{#000003}/);
-  });
-
-  it('too late', function() {
-    ra.resetState();
-    ra.setSize({w: 8, h: 8})
-    ra.setColor(1);
-    assert.throws(function() {
-      ra.useColors('nes');
-    }, /Error: cannot use colorMap "nes", already using "quick"/);
-  });
-
-  it('frozen', function() {
-    ra.resetState();
-    ra.useColors('pico8');
-    ra.setSize({w: 8, h: 8})
-    assert.throws(function() {
-      ra.setTrueColor(1);
-    }, /Error: colorMap is frozen, cannot extend with RGBColor{#000001}/);
-  });
-
-  it('gameboy stringify', function() {
-    ra.resetState();
-    ra.useColors('gameboy');
-    let actual = ra.colorMap.toString();
-    let expect = 'ColorMap{0: #003f00, 1: #2e7320, 2: #8cbf0a, 3: #a0cf0a}';
-    assert.equal(actual, expect);
-  });
+  // TODO: add a way to do this.
+  // it('gameboy stringify', function() {
+  //   ra.resetState();
+  //   ra.useColors('gameboy');
+  //   let actual = ra.colorMap.toString();
+  //   let expect = 'ColorMap{0: #003f00, 1: #2e7320, 2: #8cbf0a, 3: #a0cf0a}';
+  //   assert.equal(actual, expect);
+  // });
 
   it('constructFrom', function() {
-    let c = colorMap.constructFrom([0xff0088, 0x0044cc, 0x4466aa]);
-    let expect = 'ColorMap{0: #ff0088, 1: #0044cc, 2: #4466aa}';
+    let c = palette.constructRGBMapFrom([0xff0088, 0x0044cc, 0x4466aa]);
+    let expect = [16711816, 17612, 4482730];
     let actual = c.toString();
     assert.equal(actual, expect);
   });

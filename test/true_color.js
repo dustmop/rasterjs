@@ -25,12 +25,12 @@ describe('True Color', function() {
     let pal = ra.usePalette();
     assert.equal(pal.length, 68);
     // Validate palette contents.
-    assert.equal(pal[64].rgb.toInt(), 0xcc66cc);
-    assert.equal(pal[65].rgb.toInt(), 0x44aa66);
-    assert.equal(pal[66].rgb.toInt(), 0x224488);
-    assert.equal(pal[67].rgb.toInt(), 0xdd4444);
+    assert.equal(pal.getRGB(64), 0xcc66cc);
+    assert.equal(pal.getRGB(65), 0x44aa66);
+    assert.equal(pal.getRGB(66), 0x224488);
+    assert.equal(pal.getRGB(67), 0xdd4444);
     for (let k = 0; k < pal.length; k++) {
-      assert.equal(pal[k].idx, k);
+      assert.equal(pal.entry(k).cval, k);
     }
   });
 
@@ -56,12 +56,12 @@ describe('True Color', function() {
     let pal = ra.usePalette();
     assert.equal(pal.length, 68);
     // Validate palette contents.
-    assert.equal(pal[64].rgb.toInt(), 0xcc66cc);
-    assert.equal(pal[65].rgb.toInt(), 0x44aa66);
-    assert.equal(pal[66].rgb.toInt(), 0x224488);
-    assert.equal(pal[67].rgb.toInt(), 0xdd4444);
+    assert.equal(pal.getRGB(64), 0xcc66cc);
+    assert.equal(pal.getRGB(65), 0x44aa66);
+    assert.equal(pal.getRGB(66), 0x224488);
+    assert.equal(pal.getRGB(67), 0xdd4444);
     for (let k = 0; k < pal.length; k++) {
-      assert.equal(pal[k].idx, k);
+      assert.equal(pal.entry(k).cval, k);
     }
   });
 });

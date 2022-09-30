@@ -1,8 +1,17 @@
 const plane = require('./plane.js');
+const palette = require('./palette.js');
+const rgbColor = require('./rgb_color.js');
 const textLoader = require('./text_loader.js');
-const colorMap = require('./color_map.js');
 const renderer = require('./renderer.js');
 const types = require('./types.js');
+
+
+function addColor(colors, num) {
+  let index = colors.length;
+  colors.push(num);
+  return index;
+}
+
 
 class Serializer {
   constructor() {
@@ -46,19 +55,18 @@ class Serializer {
     // Create dependencies for drawing
     let loader = new textLoader.TextLoader();
     let font = loader.createFontResource('tiny');
-    let colors = new colorMap.Map([]);
-    colors.assign([]);
+    let colors = [];
 
     // Draw the palette
     target.font = font;
-    target.fillColor(colors.extendWith(0x606060));
+    target.fillColor(addColor(colors, 0x606060));
     for (let k = 0; k < colorList.length; k++) {
-      let rgbInt = colorList[k].toInt();
+      let rgbInt = colorList[k];
       let j = k % numX;
       let i = Math.floor(k / numX);
       let y = i * gridY;
       let x = j * gridX;
-      target.setColor(colors.extendWith(rgbInt));
+      target.setColor(addColor(colors, rgbInt));
       target.fillRect(x + outerLeft, y + outerTop,
                       gridX - cellBetween, gridY - cellBetween);
       let v = k.toString();
@@ -66,9 +74,9 @@ class Serializer {
         v = '0' + v;
       }
       if (this._isLightColor(colorList[k])) {
-        target.setColor(colors.extendWith(0));
+        target.setColor(addColor(colors, 0));
       } else {
-        target.setColor(colors.extendWith(0xffffff));
+        target.setColor(addColor(colors, 0xffffff));
       }
       if (textOpt == 'none') {
         // pass
@@ -78,14 +86,16 @@ class Serializer {
         target.drawText(`${v[0]}`, textX, textY);
         target.drawText(`${v[1]}`, textX, textY + 6);
       } else {
-        target.drawText(`${v}`, x + textLeft + outerLeft, y + textTop + outerTop);
+        let textX = x + textLeft + outerLeft;
+        let textY = y + textTop + outerTop;
+        target.drawText(`${v}`, textX, textY);
       }
     }
 
     // Components for rendering
     let components = [{
       plane: target,
-      colorMap: colors,
+      palette: new palette.Palette({rgbmap: colors}),
     }];
 
     // Render it
@@ -110,7 +120,7 @@ class Serializer {
     target.setSize(width, height);
     target.fillColor(0);
 
-    let colors = colorMap.constructFrom('quick');
+    let colors = palette.constructRGBMapFrom('quick');
 
     for (let y = 0; y < srcHeight; y++) {
       for (let x = 0; x < srcWidth; x++) {
@@ -123,7 +133,7 @@ class Serializer {
     // Components for rendering
     let components = [{
       plane: target,
-      colorMap: colors,
+      palette: new palette.Palette({rgbmap: colors}),
     }];
 
     // Render it
@@ -140,7 +150,7 @@ class Serializer {
     target.fillColor(0);
     target.setColor(7);
 
-    let colors = colorMap.constructFrom('quick');
+    let colors = palette.constructRGBMapFrom('quick');
 
     let prev = 0;
     for (let row of arr) {
@@ -175,7 +185,7 @@ class Serializer {
     // Components for rendering
     let components = [{
       plane: target,
-      colorMap: colors,
+      palette: new palette.Palette({rgbmap: colors}),
     }];
 
     // Render it
@@ -184,14 +194,8 @@ class Serializer {
     return rend.render();
   }
 
-  _isLightColor(rgb) {
-    if (types.isRGBColor(rgb)) {
-      // pass
-    } else if (types.isPaletteEntry(rgb)) {
-      rgb = rgb.rgb;
-    } else {
-      throw new Error(`invalid type: ${rgb}`);
-    }
+  _isLightColor(n) {
+    let rgb = new rgbColor.RGBColor(n);
     let total = rgb.r + rgb.g + rgb.b;
     let avg = total / 3;
     return avg > 0x80;

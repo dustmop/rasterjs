@@ -1,7 +1,6 @@
 const algorithm = require('./algorithm.js');
 const rgbColor = require('./rgb_color.js');
 const plane = require('./plane.js');
-const colorMap = require('./color_map.js');
 const tiles = require('./tiles.js');
 const palette = require('./palette.js');
 const attrs = require('./attributes.js');
@@ -26,7 +25,6 @@ class Renderer {
         rgbSurface: null,
         camera: null,
         plane: null,
-        colorMap: null,
         tileset: null,
         palette: null,
         attributes: null,
@@ -53,7 +51,7 @@ class Renderer {
     let input = inputList[0];
 
     let layer = this._layers[0];
-    let allow = ['plane', 'colorMap', 'size', 'camera',
+    let allow = ['plane', 'size', 'camera',
                  'tileset', 'palette', 'attributes', 'interrupts', 'spriteList',
                  'font', 'grid'];
     let keys = Object.keys(input);
@@ -67,9 +65,6 @@ class Renderer {
 
     if (!input.plane || !types.isPlane(input.plane)) {
       throw new Error(`input.plane must be a non-null Plane`);
-    }
-    if (!input.colorMap || !types.isColorMap(input.colorMap)) {
-      throw new Error(`input.colorMap must be a non-null colorMap`);
     }
     if (input.tileset && !types.isTileset(input.tileset)) {
       throw new Error(`input.tiles must be a Tileset, got ${input.tileset}`);
@@ -87,8 +82,6 @@ class Renderer {
     layer.plane    = input.plane;
     layer.size     = input.size;
     layer.camera   = input.camera;
-    // TODO: colorMap should be 'global'
-    layer.colorMap = input.colorMap;
     layer.tileset  = input.tileset;
     layer.palette  = input.palette;
     layer.attributes = input.attributes;
@@ -104,7 +97,6 @@ class Renderer {
         let upper = this._layers[1];
         upper.plane = input.plane;
         upper.conf = this._layers[0].conf;
-        upper.colorMap = this._layers[0].colorMap;
       }
     }
   }
@@ -134,6 +126,10 @@ class Renderer {
   }
 
   render() {
+    let bottomPalette = this._layers[0].palette;
+    bottomPalette.ensureRGBMap();
+    this._rgbmap = bottomPalette._rgbmap;
+
     let res = [];
     for (let i = 0; i < this._layers.length; i++) {
       res.push(this._renderLayer(this._layers[i], i == 0, this));
@@ -143,6 +139,12 @@ class Renderer {
   }
 
   _renderLayer(layer, isBg, system) {
+    if (!layer.palette) {
+      // set the bottom palette, need the rgbmap for rendering
+      // TODO: does this break something?
+      layer.palette = this._layers[0].palette;
+    }
+
     // Calculate size of the buffer to render.
     let width = (layer.size && layer.size.width);
     let height = (layer.size && layer.size.height);
@@ -447,7 +449,6 @@ class Renderer {
   renderComponents(components, settings, callback) {
     let system = this;
     let myPlane = this._layers[0].plane;
-    let myColorMap = this._layers[0].colorMap;
     let myTiles = this._layers[0].tileset;
     let myPalette = this._layers[0].palette;
     let myAttributes = this._layers[0].attributes;
@@ -472,7 +473,6 @@ class Renderer {
           this.innerPlaneRenderer = new Renderer();
           let components = [{
             plane: myPlane,
-            colorMap: myColorMap,
           }];
           this.innerPlaneRenderer.connect(components);
         }
@@ -482,6 +482,7 @@ class Renderer {
 
       } else if (comp == 'colorMap') {
         let opt = {};
+        // TODO: fix and test me
         if (settings.colorMap) {
           if (settings.colorMap['*']) {
             opt = settings.colorMap['*'];
@@ -584,20 +585,9 @@ class Renderer {
     if (c !== 0 && !c) {
       throw new Error(`invalid color ${c}`);
     }
-    if (layer.palette) {
-      let ent = layer.palette.get(c);
-      if (!ent) {
-        rgb = rgbColor.BLACK;
-      } else {
-        rgb = ent.rgb;
-      }
-    } else {
-      rgb = layer.colorMap.get(c);
-    }
-    rgbColor.ensureIs(rgb);
-    return rgb
+    rgb = layer.palette.getRGBUsing(c, this._rgbmap);
+    return new rgbColor.RGBColor(rgb);
   }
 }
-
 
 module.exports.Renderer = Renderer;

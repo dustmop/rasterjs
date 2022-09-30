@@ -12,12 +12,12 @@ const randstr = require('randomstring');
 const algorithm = require('./algorithm');
 
 class SaveImageDisplay extends baseDisplay.BaseDisplay {
-  constructor(targetPath, numFrames, saveService) {
+  constructor(targetPath, numFrames, fsacc) {
     super();
     this.targetPath = targetPath;
     this._numFrames = numFrames;
     this.isGif = this.targetPath.endsWith('gif');
-    this.saveService = saveService;
+    this._fsacc = fsacc;
     this._zoomLevel = 1;
   }
 
@@ -82,7 +82,7 @@ class SaveImageDisplay extends baseDisplay.BaseDisplay {
         algorithm.mergeIntoSurface(create, surface);
       }
 
-      this.saveService.saveTo(outFile, [create]);
+      this._fsacc.saveTo(outFile, [create]);
       bufferList.push(create.buff);
       this._renderer.flushBuffer();
     }

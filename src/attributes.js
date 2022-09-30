@@ -62,8 +62,8 @@ class Attributes {
       let tile = tiles.get(j);
 
       // Get tile's color needs, pick a palette piece, then recolor
-      let colorNeeds = this._getColorNeeds(tile, palette);
-      let pieceNum = this._choosePalettePiece(colorNeeds, palette, piece_size);
+      let rgbNeeds = this._getRGBNeeds(tile, palette);
+      let pieceNum = this._choosePalettePiece(rgbNeeds, palette, piece_size);
       if (pieceNum === null) {
         console.log(`[error] illegal tile, no palette: tileNum=${j}`);
         continue;
@@ -158,15 +158,15 @@ class Attributes {
     }
   }
 
-  _getColorNeeds(tile, palette) {
+  _getRGBNeeds(tile, palette) {
     let needSet = {};
     for (let y = 0; y < tile.height; y++) {
       for (let x = 0; x < tile.width; x++) {
         // Look up the color index into colorMap
         let k = tile.pitch*y + x;
         let v = tile.data[k];
-        let c = palette.lookup(v);
-        needSet[c] = true;
+        let rgbint = palette.getRGB(v);
+        needSet[rgbint] = true;
       }
     }
     let needs = Object.keys(needSet);
@@ -177,23 +177,23 @@ class Attributes {
     return needs;
   }
 
-  _choosePalettePiece(colorNeeds, palette, piece_size) {
-    let candidates = [];
+  _choosePalettePiece(rgbNeeds, palette, pieceSize) {
+    palette.ensureEntries();
 
-    let pieceSize = piece_size;
     // TODO: Handle non-even division
-    let numOpt = palette.length / pieceSize;
+    let numOpt = palette._entries.length / pieceSize;
 
+    let candidates = [];
     for (let n = 0; n < numOpt; n++) {
       let collect = [];
       for (let k = 0; k < pieceSize; k++) {
         let j = n*pieceSize + k;
-        let pal = palette.get(j);
-        collect.push(pal.cval);
+        let item = palette.getRGB(j);
+        collect.push(item);
       }
 
       // Does set contain the colorNeeds
-      if (setContains(collect, colorNeeds)) {
+      if (setContains(collect, rgbNeeds)) {
         candidates.push(n);
       }
     }
@@ -210,21 +210,15 @@ class Attributes {
   }
 
   _recolorTile(pieceNum, palette, tile, piece_size) {
+    // TODO: test me
     let pieceSize = piece_size;
     // for each pixel
     for (let y = 0; y < tile.height; y++) {
       for (let x = 0; x < tile.width; x++) {
-        // Look up the color
+        // look up the correct color
         let k = tile.pitch*y + x;
         let c = tile.data[k];
-        // See what piece this pixel is using
-        let choice = Math.floor(c / pieceSize);
-        if (choice != pieceNum) {
-          let badChoice = choice;
-          // Change to the correct color
-          // Must work because we got pieceNum
-          tile.data[k] = palette.relocateColorTo(c, pieceNum, pieceSize)
-        }
+        tile.data[k] = palette.relocateColorTo(c, pieceNum, pieceSize)
       }
     }
   }

@@ -144,9 +144,7 @@ class RGBColor {
       throw new Error(`rgb value not properly defined ${this.r} ${this.g} ${this.b}`);
     }
   }
-
 }
-
 
 function ensureIs(rgb) {
   if (rgb == null) {

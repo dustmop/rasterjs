@@ -5,7 +5,6 @@ const imageLoader = require('./image_loader.js');
 const tiles = require('./tiles.js');
 const attributes = require('./attributes.js');
 const palette = require('./palette.js');
-const colorMap = require('./color_map.js');
 const interrupts = require('./interrupts.js');
 const sprites = require('./sprites.js');
 const weak = require('./weak.js');
@@ -70,11 +69,6 @@ function isPlane(obj) {
           obj.constructor == imageLoader.ImagePlane);
 }
 
-function isColorMap(obj) {
-  if (!obj) { return false; }
-  return obj.constructor == colorMap.Map;
-}
-
 function isLookOfImage(obj) {
   if (!obj) { return false; }
   return obj.constructor == imageLoader.LookOfImage;
@@ -126,7 +120,6 @@ module.exports.isString = isString;
 module.exports.isFunction = isFunction;
 module.exports.isObject = isObject;
 module.exports.isRGBColor = isRGBColor;
-module.exports.isColorMap = isColorMap;
 module.exports.isLookOfImage = isLookOfImage;
 module.exports.isPaletteEntry = isPaletteEntry;
 module.exports.isTileset = isTileset;

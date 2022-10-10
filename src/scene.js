@@ -774,18 +774,6 @@ Scene.prototype.usePlane = function(pl) {
   return this.aPlane;
 }
 
-Scene.prototype._ensureColorMapPositiveSize = function() {
-  throw new Error(`TODO: ensure ColorMap Positive Value`);
-  // NOTE: from Scene._makeShape, loading an image will
-  // construct an empty colorMap and assign it to the scene. Once
-  // the image loads, it will fill the colorMap with colors. But
-  // before then, in an async environment, calling this should
-  // fail because the colorMap is empty.
-  if (this.colorMap.size() == 0) {
-    throw new Error(`empty colorMap, wait for images to load`)
-  }
-}
-
 Scene.prototype.normalizePaletteAttributes = function() {
   if (!this.attributes || !this.palette) {
     throw new Error(`need palette and attributes`);

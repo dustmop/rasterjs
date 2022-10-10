@@ -1,14 +1,134 @@
 var assert = require('assert');
 var util = require('./util.js');
 var ra = require('../src/lib.js');
-var rgb_map = require('../src/rgb_map.js');
+var rgbColor = require('../src/rgb_color.js');
+var rgbMap = require('../src/rgb_map.js');
+var palette = require('../src/palette.js');
 
-describe('Palette entry', function() {
-  it('set color', function() {
+describe('Palette', function() {
+  it('setEntries', () => {
+    let pal = new palette.Palette();
+    pal.setEntries(4);
+    assert.equal(pal.length, 4);
+    assert.deepEqual(pal.entriesToInts(), [0, 1, 2, 3]);
 
-    console.log(`DISABLED`);
-    return;
+    pal.setEntries(7);
+    assert.equal(pal.length, 7);
+    assert.deepEqual(pal.entriesToInts(), [0, 1, 2, 3, 4, 5, 6]);
 
+    pal.setEntries([1,2,3]);
+    assert.equal(pal.length, 3);
+    assert.deepEqual(pal.entriesToInts(), [1, 2, 3]);
+  });
+
+  it('toString', () => {
+    let pal = new palette.Palette();
+    pal.setRGBMap([0x000000, 0x010000, 0x020000, 0x030000,
+                   0x040000, 0x050000, 0x060000, 0x070000]);
+
+    let actual = pal.toString();
+    let expect = `Palette{null}`;
+    assert.equal(actual, expect);
+
+    actual = pal.toString({rgbmap: true});
+    expect = `Palette.rgbmap{0:0x000000, 1:0x010000, 2:0x020000, 3:0x030000, 4:0x040000, 5:0x050000, 6:0x060000, 7:0x070000}`;
+    assert.equal(actual, expect);
+
+    pal.setEntries([0, 4, 3, 6,
+                    1, 5, 4, 7,
+                    2, 5, 6, 7]);
+    actual = pal.toString();
+    expect = `Palette{0:[0]=0x000000, 1:[4]=0x040000, 2:[3]=0x030000, 3:[6]=0x060000, 4:[1]=0x010000, 5:[5]=0x050000, 6:[4]=0x040000, 7:[7]=0x070000, 8:[2]=0x020000, 9:[5]=0x050000, 10:[6]=0x060000, 11:[7]=0x070000}`;
+    assert.equal(actual, expect);
+
+    actual = pal.toString({pieceSize: 4});
+    expect = `Palette{0:[0]=0x000000, 1:[4]=0x040000, 2:[3]=0x030000, 3:[6]=0x060000, 4:[1]=0x010000, 5:[5]=0x050000, 6:[4]=0x040000, 7:[7]=0x070000, 8:[2]=0x020000, 9:[5]=0x050000, 10:[6]=0x060000, 11:[7]=0x070000}`;
+    assert.equal(actual, expect);
+
+    actual = pal.toString({rgbmap: true});
+    expect = `Palette.rgbmap{0:0x000000, 1:0x010000, 2:0x020000, 3:0x030000, 4:0x040000, 5:0x050000, 6:0x060000, 7:0x070000}`;
+    assert.equal(actual, expect);
+  });
+
+  it('findNearPieces', () => {
+    const pieceSize = 4;
+
+    let pal = new palette.Palette({pieceSize: pieceSize});
+    pal.setRGBMap([0x000000, 0x010000, 0x020000, 0x030000,
+                   0x040000, 0x050000, 0x060000, 0x070000]);
+    pal.setEntries([0, 4, 3, 6,
+                    1, 5, 4, 7,
+                    2, 5, 6, 7]);
+
+    let match;
+    match = pal.findNearPieces([new rgbColor.RGBColor(0x000000),
+                                new rgbColor.RGBColor(0x040000),
+                                new rgbColor.RGBColor(0x030000)]);
+    assert.deepEqual(match,
+                     {
+                       winners: [0],
+                       ranking: [
+                         {piece: 1, score: 1}
+                       ]
+                     });
+
+    match = pal.findNearPieces([new rgbColor.RGBColor(0x010000),
+                                new rgbColor.RGBColor(0x050000),
+                                new rgbColor.RGBColor(0x070000)]);
+    assert.deepEqual(match,
+                     {
+                       winners: [1],
+                       ranking: [
+                         {piece: 2, score: 2}
+                       ]
+                     });
+
+    match = pal.findNearPieces([new rgbColor.RGBColor(0x030000),
+                                new rgbColor.RGBColor(0x020000),
+                                new rgbColor.RGBColor(0x050000),
+                                new rgbColor.RGBColor(0x060000)]);
+    assert.deepEqual(match,
+                     {
+                       winners: [],
+                       ranking: [
+                         {piece: 2, score: 3},
+                         {piece: 0, score: 2},
+                         {piece: 1, score: 1},
+                       ]
+                     });
+
+    match = pal.findNearPieces([new rgbColor.RGBColor(0x060000)]);
+    assert.deepEqual(match,
+                     {
+                       winners: [0, 2],
+                       ranking: []
+                     });
+  });
+
+  it('fill', () => {
+    let pal = new palette.Palette();
+    pal.setEntries(4);
+    pal.fill(6);
+    assert.equal(pal.length, 4);
+    assert.deepEqual(pal.entriesToInts(), [6, 6, 6, 6]);
+
+    let expect = `Palette{0:[6]=0xc0c0c0, 1:[6]=0xc0c0c0, 2:[6]=0xc0c0c0, 3:[6]=0xc0c0c0}`;
+    assert.equal(pal.toString(), expect);
+  });
+
+  it('assign', () => {
+    let pal = new palette.Palette();
+    pal.setEntries(4);
+    pal.fill(6);
+    pal.assign({1: 3, 3: 7});
+    assert.equal(pal.length, 4);
+    assert.deepEqual(pal.entriesToInts(), [6, 3, 6, 7]);
+
+    let expect = `Palette{0:[6]=0xc0c0c0, 1:[3]=0x606060, 2:[6]=0xc0c0c0, 3:[7]=0xffffff}`;
+    assert.equal(pal.toString(), expect);
+  });
+
+  it('entry set color', function() {
     let tmpdir = util.mkTmpDir();
     let tmpout = tmpdir + '/actual.png';
     ra.resetState();
@@ -36,12 +156,12 @@ describe('Palette entry', function() {
       for (let x = 0; x < 8; x++) {
         ra.setColor(i);
         ra.fillRect({x:x, y:y, w:1, h:1});
-        result.push(palette.entry(i).toInt());
+        result.push(palette.entry(i).getRGB());
         i++;
       }
     }
 
-    assert.deepEqual(result, rgb_map.rgb_map_quick);
+    assert.deepEqual(result, rgbMap.rgb_map_quick);
     util.renderCompareTo(ra, 'test/testdata/pal_quick.png');
   });
 
@@ -56,7 +176,7 @@ describe('Palette entry', function() {
     util.ensureFilesMatch('test/testdata/pal_saved.png', tmpout);
   });
 
-  it('palette as buffer', function() {
+  it('palette image serialization', function() {
     let tmpdir = util.mkTmpDir();
     let tmpout = tmpdir + '/actual.png';
     ra.resetState();
@@ -67,6 +187,19 @@ describe('Palette entry', function() {
     ra._saveSurfacesTo(surfaces, tmpout);
 
     util.ensureFilesMatch('test/testdata/pal_saved.png', tmpout);
+  });
+
+  it('palette.rgbmap image serialization', () => {
+    let tmpdir = util.mkTmpDir();
+    let tmpout = tmpdir + '/actual.png';
+    ra.resetState();
+
+    let palette = ra.usePalette();
+    let surfaces = palette.serialize({rgbmap: true});
+
+    ra._saveSurfacesTo(surfaces, tmpout);
+
+    util.ensureFilesMatch('test/testdata/pal_rgbmap_saved.png', tmpout);
   });
 
   it('palette buffer with options', function() {
@@ -144,7 +277,7 @@ describe('Palette entry', function() {
 
     let palette = ra.usePalette();
     for (let i = 0; i < palette.length; i++) {
-      if (palette.entry(i).rgb.toInt() != rgb_map.rgb_map_dos[i]) {
+      if (palette.entry(i).rgb.toInt() != rgbMap.rgb_map_dos[i]) {
         assert.fail('Did not match!');
       }
     }
@@ -154,7 +287,7 @@ describe('Palette entry', function() {
     assert.equal(expect, actual);
 
     let entry = palette.entry(1);
-    assert.equal(entry.toInt(), 170);
+    assert.equal(entry.getRGB(), 170);
   });
 
   it('get all', function() {
@@ -162,10 +295,7 @@ describe('Palette entry', function() {
     ra.useColors(null);
     ra.fillTrueColor(0x444444);
 
-    // TODO: Currently, loading the image adds to the colorMap.
-    // It should really happen lazily, when the image plane gets
-    // applied to the target plane. This means either when the
-    // scene's `then` completes, or when the image is drawn.
+    // loading image adds to the rgbmap
     let img = ra.loadImage('test/testdata/boss_first_form.png');
 
     ra.drawImage(img, 0, 0);

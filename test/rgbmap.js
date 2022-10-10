@@ -68,14 +68,13 @@ describe('rgbmap', function() {
     util.renderCompareTo(ra, 'test/testdata/colors_custom.png');
   });
 
-  // TODO: add a way to do this.
-  // it('gameboy stringify', function() {
-  //   ra.resetState();
-  //   ra.useColors('gameboy');
-  //   let actual = ra.colorMap.toString();
-  //   let expect = 'ColorMap{0: #003f00, 1: #2e7320, 2: #8cbf0a, 3: #a0cf0a}';
-  //   assert.equal(actual, expect);
-  // });
+  it('gameboy stringify', function() {
+    ra.resetState();
+    ra.useColors('gameboy');
+    let actual = ra.palette.toString({rgbmap: true});
+    let expect = 'Palette.rgbmap{0:0x003f00, 1:0x2e7320, 2:0x8cbf0a, 3:0xa0cf0a}';
+    assert.equal(actual, expect);
+  });
 
   it('constructFrom', function() {
     let c = palette.constructRGBMapFrom([0xff0088, 0x0044cc, 0x4466aa]);

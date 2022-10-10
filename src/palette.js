@@ -4,6 +4,7 @@ const destructure = require('./destructure.js');
 const types = require('./types.js');
 const serializer = require('./serializer.js');
 const verboseLogger = require('./verbose_logger.js');
+const weak = require('./weak.js');
 
 let verbose = new verboseLogger.Logger();
 
@@ -13,30 +14,40 @@ let verbose = new verboseLogger.Logger();
  */
 class Palette {
 
+  /**
+   * construct a new palette
+   * @param {object} opt - options. pieceSize, rgbmap
+   */
   constructor(opt) {
     opt = (opt || {});
-    this._rgbmap = opt.rgbmap; // TODO: validate
+    this.name = null;
+    this._rgbmap = null;
     this._entries = null;
-    this._pending = false;
     this._expandable = false;
     this._system = null;
-    this._pieceSize = null;
+    this._pieceSize = opt.pieceSize || null;
+    if (opt.rgbmap) {
+      this._rgbmap = toIntList(opt.rgbmap);
+    }
   }
 
+  /**
+   * assign to the rgbmap, and remove all entries. Assign name if one exists
+   * @param {Array} values - values to assign to the rgbmap
+   */
   setRGBMap(values) {
-    let res = [];
-    for (let elem of values) {
-      res.push(Math.floor(elem));
+    if (values.name) {
+      this.name = values.name;
     }
-    this._rgbmap = res;
-    this._pending = false;
+    // TODO: test me, required for useColors to work
+    this.entries = null;
+    this._rgbmap = toIntList(values);
   }
 
   addRGBMap(rgbval) {
     rgbval = toNum(rgbval);
     if (this._rgbmap == null) {
       this._rgbmap = [];
-      this._pending = false;
     }
     let len = this._rgbmap.length;
     for (let i = 0; i < len; i++) {
@@ -45,16 +56,11 @@ class Palette {
       }
     }
     this._rgbmap.push(rgbval);
-    let m = this._rgbmap[len-1];
     return len;
   }
 
-  setPending() {
-    this._pending = true;
-  }
-
   isPending() {
-    return this._pending;
+    return !this._rgbmap;
   }
 
   isExpandable() {
@@ -62,14 +68,36 @@ class Palette {
     return true;
   }
 
+  setEntries(vals) {
+    if (types.isNumber(vals)) {
+      this._entries = [...Array(Math.floor(vals)).keys()].slice();
+      return;
+    }
+
+    if (types.isArray(vals)) {
+      let entries = [];
+      for (let v of vals) {
+        entries.push(Math.floor(v));
+      }
+      this._entries = entries;
+      return;
+    }
+
+    throw new Error(`invalid param for setEntries: ${JSON.stringify(vals)}`);
+  }
+
+  entriesToInts() {
+    return this._entries.slice();
+  }
+
   get length() {
     return this._entries.length;
   }
 
-  fill(num) {
+  fill(v) {
     this.ensureEntries();
-    for (let it of this._entries) {
-      it.setColor(toNum(num));
+    for (let i = 0; i < this._entries.length; i++) {
+      this._entries[i] = v;
     }
   }
 
@@ -86,7 +114,7 @@ class Palette {
   locateRGB(rgbval) {
     // TODO: should this use the _entries?
     let map;
-    if (!this._rgbmap || this.isPending()) {
+    if (this.isPending()) {
       map = rgbMap.rgb_map_quick;
     } else {
       map = this._rgbmap;
@@ -100,17 +128,17 @@ class Palette {
   }
 
   reset() {
+    this.ensureEntries();
     for (let i = 0; i < this._entries.length; i++) {
       this._entries[i] = i;
     }
   }
 
   assign(assoc) {
-    // TODO: fix me and test
     this.ensureEntries();
     let keys = Object.keys(assoc);
     for (let key of keys) {
-      this._entries[key].setColor(assoc[key]);
+      this._entries[key] = toNum(assoc[key]);
     }
   }
 
@@ -127,8 +155,7 @@ class Palette {
   entry(n) {
     this.ensureRGBMap();
     this.ensureEntries();
-    let val = this._entries[n];
-    return new PaletteEntry(new rgbColor.RGBColor(this._rgbmap[val]), val);
+    return new PaletteEntry(n, this._entries[n], new weak.Ref(this));
   }
 
   cycle(args, opt) {
@@ -144,23 +171,28 @@ class Palette {
   }
 
   serialize(opt) {
+    opt = opt || {};
+    this.ensureRGBMap();
     let ser = new serializer.Serializer();
-    let vals = [];
-    if (this._entries) {
+    let colors = [];
+    let entries = null;
+    if (this._entries && !opt.rgbmap) {
+      entries = [];
       for (let i = 0; i < this._entries.length; i++) {
-        vals.push(this._rgbmap[this._entries[i]]);
+        colors.push(this._rgbmap[this._entries[i]]);
+        entries.push(this._entries[i]);
       }
     } else {
       for (let i = 0; i < this._rgbmap.length; i++) {
-        vals.push(this._rgbmap[i]);
+        colors.push(this._rgbmap[i]);
       }
     }
-    return ser.colorsToSurface(vals, opt);
-    // TODO: serialize rgbMap alone
+    return ser.colorsToSurface(colors, entries, opt);
   }
 
-  toString() {
-    return this._stringify(0, {});
+  toString(opt) {
+    opt = opt || {};
+    return this._stringify(0, opt);
   }
 
   getRGB(n) {
@@ -185,8 +217,42 @@ class Palette {
     this._refScene = refScene;
   }
 
-  findNearPieces() {
-    throw new Error(`TODO: findNearPieces`);
+  findNearPieces(colorNeeds, pieceSize) {
+    if (!pieceSize) {
+      pieceSize = this._pieceSize || 8;
+    }
+
+    this.ensureEntries();
+    for (let nc of colorNeeds) {
+      if (!types.isRGBColor(nc)) {
+        throw new Error(`findNearPieces requires list of rgb colors`);
+      }
+    }
+    let numPieces = this._entries.length / pieceSize;
+    let winners = [];
+    let ranking = [];
+    for (let p = 0; p < numPieces; p++) {
+      // get list of rgb items in this piece of the palette
+      let rgbVals = [];
+      for (let i = 0; i < pieceSize; i++) {
+        let k = i + p*pieceSize;
+        rgbVals.push(this.getRGB(k));
+      }
+      // See if needs completely matches the content, if so, add to winners.
+      // Otherwise, keep score and add it to ranking.
+      let score = colorNeeds.filter(c => rgbVals.includes(c.toInt())).length;
+      if (score == colorNeeds.length) {
+        winners.push(p);
+      } else if (score > 0) {
+        ranking.push({piece: p, score: score});
+      }
+    }
+    // Sort the ranking by score, from highest to lowest.
+    ranking.sort((a,b) => b.score - a.score);
+    return {
+      winners: winners,
+      ranking: ranking,
+    };
   }
 
   agreeWithMe(pl) {
@@ -255,21 +321,17 @@ class Palette {
   }
 
   ensureEntries() {
+    this.ensureRGBMap();
     if (this._entries) {
       return;
     }
-    let vals = [];
-    for (let i = 0; i < this._rgbmap.length; i++) {
-      vals[i] = i;
-    }
-    this._entries = vals;
+    this._entries = [...Array(Math.floor(this._rgbmap.length)).keys()].slice();
   }
 
   ensureRGBMap() {
     if (this.isPending()) {
       verbose.log(`creating default rgbMap`, 4);
-      this._rgbmap = rgbMap.rgb_map_quick;
-      this._pending = false;
+      this._rgbmap = rgbMap.rgb_map_quick.slice();
     }
   }
 
@@ -277,21 +339,30 @@ class Palette {
     if (this.isPending()) {
       verbose.log(`creating empty and expanding rgbMap`, 4);
       this._rgbmap = [];
-      this._pending = false;
       this._expandable = true;
     }
   }
 
   _stringify(depth, opts) {
     this.ensureRGBMap();
-    let elems = [];
-    if (this._entries == null) {
-      return 'Palette{null}';
+    let prefix = 'Palette';
+    let segments = [];
+    let len = 0;
+    if (this._entries && !opts.rgbmap) {
+      len = this._entries.length;
+    } else if (opts.rgbmap) {
+      prefix = 'Palette.rgbmap'
+      len = this._rgbmap.length;
+    } else {
+      return 'Palette{null}'
     }
-    for (let i = 0; i < this._entries.length; i++) {
-      let n = this._entries[i];
+    for (let i = 0; i < len; i++) {
+      let n = i;
+      if (this._entries && !opts.rgbmap) {
+        n = this._entries[i];
+      }
       if (n == null) {
-        elems.push(`${i}:null`);
+        segments.push(`${i}:null`);
         continue
       }
       if (!types.isNumber(n)) {
@@ -302,9 +373,13 @@ class Palette {
         rgb = '0' + rgb;
       }
       rgb = '0x' + rgb;
-      elems.push(`${i}:[${n}]=${rgb}`);
+      if (opts.rgbmap) {
+        segments.push(`${i}:${rgb}`);
+      } else {
+        segments.push(`${i}:[${n}]=${rgb}`);
+      }
     }
-    return 'Palette{' + elems.join(', ') + '}';
+    return prefix + '{' + segments.join(', ') + '}';
   }
 
   _cycleTopLevel(firstArg, opt) {
@@ -394,51 +469,34 @@ class Palette {
   }
 }
 
-function constructFrom(vals, offset, colors, fsacc, refScene) {
-  if (!refScene) {
-    throw new Error('constructFrom: refScene is null');
-  }
-  let all = [];
-  let ent;
-  for (let i = 0; i < vals.length; i++) {
-    let cval = vals[i];
-    if (cval === null) {
-      let rgb = new rgbColor.RGBColor(0);
-      ent = new PaletteEntry(rgb, -1, colors);
-      ent.isAvail = true;
-      all.push(ent);
-      continue;
-    }
-    if (cval >= colors.size()) {
-      throw new Error(`illegal color value ${cval}, colorMap only has ${colors.size()}`);
-    }
-    let rgb = colors.get(cval);
-    rgbColor.ensureIs(rgb);
-    ent = new PaletteEntry(rgb, cval, colors);
-    all.push(ent);
-  }
-  return new Palette(all, fsacc, refScene);
-}
-
 
 class PaletteEntry {
-  constructor(rgb, idx) {
-    if (!types.isRGBColor(rgb)) {
-      throw new Error(`PaletteEntry: rgb must be a RGBColor`);
-    }
+  constructor(idx, cval, refOwner) {
     if (!types.isNumber(idx)) {
       throw new Error(`PaletteEntry: idx must be a number`);
     }
-    this.rgb = rgb;
+    if (!types.isWeakRef(refOwner)) {
+      throw new Error(`PaletteEntry: ref must be a weak.Ref`);
+    }
+
+    let pal = refOwner.deref();
     this.idx = idx;
-    this.cval = idx;
-    this.isAvail = false;
+    this.cval = cval;
+    this.rgb = new rgbColor.RGBColor(pal._rgbmap[cval]);
+    this.refOwner = refOwner;
     return this;
   }
 
   setColor(n) {
-    this.cval = Math.floor(n);
-    this.rgb = new rgbColor.RGBColor(this.colors.get(this.cval));
+    if (!types.isNumber(n)) {
+      throw new Error(`setColor: n must be a number, got ${JSON.stringify(n)}`);
+    }
+    n = Math.floor(n);
+
+    let pal = this.refOwner.deref();
+    this.cval = n;
+    this.rgb = new rgbColor.RGBColor(pal._rgbmap[n]);
+    pal._entries[this.idx] = n;
   }
 
   hex() {
@@ -455,7 +513,7 @@ class PaletteEntry {
     return '0x' + text;
   }
 
-  toInt() {
+  getRGB() {
     return this.rgb.toInt();
   }
 
@@ -479,6 +537,14 @@ function toNum(n) {
     return n.toInt();
   }
   throw new Error(`toNum: unknown type of ${n}`);
+}
+
+function toIntList(vals) {
+  let res = [];
+  for (let e of vals) {
+    res.push(Math.floor(e));
+  }
+  return res;
 }
 
 function constructRGBMapFrom(rep) {

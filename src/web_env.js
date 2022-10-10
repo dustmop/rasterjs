@@ -32,7 +32,11 @@ function runningUnderKarma() {
 }
 
 function handleErrorGracefully(err, display) {
-  // TODO: dispatch the err to display
+  if (display.onErrorHandler) {
+    display.onErrorHandler(err);
+    return;
+  }
+  console.log(err);
 }
 
 module.exports.makeDisplay = makeDisplay;

@@ -3,6 +3,34 @@ var util = require('./util.js');
 var ra = require('../src/lib.js');
 
 describe('Render components', function() {
+  it('render rgbmap', () => {
+    ra.resetState();
+    ra.useColors('c64');
+    ra.usePalette([8, 5, 7, 3, 2, 11, 0, 4]);
+
+    let gotPalette, gotRRGMap;
+
+    let renderer = ra._renderer;
+    renderer.connect(ra.provide());
+    renderer.renderComponents(['palette', 'palette-rgbmap'], null, (type, surf) => {
+      if (type == 'palette') {
+        gotPalette = surf;
+      } else if (type == 'palette-rgbmap') {
+        gotRGMap = surf;
+      }
+    });
+
+    let tmpdir = util.mkTmpDir();
+    let tmppal = tmpdir + '/actual-palette.png';
+    let tmprgbmap = tmpdir + '/actual-rgbmap.png';
+
+    ra._saveSurfacesTo(gotPalette, tmppal);
+    ra._saveSurfacesTo(gotRGMap, tmprgbmap);
+
+    util.ensureFilesMatch('test/testdata/c64-palette.png', tmppal);
+    util.ensureFilesMatch('test/testdata/c64-rgbmap.png', tmprgbmap);
+  });
+
   it('tileset and colorMap', function() {
     ra.resetState();
     ra.useColors(null);

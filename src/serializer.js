@@ -18,7 +18,7 @@ class Serializer {
     return this;
   }
 
-  colorsToSurface(colorList, opt) {
+  colorsToSurface(colorList, entries, opt) {
     opt = opt || {};
 
     let target = new plane.Plane();
@@ -69,26 +69,39 @@ class Serializer {
       target.setColor(addColor(colors, rgbInt));
       target.fillRect(x + outerLeft, y + outerTop,
                       gridX - cellBetween, gridY - cellBetween);
-      let v = k.toString();
-      if (v.length < 2) {
-        v = '0' + v;
+
+      // number is either from entry's value, or is the index
+      let num;
+      if (entries) {
+        num = entries[k];
+      } else {
+        num = k;
       }
+
+      // hex, left pad with 0
+      let digits = num.toString();
+      if (digits.length < 2) {
+        digits = '0' + digits;
+      }
+      // foreground color is the opposite of background color
       if (this._isLightColor(colorList[k])) {
         target.setColor(addColor(colors, 0));
       } else {
         target.setColor(addColor(colors, 0xffffff));
       }
+
+      // draw the text
       if (textOpt == 'none') {
         // pass
       } else if (textOpt == 'vert') {
         let textX = x + textLeft + outerLeft;
         let textY = y + textTop + outerTop;
-        target.drawText(`${v[0]}`, textX, textY);
-        target.drawText(`${v[1]}`, textX, textY + 6);
+        target.drawText(`${digits[0]}`, textX, textY);
+        target.drawText(`${digits[1]}`, textX, textY + 6);
       } else {
         let textX = x + textLeft + outerLeft;
         let textY = y + textTop + outerTop;
-        target.drawText(`${v}`, textX, textY);
+        target.drawText(`${digits}`, textX, textY);
       }
     }
 

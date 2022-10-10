@@ -1,5 +1,6 @@
 const serializer = require('./serializer.js');
 const types = require('./types.js');
+const rgbColor = require('./rgb_color.js');
 
 
 class Attributes {
@@ -56,20 +57,35 @@ class Attributes {
   }
 
   ensureConsistentTileset(tiles, palette) {
-    let piece_size = this._getPieceSize();
+    let pieceSize = this._getPieceSize();
 
     for (let j = 0; j < tiles.numTiles; j++) {
       let tile = tiles.get(j);
 
       // Get tile's color needs, pick a palette piece, then recolor
       let rgbNeeds = this._getRGBNeeds(tile, palette);
-      let pieceNum = this._choosePalettePiece(rgbNeeds, palette, piece_size);
-      if (pieceNum === null) {
-        console.log(`[error] illegal tile, no palette: tileNum=${j}`);
-        continue;
-      }
-      this._recolorTile(pieceNum, palette, tile, piece_size);
+      let match = palette.findNearPieces(rgbNeeds, pieceSize);
+      let pieceNum = this._choosePieceNum(match, null);
+      this._recolorTile(pieceNum, palette, tile, pieceSize);
     }
+  }
+
+  // given the result of findNearPieces, pick our favorite palette piece
+  _choosePieceNum(match, was) {
+    if (match.winners.length) {
+      // If the value of the cell matches a winner, keep using it.
+      if (was != null) {
+        let pos = match.winners.indexOf(was);
+        if (pos > -1) {
+          return match.winners[pos];
+        }
+      }
+      // Otherwise use the first winner.
+      return match.winners[0];
+    }
+    // If there's no winner, pick best ranked, ignoring what the value
+    // used to be.
+    return match.ranking[0].piece;
   }
 
   ensureConsistentPlanePalette(plane, palette) {
@@ -83,9 +99,9 @@ class Attributes {
         let pal_index_needs = this._collectColorNeeds(plane, j, i);
         let color_needs = this._lookupPaletteColors(pal_index_needs, palette);
         let was = this.source.get(j, i);
-        let cell_value = this._discoverCellValue(color_needs, was,
-                                                 palette, piece_size);
-        this._downColorize(plane, j, i, piece_size);
+        let match = palette.findNearPieces(color_needs, piece_size);
+        let cell_value = this._choosePieceNum(match, was);
+        this._downModulate(plane, j, i, piece_size);
         this.source.put(j, i, cell_value);
       }
     }
@@ -120,6 +136,7 @@ class Attributes {
       }
     }
     let needs = Object.keys(collect);
+    needs = needs.map(e => parseInt(e, 10));
     needs.sort((a,b) => a - b);
     return needs;
   }
@@ -127,25 +144,12 @@ class Attributes {
   _lookupPaletteColors(pal_index_needs, palette) {
     let colors = [];
     for (let i = 0; i < pal_index_needs.length; i++) {
-      colors.push(palette[pal_index_needs[i]].cval);
+      colors.push(palette.entry(pal_index_needs[i]).rgb);
     }
     return colors;
   }
 
-  _discoverCellValue(color_needs, was, palette, piece_size) {
-    let match = palette.findNearPieces(color_needs, piece_size);
-    if (match.winners.length) {
-      // If the value of the cell matches a winner, keep using it.
-      // Otherwise use the first winner.
-      // TODO: Test me
-      let pos = match.winners.indexOf(was);
-      return match.winners[pos > -1 ? pos : 0];
-    }
-    // TODO: Test me
-    return match.ranking[0].value;
-  }
-
-  _downColorize(plane, cell_x, cell_y, piece_size) {
+  _downModulate(plane, cell_x, cell_y, piece_size) {
     let collect = {};
     for (let i = 0; i < this.sizeInfo.cell_height; i++) {
       for (let j = 0; j < this.sizeInfo.cell_width; j++) {
@@ -174,39 +178,7 @@ class Attributes {
     needs.sort(function(a, b) {
       return a - b;
     });
-    return needs;
-  }
-
-  _choosePalettePiece(rgbNeeds, palette, pieceSize) {
-    palette.ensureEntries();
-
-    // TODO: Handle non-even division
-    let numOpt = palette._entries.length / pieceSize;
-
-    let candidates = [];
-    for (let n = 0; n < numOpt; n++) {
-      let collect = [];
-      for (let k = 0; k < pieceSize; k++) {
-        let j = n*pieceSize + k;
-        let item = palette.getRGB(j);
-        collect.push(item);
-      }
-
-      // Does set contain the colorNeeds
-      if (setContains(collect, rgbNeeds)) {
-        candidates.push(n);
-      }
-    }
-
-    if (candidates.length >= 1) {
-      if (candidates.length > 1) {
-        // TODO: Do something more interesting here
-        console.log(`[warning] ambiguous palette choice: ${colorNeeds} => ${candidates}`);
-      }
-      return candidates[0];
-    }
-
-    return null;
+    return needs.map(e => new rgbColor.RGBColor(e));
   }
 
   _recolorTile(pieceNum, palette, tile, piece_size) {

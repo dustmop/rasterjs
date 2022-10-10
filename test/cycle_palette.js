@@ -118,17 +118,6 @@ describe('Cycle palette', function() {
   });
 
 
-  it('usePalette must be correct', function() {
-    console.log('DISABLED');
-    return;
-    ra.resetState();
-    ra.useColors('pico8');
-    assert.throws(function() {
-      ra.usePalette([16]);
-    }, /illegal color value 16, colorMap only has 16/);
-  });
-
-
   // Image uses color in the colorMap, but not in palette
   it('image uses colors in colorMap, but not in palette', function() {
     ra.resetState();
@@ -166,49 +155,6 @@ describe('Cycle palette', function() {
     ra.usePalette([8, 0, 2, 4, 14], {agree: true});
 
     util.renderCompareTo(ra, 'test/testdata/small-fruit.png');
-  });
-
-
-  // Image uses color that's not in the colorMap, alias it
-  it('palette has available slots', function() {
-    console.log('DISABLED');
-    return;
-    ra.resetState();
-    ra.useColors([0x000000, // 0 = black
-                  0x010101, // 1 = _
-                  0x7e2553, // 2 = purple
-                  0x030303, // 3 = _
-                  0x040404, // 4 = _
-                  0x050505, // 5 = _
-                  0x060606, // 6 = _
-                  0x070707, // 7 = _
-                  0xff004d, // 8 = red
-                  ]);
-    ra.usePalette([8, 0, null, null, 2]);
-
-    let img = ra.loadImage('test/testdata/small-fruit.png');
-    ra.drawImage(img);
-
-    util.renderCompareTo(ra, 'test/testdata/rotten-fruit.png');
-
-    let expect = new Uint8Array([
-      1, 1, 1, 1, 2, 1, 1, 1,
-      1, 1, 1, 1, 1, 2, 1, 1,
-      1, 4, 0, 0, 0, 2, 4, 1,
-      4, 0, 3, 0, 2, 0, 0, 4,
-      0, 3, 3, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0,
-      1, 0, 0, 0, 0, 0, 0, 1,
-      1, 1, 0, 0, 0, 0, 1, 1
-    ]);
-    assert.deepEqual(expect, ra.clonePlane().data);
-
-    // Compare the palette, which has aliased color. Dropped rgb is shown in
-    // parenthesis.
-    palette = ra.usePalette();
-    expect = 'Palette{0:[8]=0xff004d, 1:[0]=0x000000, 2:[0]=(0xab5236), 3:[0]=(0xff77a8), 4:[2]=0x7e2553}';
-    let actual = palette.toString();
-    assert.equal(expect, actual);
   });
 
 

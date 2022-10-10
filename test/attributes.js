@@ -1,8 +1,123 @@
 var assert = require('assert');
 var util = require('./util.js');
 var ra = require('../src/lib.js');
+var palette = require('../src/palette.js');
+var attributes = require('../src/attributes.js');
+var rgbColor = require('../src/rgb_color.js');
 
 describe('Attributes', function() {
+  it('getRGBNeeds', () => {
+    ra.resetState();
+
+    let fruit = ra.loadImage('test/testdata/small-fruit.png');
+    let pal = ra.palette;
+
+    // using this breaks things!
+    //let pal = new palette.Palette();
+
+    let source = new ra.Plane();
+    // TODO: make this unnecessary
+    source.setSize(1, 1);
+    let sizeInfo = {
+      cell_width: 8,
+      cell_height: 8,
+    };
+    let attrs = new attributes.Attributes(source, pal, sizeInfo);
+    let actual = attrs._getRGBNeeds(fruit, pal);
+    let expect = [
+      new rgbColor.RGBColor(0x000000),
+      new rgbColor.RGBColor(0x7e2553),
+      new rgbColor.RGBColor(0xab5236),
+      new rgbColor.RGBColor(0xff004d),
+      new rgbColor.RGBColor(0xff77a8),
+    ]
+    assert.deepEqual(actual, expect);
+  });
+
+  it('choosePieceNum', () => {
+    let source = new ra.Plane();
+    let pal = new palette.Palette();
+    let sizeInfo = {cell_width: 1, cell_height: 1};
+    let attrs = new attributes.Attributes(source, pal, sizeInfo);
+
+    // pick first
+    let match = {
+      winners: [3, 4],
+      ranking: [
+        {piece: 1, score: 2}
+      ]
+    };
+    let piece = attrs._choosePieceNum(match, null);
+    assert.equal(piece, 3);
+
+    // pick `was` if its a winner
+    match = {
+      winners: [3, 4],
+      ranking: [
+        {piece: 1, score: 2}
+      ]
+    };
+    piece = attrs._choosePieceNum(match, 4);
+    assert.equal(piece, 4);
+
+    // `was` is ignored if not a winner
+    match = {
+      winners: [3, 4],
+      ranking: [
+        {piece: 1, score: 2}
+      ]
+    };
+    piece = attrs._choosePieceNum(match, 2);
+    assert.equal(piece, 3);
+
+    // first in ranking if no winner
+    match = {
+      winners: [],
+      ranking: [
+        {piece: 1, score: 2}
+      ]
+    };
+    piece = attrs._choosePieceNum(match, null);
+    assert.equal(piece, 1);
+
+    // ranking doesn't care about `was`
+    match = {
+      winners: [],
+      ranking: [
+        {piece: 1, score: 2},
+        {piece: 4, score: 1}
+      ]
+    };
+    piece = attrs._choosePieceNum(match, 4);
+    assert.equal(piece, 1);
+  });
+
+  it('downModulate', () => {
+    ra.resetState();
+    ra.useColors('pico8');
+
+    let fruit = ra.loadImage('test/testdata/small-fruit.png');
+    let pal = ra.palette;
+
+    let source = new ra.Plane();
+    source.setSize(1, 1);
+    let sizeInfo = {cell_width: 8, cell_height: 8};
+    let attrs = new attributes.Attributes(source, pal, sizeInfo);
+    attrs._downModulate(fruit, 0, 0, 8);
+
+    let expect = new Uint8Array([
+      0, 0, 0, 0, 4, 0, 0, 0,
+      0, 0, 0, 0, 0, 4, 0, 0,
+      0, 2, 0, 0, 0, 4, 2, 0,
+      2, 0, 6, 0, 4, 0, 0, 2,
+      0, 6, 6, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0
+    ]);
+    assert.deepEqual(expect, fruit.clone().data);
+  });
+
   it('normal', function() {
     ra.resetState();
 

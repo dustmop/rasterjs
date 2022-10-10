@@ -96,7 +96,8 @@ Scene.prototype._initialize = function () {
 Scene.prototype._initPalette = function() {
   this.palette = new palette.Palette();
   this.palette.giveFeatures(this._fsacc, new weak.Ref(this));
-  this.palette.setPending();
+  // TODO: possibly, this.palette.setDefaultRGBMap('quick');
+  // then, don't have palette depend on rgb_map_quick
 }
 
 Scene.prototype.Plane = function() {
@@ -633,12 +634,8 @@ Scene.prototype.resize = function(x, y) {
 }
 
 Scene.prototype.eyedrop = function(x, y) {
-  // TODO: fix me, test me
-  this.palette.ensureRGBMap();
-  throw new Error(`TODO: eyedrop`);
-  this._paletteFromColorMap();
   let c = this.aPlane.get(x, y);
-  return this.palette.get(c);
+  return this.palette.entry(c);
 }
 
 Scene.prototype.get = function(x, y) {

@@ -244,7 +244,7 @@ void main() {
 
     let self = this;
     window.addEventListener('DOMContentLoaded', function(e) {
-      let possible = ['plane', 'colorMap', 'palette', 'tileset',
+      let possible = ['plane', 'palette', 'tileset',
                       'attributes', 'interrupts'];
       for (let i = 0; i < possible.length; i++) {
         let p = possible[i];
@@ -318,8 +318,12 @@ void main() {
       }
       if (type == 'palette') {
         self._putSurfaceToElem(surface, 'palette-display');
-      } else if (type == 'colorMap') {
-        self._putSurfaceToElem(surface, 'colorMap-display');
+      } else if (type == 'palette-rgbmap') {
+        // NOTE: this enables the element
+        let id = 'palette-rgbmap-display';
+        let displayElem = document.getElementById(id);
+        displayElem.style.display = 'inline';
+        self._putSurfaceToElem(surface, id);
       } else if (type == 'plane') {
         self._putSurfaceToElem(surface, 'plane-display');
       } else if (type == 'tileset') {

@@ -51,7 +51,7 @@ class Renderer {
     let input = inputList[0];
 
     let layer = this._layers[0];
-    let allow = ['plane', 'size', 'camera',
+    let allow = ['plane', 'size', 'camera', 'palette-rgbmap',
                  'tileset', 'palette', 'attributes', 'interrupts', 'spriteList',
                  'font', 'grid'];
     let keys = Object.keys(input);
@@ -66,11 +66,11 @@ class Renderer {
     if (!input.plane || !types.isPlane(input.plane)) {
       throw new Error(`input.plane must be a non-null Plane`);
     }
+    if (!input.palette || !types.isPalette(input.palette)) {
+      throw new Error(`input.palette must be a non-null Palette`);
+    }
     if (input.tileset && !types.isTileset(input.tileset)) {
       throw new Error(`input.tiles must be a Tileset, got ${input.tileset}`);
-    }
-    if (input.palette && !types.isPalette(input.palette)) {
-      throw new Error(`input.palette must be a Palette, got ${input.palette}`);
     }
     if (input.attributes && !types.isAttributes(input.attributes)) {
       throw new Error(`input.attributes must be a Attributes`);
@@ -473,6 +473,7 @@ class Renderer {
           this.innerPlaneRenderer = new Renderer();
           let components = [{
             plane: myPlane,
+            palette: myPalette,
           }];
           this.innerPlaneRenderer.connect(components);
         }
@@ -480,25 +481,32 @@ class Renderer {
         let layer = surfaces[0];
         callback('plane', layer);
 
-      } else if (comp == 'colorMap') {
+      } else if (comp == 'palette') {
         let opt = {};
-        // TODO: fix and test me
-        if (settings.colorMap) {
-          if (settings.colorMap['*']) {
-            opt = settings.colorMap['*'];
-          } else if (myColorMap.name) {
-            opt = settings.colorMap[myColorMap.name];
+        // TODO: test me
+        if (settings.palette) {
+          if (settings.palette['*']) {
+            opt = settings.palette['*'];
+          } else if (myPalette.name) {
+            opt = settings.palette[myPalette.name];
           }
         }
-        let surface = myColorMap.serialize(opt);
-        callback('colorMap', surface);
+        let surface = myPalette.serialize(opt);
+        callback('palette', surface);
 
-      } else if (comp == 'palette') {
-        if (myPalette) {
-          let opt = settings.palette || {};
-          let surface = myPalette.serialize(opt);
-          callback('palette', surface);
+      } else if (comp == 'palette-rgbmap') {
+        let opt = {};
+        if (settings['palette-rgbmap']) {
+          let conf = settings['palette-rgbmap'];
+          if (conf['*']) {
+            opt = conf['*'];
+          } else if (myPalette.name) {
+            opt = conf[myPalette.name];
+          }
         }
+        opt.rgbmap = true;
+        let surface = myPalette.serialize(opt);
+        callback('palette-rgbmap', surface);
 
       } else if (comp == 'tileset') {
         if (myTiles) {

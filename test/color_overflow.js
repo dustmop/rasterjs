@@ -4,8 +4,6 @@ var ra = require('../src/lib.js');
 
 describe('Color overflow', function() {
   it('works correctly', function() {
-    // TODO: fix me! DISABLED
-    return;
     ra.resetState();
     ra.setSize({w: 3, h: 2});
 

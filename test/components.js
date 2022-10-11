@@ -4,16 +4,12 @@ var ra = require('../src/lib.js');
 describe('Components', function() {
   it('palette', function() {
     ra.resetState();
-    // null constructor
-    let pal = ra.usePalette();
-    assert.equal(pal.constructor.name, 'Palette');
-    assert.equal(pal.length, 64);
     // number of palette entries
-    pal = ra.usePalette(5);
+    let pal = ra.usePalette({numEntries: 5});
     assert.equal(pal.constructor.name, 'Palette');
     assert.equal(pal.length, 5);
     // color values
-    pal = ra.usePalette([12,23,34]);
+    pal = ra.usePalette({entries: [12,23,34]});
     assert.equal(pal.constructor.name, 'Palette');
     assert.equal(pal.length, 3);
   });

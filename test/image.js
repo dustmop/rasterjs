@@ -39,7 +39,7 @@ describe('Image', function() {
   // If a colorMap exists, image uses it to convert rgb to 8-bit.
   it('draw using colormap', function() {
     ra.resetState();
-    ra.useColors('pico8');
+    ra.usePalette('pico8');
 
     let img = ra.loadImage('test/testdata/small-fruit.png');
     ra.drawImage(img);
@@ -64,7 +64,7 @@ describe('Image', function() {
   // Colors that didn't exist in the colorMap are added to it
   it('draw adds colors', function() {
     ra.resetState();
-    ra.useColors([0x000000, 0xab5236, 0xff004d, 0x29adff]);
+    ra.usePalette({rgbmap:[0x000000, 0xab5236, 0xff004d, 0x29adff]});
 
     let img = ra.loadImage('test/testdata/small-fruit.png');
     ra.drawImage(img);
@@ -84,7 +84,7 @@ describe('Image', function() {
     assert.deepEqual(expect, ra.clonePlane().data);
 
     // Compare the palette
-    let palette = ra.usePalette();
+    let palette = ra.palette;
     expect = 'Palette{0:[0]=0x000000, 1:[1]=0xab5236, 2:[2]=0xff004d, 3:[3]=0x29adff, 4:[4]=0x7e2553, 5:[5]=0xff77a8}';
     let actual = palette.toString();
     assert.equal(expect, actual);
@@ -94,7 +94,7 @@ describe('Image', function() {
   // Draw an image onto a selection
   it('draw on selection', function() {
     ra.resetState();
-    ra.useColors('pico8');
+    ra.usePalette('pico8');
 
     ra.setSize(10, 10);
     ra.fillColor(1);
@@ -112,7 +112,7 @@ describe('Image', function() {
   // Loading returns an image that knows what colors is uses
   it('loaded image has a look', function() {
     ra.resetState();
-    ra.useColors('pico8');
+    ra.usePalette('pico8');
 
     let img = ra.loadImage('test/testdata/small-fruit.png');
     assert.equal(img.numColors(), 5);
@@ -260,7 +260,7 @@ describe('Image', function() {
 
   it('select and draw', function() {
     ra.resetState();
-    ra.useColors('quick');
+    ra.usePalette('quick');
 
     let img = ra.loadImage('test/testdata/draw_all.png');
     ra.drawImage(img);

@@ -6,7 +6,7 @@ describe('Flood', function() {
   it('maze', function() {
     ra.resetState();
     ra.setSize({w: 16, h: 16});
-    ra.useColors('quick');
+    ra.usePalette('quick');
     let img = ra.loadImage('test/testdata/maze_mini.png');
     ra.drawImage(img);
     ra.setColor(37);
@@ -17,7 +17,7 @@ describe('Flood', function() {
   it('odd shape', function() {
     ra.resetState();
     ra.setSize({w: 16, h: 16});
-    ra.useColors('quick');
+    ra.usePalette('quick');
     let img = ra.loadImage('test/testdata/odd_shape.png');
     ra.drawImage(img);
     ra.setColor(33);

@@ -29,6 +29,9 @@ class Palette {
     if (opt.rgbmap) {
       this._rgbmap = toIntList(opt.rgbmap);
     }
+    if (opt.entries) {
+      this._entries = toIntList(opt.entries);
+    }
   }
 
   /**
@@ -91,6 +94,7 @@ class Palette {
   }
 
   get length() {
+    this.ensureEntries();
     return this._entries.length;
   }
 
@@ -354,7 +358,7 @@ class Palette {
       prefix = 'Palette.rgbmap'
       len = this._rgbmap.length;
     } else {
-      return 'Palette{null}'
+      len = this._rgbmap.length;
     }
     for (let i = 0; i < len; i++) {
       let n = i;
@@ -582,6 +586,38 @@ function constructRGBMapFrom(rep) {
   return make;
 }
 
+function buildFrom(param, opt) {
+  opt = opt || {};
+  let spec = ['!name', 'name?s', 'rgbmap?a', 'entries?a',
+              'numEntries?a', 'pieceSize?i', 'upon?a'];
+  let [name, rgbmap, entries, numEntries, pieceSize, upon] = (
+    destructure.from('usePalette', spec, [param], null));
+
+  if (!entries && numEntries) {
+    entries = [...Array(numEntries).keys()].slice();
+  }
+  if (!entries && opt.copy) {
+    entries = opt.copy._entries;
+  }
+  if (!rgbmap && opt.copy) {
+    rgbmap = opt.copy._rgbmap;
+  }
+  let make = new Palette({rgbmap: rgbmap, entries: entries});
+  if (name) {
+    make.name = name;
+  }
+  if (pieceSize) {
+    make.pieceSize = pieceSize;
+  }
+  if (opt.copy) {
+    make._fsacc = opt.copy._fsacc;
+    make._refScene = opt.copy._refScene;
+  }
+  // TODO: upon
+  return make;
+}
+
 module.exports.Palette = Palette;
 module.exports.PaletteEntry = PaletteEntry;
 module.exports.constructRGBMapFrom = constructRGBMapFrom;
+module.exports.buildFrom = buildFrom;

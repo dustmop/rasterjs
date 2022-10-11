@@ -15,12 +15,12 @@ describe('Cycle palette', function() {
   // Functionality we want, draw an image then change the palette
   it('change to green', function() {
     ra.resetState();
-    ra.useColors('pico8');
+    ra.usePalette('pico8');
 
     let img = ra.loadImage('test/testdata/small-fruit.png');
     ra.drawImage(img);
 
-    let palette = ra.usePalette();
+    let palette = ra.palette;
     palette.put(2, 3);
     palette.put(8, 11);
     palette.put(14, 10);
@@ -40,7 +40,7 @@ describe('Cycle palette', function() {
     assert.deepEqual(expect, ra.clonePlane().data);
 
     // Compare the palette
-    palette = ra.usePalette();
+    palette = ra.palette;
     expect = 'Palette{0:[0]=0x000000, 1:[1]=0x1d2b53, 2:[3]=0x008751, 3:[3]=0x008751, 4:[4]=0xab5236, 5:[5]=0x5f574f, 6:[6]=0xc2c3c7, 7:[7]=0xfff1e8, 8:[11]=0x00e436, 9:[9]=0xffa300, 10:[10]=0xffec27, 11:[11]=0x00e436, 12:[12]=0x29adff, 13:[13]=0x83769c, 14:[10]=0xffec27, 15:[15]=0xffccaa}';
     let actual = palette.toString();
     assert.equal(expect, actual);
@@ -121,8 +121,8 @@ describe('Cycle palette', function() {
   // Image uses color in the colorMap, but not in palette
   it('image uses colors in colorMap, but not in palette', function() {
     ra.resetState();
-    ra.useColors('pico8');
-    ra.usePalette([8, 0, 2]);
+    ra.usePalette('pico8');
+    ra.usePalette({entries: [8, 0, 2]});
 
     let img = ra.loadImage('test/testdata/small-fruit.png');
     ra.drawImage(img);
@@ -134,11 +134,11 @@ describe('Cycle palette', function() {
   // Image loaded before palette must agree with it
   it('image loaded before palette is set, needs to agree', function() {
     ra.resetState();
-    ra.useColors('pico8');
+    ra.usePalette('pico8');
 
     let img = ra.loadImage('test/testdata/small-fruit.png');
     ra.drawImage(img);
-    ra.usePalette([8, 0, 2, 4, 14]);
+    ra.usePalette({entries:[8, 0, 2, 4, 14]});
 
     // TODO: The image should be redrawn to agree with the palette.
     util.renderCompareTo(ra, 'test/testdata/small-fruit-agree.png');
@@ -148,11 +148,11 @@ describe('Cycle palette', function() {
   // Palette can make the plane agree with it, to remap its colors
   it('explicit valued palette can remap the plane', function() {
     ra.resetState();
-    ra.useColors('pico8');
+    ra.usePalette('pico8');
 
     let img = ra.loadImage('test/testdata/small-fruit.png');
     ra.drawImage(img);
-    ra.usePalette([8, 0, 2, 4, 14], {agree: true});
+    ra.usePalette({entries:[8, 0, 2, 4, 14], agree: true});
 
     util.renderCompareTo(ra, 'test/testdata/small-fruit.png');
   });
@@ -161,8 +161,8 @@ describe('Cycle palette', function() {
   // Draw an image using a pre-defined palette
   it('usePalette packed', function() {
     ra.resetState();
-    ra.useColors('pico8');
-    ra.usePalette([8, 0, 2, 14, 4]);
+    ra.usePalette('pico8');
+    ra.usePalette({entries:[8, 0, 2, 14, 4]});
 
     let img = ra.loadImage('test/testdata/small-fruit.png');
     ra.drawImage(img);
@@ -180,7 +180,7 @@ describe('Cycle palette', function() {
     assert.deepEqual(expect, ra.clonePlane().data);
 
     // Compare the palette
-    palette = ra.usePalette();
+    let palette = ra.palette;
     expect = 'Palette{0:[8]=0xff004d, 1:[0]=0x000000, 2:[2]=0x7e2553, 3:[14]=0xff77a8, 4:[4]=0xab5236}';
     let actual = palette.toString();
     assert.equal(expect, actual);
@@ -192,10 +192,10 @@ describe('Cycle palette', function() {
     return;
 
     ra.resetState();
-    ra.useColors([0x000000, 0xff0000, 0x00ff00, 0x0000ff]);
+    ra.usePalette({rgbmap:[0x000000, 0xff0000, 0x00ff00, 0x0000ff]});
 
     // Enable the palette
-    let palette = ra.usePalette();
+    let palette = ra.palette;
 
     assert.throws(function() {
       ra.loadImage('test/testdata/small-fruit.png');

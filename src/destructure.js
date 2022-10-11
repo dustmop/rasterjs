@@ -195,6 +195,9 @@ function typeCoerce(value, type) {
     return value;
   } else if (type == 's') {
     // string
+    if (!value) {
+      return '';
+    }
     return value.toString();
   } else if (type == 'b') {
     // bool

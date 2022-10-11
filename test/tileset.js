@@ -140,8 +140,8 @@ describe('Tileset', function() {
     tiles.setColor(4);
     tiles.drawDot(5, 13);
 
-    //              0   1   2   3   4
-    ra.usePalette([ 4, 31, 37, 34, 31]);
+    //                       0   1   2   3   4
+    ra.usePalette({entries:[ 4, 31, 37, 34, 31]});
 
     ra.useTileset(tiles, {tile_width: 8, tile_height: 8});
     ra.usePlane(plane);
@@ -202,20 +202,20 @@ describe('Tileset', function() {
   it('tiles with attributes', function() {
     ra.resetState();
 
-    ra.useColors([
+    ra.usePalette({rgbmap:[
       0x000000, 0x565656, 0x664019, 0x858585, 0xa5a5a5, 0xc0c0c0,
       0xffffff, 0xffb973, 0xff7373, 0xff3333, 0xff9933, 0xf1ff73,
       0x2b6619, 0x4abf26, 0xbbffa6, 0x63ff33, 0xd9ffed, 0x2687bf,
       0x7033ff, 0x66194f, 0xffa6e4, 0xff33c2
-    ]);
+    ]});
 
     // Create palette, 4 options, each of size 6
-    let pal = [17,16,14,15,13,12,
-                0,11, 7,10, 9, 2,
-                6, 5, 4, 3, 1, 0,
-               18,20, 8, 5,21,19,
-              ];
-    ra.usePalette(pal);
+    let ents = [17,16,14,15,13,12,
+                 0,11, 7,10, 9, 2,
+                 6, 5, 4, 3, 1, 0,
+                18,20, 8, 5,21,19,
+               ];
+    ra.usePalette({entries:ents});
 
     // Build attributes
     let attrs = new ra.Plane();
@@ -247,20 +247,20 @@ describe('Tileset', function() {
     ra.resetState();
 
     // ColorMap has 22 values
-    ra.useColors([
+    ra.usePalette({rgbmap:[
       0x000000, 0x565656, 0x664019, 0x858585, 0xa5a5a5, 0xc0c0c0,
       0xffffff, 0xffb973, 0xff7373, 0xff3333, 0xff9933, 0xf1ff73,
       0x2b6619, 0x4abf26, 0xbbffa6, 0x63ff33, 0xd9ffed, 0x2687bf,
       0x7033ff, 0x66194f, 0xffa6e4, 0xff33c2
-    ]);
+    ]});
 
     // Create palette, 4 options, each of size 6
-    let pal = [17,16,14,15,13,12,
-                0,11, 7,10, 9, 2,
-                6, 5, 4, 3, 1, 0,
-               18,20, 8, 5,21,19,
-              ];
-    ra.usePalette(pal);
+    let ents = [17,16,14,15,13,12,
+                 0,11, 7,10, 9, 2,
+                 6, 5, 4, 3, 1, 0,
+                18,20, 8, 5,21,19,
+               ];
+    ra.usePalette({entries:ents});
 
     // Build attributes
     let attrs = new ra.Plane();
@@ -301,12 +301,12 @@ describe('Tileset', function() {
     ra.resetState();
 
     // Create palette, 4 options, each of size 6
-    let pal = [17,16,14,15,13,12,
-                0,11, 7,10, 9, 2,
-                6, 5, 4, 3, 1, 0,
-               18,20, 8, 5,21,19,
-              ];
-    ra.usePalette(pal);
+    let ents = [17,16,14,15,13,12,
+                 0,11, 7,10, 9, 2,
+                 6, 5, 4, 3, 1, 0,
+                18,20, 8, 5,21,19,
+               ];
+    ra.usePalette({entries:ents});
 
     // Build attributes
     let dat = new ra.Plane();

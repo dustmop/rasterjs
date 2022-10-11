@@ -5,8 +5,8 @@ var ra = require('../src/lib.js');
 describe('Render components', function() {
   it('render rgbmap', () => {
     ra.resetState();
-    ra.useColors('c64');
-    ra.usePalette([8, 5, 7, 3, 2, 11, 0, 4]);
+    ra.usePalette('c64');
+    ra.usePalette({entries:[8, 5, 7, 3, 2, 11, 0, 4]});
 
     let gotPalette, gotRRGMap;
 
@@ -33,7 +33,7 @@ describe('Render components', function() {
 
   it('tileset and colorMap', function() {
     ra.resetState();
-    ra.useColors(null);
+    ra.usePalette({rgbmap:[]});
 
     let plane = new ra.Plane();
     plane.setSize(4);

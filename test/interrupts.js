@@ -5,7 +5,7 @@ describe('Interrupts', function() {
 
   it('change scroll', function() {
     ra.resetState();
-    ra.useColors('pico8');
+    ra.usePalette('pico8');
 
     let img = ra.loadImage('test/testdata/small-fruit.png');
     ra.drawImage(img);
@@ -24,7 +24,7 @@ describe('Interrupts', function() {
 
   it('scroll range', function() {
     ra.resetState();
-    ra.useColors('pico8');
+    ra.usePalette('pico8');
 
     let img = ra.loadImage('test/testdata/small-fruit.png');
     ra.drawImage(img);
@@ -41,7 +41,7 @@ describe('Interrupts', function() {
 
   it('fill color', function() {
     ra.resetState();
-    ra.useColors('pico8');
+    ra.usePalette('pico8');
     ra.setSize(8, 8);
 
     ra.useInterrupts([

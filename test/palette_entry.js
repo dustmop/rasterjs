@@ -27,7 +27,7 @@ describe('Palette', function() {
                    0x040000, 0x050000, 0x060000, 0x070000]);
 
     let actual = pal.toString();
-    let expect = `Palette{null}`;
+    let expect = `Palette{0:[0]=0x000000, 1:[1]=0x010000, 2:[2]=0x020000, 3:[3]=0x030000, 4:[4]=0x040000, 5:[5]=0x050000, 6:[6]=0x060000, 7:[7]=0x070000}`;
     assert.equal(actual, expect);
 
     actual = pal.toString({rgbmap: true});
@@ -150,7 +150,7 @@ describe('Palette', function() {
     ra.setSize(8, 8);
 
     let result = [];
-    let palette = ra.usePalette();
+    let palette = ra.palette;
     let i = 0;
     for (let y = 0; y < 8; y++) {
       for (let x = 0; x < 8; x++) {
@@ -170,7 +170,7 @@ describe('Palette', function() {
     let tmpout = tmpdir + '/actual.png';
     ra.resetState();
 
-    let palette = ra.usePalette();
+    let palette = ra.palette;
     palette.save(tmpout);
 
     util.ensureFilesMatch('test/testdata/pal_saved.png', tmpout);
@@ -181,7 +181,7 @@ describe('Palette', function() {
     let tmpout = tmpdir + '/actual.png';
     ra.resetState();
 
-    let palette = ra.usePalette();
+    let palette = ra.palette;
     let surfaces = palette.serialize();
 
     ra._saveSurfacesTo(surfaces, tmpout);
@@ -194,7 +194,7 @@ describe('Palette', function() {
     let tmpout = tmpdir + '/actual.png';
     ra.resetState();
 
-    let palette = ra.usePalette();
+    let palette = ra.palette;
     let surfaces = palette.serialize({rgbmap: true});
 
     ra._saveSurfacesTo(surfaces, tmpout);
@@ -207,7 +207,7 @@ describe('Palette', function() {
     let tmpout = tmpdir + '/actual.png';
     ra.resetState();
 
-    let palette = ra.usePalette();
+    let palette = ra.palette;
     let surfaces = palette.serialize({
       cell_width: 10, cell_height: 7,
       cell_between: 3,
@@ -223,9 +223,9 @@ describe('Palette', function() {
     let tmpdir = util.mkTmpDir();
     let tmpout = tmpdir + '/actual.png';
     ra.resetState();
-    ra.useColors('nes');
+    ra.usePalette('nes');
 
-    let palette = ra.usePalette();
+    let palette = ra.palette;
     let surfaces = palette.serialize({
       cell_width: 7, cell_height: 19,
       cell_between: 1,
@@ -242,9 +242,9 @@ describe('Palette', function() {
     let tmpdir = util.mkTmpDir();
     let tmpout = tmpdir + '/actual.png';
     ra.resetState();
-    ra.useColors('nes');
+    ra.usePalette('nes');
 
-    let palette = ra.usePalette();
+    let palette = ra.palette;
     let surfaces = palette.serialize({
       cell_width: 4, cell_height: 4,
       cell_between: 0,
@@ -261,9 +261,9 @@ describe('Palette', function() {
     let tmpdir = util.mkTmpDir();
     let tmpout = tmpdir + '/actual.png';
     ra.resetState();
-    ra.useColors('dos');
+    ra.usePalette('dos');
 
-    let palette = ra.usePalette();
+    let palette = ra.palette;
     palette.save(tmpout);
 
     util.ensureFilesMatch('test/testdata/pal_dos_saved.png', tmpout);
@@ -273,9 +273,9 @@ describe('Palette', function() {
     let tmpdir = util.mkTmpDir();
     let tmpout = tmpdir + '/actual.png';
     ra.resetState();
-    ra.useColors('dos');
+    ra.usePalette('dos');
 
-    let palette = ra.usePalette();
+    let palette = ra.palette;
     for (let i = 0; i < palette.length; i++) {
       if (palette.entry(i).rgb.toInt() != rgbMap.rgb_map_dos[i]) {
         assert.fail('Did not match!');
@@ -292,14 +292,14 @@ describe('Palette', function() {
 
   it('get all', function() {
     ra.resetState();
-    ra.useColors(null);
+    ra.usePalette({rgbmap:[]});
     ra.fillTrueColor(0x444444);
 
     // loading image adds to the rgbmap
-    let img = ra.loadImage('test/testdata/boss_first_form.png');
+    let img = ra.loadImage('test/testdata/boss_first_form.png', {sortColors: 'usingHSV'});
 
     ra.drawImage(img, 0, 0);
-    let colors = ra.usePalette({sort: true});
+    let colors = ra.palette;
     let actual = [];
     for (let i = 0; i < colors.length; i++) {
       actual.push(colors.entry(i).hex());
@@ -332,9 +332,10 @@ describe('Palette', function() {
     let tmpdir = util.mkTmpDir();
     let tmpout = tmpdir + '/actual.png';
     ra.resetState();
-    ra.useColors([0xff0000, 0xff8800, 0xffff00, 0x00ff88,
-                  0x00ffff, 0x000088, 0x0000ff, 0x0088ff]);
-    let palette = ra.usePalette([1, 0, 3, 2]);
+    ra.usePalette({rgbmap:[0xff0000, 0xff8800, 0xffff00, 0x00ff88,
+                           0x00ffff, 0x000088, 0x0000ff, 0x0088ff]});
+    ra.usePalette({entries:[1, 0, 3, 2]});
+    let palette = ra.palette;
     ra.setSize(8, 8);
     ra.fillFrame(function(x, y) {
       let a = x / 4;
@@ -368,7 +369,7 @@ describe('Palette', function() {
     let tmpdir = util.mkTmpDir();
     let tmpout = tmpdir + '/actual.png';
     ra.resetState();
-    ra.useColors('pico8');
+    ra.usePalette('pico8');
 
     let img = ra.loadImage('test/testdata/green-fruit.png');
     let pal = ra.usePalette(img.look);
@@ -385,7 +386,7 @@ describe('Palette', function() {
 
     let shape = ra.loadImage('test/testdata/cycle-before.png');
     let cycleColors = ra.loadImage('test/testdata/cycle-colors.png');
-    let palette = ra.usePalette({size: 4});
+    let palette = ra.usePalette({numEntries: 4});
 
     ra.setSize(8, 8);
     ra.fillFrame(function(x, y) {

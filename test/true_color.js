@@ -22,7 +22,7 @@ describe('True Color', function() {
 
     util.renderCompareTo(ra, 'test/testdata/true_color.png');
 
-    let pal = ra.usePalette();
+    let pal = ra.palette;
     assert.equal(pal.length, 68);
     // Validate palette contents.
     assert.equal(pal.getRGB(64), 0xcc66cc);
@@ -53,7 +53,7 @@ describe('True Color', function() {
 
     util.renderCompareTo(ra, 'test/testdata/true_color.png');
 
-    let pal = ra.usePalette();
+    let pal = ra.palette;
     assert.equal(pal.length, 68);
     // Validate palette contents.
     assert.equal(pal.getRGB(64), 0xcc66cc);

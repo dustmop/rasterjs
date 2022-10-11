@@ -55,6 +55,7 @@ Scene.prototype._initialize = function () {
   this.time = 0.0;
   this.timeTick = 0;
   this.TAU = 6.283185307179586;
+  this.TURN = this.TAU;
   this.PI = this.TAU / 2;
   this.camera = {};
   this._hasRenderedOnce = false;
@@ -345,10 +346,6 @@ Scene.prototype.setTitle = function(title) {
 
 Scene.prototype.originAtCenter = function() {
   this.config.translateCenter = true;
-}
-
-Scene.prototype.useColors = function(obj) {
-  this.palette.setRGBMap(palette.constructRGBMapFrom(obj));
 }
 
 Scene.prototype.useDisplay = function(nameOrDisplay) {
@@ -788,63 +785,52 @@ Scene.prototype.normalizePaletteAttributes = function() {
 Scene.prototype.usePalette = function(param, opt) {
   // can be called like this:
   //
-  //   // Construct a palette from what was drawn to the plane
-  //   ra.usePalette();
+  //   // name of a preset palette
+  //   ra.usePalette('nes');
   //
-  //   // Same, but sort the palette by hsv
-  //   ra.usePalette({sort: true});
+  //   // rgbmap values
+  //   ra.usePalette({rgbmap: [0xff8844, 0x6644cc, 0xffffff, 0x0066ff]});
   //
-  //   // ...
-  //   ra.usePalette({size: 4});
+  //   // entries
+  //   ra.usePalette({entries: [7, 4, 1, 0, 5, 6]});
   //
-  //   // List of indicies from the colorMap.
-  //   ra.usePalette([0x17, 0x21, 0x04, 0x09]);
+  //   // entries
+  //   ra.usePalette({numEntries: 9});
   //
-  //   // Number of colors in the palette.
-  //   ra.usePalette(5);
+  //   // image look
+  //   ra.usePalette(image.look);
   //
   this.palette.ensureRGBMap();
+
   if (!param) {
-    // identity palette entries
-    return this._newPaletteEntries(null, false, null);
+    // error
+    throw new Error(`usePalette needs param, got null`);
 
-  } else if (types.isObject(param)) {
-    // options for palette entries, sort & size
-    return this._newPaletteEntries(null, param.sort, param.size);
-
-  } else if (types.isInteger(param)) {
-    // size of the entries list
-    let vals = new Array(param).fill(0);
-    return this._newPaletteEntries(vals, false, null);
-
-  } else if (types.isArray(param)) {
-    // values to use for palette entries
-    this._newPaletteEntries(param, false, null);
-    if ((opt || {}).agree) {
-      this._recolorPlaneToMatchPalette();
-    }
-    return this.palette;
-
-  } else if (types.isPalette(param)) {
-    let keepRGBMap = this.palette._rgbmap || param._rgbmap;
-    // copy a palette, keep rgbmap
-    // TODO: what about other fields?
-    // TODO: what is the actual use case here?
-    this.palette = param;
-    this.palette._rgbmap = keepRGBMap;
+  } else if (types.isString(param)) {
+    // name of palette rgbmap
+    this.palette.setRGBMap(palette.constructRGBMapFrom(param));
     return this.palette;
 
   } else if (types.isLookOfImage(param)) {
     // palette entries created from an image.look
     this.palette = this._newPaletteFromLookOfImage(param);
-    if (!this.palette._rgbmap) {
-      throw new Error(`FIX ME`);
-    }
     if (opt && opt.upon) {
       this.palette = this._coverUponPalette(opt.upon, this.palette);
       // coverage implies agreement with me
       this._recolorPlaneToMatchPalette();
       return this.palette;
+    }
+    return this.palette;
+
+  } else if (types.isObject(param)) {
+    let agree = false;
+    if (param.agree) {
+      agree = true;
+      delete param.agree;
+    }
+    this.palette = palette.buildFrom(param, {copy: this.palette});
+    if (agree) {
+      this._recolorPlaneToMatchPalette();
     }
     return this.palette;
   }

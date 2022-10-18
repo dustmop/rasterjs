@@ -28,12 +28,11 @@ class SDLBackend : public Napi::ObjectWrap<SDLBackend> {
   Napi::Value SetRenderer(const Napi::CallbackInfo& info);
   Napi::Value SetZoom(const Napi::CallbackInfo& info);
   Napi::Value SetGrid(const Napi::CallbackInfo& info);
-  Napi::Value SetCallbacks(const Napi::CallbackInfo& info);
 
   Napi::Value HandleEvent(const Napi::CallbackInfo& info);
-  Napi::Value RenderLoop(const Napi::CallbackInfo& info);
-  Napi::Value AppQuit(const Napi::CallbackInfo& info);
+  Napi::Value RunDisplayLoop(const Napi::CallbackInfo& info);
 
+  Napi::Value ExitLoop(const Napi::CallbackInfo& info);
 
   Napi::Value InsteadWriteBuffer(const Napi::CallbackInfo& info);
   Napi::Value SetInstrumentation(const Napi::CallbackInfo& info);
@@ -45,9 +44,8 @@ class SDLBackend : public Napi::ObjectWrap<SDLBackend> {
 
   napi_ref rendererRef;
   Napi::FunctionReference renderFunc;
-  Napi::FunctionReference eachFrameFunc;
-  int numRender;
-  bool exitAfter;
+  Napi::FunctionReference execNextFrame;
+  bool isRunning;
 
   bool hasWriteBuffer;
   Napi::Reference<Napi::Value> writeBuffer;

@@ -22,7 +22,7 @@ add-on is built with SDL support!
     ra.drawImage(img);
 
     // Call to `insteadWriteBuffer` means the window will not block
-    ra.show();
+    ra.run();
 
     let tmpdir = util.mkTmpDir();
     let tmpout = tmpdir + '/capture.png';

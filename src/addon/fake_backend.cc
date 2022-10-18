@@ -16,8 +16,8 @@ void FakeBackend::InitClass(Napi::Env env, Napi::Object exports) {
        InstanceMethod("setZoom", &FakeBackend::SetZoom),
        InstanceMethod("setGrid", &FakeBackend::SetGrid),
        InstanceMethod("handleEvent", &FakeBackend::HandleEvent),
-       InstanceMethod("renderLoop", &FakeBackend::RenderLoop),
-       InstanceMethod("appQuit", &FakeBackend::AppQuit),
+       InstanceMethod("runDisplayLoop", &FakeBackend::RunDisplayLoop),
+       InstanceMethod("exitLoop", &FakeBackend::ExitLoop),
        InstanceMethod("insteadWriteBuffer", &FakeBackend::InsteadWriteBuffer),
   });
   g_displayConstructor = Napi::Persistent(func);
@@ -80,12 +80,12 @@ Napi::Value FakeBackend::InsteadWriteBuffer(const Napi::CallbackInfo& info) {
   return info.Env().Null();
 }
 
-Napi::Value FakeBackend::RenderLoop(const Napi::CallbackInfo& info) {
+Napi::Value FakeBackend::RunDisplayLoop(const Napi::CallbackInfo& info) {
   fail();
   return info.Env().Null();
 }
 
-Napi::Value FakeBackend::AppQuit(const Napi::CallbackInfo& info) {
+Napi::Value FakeBackend::ExitLoop(const Napi::CallbackInfo& info) {
   return info.Env().Null();
 }
 

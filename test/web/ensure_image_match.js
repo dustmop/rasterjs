@@ -1,12 +1,10 @@
 function ensureImageMatch(expect_filename, callback) {
-  return function() {
-    var canvas = document.getElementsByTagName('canvas')[0];
-    var ctx = canvas.getContext('2d');
-    compareImage(canvas, expect_filename, function(err) {
-      if (err) { console.log(err); throw err; }
-      callback();
-    });
-  }
+  var canvas = document.getElementsByTagName('canvas')[0];
+  var ctx = canvas.getContext('2d');
+  compareImage(canvas, expect_filename, function(err) {
+    if (err) { console.log(err); throw err; }
+    callback();
+  });
 }
 
 function compareImage(left, right, callback) {

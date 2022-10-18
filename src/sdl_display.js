@@ -33,10 +33,6 @@ class SDLDisplay extends baseDisplay.BaseDisplay {
     this._b.setGrid(unit);
   }
 
-  setCallbacks(numFrames, exitAfter, finalFunc) {
-    this._b.setCallbacks(numFrames, exitAfter, finalFunc);
-  }
-
   setInstrumentation(inst) {
     this._b.setInstrumentation(inst);
   }
@@ -45,12 +41,13 @@ class SDLDisplay extends baseDisplay.BaseDisplay {
     this._b.setVeryVerboseTiming(timing);
   }
 
-  appQuit() {
-    return this._b.appQuit();
+  stopRunning() {
+    this._isRunning = false;
+    return this._b.exitLoop();
   }
 
-  renderLoop(loopID, eachFrame) {
-    return this._b.renderLoop(loopID, eachFrame);
+  appLoop(loopID, execNextFrame) {
+    return this._b.runDisplayLoop(loopID, execNextFrame);
   }
 
   handleEvent(eventName, callback) {

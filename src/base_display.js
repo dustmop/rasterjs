@@ -1,6 +1,8 @@
 class BaseDisplay {
   initialize() {}
 
+  beginExec(refExec) {}
+
   setSize(width, height) {
     this._width = width;
     this._height = height;
@@ -18,18 +20,12 @@ class BaseDisplay {
     this._gridUnit = unit;
   }
 
-  setCallbacks(numFrames, exitAfter, finalFunc) {
-    this._numFrames = numFrames;
-    this._exitAfter = exitAfter;
-    this._finalFunc = finalFunc;
+  appLoop(loopID, eachFrame) {
+    throw new Error(`NotImplemented: BaseDisplay.appLoop`);
   }
 
-  appQuit() {
-    this._quit = true;
-  }
-
-  renderLoop(loopID, eachFrame) {
-    throw new Error(`NotImplemented: BaseDisplay.renderLoop`);
+  stopRunning() {
+    this._isRunning = false;
   }
 
   handleEvent(eventName, callback) {

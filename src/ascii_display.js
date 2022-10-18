@@ -1,7 +1,7 @@
 const baseDisplay = require('./base_display.js');
 
 class AsciiDisplay extends baseDisplay.BaseDisplay {
-  renderLoop(runID, nextFrame) {
+  appLoop(runID, nextFrame) {
     let _res = this._renderer.render();
     let plane = this._renderer.getFirstPlane();
     let buffer = plane.data;

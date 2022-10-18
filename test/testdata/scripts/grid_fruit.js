@@ -7,4 +7,4 @@ ra.setGrid(2);
 let img = ra.loadImage('test/testdata/small-fruit.png');
 ra.drawImage(img);
 
-ra.show();
+ra.run();

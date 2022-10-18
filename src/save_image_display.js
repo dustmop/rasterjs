@@ -25,7 +25,12 @@ class SaveImageDisplay extends baseDisplay.BaseDisplay {
     this._tmpdir = path.join(os.tmpdir(), 'raster-save-' + randstr.generate(8));
   }
 
-  renderLoop(runID, nextFrame) {
+  beginExec(refExec) {
+    let exec = refExec.deref();
+    exec.setLockTime(true);
+  }
+
+  appLoop(runID, execNextFrame) {
     let width = this._width;
     let height = this._height;
 
@@ -34,7 +39,7 @@ class SaveImageDisplay extends baseDisplay.BaseDisplay {
     } catch (e) {
     }
 
-    this._quit = false;
+    this._isRunning = true;
     let hasTemplate = false;
 
     let numFrames = this._numFrames;
@@ -56,10 +61,10 @@ class SaveImageDisplay extends baseDisplay.BaseDisplay {
     let bufferList = [];
     let doneCount = 0;
     for (let count = 0; count < numFrames; count++) {
-      if (this.stopRunning) {
+      if (!this._isRunning) {
         break;
       }
-      nextFrame();
+      execNextFrame();
       let frameNum = leftPad(count, 3, '0');
       let outFile = `${this._tmpdir}/${frameNum}.png`;
       let renderedLayers = this._renderer.render();

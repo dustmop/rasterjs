@@ -9,7 +9,6 @@ describe('basic', function () {
     ra.drawDot(7, 5);
     ra.drawDot(5, 7);
     ra.fillRect(6, 6, 2, 2);
-    ra.show(null, ensureImageMatch('img/fill_clear.png', success));
     util.renderCompareTo(ra, 'img/fill_clear.png', success);
   });
 
@@ -43,6 +42,6 @@ describe('basic', function () {
     ra.resetState();
     ra.setSize(8, 8);
     ra.fillColor(25);
-    ra.show(null, ensureImageMatch('img/solid-orange.png', success));
+    util.renderCompareTo(ra, 'img/solid-orange.png', success);
   });
 });

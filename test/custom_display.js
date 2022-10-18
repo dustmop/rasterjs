@@ -11,13 +11,11 @@ describe('Display', function() {
     ra.setSize({w:6, h:7});
     ra.setZoom(4);
     ra.drawCircle({x:1, y:1, r:3});
-    ra.show();
+    ra.run();
 
     let expect = (
       1000 + // initialize
-      4 +    // zoom
-      60 +   // width
-      700    // height
+      4      // zoom
     );
     assert.equal(display.count, expect);
 
@@ -101,6 +99,8 @@ describe('Display', function() {
 
 
 class MyDisplay extends baseDisplay.BaseDisplay {
+  // TODO: improve this once the Display API is done
+
   constructor() {
     super();
     this.count = 0;
@@ -130,9 +130,7 @@ class MyDisplay extends baseDisplay.BaseDisplay {
     this.gridState = state;
   }
 
-  renderLoop = function(runID, nextFrame) {
-    let plane = this._renderer.getFirstPlane();
-    this.count += plane.width * 10;
-    this.count += plane.height * 100;
+  appLoop = function(runID, nextFrame) {
+    this.count += 500;
   }
 }

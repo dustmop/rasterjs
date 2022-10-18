@@ -36,12 +36,6 @@ class TwoDeeDisplay extends baseDisplay.BaseDisplay {
     this.gridState = state;
   }
 
-  setCallbacks(num, exitAfter, finalFunc) {
-    this._numFrames = num;
-    this._exitAfter = exitAfter;
-    this._finalFunc = finalFunc;
-  }
-
   _createEventHandlers() {
     let self = this;
     document.addEventListener('keypress', function(e) {
@@ -95,22 +89,27 @@ class TwoDeeDisplay extends baseDisplay.BaseDisplay {
     }, 0);
   }
 
-  renderLoop(id, nextFrame) {
+  appLoop(id, nextFrame) {
     let self = this;
     this.waitForContentLoad(function() {
       self._create2dCanvas();
-      self._beginLoop(nextFrame, id, self._numFrames, self._exitAfter, self._finalFunc);
+      self._beginLoop(id, nextFrame);
     });
   }
 
-  _beginLoop(nextFrame, id, num, exitAfter, finalFunc) {
+  _beginLoop(id, nextFrame) {
     let frontBuffer = null;
     let ctx = this.canvas.getContext('2d');
     ctx.imageSmoothingEnabled = false;
     ctx.mozImageSmoothingEnabled = false;
     let self = this;
+    this._isRunning = true;
 
     let renderIt = function() {
+      if (!self._isRunning) {
+        return;
+      }
+
       // Get the data buffer from the plane.
       let res = self._renderer.render();
       if (!frontBuffer) {
@@ -121,20 +120,10 @@ class TwoDeeDisplay extends baseDisplay.BaseDisplay {
         let buff = Uint8ClampedArray.from(frontBuffer);
         let image = new ImageData(buff, self._width, self._height);
         ctx.putImageData(image, 0, 0);
-        if (num > 0) {
-          num--;
-        }
       }
 
       // Create the next frame.
       nextFrame();
-
-      if (num == 0) {
-        if (finalFunc) {
-          finalFunc();
-        }
-        return;
-      }
 
       // Wait for next frame.
       requestAnimationFrame(renderIt);

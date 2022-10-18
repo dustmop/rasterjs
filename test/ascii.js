@@ -25,7 +25,7 @@ describe('Ascii', function() {
     ra.setColor(0);
     ra.drawDot(3, 7);
 
-    ra.show();
+    ra.run();
 
     process.stdout.write = originalWrite;
 

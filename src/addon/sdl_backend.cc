@@ -23,14 +23,13 @@ void SDLBackend::InitClass(Napi::Env env, Napi::Object exports) {
        InstanceMethod("name", &SDLBackend::Name),
        InstanceMethod("setSize", &SDLBackend::SetSize),
        InstanceMethod("setRenderer", &SDLBackend::SetRenderer),
-       InstanceMethod("setCallbacks", &SDLBackend::SetCallbacks),
        InstanceMethod("setZoom", &SDLBackend::SetZoom),
        InstanceMethod("setGrid", &SDLBackend::SetGrid),
        InstanceMethod("setInstrumentation", &SDLBackend::SetInstrumentation),
        InstanceMethod("setVeryVerboseTiming", &SDLBackend::SetVeryVerboseTiming),
        InstanceMethod("handleEvent", &SDLBackend::HandleEvent),
-       InstanceMethod("renderLoop", &SDLBackend::RenderLoop),
-       InstanceMethod("appQuit", &SDLBackend::AppQuit),
+       InstanceMethod("runDisplayLoop", &SDLBackend::RunDisplayLoop),
+       InstanceMethod("exitLoop", &SDLBackend::ExitLoop),
        InstanceMethod("insteadWriteBuffer", &SDLBackend::InsteadWriteBuffer),
   });
   g_displayConstructor = Napi::Persistent(func);
@@ -116,23 +115,17 @@ Napi::Value SDLBackend::SetRenderer(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, 0);
 }
 
-Napi::Value SDLBackend::SetCallbacks(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-
-  this->numRender = info[0].ToNumber().Int32Value();
-  this->exitAfter = info[1].ToBoolean();
-  // finalFunc    = info[2]
-
-  return Napi::Number::New(env, 0);
-}
-
 Napi::Value SDLBackend::SetZoom(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if (info.Length() < 1) {
     printf("SetZoom needs zoom\n");
     exit(1);
   }
-  this->zoomLevel = info[0].As<Napi::Number>().Int32Value();
+  if (!info[0].IsNumber()) {
+    this->zoomLevel = 1;
+  } else {
+    this->zoomLevel = info[0].As<Napi::Number>().Int32Value();
+  }
   return Napi::Number::New(env, 0);
 }
 
@@ -214,11 +207,13 @@ unsigned char* surfaceToRawBuffer(Napi::Value surfaceVal) {
   return (unsigned char*)arrBuff.Data();
 }
 
-Napi::Value SDLBackend::RenderLoop(const Napi::CallbackInfo& info) {
+Napi::Value SDLBackend::RunDisplayLoop(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
+  this->isRunning = true;
+
   Napi::Value runIDVal = info[0];
-  this->eachFrameFunc = Napi::Persistent(info[1].As<Napi::Function>());
+  this->execNextFrame = Napi::Persistent(info[1].As<Napi::Function>());
 
   // track the first few frames
   this->startupFrameCount = 0;
@@ -399,11 +394,11 @@ void SDLBackend::execOneFrame(const CallbackInfo& info) {
   if (SDL_PollEvent(&event)) {
     switch (event.type) {
     case SDL_QUIT:
-      // exit render loop!
-      return;
+      this->isRunning = false;
+      break;
     case SDL_KEYDOWN:
       if (event.key.keysym.sym == SDLK_ESCAPE) {
-        // exit render loop!
+        this->isRunning = false;
         return;
       } else if (!this->keyHandleFunc.IsEmpty()) {
         int code = event.key.keysym.sym;
@@ -419,24 +414,17 @@ void SDLBackend::execOneFrame(const CallbackInfo& info) {
       }
       break;
     case SDL_WINDOWEVENT_CLOSE:
-      // exit render loop!
+      this->isRunning = false;
       return;
     }
   }
 
-  // TODO: Clean up this logic.
-  if (this->numRender == 0) {
-    if (this->exitAfter) {
-      // Number of frames have completed, exit the app.
-      return;
-    }
-    // This was a show() call, keep window open.
-    return this->nextWithoutPresent(env);
+  if (!this->isRunning) {
+    // exit render loop!
+    return;
   }
 
-  SDL_RenderClear(this->rendererHandle);
-
-  // Create an empty object for js function calls
+  // create an empty object for js function calls
   napi_value self;
   napi_status status;
   status = napi_create_object(env, &self);
@@ -445,12 +433,23 @@ void SDLBackend::execOneFrame(const CallbackInfo& info) {
     return;
   }
 
-  // Call the draw function.
-  napi_value funcResult;
-  funcResult = this->eachFrameFunc.Call(self, 0, NULL);
+  // call the executor
+  napi_value needRenderVal;
+  needRenderVal = this->execNextFrame.Call(self, 0, NULL);
   if (env.IsExceptionPending()) {
     return;
   }
+
+  Napi::Value needRenderObj = Napi::Value(env, needRenderVal);
+  Napi::Boolean needRender = needRenderObj.ToBoolean();
+
+  // if no need to render, exit early
+  if (!needRender) {
+    this->nextWithoutPresent(env);
+    return;
+  }
+
+  SDL_RenderClear(this->rendererHandle);
 
   // Call the render function.
   napi_value resVal;
@@ -481,7 +480,7 @@ void SDLBackend::execOneFrame(const CallbackInfo& info) {
     viewPitch = realPitchNum.As<Napi::Number>().Int32Value();
   }
 
-  // Send the raw data from the plane's buffer to the texture
+  // present the raw data from the plane's buffer to the texture
   if (this->dataSources[0]) {
     SDL_UpdateTexture(this->mainLayer0, NULL, this->dataSources[0], viewPitch);
   } else {
@@ -492,6 +491,7 @@ void SDLBackend::execOneFrame(const CallbackInfo& info) {
     SDL_UpdateTexture(this->mainLayer1, NULL, this->dataSources[1], viewPitch);
   }
 
+  // create grid if renderer returns one
   if (this->gridRawBuff) {
     if (!this->gridLayer) {
       // Create the texture that the grid is mapped to
@@ -543,10 +543,6 @@ void SDLBackend::execOneFrame(const CallbackInfo& info) {
     return;
   }
 
-  if (this->numRender > 0) {
-    this->numRender--;
-  }
-
   this->next(env);
 }
 
@@ -578,10 +574,8 @@ void SDLBackend::nextWithoutPresent(Napi::Env env) {
   w->Queue();
 }
 
-Napi::Value SDLBackend::AppQuit(const Napi::CallbackInfo& info) {
-  // TODO: Improve this logic
-  this->numRender = 0;
-  this->exitAfter = true;
+Napi::Value SDLBackend::ExitLoop(const Napi::CallbackInfo& info) {
+  this->isRunning = false;
   return info.Env().Null();
 }
 

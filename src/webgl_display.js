@@ -47,12 +47,6 @@ class WebGLDisplay extends baseDisplay.BaseDisplay {
     }
   }
 
-  setCallbacks(num, exitAfter, finalFunc) {
-    this._numFrames = num;
-    this._exitAfter = exitAfter;
-    this._finalFunc = finalFunc;
-  }
-
   _createWebglCanvas() {
     let displayID = 'main-display';
     if (this.elemID) {
@@ -286,23 +280,20 @@ void main() {
     }, 0);
   }
 
-  renderLoop(id, nextFrame) {
+  appLoop(id, execNextFrame) {
     let self = this;
     self.currentRunId = id;
+    self._isRunning = true;
     this.waitForContentLoad(function() {
       self._createWebglCanvas();
       if (self.onReadyHandler) {
         self.onReadyHandler();
       }
-      self._beginLoop(nextFrame, id, self._numFrames, self._exitAfter, self._finalFunc);
+      self._beginLoop(id, execNextFrame);
     });
   }
 
-  appQuit() {
-    this.currentRunId = null;
-  }
-
-  _beginLoop(nextFrame, id, num, exitAfter, finalFunc) {
+  _beginLoop(id, execNextFrame) {
     let gl = this.gl;
     let frontBuffer = null;
     let topBuffer = null;
@@ -339,6 +330,10 @@ void main() {
 
     let renderIt = function() {
       // Did the app quit?
+      if (!self._isRunning) {
+        return;
+      }
+
       if (self.currentRunId != id) {
         return;
       }
@@ -392,13 +387,10 @@ void main() {
 
       if (frontBuffer) {
         gl.drawArrays(gl.TRIANGLES, 0, 6);
-        if (num > 0) {
-          num--;
-        }
       }
 
       // Create the next frame.
-      nextFrame();
+      execNextFrame();
 
       if (self._renderAndDisplayComponents) {
 
@@ -409,13 +401,6 @@ void main() {
             first.irq(0);
           }
         }
-      }
-
-      if (num == 0) {
-        if (finalFunc) {
-          finalFunc();
-        }
-        return;
       }
 
       // Wait for next frame.

@@ -30,4 +30,4 @@ lower.fillColor(32);
 lower.setColor(42);
 lower.fillCircle({x: 2, y: 2, r: 6});
 
-ra.show();
+ra.run();

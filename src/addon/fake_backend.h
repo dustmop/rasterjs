@@ -18,8 +18,8 @@ class FakeBackend : public Napi::ObjectWrap<FakeBackend> {
   Napi::Value SetGrid(const Napi::CallbackInfo& info);
   Napi::Value HandleEvent(const Napi::CallbackInfo& info);
   Napi::Value InsteadWriteBuffer(const Napi::CallbackInfo& info);
-  Napi::Value RenderLoop(const Napi::CallbackInfo& info);
-  Napi::Value AppQuit(const Napi::CallbackInfo& info);
+  Napi::Value RunDisplayLoop(const Napi::CallbackInfo& info);
+  Napi::Value ExitLoop(const Napi::CallbackInfo& info);
   Napi::Value ReadImage(const Napi::CallbackInfo& info);
 
   Napi::Value SetInstrumentation(const Napi::CallbackInfo& info);

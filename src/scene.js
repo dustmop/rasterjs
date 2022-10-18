@@ -4,6 +4,7 @@ const destructure = require('./destructure.js');
 const algorithm = require('./algorithm.js');
 const palette = require('./palette.js');
 const renderer = require('./renderer.js');
+const executor = require('./executor.js');
 const geometry = require('./geometry.js');
 const imageLoader = require('./image_loader.js');
 const textLoader = require('./text_loader.js');
@@ -64,12 +65,15 @@ Scene.prototype._initialize = function () {
   this.dip = {};
   this.dip.length = 0;
 
+  this._renderer = new renderer.Renderer();
+  this._executor = null;
+
   this._imgLoader = new imageLoader.Loader(this._fsacc, new weak.Ref(this));
   this._textLoader = new textLoader.TextLoader(this._fsacc);
   this._initPalette();
 
   let options = this._env.getOptions();
-  this._numFrames = options.num_frames || -1;
+  this._numFrames = options.num_frames || FRAMES_LOOP_FOREVER;
   if (options.display) {
     this.useDisplay(options.display);
   } else {
@@ -436,15 +440,7 @@ Scene.prototype.fold = function(fname, paramList) {
   }
 }
 
-Scene.prototype._doRender = function(num, exitAfter, drawFunc, finalFunc) {
-  try {
-    this._doRenderSafely(num, exitAfter, drawFunc, finalFunc);
-  } catch (e) {
-    this._env.handleErrorGracefully(e, this._display);
-  }
-}
-
-Scene.prototype._doRenderSafely = function(num, exitAfter, drawFunc, finalFunc) {
+Scene.prototype._prepareRendering = function() {
   let plane = this.aPlane;
 
   if (!this.width || !this.height) {
@@ -464,43 +460,39 @@ Scene.prototype._doRenderSafely = function(num, exitAfter, drawFunc, finalFunc) 
   }
 
   this._renderer.setInspector(this._inspectScanline, this._inspectCallback);
+}
 
-  let renderID = makeRenderID();
+Scene.prototype.setNumFrames = function(num) {
+  this._numFrames = num;
+}
+
+Scene.prototype.run = function(drawFunc, opt) {
+  this._prepareRendering();
+
+  let postRunFunc = (opt || {}).postRun || null;
+
+  this._display.setSize(this.width, this.height);
+  this._display.setRenderer(this._renderer);
+  this._display.setZoom(this.config.zoomScale);
+
+  this._ensureExecutor();
+  this._executor.setLifetime(this._numFrames, postRunFunc);
 
   let self = this;
-  self.then(function() {
-    self._display.setSize(self.width, self.height);
-    self._display.setRenderer(self._renderer);
-    self._display.setZoom(self.config.zoomScale);
-    self._display.setCallbacks(num, exitAfter, finalFunc);
-    self._display.renderLoop(renderID, function() {
-      if (drawFunc) {
-        drawFunc();
-      }
-      self.nextFrame();
-    }, renderID, num, exitAfter, finalFunc);
+  self.then(() => {
+    try {
+      self._executor.execApp(drawFunc);
+    } catch (e) {
+      self._env.handleErrorGracefully(e, self._display);
+    }
   });
 }
 
-function makeRenderID() {
-  let res = '';
-  for (let k = 0; k < 20; k++) {
-    res += String.fromCharCode(65+Math.floor(Math.random()*26));
-  }
-  return res;
-}
-
-Scene.prototype.show = function(drawFunc, finalFunc) {
-  this._doRender(1, false, drawFunc, finalFunc);
-}
-
-Scene.prototype.run = function(drawFunc) {
-  this._doRender(this._numFrames, true, drawFunc, null);
-}
-
-Scene.prototype.showFrame = function(callback) {
-  this.fillFrame(callback);
-  this.show();
+Scene.prototype.runFrame = function(afterFunc) {
+  // TODO: force rendering, for when `drawFunc` is null
+  this._ensureExecutor();
+  this._executor.nextFrame();
+  afterFunc();
 }
 
 Scene.prototype.save = function(savepath) {
@@ -512,6 +504,7 @@ Scene.prototype.save = function(savepath) {
 }
 
 Scene.prototype.renderPrimaryPlane = function() {
+  this._prepareRendering();
   this._renderer.connect(this.provide());
   let res = this._renderer.render();
   if (res[0].width == 0 || res[0].height == 0 || res[0].pitch == 0) {
@@ -520,16 +513,16 @@ Scene.prototype.renderPrimaryPlane = function() {
   return res;
 }
 
-Scene.prototype.quit = function() {
-  this._display.appQuit();
+Scene.prototype.lockTimeToTick = function() {
+  this._ensureExecutor();
+  this._executor._lockTime = true;
 }
 
-Scene.prototype.nextFrame = function() {
-  var self = this;
-  self.then(function() {
-    self.timeTick += 1;
-    self.time = self.timeTick / 60.0;
-  });
+Scene.prototype.quit = function() {
+  if (!this._executor) {
+    throw new Error(`app not running, cannot quit`);
+  }
+  this._executor.appQuit();
 }
 
 Scene.prototype.mixColors = function(spec) {
@@ -976,5 +969,11 @@ function toNum(n) {
   }
   throw new Error(`toNum: unknown type of ${n}`);
 }
+
+Scene.prototype._ensureExecutor = function() {
+  if (this._executor) { return; }
+  this._executor = new executor.Executor(this._display, new weak.Ref(this));
+}
+
 
 module.exports.Scene = Scene;

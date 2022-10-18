@@ -9,4 +9,4 @@ ra.drawImage(img);
 ra.renderPrimaryPlane();
 ra.setGrid(2);
 
-ra.show();
+ra.run();

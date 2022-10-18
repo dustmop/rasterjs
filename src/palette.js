@@ -217,7 +217,7 @@ class Palette {
   giveFeatures(fsacc, refScene) {
     // palette.save needs `fsacc.saveTo`
     this._fsacc = fsacc;
-    // palette.cycle needs `scene.timeTick`
+    // palette.cycle needs `scene.tick`
     this._refScene = refScene;
   }
 
@@ -445,7 +445,7 @@ class Palette {
     endIndex = endIndex || this.length;
     incStep = Math.max(1, Math.floor(incStep));
     slow = Math.max(1, Math.floor(slow));
-    tick = tick !== null ? tick : ra.timeTick;
+    tick = tick !== null ? tick : ra.tick;
 
     tick = Math.floor(tick / slow);
     let numColors = endIndex - startIndex;

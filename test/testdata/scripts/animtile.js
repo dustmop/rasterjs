@@ -15,10 +15,10 @@ plane.fillPattern([[2, 6, 1, 3],
                    [6, 4, 2, 2]]);
 
 function draw() {
-  if (ra.timeTick % 4) {
+  if (ra.tick % 4) {
     return;
   }
-  let c = Math.floor(ra.timeTick / 4) % 4;
+  let c = Math.floor(ra.tick / 4) % 4;
   if (c == 3) {
     ra.setTileset(1);
   } else {

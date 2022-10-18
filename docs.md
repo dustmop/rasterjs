@@ -116,7 +116,7 @@ Produce an oscillating wave value that varies between 0.0 and 1.0 in a sinusoida
 
 `max`: Maximum value to be returned, representing the distance from valley to peak. Default 1.0
 
-`tick`: Parameter used as input. Default is `ra.timeTick`
+`tick`: Parameter used as input. Default is `ra.tick`
 
 ### on(eventName, callback)
 
@@ -128,7 +128,7 @@ Handle events caused by user interaction. Only eventName that is currently handl
 width
 height
 time
-timeTick
+tick
 TAU
 ```
 
@@ -140,9 +140,9 @@ Width and height of the scene, equivalent to the display size.
 
 The number of seconds since the scene begin, as a floating point value.
 
-### timeTick
+### tick
 
-The number of frames that have rendered so far, increasing by 1 per frame.
+The number of internal clock ticks, equal to 1 per frame, at 60 frames a second.
 
 ### TAU
 

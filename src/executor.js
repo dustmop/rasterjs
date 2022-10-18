@@ -12,7 +12,7 @@ class Executor {
     this._alwaysRenderFirstFrame = true;
     this._startTime = new Date();
     this.time = 0.0;
-    this.timeTick = 0;
+    this.tick = 0;
     this._lockTime = false;
   }
 
@@ -63,9 +63,9 @@ class Executor {
       }
     }
     // TODO: rename to this.tick
-    this.timeTick += 1;
+    this.tick += 1;
     if (this._lockTime) {
-      this.time = this.timeTick / 60.0;
+      this.time = this.tick / 60.0;
     } else {
       this.time = (new Date() - this._startTime) / 1000;
     }
@@ -75,7 +75,7 @@ class Executor {
   updateSceneTime() {
     let scene = this.refOwner.deref();
     scene.time = this.time;
-    scene.timeTick = this.timeTick;
+    scene.tick = this.tick;
   }
 
 }

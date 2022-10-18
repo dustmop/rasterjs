@@ -5,6 +5,6 @@ ra.setZoom(8);
 
 ra.run(function() {
   let colors = [24, 29, 33, 31];
-  let t = Math.floor(ra.timeTick / 16);
+  let t = Math.floor(ra.tick / 16);
   ra.fillColor(colors[t % colors.length]);
 });

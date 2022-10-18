@@ -19,25 +19,25 @@ describe('Oscil', function() {
   });
   it('little bit later', function() {
     ra.resetState();
-    ra.timeTick = 10;
+    ra.tick = 10;
     let n = ra.oscil();
     assert.almostEqual(n, 0.25);
   });
   it('max', function() {
     ra.resetState();
-    ra.timeTick = 10;
+    ra.tick = 10;
     let n = ra.oscil({max: 100});
     assert.almostEqual(n, 25, {epsilon: 0.01});
   });
   it('period', function() {
     ra.resetState();
-    ra.timeTick = 10;
+    ra.tick = 10;
     let n = ra.oscil({period: 120});
     assert.almostEqual(n, 0.067);
   });
   it('begin', function() {
     ra.resetState();
-    ra.timeTick = 10;
+    ra.tick = 10;
     let n = ra.oscil({begin: 0.5});
     assert.almostEqual(n, 0.75);
   });

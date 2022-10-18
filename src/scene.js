@@ -54,7 +54,7 @@ function Scene(env) {
 Scene.prototype._initialize = function () {
   this._initConfig();
   this.time = 0.0;
-  this.timeTick = 0;
+  this.tick = 0;
   this.TAU = 6.283185307179586;
   this.TURN = this.TAU;
   this.PI = this.TAU / 2;
@@ -88,12 +88,17 @@ Scene.prototype._initialize = function () {
     this.setZoom(options.zoom);
   }
   if (options.time_tick) {
-    this.timeTick = options.time_tick;
-    this.time = this.timeTick / 60.0;
+    this.tick = options.time_tick;
+    this.time = this.tick / 60.0;
   }
   Object.defineProperty(this, 'timeClick', {
     get() {
-      throw new Error(`ra.timeClick is invalid, use ra.timeTick instead`);
+      throw new Error(`ra.timeClick is invalid, use ra.tick instead`);
+    }
+  });
+  Object.defineProperty(this, 'timeTick', {
+    get() {
+      throw new Error(`ra.timeTick is invalid, use ra.tick instead`);
     }
   });
 }
@@ -286,7 +291,7 @@ Scene.prototype.resetState = function() {
   this._renderer.clear();
   this._fsacc.clear();
   this.time = 0.0;
-  this.timeTick = 0;
+  this.tick = 0;
   this.camera = {};
   this.tileset = null;
   this.attributes = null;
@@ -576,7 +581,7 @@ Scene.prototype.oscil = function(namedOnly) {
     begin = 0.0;
   }
   if (tick === null) {
-    tick = this.timeTick;
+    tick = this.tick;
   }
   tick = tick + Math.round(period * begin);
   return max * ((1.0 - Math.cos(tick * this.TAU / period)) / 2.0000001);

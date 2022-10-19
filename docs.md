@@ -10,7 +10,6 @@ setZoom
 setTitle
 setGrid
 originAtCenter
-useColors
 useDisplay
 ```
 
@@ -34,32 +33,6 @@ Show the grid on top of the display, spaced out the given number of units.
 
 Move the x,y coordinate system's origin to the center of the plane, instead of the upper-left.
 
-### useColors(colorMap)
-
-Assigns the colorMap to use for displaying the scene. May either be the name of a pre-existing colorMap, or a list of rgb values.
-
-If not invoked, the current default colorMap is this:
-
-![](asset/quick-colormap.png)
-
-Names of pre-existing colorMaps:
-
-`quick`: The current default colorMap, shown above. 64 colors, a quick and simple rainbow palette.
-
-`dos`: Colors used by the DOS operating system.
-
-`nes`: Colors used by the NES 8-bit console.
-
-`grey`: Grey scale colors, from black to white.
-
-`gameboy`: Colors used by the Gameboy handheld console.
-
-`zx-spectrum`: Colors used by the ZX Spectrum 8-bit computer.
-
-`c64`: Colors used by the Commodore 64 8-bit computer.
-
-`pico8`: Colors used by the Pico-8 fantasy console.
-
 ### useDisplay(display)
 
 The display to use, instead of the default display. Either the name of a pre-existing display, or a display object.
@@ -82,7 +55,7 @@ on
 
 Loads an image, by opening it and reading its contents. Can be passed to `drawImage` once reading has completed.
 
-In some environments, such as node.js, `loadImage` is synchronous, so images are opened and read all at once. However, in order to keep scripts portable, it is recommended to also handle async environments, such as web browsers. To do this, call `loadImage` at the top-level of your script, and then only use `drawImage` inside of a render function that is passed to `show` or `run`. Raster.js guarantees that all images opened will be fully loaded once the render function is invoked, assuming that the images can be loaded without error.
+In some environments, such as node.js, `loadImage` is synchronous, so images are opened and read all at once. However, in order to keep scripts portable, it is recommended to also handle async environments, such as web browsers. To do this, call `loadImage` at the top-level of your script, and then only use `drawImage` inside of a call to `then` or a draw function that is passed to `run`. Raster.js guarantees that all images opened will be fully loaded once the draw function is invoked, assuming they exist.
 
 `filename`: the name of the image to load. Either a local filesystem path or a web accessible URL.
 
@@ -129,7 +102,7 @@ width
 height
 time
 tick
-TAU
+TURN
 ```
 
 ### width, height
@@ -144,15 +117,13 @@ The number of seconds since the scene begin, as a floating point value.
 
 The number of internal clock ticks, equal to 1 per frame, at 60 frames a second.
 
-### TAU
+### TURN
 
-A mathematical constant representing the number of radians in the full rotation of a circle around a plane.
+A mathematical constant representing the number of radians in the full rotation around a plane, equivalent to 2PI or TAU, approximately 6.2831853.
 
 ## Color usage
 
 ```
-fillColor
-fillTrueColor
 setColor
 setTrueColor
 ```
@@ -161,17 +132,9 @@ setTrueColor
 
 Set the background color and clear the plane.
 
-### fillTrueColor(rgb)
-
-Add the rgb value to the colorMap and use it as the background color. Also clear the plane.
-
 ### setColor(color)
 
 Set the foreground color to use for drawing.
-
-### setTrueColor(rgb)
-
-Add the rgb value to the colorMap and use it as the foreground color.
 
 ## Drawing
 
@@ -251,7 +214,7 @@ Fills a polygon, offset by the optional x,y position. Same as `drawPolygon`, exc
 
 Draw an image to the plane, downsampling it to match the allowed colors.
 
-`img`: An image that was created by `loadImage`. NOTE: If raster.js is running in an async environment, such as in a web browser, calls to `drawImage` must be made inside of a render function such as those passed to `then`, `show`, or `run`, while `loadImage` must be called earlier, such as at the script's top-level.
+`img`: An image that was created by `loadImage`. NOTE: If raster.js is running in an async environment, such as in a web browser, calls to `drawImage` must be made inside of a draw function such as those passed to `then` or `run`, while `loadImage` must be called earlier, such as at the script's top-level.
 
 `x`: X dimension (left ) of the upper-left point where drawing starts.
 
@@ -294,21 +257,41 @@ Scroll the plane y pixels vertically. Rendering will wrap-around when it reaches
 
 ## Palette
 
-```
-eyedrop
-```
+### usePalette(name OR {rgbmap, entries})
+
+Assigns the palette to use for displaying the scene. May either be the name of a pre-existing palette, or a list of rgb values.
+
+If not invoked, the default palette is this:
+
+![](asset/quick-rgbmap.png)
+
+Names of pre-existing palette:
+
+`quick`: The default, shown above. 64 colors, a quick and simple rainbow palette.
+
+`dos`: The DOS operating system.
+
+`nes`: NES 8-bit video game console.
+
+`grey`: Grey scale colors, from black to white.
+
+`gameboy`: Gameboy handheld video game console.
+
+`zx-spectrum`: ZX Spectrum 8-bit computer.
+
+`c64`: Commodore 64 8-bit computer.
+
+`pico8`: Pico-8 fantasy console.
 
 ### eyedrop(x, y)
 
-Pick the color at position x,y and return it as a palette entry. If no palette is in use, one is created that directly maps to the colorMap.
+Pick the color at position x,y and return it as a palette entry.
 
 ## Display
 
 ```
 run
-show
 save
-showFrame
 quit
 nextFrame
 ```
@@ -317,17 +300,9 @@ nextFrame
 
 Continually render to the display. The function `drawFunc` is called once per frame, before rendering begins.
 
-### show(renderFunc)
-
-Render the plane to the display once.
-
 ### save(filename)
 
 Save the plane to the given filename. May only be run in an environment that supports creating files.
-
-### showFrame(options, callback)
-
-The same as `fillFrame` followed by `show`.
 
 ### quit()
 

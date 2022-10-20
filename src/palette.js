@@ -403,12 +403,16 @@ class Palette {
 
       if (opt.upon !== null && opt.upon !== undefined) {
         let cycleUpon = opt.upon;
-        if (cycleUpon !== 0) {
-          throw new Error(`not implemented: palette.cycle(look, {upon}) except for {upon: 0}`);
+        // `upon` value can be look, or the number `0`
+        if (types.isLookOfImage(cycleUpon)) {
+          params.upon = cycleUpon._items;
+        } else if (cycleUpon === 0) {
+          // create list of upon values, add to params
+          // these upon will change the iteration order for cycle
+          params.upon = look._items.slice(0, look._density);
+        } else {
+          throw new Error(`unknown upon value ${upon}`);
         }
-        // create list of upon values, add to params
-        // these upon will change the iteration order for cycle
-        params.upon = look._items.slice(0, look._density);
       }
 
       this._cycleParams(params);
@@ -423,6 +427,8 @@ class Palette {
     let [startIndex, endIndex, values, incStep, slow, tick, upon] = (
       destructure.from('cycle', spec, arguments, null));
     let stepReason = '';
+
+    this.ensureEntries();
 
     if (this._refScene == null) {
       throw new Error('refScene is not set');
@@ -462,6 +468,9 @@ class Palette {
       let index = k + startIndex;
       if (upon) {
         index = upon[k];
+      }
+      if (index === undefined) {
+        continue;
       }
       let n = (k + (tick*incStep)) % values.length;
       let r = values[n];

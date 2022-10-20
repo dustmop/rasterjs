@@ -68,7 +68,7 @@ describe('Cycle palette', function() {
 
 
   // cycle upon
-  it('cycle upon', function() {
+  it('cycle upon zero', function() {
     ra.resetState();
 
     let fruit = ra.loadImage('test/testdata/small-fruit.png');
@@ -86,6 +86,27 @@ describe('Cycle palette', function() {
   });
 
 
+  // cycle upon is look
+  it('upon with look', function() {
+    ra.resetState();
+
+    let fruit = ra.loadImage('test/testdata/small-fruit.png');
+    let cover = ra.loadImage('test/testdata/fruit-coverage.png');
+    let input = ra.loadImage('test/testdata/green-golden-values.png');
+
+    ra.drawImage(fruit);
+
+    let palette = ra.usePalette(fruit.look);
+    util.renderCompareTo(ra, 'test/testdata/small-fruit.png');
+
+    palette.cycle(input.look, {upon: cover.look});
+    util.renderCompareTo(ra, 'test/testdata/green-fruit.png');
+
+    palette.cycle(input.look, {upon: cover.look, tick: 1});
+    util.renderCompareTo(ra, 'test/testdata/golden-fruit.png');
+  });
+
+
   // upon can't use startIndex
   it('upon no startIndex', function() {
     ra.resetState();
@@ -99,22 +120,6 @@ describe('Cycle palette', function() {
     assert.throws(function() {
       palette.cycle(input.look, {upon: 0, tick: 4, startIndex: 1});
     }, /Error: cannot use {upon} with {startIndex}/);
-  });
-
-
-  // upon only works for 0th row
-  it('upon only 0', function() {
-    ra.resetState();
-
-    let fruit = ra.loadImage('test/testdata/small-fruit.png');
-    let input = ra.loadImage('test/testdata/cycle-values.png');
-
-    ra.drawImage(fruit);
-
-    let palette = ra.usePalette(fruit.look);
-    assert.throws(function() {
-      palette.cycle(input.look, {upon: 1, tick: 4});
-    }, /not implemented: palette.cycle\(look, {upon}\) except for {upon: 0}/);
   });
 
 

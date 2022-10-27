@@ -42,7 +42,7 @@ class SDLDisplay extends baseDisplay.BaseDisplay {
   }
 
   stopRunning() {
-    this._isRunning = false;
+    super.stopRunning();
     return this._b.exitLoop();
   }
 

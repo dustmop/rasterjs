@@ -21,6 +21,7 @@ class Executor {
     let self = this;
     this.display.beginExec(new weak.Ref(this));
     let execNextFrame = this._execNextFrame.bind(this);
+    this.display.beginLoop(renderID);
     this.display.appLoop(renderID, ()=>{ return execNextFrame(drawFunc); });
   }
 

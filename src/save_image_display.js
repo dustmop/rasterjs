@@ -39,7 +39,6 @@ class SaveImageDisplay extends baseDisplay.BaseDisplay {
     } catch (e) {
     }
 
-    this._isRunning = true;
     let hasTemplate = false;
 
     let numFrames = this._numFrames;
@@ -61,7 +60,8 @@ class SaveImageDisplay extends baseDisplay.BaseDisplay {
     let bufferList = [];
     let doneCount = 0;
     for (let count = 0; count < numFrames; count++) {
-      if (!this._isRunning) {
+      // TODO: Is this
+      if (!this.isRunning()) {
         break;
       }
       execNextFrame();

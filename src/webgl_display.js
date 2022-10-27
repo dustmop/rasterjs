@@ -283,7 +283,6 @@ void main() {
   appLoop(id, execNextFrame) {
     let self = this;
     self.currentRunId = id;
-    self._isRunning = true;
     this.waitForContentLoad(function() {
       self._createWebglCanvas();
       if (self.onReadyHandler) {
@@ -330,7 +329,7 @@ void main() {
 
     let renderIt = function() {
       // Did the app quit?
-      if (!self._isRunning) {
+      if (!self.isRunning()) {
         return;
       }
 

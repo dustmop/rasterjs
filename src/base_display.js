@@ -20,8 +20,16 @@ class BaseDisplay {
     this._gridUnit = unit;
   }
 
+  beginLoop() {
+    this._isRunning = true;
+  }
+
   appLoop(loopID, eachFrame) {
     throw new Error(`NotImplemented: BaseDisplay.appLoop`);
+  }
+
+  isRunning() {
+    return this._isRunning;
   }
 
   stopRunning() {

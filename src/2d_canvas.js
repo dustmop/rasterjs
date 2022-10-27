@@ -103,10 +103,9 @@ class TwoDeeDisplay extends baseDisplay.BaseDisplay {
     ctx.imageSmoothingEnabled = false;
     ctx.mozImageSmoothingEnabled = false;
     let self = this;
-    this._isRunning = true;
 
     let renderIt = function() {
-      if (!self._isRunning) {
+      if (!self.isRunning()) {
         return;
       }
 

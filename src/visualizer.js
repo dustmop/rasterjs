@@ -13,7 +13,7 @@ function addColor(colors, num) {
 }
 
 
-class Serializer {
+class Visualizer {
   constructor() {
     return this;
   }
@@ -215,4 +215,4 @@ class Serializer {
   }
 }
 
-module.exports.Serializer = Serializer;
+module.exports.Visualizer = Visualizer;

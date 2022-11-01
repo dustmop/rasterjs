@@ -2,7 +2,7 @@ const rgbMap = require('./rgb_map.js');
 const rgbColor = require('./rgb_color.js');
 const destructure = require('./destructure.js');
 const types = require('./types.js');
-const serializer = require('./serializer.js');
+const visualizer = require('./visualizer.js');
 const verboseLogger = require('./verbose_logger.js');
 const weak = require('./weak.js');
 
@@ -170,14 +170,14 @@ class Palette {
     if (!this._fsacc) {
       throw new Error(`cannot save without fsacc`);
     }
-    let res = this.serialize();
+    let res = this.visualize();
     this._fsacc.saveTo(filename, res);
   }
 
-  serialize(opt) {
+  visualize(opt) {
     opt = opt || {};
     this.ensureRGBMap();
-    let ser = new serializer.Serializer();
+    let viz = new visualizer.Visualizer();
     let colors = [];
     let entries = null;
     if (this._entries && !opt.rgbmap) {
@@ -191,7 +191,7 @@ class Palette {
         colors.push(this._rgbmap[i]);
       }
     }
-    return ser.colorsToSurface(colors, entries, opt);
+    return viz.colorsToSurface(colors, entries, opt);
   }
 
   toString(opt) {

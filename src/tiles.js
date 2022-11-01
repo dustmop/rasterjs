@@ -149,7 +149,7 @@ class Tileset {
     return build.toString();
   }
 
-  serialize() {
+  visualize() {
     // TODO: Support chr-ram style tilesets, and palettes.
     let buff = this.source.rgbBuff;
     let surface = {

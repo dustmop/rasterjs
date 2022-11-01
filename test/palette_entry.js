@@ -176,26 +176,26 @@ describe('Palette', function() {
     util.ensureFilesMatch('test/testdata/pal_saved.png', tmpout);
   });
 
-  it('palette image serialization', function() {
+  it('palette image visualization', function() {
     let tmpdir = util.mkTmpDir();
     let tmpout = tmpdir + '/actual.png';
     ra.resetState();
 
     let palette = ra.palette;
-    let surfaces = palette.serialize();
+    let surfaces = palette.visualize();
 
     ra._saveSurfacesTo(surfaces, tmpout);
 
     util.ensureFilesMatch('test/testdata/pal_saved.png', tmpout);
   });
 
-  it('palette.rgbmap image serialization', () => {
+  it('palette.rgbmap image visualization', () => {
     let tmpdir = util.mkTmpDir();
     let tmpout = tmpdir + '/actual.png';
     ra.resetState();
 
     let palette = ra.palette;
-    let surfaces = palette.serialize({rgbmap: true});
+    let surfaces = palette.visualize({rgbmap: true});
 
     ra._saveSurfacesTo(surfaces, tmpout);
 
@@ -208,7 +208,7 @@ describe('Palette', function() {
     ra.resetState();
 
     let palette = ra.palette;
-    let surfaces = palette.serialize({
+    let surfaces = palette.visualize({
       cell_width: 10, cell_height: 7,
       cell_between: 3,
       outer_top: 2, outer_left: 1,
@@ -226,7 +226,7 @@ describe('Palette', function() {
     ra.usePalette('nes');
 
     let palette = ra.palette;
-    let surfaces = palette.serialize({
+    let surfaces = palette.visualize({
       cell_width: 7, cell_height: 19,
       cell_between: 1,
       outer_top: 3, outer_left: 3,
@@ -245,7 +245,7 @@ describe('Palette', function() {
     ra.usePalette('nes');
 
     let palette = ra.palette;
-    let surfaces = palette.serialize({
+    let surfaces = palette.visualize({
       cell_width: 4, cell_height: 4,
       cell_between: 0,
       outer_top: 2, outer_left: 2,

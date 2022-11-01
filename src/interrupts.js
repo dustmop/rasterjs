@@ -1,4 +1,4 @@
-const serializer = require('./serializer.js');
+const visualizer = require('./visualizer.js');
 const types = require('./types.js');
 
 
@@ -35,15 +35,15 @@ class Interrupts {
     }
   }
 
-  serialize() {
+  visualize() {
     let scene = this.refScene.deref();
     let width = scene.width;
     let height = scene.height;
     if (!width || !height) {
       throw new Error('scene does not have width or height set');
     }
-    let ser = new serializer.Serializer();
-    return ser.interruptsToSurface(this.arr, this.xposTrack, width, height);
+    let viz = new visualizer.Visualizer();
+    return viz.interruptsToSurface(this.arr, this.xposTrack, width, height);
   }
 
   shiftDown(line, obj) {

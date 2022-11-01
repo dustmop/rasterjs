@@ -319,12 +319,12 @@ describe('Tileset', function() {
     let attrs = ra.useAttributes(dat, {cell_width: 4, cell_height: 4,
                                        piece_size: 6});
 
-    let surfaces = attrs.serialize();
+    let surfaces = attrs.visualize();
     ra._saveSurfacesTo(surfaces, tmpout);
     util.ensureFilesMatch('test/testdata/attrs_saved.png', tmpout);
   });
 
-  it('serialize', function() {
+  it('visualize', function() {
     let tmpdir = util.mkTmpDir();
     let tmpout = tmpdir + '/actual.png';
     ra.resetState();
@@ -332,8 +332,7 @@ describe('Tileset', function() {
     let tiles = ra.loadImage('test/testdata/tiles.png');
     let tileset = ra.useTileset(tiles, {tile_width: 4, tile_height: 4});
 
-    let surfaces = tileset.serialize();
-
+    let surfaces = tileset.visualize({palette: ra.palette});
     ra._saveSurfacesTo(surfaces, tmpout);
 
     util.ensureFilesMatch('test/testdata/tiles_saved.png', tmpout);

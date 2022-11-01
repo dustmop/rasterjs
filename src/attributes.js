@@ -1,4 +1,4 @@
-const serializer = require('./serializer.js');
+const visualizer = require('./visualizer.js');
 const types = require('./types.js');
 const rgbColor = require('./rgb_color.js');
 
@@ -204,9 +204,9 @@ class Attributes {
     return (c % pieceSize) + (choice * pieceSize);
   }
 
-  serialize() {
-    let ser = new serializer.Serializer();
-    return ser.attributesToSurface(this.source, this.sizeInfo);
+  visualize() {
+    let viz = new visualizer.Visualizer();
+    return viz.attributesToSurface(this.source, this.sizeInfo);
   }
 
 }

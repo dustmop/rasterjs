@@ -220,7 +220,7 @@ class Renderer {
       renderBegin = scanLine;
     }
 
-    // Store x-positions so that they can serialize
+    // Store x-positions so that they can visualize
     system.interrupts.xposTrack = xposTrack;
 
     return layer.rgbSurface;
@@ -491,7 +491,7 @@ class Renderer {
             opt = settings.palette[myPalette.name];
           }
         }
-        let surface = myPalette.serialize(opt);
+        let surface = myPalette.visualize(opt);
         callback('palette', surface);
 
       } else if (comp == 'palette-rgbmap') {
@@ -505,12 +505,12 @@ class Renderer {
           }
         }
         opt.rgbmap = true;
-        let surface = myPalette.serialize(opt);
+        let surface = myPalette.visualize(opt);
         callback('palette-rgbmap', surface);
 
       } else if (comp == 'tileset') {
         if (myTiles) {
-          let surface = myTiles.serialize();
+          let surface = myTiles.visualize({palette: myPalette});
           callback('tileset', surface);
         } else {
           callback('tileset', null);
@@ -518,7 +518,7 @@ class Renderer {
 
       } else if (comp == 'attributes') {
         if (myAttributes) {
-          let surface = myAttributes.serialize();
+          let surface = myAttributes.visualize();
           callback('attributes', surface);
         } else {
           callback('attributes', null);
@@ -526,7 +526,7 @@ class Renderer {
 
       } else if (comp == 'interrupts') {
         if (myInterrupts) {
-          let surface = myInterrupts.serialize();
+          let surface = myInterrupts.visualize();
           callback('interrupts', surface);
         } else {
           callback('interrupts', null);

@@ -241,7 +241,7 @@ describe('Attributes', function() {
     util.renderCompareTo(ra, 'test/testdata/attrs_colorize.png');
   });
 
-  it('serialize', function() {
+  it('visualize', function() {
     let tmpdir = util.mkTmpDir();
     let tmpout = tmpdir + '/actual.png';
     ra.resetState();
@@ -265,7 +265,7 @@ describe('Attributes', function() {
     let attrs = ra.useAttributes(dat, {cell_width: 4, cell_height: 4,
                                        piece_size: 6});
 
-    let surfaces = attrs.serialize();
+    let surfaces = attrs.visualize();
     ra._saveSurfacesTo(surfaces, tmpout);
     util.ensureFilesMatch('test/testdata/attrs_saved.png', tmpout);
   });

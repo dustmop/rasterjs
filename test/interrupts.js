@@ -55,7 +55,7 @@ describe('Interrupts', function() {
   });
 
 
-  it('serialize', function() {
+  it('visualize', function() {
     let tmpdir = util.mkTmpDir();
     let tmpout = tmpdir + '/actual.png';
     ra.resetState();
@@ -69,7 +69,7 @@ describe('Interrupts', function() {
 
     ra.renderPrimaryPlane();
 
-    let surfaces = interrupts.serialize();
+    let surfaces = interrupts.visualize();
     ra._saveSurfacesTo(surfaces, tmpout);
     util.ensureFilesMatch('test/testdata/interrupts_saved.png', tmpout);
   });

@@ -8,7 +8,7 @@ describe('xform', function() {
     ra.resetState();
 
     let img = ra.loadImage('test/testdata/small-fruit.png');
-    ra.drawImage(img);
+    ra.paste(img);
 
     let pl = ra.xform('hflip');
     ra.usePlane(pl);
@@ -20,7 +20,7 @@ describe('xform', function() {
     ra.resetState();
 
     let img = ra.loadImage('test/testdata/small-fruit.png');
-    ra.drawImage(img);
+    ra.paste(img);
 
     let pl = ra.xform('vflip');
     ra.usePlane(pl);
@@ -32,11 +32,11 @@ describe('xform', function() {
     ra.resetState();
 
     let img = ra.loadImage('test/testdata/polygon.png');
-    ra.drawImage(img);
+    ra.paste(img);
 
     let pl = ra.select(2, 9, 13, 5);
     let replace = pl.xform('vflip');
-    ra.drawImage(replace, 12, 15);
+    ra.paste(replace, 12, 15);
 
     util.renderCompareTo(ra, 'test/testdata/mod-scene.png');
   });

@@ -19,7 +19,7 @@ add-on is built with SDL support!
     ra.setGrid(2);
 
     let img = ra.loadImage('test/testdata/small-fruit.png');
-    ra.drawImage(img);
+    ra.paste(img);
 
     // Call to `insteadWriteBuffer` means the window will not block
     ra.run();

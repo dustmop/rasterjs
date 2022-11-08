@@ -7,10 +7,10 @@ describe('Nearest neighbor', function() {
     ra.resetState();
 
     let img = ra.loadImage('test/testdata/simple.png');
-    ra.drawImage(img, 0, 0);
+    ra.paste(img);
 
     let res = ra.renderPrimaryPlane();
-    let surf = res[0]
+    let surf = res[0];
     surf = algorithm.nearestNeighborSurface(surf, 2);
 
     let tmpdir = util.mkTmpDir();
@@ -24,7 +24,7 @@ describe('Nearest neighbor', function() {
     ra.resetState();
 
     let img = ra.loadImage('test/testdata/simple.png');
-    ra.drawImage(img, 0, 0);
+    ra.paste(img);
 
     let upscale = ra.resize(32, 32);
     ra.usePlane(upscale);
@@ -36,7 +36,7 @@ describe('Nearest neighbor', function() {
     ra.resetState();
 
     let img = ra.loadImage('test/testdata/simple.png');
-    ra.drawImage(img, 0, 0);
+    ra.paste(img);
 
     let upscale = ra.resize(29, 33);
     ra.usePlane(upscale);
@@ -48,7 +48,7 @@ describe('Nearest neighbor', function() {
     ra.resetState();
 
     let img = ra.loadImage('test/testdata/simple.png');
-    ra.drawImage(img, 0, 0);
+    ra.paste(img);
 
     let upscale = ra.resize(13, 11);
     ra.usePlane(upscale);

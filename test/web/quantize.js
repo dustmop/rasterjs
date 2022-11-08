@@ -5,7 +5,7 @@ describe('quantitize', function () {
     ra.resetState();
     let img = ra.loadImage('img/boss-pic.jpg');
     img.then(function() {
-      ra.drawImage(img);
+      ra.paste(img);
       util.renderCompareTo(ra, 'img/boss-pic-quant2.png', success);
     });
   });

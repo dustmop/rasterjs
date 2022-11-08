@@ -7,7 +7,7 @@ describe('image', function () {
     ra.fillColor(0);
     let img = ra.loadImage('img/fill_clear.png');
     img.then(function() {
-      ra.drawImage(img, 2, 2);
+      ra.paste(img, 2, 2);
       util.renderCompareTo(ra, 'img/draw_image.png', success);
     });
   });
@@ -19,14 +19,14 @@ describe('image', function () {
     let img = ra.loadImage('img/fill_clear.png');
     let gotError = null;
     try {
-      ra.drawImage(img, 2, 2);
+      ra.paste(img, 2, 2);
     } catch(e) {
       gotError = e.message;
     }
     if (gotError == null) {
       throw new Error('Failed! Expected to get an error, did not get one');
     }
-    let expectError = 'drawImage: image has been opened, but not yet read';
+    let expectError = 'paste: source has been opened, but not yet read';
     if (gotError != expectError) {
       throw new Error('Mismatch!');
     }

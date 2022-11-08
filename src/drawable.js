@@ -249,18 +249,17 @@ Drawable.prototype.fillFrame = function(options, fillerFunc) {
   }
 }
 
-Drawable.prototype.drawImage_params = ['img:a', 'x?i', 'y?i'];
-Drawable.prototype.drawImage = function(img, x, y) {
-  if (!img.data) {
-    throw new Error('drawImage: image has been opened, but not yet read');
+Drawable.prototype.paste_params = ['source:a', 'x?i', 'y?i'];
+Drawable.prototype.paste = function(source, x, y) {
+  if (!source.data) {
+    throw new Error('paste: source has been opened, but not yet read');
+  }
+  if (x == null && y == null && !this.width && !this.height) {
+    this.setSize(source.width, source.height);
   }
   x = x || 0;
   y = y || 0;
-  if (this.width == 0 && this.height == 0) {
-    // TODO: Set the colorMap as well.
-    this.setSize(img.width, img.height);
-  }
-  this.putImage(img, x, y);
+  this.putBlit(source, x, y);
 }
 
 Drawable.prototype.drawText_params = ['text:s', 'x:i', 'y:i'];

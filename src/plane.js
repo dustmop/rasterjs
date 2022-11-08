@@ -293,7 +293,7 @@ Plane.prototype.putSequence = function(seq) {
   }
 }
 
-Plane.prototype.putImage = function(img, baseX, baseY) {
+Plane.prototype.putBlit = function(img, baseX, baseY) {
   this._prepare();
   let offsetTop = this.offsetTop || 0;
   let offsetLeft = this.offsetLeft || 0;

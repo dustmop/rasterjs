@@ -14,7 +14,7 @@ describe('Sprite', function() {
     let imgObj2 = ra.loadImage('test/testdata/valgrind-obj2.png');
     let imgBg = ra.loadImage('test/testdata/valgrind-bg.png');
 
-    ra.drawImage(imgBg);
+    ra.paste(imgBg);
 
     let sprites = new ra.SpriteList(3, {chardat: [imgObj0, imgObj1, imgObj2]});
     ra.useSpriteList(sprites);
@@ -42,7 +42,7 @@ describe('Sprite', function() {
     let imgTiles = ra.loadImage('test/testdata/valgrind-tiles.png');
     let imgBg = ra.loadImage('test/testdata/valgrind-bg.png');
 
-    ra.drawImage(imgBg);
+    ra.paste(imgBg);
 
     let tiles = new ra.Tileset({tile_width: 16, tile_height: 16});
     tiles.addFrom(imgTiles);
@@ -77,7 +77,7 @@ describe('Sprite', function() {
     let imgSheet = ra.loadImage('test/testdata/valgrind-sheet.png');
     let imgBg = ra.loadImage('test/testdata/valgrind-bg.png');
 
-    ra.drawImage(imgBg);
+    ra.paste(imgBg);
 
     let sheet = new ra.SpriteSheet(imgSheet, {trueColorBorder: '#000cd4'});
 
@@ -150,7 +150,7 @@ describe('Sprite', function() {
     let imgObj = ra.loadImage('test/testdata/small-fruit.png');
     let imgBg = ra.loadImage('test/testdata/letter_e.png');
 
-    ra.drawImage(imgBg);
+    ra.paste(imgBg);
 
     let sprites = new ra.SpriteList(1, {chardat: [imgObj]});
     ra.useSpriteList(sprites);
@@ -171,7 +171,7 @@ describe('Sprite', function() {
     let imgObj = ra.loadImage('test/testdata/small-fruit.png');
     let imgBg = ra.loadImage('test/testdata/letter_e.png');
 
-    ra.drawImage(imgBg);
+    ra.paste(imgBg);
     ra.setScrollX(4);
 
     let sprites = new ra.SpriteList(1, {chardat: [imgObj]});
@@ -193,7 +193,7 @@ describe('Sprite', function() {
     let imgObj = ra.loadImage('test/testdata/small-fruit.png');
     let imgBg = ra.loadImage('test/testdata/letter_e.png');
 
-    ra.drawImage(imgBg);
+    ra.paste(imgBg);
 
     let sprites = new ra.SpriteList(1, {chardat: [imgObj]});
     ra.useSpriteList(sprites);
@@ -214,7 +214,7 @@ describe('Sprite', function() {
     let imgObj = ra.loadImage('test/testdata/small-fruit.png');
     let imgBg = ra.loadImage('test/testdata/letter_e.png');
 
-    ra.drawImage(imgBg);
+    ra.paste(imgBg);
 
     let sprites = new ra.SpriteList(1, {chardat: [imgObj]});
     ra.useSpriteList(sprites);
@@ -235,7 +235,7 @@ describe('Sprite', function() {
     let imgObj = ra.loadImage('test/testdata/small-fruit.png');
     let imgBg = ra.loadImage('test/testdata/letter_e.png');
 
-    ra.drawImage(imgBg);
+    ra.paste(imgBg);
 
     let sprites = new ra.SpriteList(1, {chardat: [imgObj]});
     ra.useSpriteList(sprites);

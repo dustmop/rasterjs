@@ -137,7 +137,7 @@ describe('Palette', function() {
     ra.fillColor(0);
 
     let img = ra.loadImage('test/testdata/line.png');
-    ra.drawImage(img, 0, 0);
+    ra.paste(img, 0, 0);
 
     let entry = ra.eyedrop(8, 4);
     entry.setColor(0x13);
@@ -298,7 +298,7 @@ describe('Palette', function() {
     // loading image adds to the rgbmap
     let img = ra.loadImage('test/testdata/boss_first_form.png', {sortColors: 'usingHSV'});
 
-    ra.drawImage(img, 0, 0);
+    ra.paste(img, 0, 0);
     let colors = ra.palette;
     let actual = [];
     for (let i = 0; i < colors.length; i++) {

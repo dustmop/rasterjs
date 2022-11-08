@@ -31,7 +31,7 @@ describe('resources', function () {
     }
     ra.insertResource('shape.png', surface);
     let img = ra.loadImage('shape.png');
-    ra.drawImage(img);
+    ra.paste(img);
     util.renderCompareTo(ra, 'img/spin-frame00.png', success);
   });
 });

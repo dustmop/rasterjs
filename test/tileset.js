@@ -350,7 +350,7 @@ describe('Tileset', function() {
     ra.resetState();
 
     let img = ra.loadImage('test/testdata/map_of_tiles.png');
-    ra.drawImage(img);
+    ra.paste(img);
 
     let tiles = ra.useTileset({tile_width: 4, tile_height: 4});
     assert.equal(tiles.length, 8);

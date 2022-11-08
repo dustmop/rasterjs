@@ -38,7 +38,7 @@ describe('Use plane', function() {
     ra.setSize(16);
 
     let img = ra.loadImage('test/testdata/simple.png');
-    ra.drawImage(img);
+    ra.paste(img);
 
     ra.setScrollX(4);
     ra.setScrollY(2);

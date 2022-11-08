@@ -8,7 +8,7 @@ describe('sprite slow', function () {
     let imgBg = ra.loadImage('img/valgrind-bg.png');
 
     ra.then(() => {
-      ra.drawImage(imgBg);
+      ra.paste(imgBg);
 
       let sheet = new ra.SpriteSheet(imgSheet, {trueColorBorder: '#000cd4'});
 

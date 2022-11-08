@@ -13,13 +13,13 @@ describe('Image', function() {
 
     // Draw an image twice
     let img = ra.loadImage('test/testdata/fill_oscil.png');
-    ra.drawImage(img, 2, 10);
-    ra.drawImage(img, 12, 4);
+    ra.paste(img, 2, 10);
+    ra.paste(img, 12, 4);
 
     // Draw and crop
     let sheet = ra.loadImage('test/testdata/circle.png');
     let obj = sheet.select(2, 2, 10, 10);
-    ra.drawImage(obj, 11, 11);
+    ra.paste(obj, 11, 11);
 
     util.renderCompareTo(ra, 'test/testdata/composite.png');
   });
@@ -30,7 +30,7 @@ describe('Image', function() {
     ra.resetState();
 
     let img = ra.loadImage('test/testdata/fill_oscil.png');
-    ra.drawImage(img);
+    ra.paste(img);
 
     util.renderCompareTo(ra, 'test/testdata/fill_oscil.png');
   });
@@ -42,7 +42,7 @@ describe('Image', function() {
     ra.usePalette('pico8');
 
     let img = ra.loadImage('test/testdata/small-fruit.png');
-    ra.drawImage(img);
+    ra.paste(img);
 
     util.renderCompareTo(ra, 'test/testdata/small-fruit.png');
 
@@ -67,7 +67,7 @@ describe('Image', function() {
     ra.usePalette({rgbmap:[0x000000, 0xab5236, 0xff004d, 0x29adff]});
 
     let img = ra.loadImage('test/testdata/small-fruit.png');
-    ra.drawImage(img);
+    ra.paste(img);
 
     util.renderCompareTo(ra, 'test/testdata/small-fruit.png');
 
@@ -103,7 +103,7 @@ describe('Image', function() {
 
     let img = ra.loadImage('test/testdata/small-fruit.png');
     sel.fillColor(2);
-    sel.drawImage(img, 1, 2);
+    sel.paste(img, 1, 2);
 
     util.renderCompareTo(ra, 'test/testdata/put-select.png');
   });
@@ -155,7 +155,7 @@ describe('Image', function() {
   it('jpg is down sampled', function() {
     ra.resetState();
     let img = ra.loadImage('test/testdata/small-fruit.jpg');
-    ra.drawImage(img);
+    ra.paste(img);
 
     util.renderCompareTo(ra, 'test/testdata/small-fruit-quant.png');
 
@@ -177,7 +177,7 @@ describe('Image', function() {
   it('jpg boss pic', function() {
     ra.resetState();
     let img = ra.loadImage('test/testdata/boss-pic.jpg');
-    ra.drawImage(img);
+    ra.paste(img);
     util.renderCompareTo(ra, 'test/testdata/boss-pic-quant.png');
   });
 
@@ -185,7 +185,7 @@ describe('Image', function() {
   it('jpg magma spawn', function() {
     ra.resetState();
     let img = ra.loadImage('test/testdata/magma-spawn.jpg');
-    ra.drawImage(img);
+    ra.paste(img);
     util.renderCompareTo(ra, 'test/testdata/magma-spawn-quant.png');
   });
 
@@ -193,7 +193,7 @@ describe('Image', function() {
   it('jpg firefly suit', function() {
     ra.resetState();
     let img = ra.loadImage('test/testdata/firefly-suit.jpg');
-    ra.drawImage(img);
+    ra.paste(img);
     util.renderCompareTo(ra, 'test/testdata/firefly-suit-quant.png');
   });
 
@@ -201,7 +201,7 @@ describe('Image', function() {
   it('jpg space invader', function() {
     ra.resetState();
     let img = ra.loadImage('test/testdata/space-invader.jpg');
-    ra.drawImage(img);
+    ra.paste(img);
     util.renderCompareTo(ra, 'test/testdata/space-invader-quant.png');
   });
 
@@ -230,7 +230,7 @@ describe('Image', function() {
     ra.fillColor(0);
     let img = ra.loadImage('test/testdata/fill_clear.png', {async: true});
     img.then(function() {
-      ra.drawImage(img, 2, 2);
+      ra.paste(img, 2, 2);
       util.renderCompareTo(ra, 'test/testdata/draw_image.png', success);
       success();
     });
@@ -242,18 +242,9 @@ describe('Image', function() {
     ra.setSize({w: 12, h: 12});
     let img = ra.loadImage('test/testdata/fill_clear.png', {async: true});
     let gotError = null;
-    try {
-      ra.drawImage(img, 2, 2);
-    } catch(e) {
-      gotError = e.message;
-    }
-    if (gotError == null) {
-      throw new Error('Failed! Expected to get an error, did not get one');
-    }
-    let expectError = 'drawImage: image has been opened, but not yet read';
-    if (gotError != expectError) {
-      throw new Error('Mismatch!');
-    }
+    assert.throws(() => {
+      ra.paste(img, 2, 2);
+    }, /paste: source has been opened, but not yet read/);
     success();
   });
 
@@ -263,7 +254,7 @@ describe('Image', function() {
     ra.usePalette('quick');
 
     let img = ra.loadImage('test/testdata/draw_all.png');
-    ra.drawImage(img);
+    ra.paste(img);
 
     // get just the square
     let squareSelect = ra.select({x: 16, y: 43, w: 7, h: 7});
@@ -271,11 +262,11 @@ describe('Image', function() {
     assert.equal(squareSelect.get(1, 1), 0);
 
     squareSelect.put(2, 2, 0x25);
-    ra.drawImage(squareSelect, 0, 0);
-    ra.drawImage(squareSelect, 25, 15);
+    ra.paste(squareSelect, 0, 0);
+    ra.paste(squareSelect, 25, 15);
 
     let insideCircleTarget = ra.select({x: 25, y: 25, w: 8, h: 5});
-    insideCircleTarget.drawImage(squareSelect, 1, 1);
+    insideCircleTarget.paste(squareSelect, 1, 1);
 
     util.renderCompareTo(ra, 'test/testdata/draw_copied.png');
   });

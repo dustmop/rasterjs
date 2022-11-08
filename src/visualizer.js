@@ -140,7 +140,7 @@ class Visualizer {
         let y = i * (tileHeight + between) + outer;
         let k = j + i * numTileX;
         if (!tileList[k]) { continue; }
-        target.drawImage(tileList[k], x, y);
+        target.paste(tileList[k], x, y);
       }
     }
 

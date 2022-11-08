@@ -18,7 +18,7 @@ describe('Cycle palette', function() {
     ra.usePalette('pico8');
 
     let img = ra.loadImage('test/testdata/small-fruit.png');
-    ra.drawImage(img);
+    ra.paste(img);
 
     let palette = ra.palette;
     palette.put(2, 3);
@@ -54,7 +54,7 @@ describe('Cycle palette', function() {
     let cover = ra.loadImage('test/testdata/fruit-coverage.png');
     let input = ra.loadImage('test/testdata/green-golden-values.png');
 
-    ra.drawImage(fruit);
+    ra.paste(fruit);
 
     let palette = ra.usePalette(fruit.look, {upon: cover.look});
     util.renderCompareTo(ra, 'test/testdata/small-fruit.png');
@@ -74,7 +74,7 @@ describe('Cycle palette', function() {
     let fruit = ra.loadImage('test/testdata/small-fruit.png');
     let input = ra.loadImage('test/testdata/cycle-values.png');
 
-    ra.drawImage(fruit);
+    ra.paste(fruit);
 
     let palette = ra.usePalette(fruit.look);
     let expect = 'Palette{0:[0]=0x000000, 1:[1]=0xab5236, 2:[2]=0x7e2553, 3:[3]=0xff004d, 4:[4]=0xff77a8}';
@@ -94,7 +94,7 @@ describe('Cycle palette', function() {
     let cover = ra.loadImage('test/testdata/fruit-coverage.png');
     let input = ra.loadImage('test/testdata/green-golden-values.png');
 
-    ra.drawImage(fruit);
+    ra.paste(fruit);
 
     let palette = ra.usePalette(fruit.look);
     util.renderCompareTo(ra, 'test/testdata/small-fruit.png');
@@ -114,7 +114,7 @@ describe('Cycle palette', function() {
     let fruit = ra.loadImage('test/testdata/small-fruit.png');
     let input = ra.loadImage('test/testdata/cycle-values.png');
 
-    ra.drawImage(fruit);
+    ra.paste(fruit);
 
     let palette = ra.usePalette(fruit.look);
     assert.throws(function() {
@@ -130,7 +130,7 @@ describe('Cycle palette', function() {
     ra.usePalette({entries: [8, 0, 2]});
 
     let img = ra.loadImage('test/testdata/small-fruit.png');
-    ra.drawImage(img);
+    ra.paste(img);
 
     util.renderCompareTo(ra, 'test/testdata/small-fruit-dramatic.png');
   });
@@ -142,7 +142,7 @@ describe('Cycle palette', function() {
     ra.usePalette('pico8');
 
     let img = ra.loadImage('test/testdata/small-fruit.png');
-    ra.drawImage(img);
+    ra.paste(img);
     ra.usePalette({entries:[8, 0, 2, 4, 14]});
 
     // TODO: The image should be redrawn to agree with the palette.
@@ -156,7 +156,7 @@ describe('Cycle palette', function() {
     ra.usePalette('pico8');
 
     let img = ra.loadImage('test/testdata/small-fruit.png');
-    ra.drawImage(img);
+    ra.paste(img);
     ra.usePalette({entries:[8, 0, 2, 4, 14], agree: true});
 
     util.renderCompareTo(ra, 'test/testdata/small-fruit.png');
@@ -170,7 +170,7 @@ describe('Cycle palette', function() {
     ra.usePalette({entries:[8, 0, 2, 14, 4]});
 
     let img = ra.loadImage('test/testdata/small-fruit.png');
-    ra.drawImage(img);
+    ra.paste(img);
 
     let expect = new Uint8Array([
       1, 1, 1, 1, 4, 1, 1, 1,

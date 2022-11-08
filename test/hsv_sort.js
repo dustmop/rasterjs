@@ -15,7 +15,7 @@ describe('HSV sort', function() {
     // Draw the image, sets the size and color map
     let img = ra.loadImage('test/testdata/dark_sphere.png');
     img.then(function() {
-      ra.drawImage(img);
+      ra.paste(img);
 
       let pal = ra.palette;
       // Compare the palette to expectation
@@ -71,7 +71,7 @@ describe('HSV sort', function() {
     // Draw the image, sets the size and color map
     let img = ra.loadImage('test/testdata/dark_sphere.png', {sortColors: 'usingHSV'});
     img.then(function() {
-      ra.drawImage(img);
+      ra.paste(img);
 
       let pal = ra.palette;
       // Compare the palette to expectation

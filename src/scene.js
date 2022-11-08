@@ -337,7 +337,7 @@ Scene.prototype.setGrid = function(unit, opt) {
 
   if (this._renderer) {
     // TODO: It is possible to get here with 0 width and 0 height if
-    // setGrid is called before setSize / drawImage.
+    // setGrid is called before setSize / paste.
     this._renderer.grid = {
       zoom: this.config.zoomScale,
       width: width,

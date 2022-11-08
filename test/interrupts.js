@@ -8,7 +8,7 @@ describe('Interrupts', function() {
     ra.usePalette('pico8');
 
     let img = ra.loadImage('test/testdata/small-fruit.png');
-    ra.drawImage(img);
+    ra.paste(img);
 
     ra.useInterrupts([
       {scanline:  0, irq: () => { ra.setScrollX(0) }},
@@ -27,7 +27,7 @@ describe('Interrupts', function() {
     ra.usePalette('pico8');
 
     let img = ra.loadImage('test/testdata/small-fruit.png');
-    ra.drawImage(img);
+    ra.paste(img);
 
     ra.useInterrupts([
       {scanline:     0, irq: () => { ra.setScrollX(0) }},

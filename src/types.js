@@ -33,6 +33,25 @@ function isArray(obj) {
   return Array.isArray(obj);
 }
 
+function is2dNumArray(obj) {
+  if (!isArray(obj)) {
+    return false;
+  }
+  for (let i = 0; i < obj.length; i++) {
+    let row = obj[i];
+    if (!isArray(row)) {
+      return false;
+    }
+    for (let j = 0; j < row.length; j++) {
+      let cell = row[j];
+      if (!isNumber(cell)) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
 function isRGBColor(obj) {
   if (!obj) { return false; }
   return obj.constructor == rgbColor.RGBColor;
@@ -46,6 +65,11 @@ function isInterrupts(obj) {
 function isTileset(obj) {
   if (!obj) { return false; }
   return obj.constructor == tiles.Tileset;
+}
+
+function isTile(obj) {
+  if (!obj) { return false; }
+  return obj.constructor == tiles.Tile;
 }
 
 function isAttributes(obj) {
@@ -115,6 +139,7 @@ module.exports.isPlane   = isPlane;
 module.exports.isNumber  = isNumber;
 module.exports.isInteger = isInteger;
 module.exports.isArray = isArray;
+module.exports.is2dNumArray = is2dNumArray;
 module.exports.isInterrupts = isInterrupts;
 module.exports.isString = isString;
 module.exports.isFunction = isFunction;
@@ -122,6 +147,7 @@ module.exports.isObject = isObject;
 module.exports.isRGBColor = isRGBColor;
 module.exports.isLookOfImage = isLookOfImage;
 module.exports.isPaletteEntry = isPaletteEntry;
+module.exports.isTile = isTile;
 module.exports.isTileset = isTileset;
 module.exports.isAttributes = isAttributes;
 module.exports.isPalette = isPalette;

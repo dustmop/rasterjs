@@ -148,9 +148,37 @@ Plane.prototype.put = function(x, y, v) {
 
 Plane.prototype.fill = function(v) {
   this._prepare();
-  for (let k = 0; k < this.data.length; k++) {
-    this.data[k] = Math.floor(v);
+  if (types.isArray(v)) {
+    let k = 0;
+    for (let i = 0; i < this.height; i++) {
+      for (let j = 0; j < this.width; j++) {
+        this.put(j, i, v[k]);
+        k++;
+      }
+    }
+    return;
   }
+  if (types.isNumber(v)) {
+    for (let k = 0; k < this.data.length; k++) {
+      this.data[k] = Math.floor(v);
+    }
+    return;
+  }
+  throw new Error(`plane.fill needs array or number, got ${v}`);
+}
+
+Plane.prototype.pack = function() {
+  let newPitch = this.width;
+  let numPixels = this.height * newPitch;
+  let newBuff = new Uint8Array(numPixels);
+  for (let y = 0; y < this.height; y++) {
+    for (let x = 0; x < this.width; x++) {
+      let k = y*this.pitch + x;
+      let j = y*newPitch + x;
+      newBuff[j] = this.data[k];
+    }
+  }
+  return newBuff;
 }
 
 Plane.prototype.xform = function(kind) {
@@ -322,6 +350,21 @@ Plane.prototype.fold = function(fname, paramList) {
     params = Object.assign(params, row);
     this[fname].bind(this).call(this, params);
   }
+}
+
+Plane.prototype.serialize = function() {
+  let data = [];
+  for (let y = 0; y < this.height; y++) {
+    for (let x = 0; x < this.width; x++) {
+      data.push(this.get(x, y));
+    }
+  }
+  let obj = {
+    "width": this.width,
+    "height": this.height,
+    "data": data,
+  };
+  return JSON.stringify(obj);
 }
 
 module.exports.Plane = Plane;

@@ -57,7 +57,7 @@ describe('Image', function() {
       0, 8, 8, 8, 8, 8, 8, 0,
       0, 0, 8, 8, 8, 8, 0, 0
     ]);
-    assert.deepEqual(expect, ra.clonePlane().data);
+    assert.deepEqual(expect, ra.aPlane.pack());
   });
 
 
@@ -81,7 +81,7 @@ describe('Image', function() {
       0, 2, 2, 2, 2, 2, 2, 0,
       0, 0, 2, 2, 2, 2, 0, 0
     ]);
-    assert.deepEqual(expect, ra.clonePlane().data);
+    assert.deepEqual(expect, ra.aPlane.pack());
 
     // Compare the palette
     let palette = ra.palette;
@@ -170,7 +170,7 @@ describe('Image', function() {
       41,51,20,10,17,18,52,34,
       25,29,12,11,23,49,33, 2,
     ]);
-    assert.deepEqual(expect, ra.clonePlane().data);
+    assert.deepEqual(expect, ra.aPlane.pack());
   });
 
 

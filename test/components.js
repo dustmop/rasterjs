@@ -30,15 +30,16 @@ describe('Components', function() {
     assert.throws(() => {
       let pl = new ra.Plane();
       tiles = ra.useTileset(pl, detail);
-    }, /Tileset's source has invalid size/);
+    }, /Tileset's tile_height is larger than source data/);
     // plane
     let pl = new ra.Plane();
     pl.setSize(16, 16);
+    pl.drawCircle(3, 5, 7);
     tiles = ra.useTileset(pl, detail);
     assert.equal(tiles.constructor.name, 'Tileset');
     assert.equal(tiles.length, 4);
     // tileset object
-    let ts = new ra.Tileset(6, detail);
+    let ts = new ra.Tileset({num: 6, tile_width: 8, tile_height: 8});
     tiles = ra.useTileset(ts);
     assert.equal(tiles.constructor.name, 'Tileset');
     assert.equal(tiles.length, 6);

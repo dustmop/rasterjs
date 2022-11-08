@@ -275,7 +275,7 @@ class Renderer {
           let c = layer.plane.data[k];
           let t = layer.tileset.get(c);
           if (t === undefined) {
-            throw new Error(`invalid tile number ${c} at ${xTile},${yTile}`);
+            continue;
           }
           for (let i = 0; i < t.height; i++) {
             for (let j = 0; j < t.width; j++) {

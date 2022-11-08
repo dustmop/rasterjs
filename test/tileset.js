@@ -42,23 +42,27 @@ describe('Tileset', function() {
     let plane = new ra.Plane();
     plane.setSize(4);
 
-    let tiles = new ra.Plane();
-    tiles.setSize(16);
+    let tilePlane = new ra.Plane();
+    tilePlane.setSize(16, 16);
 
-    tiles.setColor(34);
-    tiles.drawDot(0, 0);
-    tiles.drawDot(8, 1);
-    tiles.drawDot(8, 2);
-    tiles.drawDot(9, 1);
-    tiles.drawDot(9, 2);
-    tiles.drawDot(1,  9);
-    tiles.drawDot(2, 10);
-    tiles.drawDot(3, 11);
-    tiles.drawDot(4, 12);
-    tiles.drawDot(5, 13);
-
-    ra.useTileset(tiles, {tile_width: 8, tile_height: 8});
+    let tiles = ra.useTileset(tilePlane, {tile_width: 8, tile_height: 8});
     ra.usePlane(plane);
+
+    let modTile = tiles.get(0);
+    modTile.put(0, 0, 34);
+
+    modTile = tiles.get(1);
+    modTile.put(0, 1, 34);
+    modTile.put(0, 2, 34);
+    modTile.put(1, 1, 34);
+    modTile.put(1, 2, 34);
+
+    modTile = tiles.get(2);
+    modTile.put(1, 1, 34);
+    modTile.put(2, 2, 34);
+    modTile.put(3, 3, 34);
+    modTile.put(4, 4, 34);
+    modTile.put(5, 5, 34);
 
     plane.fillPattern([[ 0, 0, 1, 0],
                        [ 0, 1, 0, 0],
@@ -68,9 +72,10 @@ describe('Tileset', function() {
 
     util.renderCompareTo(ra, 'test/testdata/drawn_tiles.png');
 
-    tiles.drawDot(2, 0);
-    tiles.drawDot(0, 2);
-    tiles.drawDot(2, 2);
+    modTile = tiles.get(0);
+    modTile.put(2, 0, 34);
+    modTile.put(0, 2, 34);
+    modTile.put(2, 2, 34);
     util.renderCompareTo(ra, 'test/testdata/modify_tiles.png');
   });
 
@@ -80,7 +85,7 @@ describe('Tileset', function() {
     let plane = new ra.Plane();
     plane.setSize(4);
 
-    let tileset = new ra.Tileset(4, {tile_width: 8, tile_height: 8});
+    let tileset = new ra.Tileset({num: 4, tile_width: 8, tile_height: 8});
 
     let t = tileset.get(0);
     t.put(0, 0, 34);
@@ -194,9 +199,7 @@ describe('Tileset', function() {
                        [5, 5, 1, 0],
                        [6, 4, 2, 2]]);
 
-    assert.throws(function() {
-      ra.renderPrimaryPlane();
-    }, /Error: invalid tile number 15 at 2,1/);
+    util.renderCompareTo(ra, 'test/testdata/tile_overflow.png');
   });
 
   it('tiles with attributes', function() {
@@ -334,8 +337,11 @@ describe('Tileset', function() {
 
     let surfaces = tileset.visualize({palette: ra.palette});
     ra._saveSurfacesTo(surfaces, tmpout);
-
     util.ensureFilesMatch('test/testdata/tiles_saved.png', tmpout);
+
+    surfaces = tileset.visualize({palette: ra.palette, numTileX: 4});
+    ra._saveSurfacesTo(surfaces, tmpout);
+    util.ensureFilesMatch('test/testdata/tiles_saved_4wide.png', tmpout);
   });
 
   it('build from plane', function() {
@@ -350,22 +356,44 @@ describe('Tileset', function() {
     assert.equal(tiles.length, 8);
     assert.equal(tiles.numTiles, 8);
 
-    let pattern = ra.clonePlane();
+    let pattern = ra.aPlane.pack();
     let expect = new Uint8Array([
       0, 1, 2, 3,
       1, 4, 4, 4,
       5, 5, 2, 6,
       1, 7, 0, 0,
     ]);
-    assert.deepEqual(expect, pattern.data);
-    assert.deepEqual(4, pattern.width);
-    assert.deepEqual(4, pattern.height);
+    assert.deepEqual(expect, pattern);
+    assert.deepEqual(4, ra.aPlane.width);
+    assert.deepEqual(4, ra.aPlane.height);
   });
 
   it('cant construct from string', function() {
     assert.throws(function() {
       ra.useTileset('abc', {tile_width: 4, tile_height: 4});
     }, /cannot construct tileset from abc/);
+  });
+
+  it('tiles addFrom', function() {
+    ra.resetState();
+    ra.setSize(3, 3, {planeOnly: true});
+
+    let firstSet = ra.loadImage('test/testdata/tiles.png');
+    let secondSet = ra.loadImage('test/testdata/dark_sphere_with_bg.png');
+
+    let tiles = new ra.Tileset({tile_width: 8, tile_height: 8});
+    tiles.addFrom(firstSet);
+    tiles.addFrom(secondSet);
+    ra.useTileset(tiles);
+
+    ra.fillPattern([[1, 1, 2],
+                    [0, 4, 0],
+                    [3, 6, 1]]);
+    util.renderCompareTo(ra, 'test/testdata/compose_tiles.png');
+
+    let obj = tiles.serialize();
+    let expectSer = '{"tileWidth":8,"tileHeight":8,"data":[[0,0,0,0,1,1,1,1,0,2,2,0,1,1,6,1,0,2,2,0,1,6,8,1,0,0,0,0,1,1,1,1,11,11,11,11,12,12,13,13,11,16,16,11,12,17,18,13,11,19,19,11,12,20,20,4,11,16,16,11,12,4,4,4],[2,2,3,2,4,5,5,4,7,2,3,7,5,5,5,5,7,9,3,7,5,5,5,5,10,10,10,10,4,5,5,4,14,14,14,5,15,15,15,15,5,6,5,14,16,16,16,16,6,5,6,14,21,21,21,21,14,14,14,6,12,12,12,12],[22,22,22,22,22,22,4,4,22,22,22,22,4,4,23,23,22,22,22,4,25,23,23,23,22,22,4,24,25,23,23,23,22,4,24,25,23,23,26,27,22,4,24,25,23,23,27,26,4,24,25,25,23,23,23,27,4,24,25,25,23,23,23,23],[4,4,22,22,22,22,22,22,23,24,4,4,22,22,22,22,23,23,23,24,4,22,22,22,23,23,23,23,25,4,22,22,23,23,23,23,23,25,4,22,27,23,23,23,23,23,4,22,23,23,23,23,23,23,25,4,23,23,23,23,23,23,23,4],[4,24,24,25,23,23,23,23,4,24,24,25,25,23,23,23,22,4,24,24,25,25,23,23,22,4,24,24,24,25,25,25,22,22,4,24,24,24,25,25,22,22,22,4,24,24,24,24,22,22,22,22,4,4,24,24,22,22,22,22,22,22,4,4],[23,23,23,23,23,23,25,4,23,23,23,23,23,23,25,4,23,23,23,23,25,25,4,22,23,23,25,25,25,24,4,22,25,25,25,24,24,4,22,22,24,24,24,24,4,22,22,22,24,24,4,4,22,22,22,22,4,4,22,22,22,22,22,22]]}';
+    assert.deepEqual(obj, expectSer);
   });
 
 });

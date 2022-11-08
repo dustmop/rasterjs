@@ -117,6 +117,45 @@ class Visualizer {
     return rend.render();
   }
 
+  tilesetToSurface(tileList, origPalette, tileWidth, tileHeight, numTileX) {
+    let between = 1;
+    let outer = 1;
+
+    let numTileY = Math.ceil(tileList.length / numTileX);
+    let targetWidth = (tileWidth + between) * numTileX + outer * 2 - between;
+    let targetHeight = (tileHeight + between) * numTileY + outer * 2 - between;
+
+    let pal = new palette.Palette();
+    pal._rgbmap = origPalette._rgbmap.slice();
+    pal._rgbmap.push(0x444444);
+    let bgColor = pal._rgbmap.length - 1;
+
+    let target = new plane.Plane();
+    target.setSize(targetWidth, targetHeight);
+    target.fillColor(bgColor);
+
+    for (let i = 0; i < numTileY; i++) {
+      for (let j = 0; j < numTileX; j++) {
+        let x = j * (tileWidth + between) + outer;
+        let y = i * (tileHeight + between) + outer;
+        let k = j + i * numTileX;
+        if (!tileList[k]) { continue; }
+        target.drawImage(tileList[k], x, y);
+      }
+    }
+
+    // Components for rendering
+    let components = [{
+      plane: target,
+      palette: pal,
+    }];
+
+    // Render it
+    let rend = new renderer.Renderer();
+    rend.connect(components);
+    return rend.render();
+  }
+
   attributesToSurface(source, sizeInfo, opt) {
     let srcWidth = source.width;
     let srcHeight = source.height;

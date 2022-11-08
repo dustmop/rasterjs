@@ -126,8 +126,7 @@ Scene.prototype.Tileset = function() {
     throw new Error('Tileset constructor must be called with `new`');
   }
   let args = arguments;
-  // TODO: destructure?
-  return new tiles.Tileset(args[0], args[1]);
+  return new tiles.Tileset(args[0]);
 }
 
 Scene.prototype.SpriteList = function() {
@@ -240,7 +239,6 @@ Scene.prototype.setSize = function(w, h, opt) {
   [w, h, opt] = destructure.from('setSize', spec, arguments, null);
   if (h === undefined) { h = w; };
   opt = opt || {};
-
   if (!opt.planeOnly) {
     this.width = w;
     this.height = h;
@@ -554,23 +552,6 @@ Scene.prototype.mixColors = function(spec) {
   return result;
 }
 
-Scene.prototype.clonePlane = function() {
-  let s = this.aPlane;
-  let p = s.clone();
-  p.pitch = p.width;
-  let numPixels = p.height * p.pitch;
-  let newBuff = new Uint8Array(numPixels);
-  for (let y = 0; y < p.height; y++) {
-    for (let x = 0; x < p.width; x++) {
-      let k = y*s.pitch + x;
-      let j = y*p.pitch + x;
-      newBuff[j] = s.data[k];
-    }
-  }
-  p.data = newBuff;
-  return p;
-}
-
 Scene.prototype.oscil = function(namedOnly) {
   let spec = ['!name', 'period?i=60', 'begin?n', 'max?n=1.0', 'tick?a'];
   let [period, begin, max, tick] = destructure.from(
@@ -857,8 +838,9 @@ Scene.prototype.useTileset = function(something, sizeInfo) {
   if (types.isObject(something) && sizeInfo == null) {
     // Construct a tileset from the current plane.
     sizeInfo = something;
-    this.tileset = new tiles.Tileset(this.aPlane, sizeInfo, {dedup: true});
-    this.aPlane = this.tileset.patternTable;
+    this.tileset = new tiles.Tileset(sizeInfo);
+    let patternTable = this.tileset.addFrom(this.aPlane, false);
+    this.aPlane = patternTable.toPlane();
   } else if (types.isTileset(something)) {
     this.tileset = something;
   } else if (types.isArray(something)) {
@@ -867,23 +849,28 @@ Scene.prototype.useTileset = function(something, sizeInfo) {
     let imageList = something;
     let allBanks = [];
     for (let i = 0; i < imageList.length; i++) {
-      let tileset = new tiles.Tileset(imageList[i], sizeInfo);
+      let tileset = new tiles.Tileset(sizeInfo);
+      tileset.addFrom(imageList[i], true);
       allBanks.push(tileset);
     }
     this.tilesetBanks = allBanks;
     this.tileset = allBanks[0];
   } else if (types.isPlane(something)) {
     let img = something;
-    this.tileset = new tiles.Tileset(img, sizeInfo);
+    this.tileset = new tiles.Tileset(sizeInfo);
+    this.tileset.addFrom(img, true);
   } else if (types.isNumber(something)) {
     let numTiles = something;
-    this.tileset = new tiles.Tileset(numTiles, sizeInfo);
+    let detail = {num: numTiles};
+    Object.assign(detail, sizeInfo);
+    this.tileset = new tiles.Tileset(detail);
   } else {
     throw new Error(`cannot construct tileset from ${something}`);
   }
   if (this.attributes) {
     this.attributes.ensureConsistentTileset(this.tileset, this.palette);
   }
+  this.tileset.giveFeatures(this._fsacc);
   return this.tileset;
 }
 

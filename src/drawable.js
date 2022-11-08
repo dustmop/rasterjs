@@ -35,6 +35,10 @@ Drawable.prototype.drawDot = function(x, y) {
 
 Drawable.prototype.fillPattern_params = ['dots:any'];
 Drawable.prototype.fillPattern = function(dots) {
+  if (!types.is2dNumArray(dots)) {
+    throw new Error(`fillPattern needs a 2d array, got ${dots}`);
+  }
+
   this._prepare();
   let buffer = this.data;
   let left = this.offsetLeft || 0;

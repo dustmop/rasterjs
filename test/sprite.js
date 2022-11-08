@@ -44,7 +44,8 @@ describe('Sprite', function() {
 
     ra.drawImage(imgBg);
 
-    let tiles = new ra.Tileset(imgTiles, {tile_width: 16, tile_height: 16});
+    let tiles = new ra.Tileset({tile_width: 16, tile_height: 16});
+    tiles.addFrom(imgTiles);
 
     let sprites = new ra.SpriteList(4, tiles);
     ra.useSpriteList(sprites);

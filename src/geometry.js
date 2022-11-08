@@ -2,10 +2,11 @@ const types = require('./types.js');
 
 class Polygon {
   constructor(points, centerAxis) {
+    centerAxis = _toPoint(centerAxis);
     this._points = points;
     centerAxis = centerAxis || guessCenterOf(this._points);
-    this._centerX = centerAxis[0];
-    this._centerY = centerAxis[1];
+    this._centerX = centerAxis.x;
+    this._centerY = centerAxis.y;
     return this;
   }
 
@@ -35,7 +36,30 @@ class Polygon {
   }
 }
 
-function convertToPolygon(pointsOrPolygon) {
+function _toPoint(source) {
+  let x, y;
+  if (source == null) {
+    return source;
+  }
+  if (arguments.length == 2) {
+    x = arguments[0];
+    y = arguments[1];
+    return {x: x, y: y};
+  }
+  if (source.length == 2) {
+    x = source[0];
+    y = source[1];
+    return {x: x, y: y};
+  }
+  if (source.x != null && source.y != null) {
+    x = source.x;
+    y = source.y;
+    return {x: x, y: y};
+  }
+  throw new Error(`cannot construct point from ${source}`);
+}
+
+function convertToPolygon(pointsOrPolygon, center) {
   // If already a polygon, just return it.
   if (pointsOrPolygon instanceof Polygon) {
     return pointsOrPolygon;
@@ -56,7 +80,7 @@ function convertToPolygon(pointsOrPolygon) {
       p[1] += 0.50000001;
     }
   }
-  return new Polygon(points)
+  return new Polygon(points, center)
 }
 
 function convertToPoints(pointsOrPolygon) {
@@ -85,7 +109,7 @@ function guessCenterOf(points) {
       bot = p[1];
     }
   }
-  return [(left+right)/2, (top+bot)/2];
+  return _toPoint((left+right)/2, (top+bot)/2);
 }
 
 module.exports.Polygon = Polygon;

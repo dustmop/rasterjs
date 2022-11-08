@@ -412,8 +412,15 @@ Scene.prototype.loadImage = function(filepath, opt) {
   return this._imgLoader.loadImage(filepath, opt);
 }
 
-Scene.prototype.makePolygon = function(pointsOrPolygon) {
-  return geometry.convertToPolygon(pointsOrPolygon);
+Scene.prototype.Polygon = function(pointsOrPolygon, center) {
+  if (new.target === undefined) {
+    throw new Error('Polygon constructor must be called with `new`');
+  }
+  return geometry.convertToPolygon(pointsOrPolygon, center);
+}
+
+Scene.prototype._makePolygon = function(pointsOrPolygon, center) {
+  return geometry.convertToPolygon(pointsOrPolygon, center);
 }
 
 Scene.prototype.rotatePolygon = function(pointsOrPolygon, angle) {

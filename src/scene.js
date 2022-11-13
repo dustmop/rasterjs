@@ -12,7 +12,7 @@ const asciiDisplay = require('./ascii_display.js');
 const plane = require('./plane.js');
 const tiles = require('./tiles.js');
 const sprites = require('./sprites.js');
-const attributes = require('./attributes.js');
+const colorspace = require('./colorspace.js');
 const interrupts = require('./interrupts.js');
 const rgbColor = require('./rgb_color.js');
 const types = require('./types.js');
@@ -37,7 +37,7 @@ function Scene(env) {
   this._font = null;
   this.camera = {};
   this.tileset = null;
-  this.attributes = null;
+  this.colorspace = null;
   this.interrupts = null;
   this.spriteList = null;
   this.aPlane = new plane.Plane();
@@ -152,8 +152,6 @@ Scene.prototype.RGBColor = function(_many) {
   let args = arguments;
   return new rgbColor.RGBColor(args[0], args[1], args[2]);
 }
-
-// TODO: Constructors for other components, Attributes, etc ...
 
 Scene.prototype._addMethods = function() {
   let self = this;
@@ -292,7 +290,7 @@ Scene.prototype.resetState = function() {
   this.tick = 0;
   this.camera = {};
   this.tileset = null;
-  this.attributes = null;
+  this.colorspace = null;
   this.interrupts = null;
   this.spriteList = null;
   this.rgbBuffer = null;
@@ -464,8 +462,8 @@ Scene.prototype._prepareRendering = function() {
   }
   this._renderer.connect(this.provide());
 
-  if (this.attributes && !this._hasRenderedOnce) {
-    this.normalizePaletteAttributes();
+  if (this.colorspace && !this._hasRenderedOnce) {
+    this.normalizePaletteColorspace();
     this._hasRenderedOnce = true;
   }
 
@@ -757,14 +755,14 @@ Scene.prototype.usePlane = function(pl) {
   return this.aPlane;
 }
 
-Scene.prototype.normalizePaletteAttributes = function() {
-  if (!this.attributes || !this.palette) {
-    throw new Error(`need palette and attributes`);
+Scene.prototype.normalizePaletteColorspace = function() {
+  if (!this.colorspace || !this.palette) {
+    throw new Error(`need palette and colorspace`);
   }
   // don't ensure the plane is consistent if it is a pattern table
-  // TODO: rewrite attributes, it has many problems
+  // TODO: rewrite colorspace, it has many problems
   if (!this.tileset) {
-    this.attributes.ensureConsistentPlanePalette(this.aPlane, this.palette);
+    this.colorspace.ensureConsistentPlanePalette(this.aPlane, this.palette);
   }
 }
 
@@ -874,24 +872,24 @@ Scene.prototype.useTileset = function(something, sizeInfo) {
   } else {
     throw new Error(`cannot construct tileset from ${something}`);
   }
-  if (this.attributes) {
-    this.attributes.ensureConsistentTileset(this.tileset, this.palette);
+  if (this.colorspace) {
+    this.colorspace.ensureConsistentTileset(this.tileset, this.palette);
   }
   this.tileset.giveFeatures(this._fsacc);
   return this.tileset;
 }
 
-Scene.prototype.useAttributes = function(pl, sizeInfo) {
+Scene.prototype.useColorspace = function(pl, sizeInfo) {
   if (!this.palette) {
-    // TODO: Attributes without a palette just slices up colorMap
-    throw new Error('cannot useAttributes without a palette');
+    // TODO: Colorspace without a palette just slices up colorMap
+    throw new Error('cannot useColorpsace without a palette');
   }
   // TODO: validate sizeInfo
-  this.attributes = new attributes.Attributes(pl, this.palette, sizeInfo);
+  this.colorspace = new colorspace.Colorspace(pl, this.palette, sizeInfo);
   if (this.tileset) {
-    this.attributes.ensureConsistentTileset(this.tileset, this.palette);
+    this.colorspace.ensureConsistentTileset(this.tileset, this.palette);
   }
-  return this.attributes;
+  return this.colorspace;
 }
 
 Scene.prototype.useInterrupts = function(conf) {
@@ -918,8 +916,8 @@ Scene.prototype.provide = function() {
   if (this.palette) {
     prov.palette = this.palette;
   }
-  if (this.attributes) {
-    prov.attributes = this.attributes;
+  if (this.colorspace) {
+    prov.colorspace = this.colorspace;
   }
   if (this.interrupts) {
     prov.interrupts = this.interrupts;

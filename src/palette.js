@@ -268,7 +268,7 @@ class Palette {
     for (let i = 0; i < this._rgbmap.length; i++) {
       let cval = this._entries[i];
       // palette with multiple uses will only map to the first
-      // TODO: this doesn't work with attributes, need ambiguity info
+      // TODO: this doesn't work with colorspace, need ambiguity info
       remap[cval] = i;
     }
 

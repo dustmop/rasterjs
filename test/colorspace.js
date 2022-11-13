@@ -2,10 +2,10 @@ var assert = require('assert');
 var util = require('./util.js');
 var ra = require('../src/lib.js');
 var palette = require('../src/palette.js');
-var attributes = require('../src/attributes.js');
+var colorspace = require('../src/colorspace.js');
 var rgbColor = require('../src/rgb_color.js');
 
-describe('Attributes', function() {
+describe('Colorspace', function() {
   it('getRGBNeeds', () => {
     ra.resetState();
 
@@ -22,8 +22,8 @@ describe('Attributes', function() {
       cell_width: 8,
       cell_height: 8,
     };
-    let attrs = new attributes.Attributes(source, pal, sizeInfo);
-    let actual = attrs._getRGBNeeds(fruit, pal);
+    let colors = new colorspace.Colorspace(source, pal, sizeInfo);
+    let actual = colors._getRGBNeeds(fruit, pal);
     let expect = [
       new rgbColor.RGBColor(0x000000),
       new rgbColor.RGBColor(0x7e2553),
@@ -38,7 +38,7 @@ describe('Attributes', function() {
     let source = new ra.Plane();
     let pal = new palette.Palette();
     let sizeInfo = {cell_width: 1, cell_height: 1};
-    let attrs = new attributes.Attributes(source, pal, sizeInfo);
+    let colors = new colorspace.Colorspace(source, pal, sizeInfo);
 
     // pick first
     let match = {
@@ -47,7 +47,7 @@ describe('Attributes', function() {
         {piece: 1, score: 2}
       ]
     };
-    let piece = attrs._choosePieceNum(match, null);
+    let piece = colors._choosePieceNum(match, null);
     assert.equal(piece, 3);
 
     // pick `was` if its a winner
@@ -57,7 +57,7 @@ describe('Attributes', function() {
         {piece: 1, score: 2}
       ]
     };
-    piece = attrs._choosePieceNum(match, 4);
+    piece = colors._choosePieceNum(match, 4);
     assert.equal(piece, 4);
 
     // `was` is ignored if not a winner
@@ -67,7 +67,7 @@ describe('Attributes', function() {
         {piece: 1, score: 2}
       ]
     };
-    piece = attrs._choosePieceNum(match, 2);
+    piece = colors._choosePieceNum(match, 2);
     assert.equal(piece, 3);
 
     // first in ranking if no winner
@@ -77,7 +77,7 @@ describe('Attributes', function() {
         {piece: 1, score: 2}
       ]
     };
-    piece = attrs._choosePieceNum(match, null);
+    piece = colors._choosePieceNum(match, null);
     assert.equal(piece, 1);
 
     // ranking doesn't care about `was`
@@ -88,7 +88,7 @@ describe('Attributes', function() {
         {piece: 4, score: 1}
       ]
     };
-    piece = attrs._choosePieceNum(match, 4);
+    piece = colors._choosePieceNum(match, 4);
     assert.equal(piece, 1);
   });
 
@@ -102,8 +102,8 @@ describe('Attributes', function() {
     let source = new ra.Plane();
     source.setSize(1, 1);
     let sizeInfo = {cell_width: 8, cell_height: 8};
-    let attrs = new attributes.Attributes(source, pal, sizeInfo);
-    attrs._downModulate(fruit, 0, 0, 8);
+    let colors = new colorspace.Colorspace(source, pal, sizeInfo);
+    colors._downModulate(fruit, 0, 0, 8);
 
     let expect = new Uint8Array([
       0, 0, 0, 0, 4, 0, 0, 0,
@@ -137,15 +137,15 @@ describe('Attributes', function() {
                ];
     ra.usePalette({entries:ents});
 
-    // Build attributes
-    let attrs = new ra.Plane();
-    attrs.setSize(4);
-    attrs.fillPattern([[0,1,1,1],
+    // Build colorspace
+    let colors = new ra.Plane();
+    colors.setSize(4);
+    colors.fillPattern([[0,1,1,1],
                        [1,3,3,3],
                        [2,2,1,0],
                        [1,3,0,0],
                       ]);
-    ra.useAttributes(attrs, {cell_width: 4, cell_height: 4, piece_size: 6});
+    ra.useColorspace(colors, {cell_width: 4, cell_height: 4, piece_size: 6});
 
     // Tileset / CHR
     let tiles = ra.loadImage('test/testdata/tiles.png');
@@ -183,15 +183,15 @@ describe('Attributes', function() {
                ];
     ra.usePalette({entries:ents});
 
-    // Build attributes
-    let attrs = new ra.Plane();
-    attrs.setSize(4);
-    attrs.fillPattern([[0,1,1,1],
+    // Build colorspace
+    let colors = new ra.Plane();
+    colors.setSize(4);
+    colors.fillPattern([[0,1,1,1],
                        [1,3,3,3],
                        [2,2,1,0],
                        [1,3,0,0],
                       ]);
-    ra.useAttributes(attrs, {cell_width: 4, cell_height: 4, piece_size: 6});
+    ra.useColorspace(colors, {cell_width: 4, cell_height: 4, piece_size: 6});
 
     // Tileset / CHR
     let tiles = ra.loadImage('test/testdata/tiles.png');
@@ -206,14 +206,14 @@ describe('Attributes', function() {
                        [5, 5, 1, 0],
                        [6, 4, 2, 2]]);
 
-    attrs.put(1, 0, 3);
-    attrs.put(3, 0, 0);
-    attrs.put(3, 1, 2);
-    attrs.put(0, 2, 1);
-    attrs.put(2, 2, 2);
-    attrs.put(2, 3, 1);
+    colors.put(1, 0, 3);
+    colors.put(3, 0, 0);
+    colors.put(3, 1, 2);
+    colors.put(0, 2, 1);
+    colors.put(2, 2, 2);
+    colors.put(2, 3, 1);
 
-    util.renderCompareTo(ra, 'test/testdata/attr_change.png');
+    util.renderCompareTo(ra, 'test/testdata/colors_change.png');
   });
 
   it('without tiles', function() {
@@ -230,15 +230,15 @@ describe('Attributes', function() {
                    26, 34, 42, 50];
     ra.usePalette({entries:entries});
 
-    let attrs = new ra.Plane();
-    attrs.setSize(6, 6);
-    attrs.fill(0);
-    attrs.put(2, 0, 1);
-    attrs.put(4, 3, 1);
-    attrs.put(1, 5, 1);
-    ra.useAttributes(attrs, {cell_width: 6, cell_height: 6, piece_size: 4});
+    let colors = new ra.Plane();
+    colors.setSize(6, 6);
+    colors.fill(0);
+    colors.put(2, 0, 1);
+    colors.put(4, 3, 1);
+    colors.put(1, 5, 1);
+    ra.useColorspace(colors, {cell_width: 6, cell_height: 6, piece_size: 4});
 
-    util.renderCompareTo(ra, 'test/testdata/attrs_colorize.png');
+    util.renderCompareTo(ra, 'test/testdata/colors_colorize.png');
   });
 
   it('visualize', function() {
@@ -254,7 +254,7 @@ describe('Attributes', function() {
                ];
     ra.usePalette({entries:ents});
 
-    // Build attributes
+    // Build colorspace
     let dat = new ra.Plane();
     dat.setSize(4);
     dat.fillPattern([[0,1,1,1],
@@ -262,15 +262,15 @@ describe('Attributes', function() {
                      [2,2,1,0],
                      [1,3,0,0],
                     ]);
-    let attrs = ra.useAttributes(dat, {cell_width: 4, cell_height: 4,
+    let colors = ra.useColorspace(dat, {cell_width: 4, cell_height: 4,
                                        piece_size: 6});
 
-    let surfaces = attrs.visualize();
+    let surfaces = colors.visualize();
     ra._saveSurfacesTo(surfaces, tmpout);
-    util.ensureFilesMatch('test/testdata/attrs_saved.png', tmpout);
+    util.ensureFilesMatch('test/testdata/colors_saved.png', tmpout);
   });
 
-  // TODO: Test normalizePaletteAttributes will downcolor the plane
+  // TODO: Test normalizePaletteColorspace will downcolor the plane
 
   // TODO: Test that winner will keep previous value if it works
 

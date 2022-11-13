@@ -220,15 +220,15 @@ describe('Tileset', function() {
                ];
     ra.usePalette({entries:ents});
 
-    // Build attributes
-    let attrs = new ra.Plane();
-    attrs.setSize(4);
-    attrs.fillPattern([[0,1,1,1],
-                       [1,3,3,3],
-                       [2,2,1,0],
-                       [1,3,0,0],
-                      ]);
-    ra.useAttributes(attrs, {cell_width: 4, cell_height: 4, piece_size: 6});
+    // Build colorspace
+    let colors = new ra.Plane();
+    colors.setSize(4);
+    colors.fillPattern([[0,1,1,1],
+                        [1,3,3,3],
+                        [2,2,1,0],
+                        [1,3,0,0],
+                       ]);
+    ra.useColorspace(colors, {cell_width: 4, cell_height: 4, piece_size: 6});
 
     // Tileset / CHR
     let tiles = ra.loadImage('test/testdata/tiles.png');
@@ -246,7 +246,7 @@ describe('Tileset', function() {
     util.renderCompareTo(ra, 'test/testdata/map_of_tiles.png');
   });
 
-  it('tiles then change attributes', function() {
+  it('tiles then change colorspaces', function() {
     ra.resetState();
 
     // ColorMap has 22 values
@@ -265,15 +265,15 @@ describe('Tileset', function() {
                ];
     ra.usePalette({entries:ents});
 
-    // Build attributes
-    let attrs = new ra.Plane();
-    attrs.setSize(4);
-    attrs.fillPattern([[0,1,1,1],
-                       [1,3,3,3],
-                       [2,2,1,0],
-                       [1,3,0,0],
-                      ]);
-    ra.useAttributes(attrs, {cell_width: 4, cell_height: 4, piece_size: 6});
+    // Build colorspace
+    let colors = new ra.Plane();
+    colors.setSize(4);
+    colors.fillPattern([[0,1,1,1],
+                        [1,3,3,3],
+                        [2,2,1,0],
+                        [1,3,0,0],
+                       ]);
+    ra.useColorspace(colors, {cell_width: 4, cell_height: 4, piece_size: 6});
 
     // Tileset / CHR
     let tiles = ra.loadImage('test/testdata/tiles.png');
@@ -288,14 +288,14 @@ describe('Tileset', function() {
                        [5, 5, 1, 0],
                        [6, 4, 2, 2]]);
 
-    attrs.put(1, 0, 3);
-    attrs.put(3, 0, 0);
-    attrs.put(3, 1, 2);
-    attrs.put(0, 2, 1);
-    attrs.put(2, 2, 2);
-    attrs.put(2, 3, 1);
+    colors.put(1, 0, 3);
+    colors.put(3, 0, 0);
+    colors.put(3, 1, 2);
+    colors.put(0, 2, 1);
+    colors.put(2, 2, 2);
+    colors.put(2, 3, 1);
 
-    util.renderCompareTo(ra, 'test/testdata/attr_change.png');
+    util.renderCompareTo(ra, 'test/testdata/colors_change.png');
   });
 
   it('attributes save', function() {
@@ -319,12 +319,12 @@ describe('Tileset', function() {
                      [2,2,1,0],
                      [1,3,0,0],
                     ]);
-    let attrs = ra.useAttributes(dat, {cell_width: 4, cell_height: 4,
-                                       piece_size: 6});
+    let colors = ra.useColorspace(dat, {cell_width: 4, cell_height: 4,
+                                        piece_size: 6});
 
-    let surfaces = attrs.visualize();
+    let surfaces = colors.visualize();
     ra._saveSurfacesTo(surfaces, tmpout);
-    util.ensureFilesMatch('test/testdata/attrs_saved.png', tmpout);
+    util.ensureFilesMatch('test/testdata/colors_saved.png', tmpout);
   });
 
   it('visualize', function() {

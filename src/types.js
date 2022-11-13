@@ -3,7 +3,7 @@ const plane = require('./plane.js');
 const baseDisplay = require('./base_display.js');
 const imageLoader = require('./image_loader.js');
 const tiles = require('./tiles.js');
-const attributes = require('./attributes.js');
+const colorspace = require('./colorspace.js');
 const palette = require('./palette.js');
 const interrupts = require('./interrupts.js');
 const sprites = require('./sprites.js');
@@ -72,9 +72,9 @@ function isTile(obj) {
   return obj.constructor == tiles.Tile;
 }
 
-function isAttributes(obj) {
+function isColorspace(obj) {
   if (!obj) { return false; }
-  return obj.constructor == attributes.Attributes;
+  return obj.constructor == colorspace.Colorspace;
 }
 
 function isPalette(obj) {
@@ -149,7 +149,7 @@ module.exports.isLookOfImage = isLookOfImage;
 module.exports.isPaletteEntry = isPaletteEntry;
 module.exports.isTile = isTile;
 module.exports.isTileset = isTileset;
-module.exports.isAttributes = isAttributes;
+module.exports.isColorspace = isColorspace;
 module.exports.isPalette = isPalette;
 module.exports.isSpriteSheet = isSpriteSheet;
 module.exports.isSurface = isSurface;

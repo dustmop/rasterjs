@@ -297,7 +297,7 @@ class ImagePlane {
     //
     // Should img.get(x,y) work the same before and after being drawn?
     //
-    // # Maybe a use case with attributes?
+    // # Maybe a use case with colorspace?
     //
     // I think the look can help to assign sprites their correct
     // attribute. Need to research how this would actually work.

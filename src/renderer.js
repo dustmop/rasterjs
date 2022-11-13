@@ -3,7 +3,7 @@ const rgbColor = require('./rgb_color.js');
 const plane = require('./plane.js');
 const tiles = require('./tiles.js');
 const palette = require('./palette.js');
-const attrs = require('./attributes.js');
+const colorspace = require('./colorspace.js');
 const types = require('./types.js');
 const verboseLogger = require('./verbose_logger.js');
 
@@ -27,7 +27,7 @@ class Renderer {
         plane: null,
         tileset: null,
         palette: null,
-        attributes: null,
+        colorspace: null,
         size: null,
         spriteList: null,
       }
@@ -52,7 +52,7 @@ class Renderer {
 
     let layer = this._layers[0];
     let allow = ['plane', 'size', 'camera', 'palette-rgbmap',
-                 'tileset', 'palette', 'attributes', 'interrupts', 'spriteList',
+                 'tileset', 'palette', 'colorspace', 'interrupts', 'spriteList',
                  'font', 'grid'];
     let keys = Object.keys(input);
     for (let k of keys) {
@@ -72,8 +72,8 @@ class Renderer {
     if (input.tileset && !types.isTileset(input.tileset)) {
       throw new Error(`input.tiles must be a Tileset, got ${input.tileset}`);
     }
-    if (input.attributes && !types.isAttributes(input.attributes)) {
-      throw new Error(`input.attributes must be a Attributes`);
+    if (input.colorspace && !types.isColorspace(input.colorspace)) {
+      throw new Error(`input.coolorspace must be a Colorspace`);
     }
     if (input.interrupts && !types.isInterrupts(input.interrupts)) {
       throw new Error(`input.interrupts must be a Interrupts`);
@@ -84,7 +84,7 @@ class Renderer {
     layer.camera   = input.camera;
     layer.tileset  = input.tileset;
     layer.palette  = input.palette;
-    layer.attributes = input.attributes;
+    layer.colorspace = input.colorspace;
     layer.spriteList = input.spriteList;
     this.grid        = input.grid;
     this.interrupts  = input.interrupts;
@@ -343,8 +343,8 @@ class Renderer {
           let s = y*sourcePitch + x;
           let t = i*targetPitch + j*4;
           let rgb;
-          if (layer.attributes) {
-            let c = layer.attributes.realizeIndexedColor(source[s], x, y);
+          if (layer.colorspace) {
+            let c = layer.colorspace.realizeIndexedColor(source[s], x, y);
             rgb = this._toColor(layer, c);
           } else {
             rgb = this._toColor(layer, source[s]);
@@ -451,7 +451,7 @@ class Renderer {
     let myPlane = this._layers[0].plane;
     let myTiles = this._layers[0].tileset;
     let myPalette = this._layers[0].palette;
-    let myAttributes = this._layers[0].attributes;
+    let myColorspace = this._layers[0].colorspace;
     let myInterrupts = system.interrupts;
     settings = settings || {};
     components = components || [];
@@ -516,12 +516,12 @@ class Renderer {
           callback('tileset', null);
         }
 
-      } else if (comp == 'attributes') {
-        if (myAttributes) {
-          let surface = myAttributes.visualize();
-          callback('attributes', surface);
+      } else if (comp == 'colorspace') {
+        if (myColorspace) {
+          let surface = myColorspace.visualize();
+          callback('colorspace', surface);
         } else {
-          callback('attributes', null);
+          callback('colorspace', null);
         }
 
       } else if (comp == 'interrupts') {

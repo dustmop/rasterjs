@@ -46,23 +46,23 @@ describe('Components', function() {
     // TODO: Multiple tilesets for bank-switching
   });
 
-  it('attributes', function() {
+  it('colorspace', function() {
     ra.resetState();
     let detail = {cell_width: 8, cell_height: 8, piece_size: 6};
     // error, null constructor does not exist
     assert.throws(() => {
-      let tiles = ra.useAttributes();
-    }, /Attributes expects an argument/);
+      let tiles = ra.useColorspace();
+    }, /Colorspace expects an argument/);
     // error, number of cells
     assert.throws(() => {
-      let tiles = ra.useAttributes(5, detail);
-    }, /Attributes expects a Plane as an argument/);
+      let tiles = ra.useColorspace(5, detail);
+    }, /Colorspace expects a Plane as an argument/);
     // plane
     let pl = new ra.Plane();
     pl.setSize(2);
     pl.fillPattern([[0,1], [2,1]])
-    let attrs = ra.useAttributes(pl, detail);
-    assert.equal(attrs.constructor.name, 'Attributes');
+    let colors = ra.useColorspace(pl, detail);
+    assert.equal(colors.constructor.name, 'Colorspace');
   });
 
   // TODO: planes

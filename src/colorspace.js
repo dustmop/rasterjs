@@ -3,12 +3,12 @@ const types = require('./types.js');
 const rgbColor = require('./rgb_color.js');
 
 
-class Attributes {
+class Colorspace {
   // TODO: use arguments instead, optional arguments
-  // Attributes()
-  // Attributes(plane)
-  // Attributes(w, h)
-  // Attributes(palette)
+  // Colorspace()
+  // Colorspace(plane)
+  // Colorspace(w, h)
+  // Colorspace(palette)
   constructor(source, palette, sizeInfo) {
     // TOOD: cell_width, cell_height -> cell_dim
     // TODO: indexed or container
@@ -17,36 +17,36 @@ class Attributes {
     //   cell_width:  8,
     //   cell_height: 8,
     // }
-    // TODO: source is a Plane, Attributes can also own Grid of values
+    // TODO: source is a Plane, Colorspace can also own Grid of values
     if (!palette && !types.isPalette) {
       throw new Error(`palette must be null or a Palette`);
     }
     if (!source && !sizeInfo) {
-      throw new Error(`Attributes expects an argument`);
+      throw new Error(`Colorspace expects an argument`);
     }
     if (!sizeInfo) {
-      throw new Error(`Attributes requires a detail object parameter`);
+      throw new Error(`Colorspace requires a detail object parameter`);
     }
     if (!sizeInfo.cell_width) {
-      throw new Error(`invalid Attributes detail: missing cell_width`);
+      throw new Error(`invalid Colorspace detail: missing cell_width`);
     }
     if (!sizeInfo.cell_height) {
-      throw new Error(`invalid Attributes detail: missing cell_height`);
+      throw new Error(`invalid Colorspace detail: missing cell_height`);
     }
     if (!Math.trunc(sizeInfo.cell_width) != 0) {
-      throw new Error(`Attributes's cell_width must be integer`);
+      throw new Error(`Colorspace's cell_width must be integer`);
     }
     if (!Math.trunc(sizeInfo.cell_height) != 0) {
-      throw new Error(`Attributes's cell_height must be integer`);
+      throw new Error(`Colorspace's cell_height must be integer`);
     }
     if (sizeInfo.cell_width <= 0) {
-      throw new Error(`Attributes's cell_width must be > 0`);
+      throw new Error(`Colorspace's cell_width must be > 0`);
     }
     if (sizeInfo.cell_height <= 0) {
-      throw new Error(`Attributes's cell_height must be > 0`);
+      throw new Error(`Colorspace's cell_height must be > 0`);
     }
     if (types.isInteger(source)) {
-      throw new Error(`Attributes expects a Plane as an argument`);
+      throw new Error(`Colorspace expects a Plane as an argument`);
     }
     if (!source.data) {
       source.ensureReady();
@@ -206,7 +206,7 @@ class Attributes {
 
   visualize() {
     let viz = new visualizer.Visualizer();
-    return viz.attributesToSurface(this.source, this.sizeInfo);
+    return viz.colorspaceToSurface(this.source, this.sizeInfo);
   }
 
 }
@@ -215,4 +215,4 @@ function setContains(container, want) {
   return want.every(function(e) { return container.indexOf(e) >= 0; });
 }
 
-module.exports.Attributes = Attributes;
+module.exports.Colorspace = Colorspace;

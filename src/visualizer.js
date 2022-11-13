@@ -156,7 +156,7 @@ class Visualizer {
     return rend.render();
   }
 
-  attributesToSurface(source, sizeInfo, opt) {
+  colorspaceToSurface(source, sizeInfo, opt) {
     let srcWidth = source.width;
     let srcHeight = source.height;
     let srcPitch = source.pitch;

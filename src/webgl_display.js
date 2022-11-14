@@ -239,7 +239,7 @@ void main() {
     let self = this;
     window.addEventListener('DOMContentLoaded', function(e) {
       let possible = ['plane', 'palette', 'tileset',
-                      'attributes', 'interrupts'];
+                      'colorspace', 'interrupts'];
       for (let i = 0; i < possible.length; i++) {
         let p = possible[i];
         if (components.indexOf(p) > -1) {
@@ -318,12 +318,12 @@ void main() {
         self._putSurfaceToElem(surface, 'plane-display');
       } else if (type == 'tileset') {
         self._putSurfaceToElem(surface, 'tileset-display');
-      } else if (type == 'attributes') {
-        self._putSurfaceToElem(surface, 'attributes-display');
+      } else if (type == 'colorspace') {
+        self._putSurfaceToElem(surface, 'colorspace-display');
       } else if (type == 'interrupts') {
         self._putSurfaceToElem(surface, 'interrupts-display');
       } else {
-        throw new Error(`unknown display type ${type}`);
+        throw new Error(`unknown component type ${type}`);
       }
     });
 

@@ -18,7 +18,7 @@ class Visualizer {
     return this;
   }
 
-  colorsToSurface(colorList, entries, opt) {
+  rgbListToSurface(colorList, entries, opt) {
     opt = opt || {};
 
     let target = new plane.Plane();

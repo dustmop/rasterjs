@@ -145,6 +145,27 @@ describe('Palette', function() {
     util.renderCompareTo(ra, 'test/testdata/pal_set.png');
   });
 
+  it('palette constructor error', () => {
+    assert.throws(() => {
+      let pal = new palette.Palette('nes');
+    }, /Error: palette constructor expected options, got nes/);
+  });
+
+  it('palette constructor options error', () => {
+    assert.throws(() => {
+      let pal = new palette.Palette({entries: 'nes'});
+    }, /Error: invalid param for setEntries: "nes"/);
+  });
+
+  it('palette entries length', () => {
+    ra.usePalette('nes');
+    assert.equal(ra.palette.length, 64);
+    ra.palette.setEntries(16);
+    assert.equal(ra.palette.length, 16);
+    ra.usePalette('gameboy');
+    assert.equal(ra.palette.length, 4);
+  });
+
   it('default palette', function() {
     ra.resetState();
     ra.setSize(8, 8);
@@ -420,6 +441,50 @@ describe('Palette', function() {
 
     palette.cycle(cycleColors.look, {tick: 1});
     util.renderCompareTo(ra, 'test/testdata/cycle-look1.png');
+  });
+
+  it('change pico8 to c64 and gameboy', function() {
+    let tmpdir = util.mkTmpDir();
+    let tmpout = tmpdir + '/actual.png';
+    ra.resetState();
+    ra.usePalette('pico8');
+
+    let fruit = ra.loadImage('test/testdata/small-fruit.png');
+    ra.paste(fruit);
+
+    ra.usePalette('c64');
+    util.renderCompareTo(ra, 'test/testdata/pal_to_c64.png');
+
+    ra.usePalette('gameboy');
+    util.renderCompareTo(ra, 'test/testdata/pal_to_gameboy.png');
+  });
+
+  it('change palette after using entries', function() {
+    ra.resetState();
+    ra.usePalette('pico8');
+
+    let img = ra.loadImage('test/testdata/small-fruit.png');
+    ra.paste(img);
+    ra.usePalette({entries:[8, 0, 2, 4, 14]});
+    assert.equal(ra.palette.length, 5);
+
+    ra.usePalette('c64');
+    assert.equal(ra.palette.length, 16);
+    util.renderCompareTo(ra, 'test/testdata/pal_to_c64.png');
+  });
+
+  it('change palette with agree', function() {
+    ra.resetState();
+    ra.usePalette('pico8');
+
+    let img = ra.loadImage('test/testdata/small-fruit.png');
+    ra.paste(img);
+    ra.usePalette({entries:[8, 0, 2, 4, 14], agree: true});
+    assert.equal(ra.palette.length, 5);
+
+    ra.usePalette('c64');
+    assert.equal(ra.palette.length, 16);
+    util.renderCompareTo(ra, 'test/testdata/weird_c64.png');
   });
 
 });

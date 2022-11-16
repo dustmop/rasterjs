@@ -20,6 +20,9 @@ class Palette {
    */
   constructor(opt) {
     opt = (opt || {});
+    if (!types.isObject(opt)) {
+      throw new Error(`palette constructor expected options, got ${opt}`);
+    }
     this.name = null;
     this._rgbmap = null;
     this._entries = null;
@@ -30,7 +33,7 @@ class Palette {
       this._rgbmap = toIntList(opt.rgbmap);
     }
     if (opt.entries) {
-      this._entries = toIntList(opt.entries);
+      this.setEntries(opt.entries);
     }
   }
 
@@ -42,8 +45,7 @@ class Palette {
     if (values.name) {
       this.name = values.name;
     }
-    // TODO: test me, required for useColors to work
-    this.entries = null;
+    this._entries = null;
     this._rgbmap = toIntList(values);
   }
 
@@ -94,8 +96,10 @@ class Palette {
   }
 
   get length() {
-    this.ensureEntries();
-    return this._entries.length;
+    if (this._entries) {
+      return this._entries.length;
+    }
+    return this._rgbmap.length;
   }
 
   fill(v) {
@@ -191,7 +195,7 @@ class Palette {
         colors.push(this._rgbmap[i]);
       }
     }
-    return viz.colorsToSurface(colors, entries, opt);
+    return viz.rgbListToSurface(colors, entries, opt);
   }
 
   toString(opt) {
@@ -209,7 +213,7 @@ class Palette {
 
   getRGBUsing(n, rgbmap) {
     if (this._entries) {
-      n = this._entries[n];
+      n = this._entries[Math.floor(n) % this._entries.length];
     }
     return rgbmap[Math.floor(n) % rgbmap.length]
   }

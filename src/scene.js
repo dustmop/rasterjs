@@ -286,6 +286,7 @@ Scene.prototype.resetState = function() {
   this._lowerCamera = null;
   this._renderer.clear();
   this._fsacc.clear();
+  this._imgLoader.clear();
   this.time = 0.0;
   this.tick = 0;
   this.camera = {};

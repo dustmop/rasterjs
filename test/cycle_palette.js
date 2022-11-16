@@ -143,9 +143,8 @@ describe('Cycle palette', function() {
 
     let img = ra.loadImage('test/testdata/small-fruit.png');
     ra.paste(img);
-    ra.usePalette({entries:[8, 0, 2, 4, 14]});
+    ra.usePalette({entries:[8, 0, 2, 4, 14]}); // 3 0 2 4 4
 
-    // TODO: The image should be redrawn to agree with the palette.
     util.renderCompareTo(ra, 'test/testdata/small-fruit-agree.png');
   });
 

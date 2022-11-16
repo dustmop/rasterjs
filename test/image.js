@@ -244,7 +244,7 @@ describe('Image', function() {
     let gotError = null;
     assert.throws(() => {
       ra.paste(img, 2, 2);
-    }, /paste: source has been opened, but not yet read/);
+    }, /paste: source has not been read, use ra.then to wait for it. filename: "test\/testdata\/fill_clear.png"/);
     success();
   });
 
@@ -270,5 +270,19 @@ describe('Image', function() {
 
     util.renderCompareTo(ra, 'test/testdata/draw_copied.png');
   });
+
+  it('load by alias', function() {
+    ra.resetState();
+
+    // load image, but don't use it
+    let _unused = ra.loadImage('test/testdata/fill_oscil.png', {as: 'oscil'});
+
+    // load by alias, and paste it
+    let img = ra.loadImage('oscil');
+    ra.paste(img);
+
+    util.renderCompareTo(ra, 'test/testdata/fill_oscil.png');
+  });
+
 
 });

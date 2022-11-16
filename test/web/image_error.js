@@ -15,6 +15,7 @@ describe('image', function () {
   it('error if not async', function(success) {
     let require = window['require'];
     let ra = require('raster');
+    ra.resetState();
     ra.setSize({w: 12, h: 12});
     let img = ra.loadImage('img/fill_clear.png');
     let gotError = null;
@@ -26,7 +27,7 @@ describe('image', function () {
     if (gotError == null) {
       throw new Error('Failed! Expected to get an error, did not get one');
     }
-    let expectError = 'paste: source has been opened, but not yet read';
+    let expectError = 'paste: source has not been read, use ra.then to wait for it. filename: "img\/fill_clear.png"';
     if (gotError != expectError) {
       throw new Error('Mismatch!');
     }
@@ -36,6 +37,7 @@ describe('image', function () {
   it('error not found', function(success) {
     let require = window['require'];
     let ra = require('raster');
+    ra.resetState();
     ra.setSize({w: 12, h: 12});
     let img = ra.loadImage('img/not_found.png');
 

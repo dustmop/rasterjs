@@ -252,7 +252,11 @@ Drawable.prototype.fillFrame = function(options, fillerFunc) {
 Drawable.prototype.paste_params = ['source:a', 'x?i', 'y?i'];
 Drawable.prototype.paste = function(source, x, y) {
   if (!source.data) {
-    throw new Error('paste: source has been opened, but not yet read');
+    let msg = 'paste: source has not been read, use ra.then to wait for it.';
+    if (source.filename) {
+      msg += ` filename: "${source.filename}"`;
+    }
+    throw new Error(msg);
   }
   if (x == null && y == null && !this.width && !this.height) {
     this.setSize(source.width, source.height);

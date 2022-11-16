@@ -19,15 +19,15 @@ class Loader {
     if (!types.isWeakRef(refScene)) {
       throw new Error('needs weak ref for scene object')
     }
-    this.list = [];
-    this.addedFiles = {};
     this.fsacc = fsacc;
     this.refScene = refScene;
+    this.clear();
     return this;
   }
 
   loadImage(filename, opt) {
     let sortUsingHSV = false;
+    let asAliasString = filename;
     if (opt.sortColors) {
       if (opt.sortColors == 'usingHSV') {
         sortUsingHSV = true;
@@ -36,6 +36,9 @@ class Loader {
       }
     } else if (Object.keys(opt) > 0) {
       throw new Error(`unknown option value ${opt}`);
+    }
+    if (opt.as) {
+      asAliasString = opt.as;
     }
 
     let useAsync = !!opt['async'];
@@ -58,6 +61,11 @@ class Loader {
       return imgPlane;
     }
 
+    if (this.references[asAliasString] != null) {
+      let index = this.references[asAliasString];
+      return this.list[index];
+    }
+
     let self = this;
 
     let img = new ImagePlane();
@@ -76,15 +84,16 @@ class Loader {
 
     // 0 success sync, 1 pending async
     let ret = this.fsacc.readImageData(filename, img, useAsync);
+    this.references[asAliasString] = this.list.length;
+    this.list.push(img);
+
     if (ret == 1) {
       img.loadState = LOAD_STATE_OPENED; // async
-      this.list.push(img);
       return img;
     }
 
     types.ensureIsOneOf(img.rgbBuff, ['Buffer', 'Uint8Array']);
     img.fillData();
-    this.list.push(img);
     return img;
   }
 
@@ -93,6 +102,12 @@ class Loader {
       throw new Error(`insert: expects surface`);
     }
     this.addedFiles[name] = imageSurf;
+  }
+
+  clear() {
+    this.list = [];
+    this.addedFiles = {};
+    this.references = {};
   }
 }
 

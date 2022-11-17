@@ -36,7 +36,7 @@ class BaseDisplay {
     this._isRunning = false;
   }
 
-  handleEvent(eventName, callback) {
+  handleEvent(eventName, region, callback) {
     throw new Error(`NotImplemented: BaseDisplay.handleEvent`);
   }
 }

@@ -50,8 +50,8 @@ class SDLDisplay extends baseDisplay.BaseDisplay {
     return this._b.runDisplayLoop(loopID, execNextFrame);
   }
 
-  handleEvent(eventName, callback) {
-    return this._b.handleEvent(eventName, callback);
+  handleEvent(eventName, region, callback) {
+    return this._b.handleEvent(eventName, region, callback);
   }
 
   insteadWriteBuffer(buffer) {

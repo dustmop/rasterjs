@@ -9,7 +9,7 @@ class WebGLDisplay extends baseDisplay.BaseDisplay {
     this.elemID = null;
     this.canvas = null;
     this.eventKeypressHandler = null;
-    this.eventClickHandler = null;
+    this.eventClickHandlers = null;
     this.initialize();
     this.onReadyHandler = null;
     this._createEventHandlers();
@@ -250,23 +250,42 @@ void main() {
   }
 
   _createEventHandlers() {
-    let self = this;
-    document.addEventListener('keypress', function(e) {
-      if (self.eventKeypressHandler) {
-        self.eventKeypressHandler({
+    document.addEventListener('keypress', (e) => {
+      if (this.eventKeypressHandler) {
+        this.eventKeypressHandler({
           key: e.key
         });
       }
     })
-    document.addEventListener('click', function(e) {
-      if (self.eventClickHandler) {
-        let x = Math.floor(e.offsetX / self.zoomLevel);
-        let y = Math.floor(e.offsetY / self.zoomLevel);
-        if (x >= 0 && x < self._width && y >= 0 && y < self._height) {
-          self.eventClickHandler({x: x, y: y});
+    document.addEventListener('click', (e) => {
+      this._processClick(e);
+    });
+  }
+
+  _processClick(e) {
+    let basex = Math.floor(e.offsetX / this._zoomLevel);
+    let basey = Math.floor(e.offsetY / this._zoomLevel);
+
+    if (this.eventClickHandlers) {
+      for (let [region, handler] of this.eventClickHandlers) {
+        let posx = basex;
+        let posy = basey;
+        let width = this._width;
+        let height = this._height;
+
+        if (region) {
+          posx -= region.x;
+          posy -= region.y;
+          width = region.w;
+          height = region.h;
         }
+        if (posx < 0 || posx < 0 || posx >= width || posy >= height) {
+          continue;
+        }
+        handler({x: posx, y: posy});
+        return;
       }
-    })
+    }
   }
 
   waitForContentLoad(cb) {
@@ -404,16 +423,20 @@ void main() {
 
       // Wait for next frame.
       requestAnimationFrame(renderIt);
+      return;
     };
 
     renderIt();
   }
 
-  handleEvent(eventName, callback) {
+  handleEvent(eventName, region, callback) {
     if (eventName == 'keypress') {
       this.eventKeypressHandler = callback;
     } else if (eventName == 'click') {
-      this.eventClickHandler = callback;
+      if (!this.eventClickHandlers) {
+        this.eventClickHandlers = [];
+      }
+      this.eventClickHandlers.push([region, callback]);
     } else if (eventName == 'ready') {
       this.onReadyHandler = callback;
     } else {

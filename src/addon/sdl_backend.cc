@@ -158,8 +158,9 @@ Napi::Value SDLBackend::SetVeryVerboseTiming(const Napi::CallbackInfo& info) {
 Napi::Value SDLBackend::HandleEvent(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   Napi::String eventName = info[0].ToString();
+  // TODO: handle click, click-with-region
   if (eventName.Utf8Value() == std::string("keypress")) {
-    Napi::Function handleFunc = info[1].As<Napi::Function>();
+    Napi::Function handleFunc = info[2].As<Napi::Function>();
     this->keyHandleFunc = Napi::Persistent(handleFunc);
   }
   return Napi::Number::New(env, 0);

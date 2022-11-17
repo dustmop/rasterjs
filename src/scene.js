@@ -59,9 +59,12 @@ Scene.prototype._initialize = function () {
   this.TURN = this.TAU;
   this.PI = this.TAU / 2;
   this.camera = {};
+
   this._hasRenderedOnce = false;
   this._inspectScanline = null;
   this._inspectCallback = null;
+  this._messageListeners = [];
+
   this.dip = {};
   this.dip.length = 0;
 
@@ -595,8 +598,22 @@ Scene.prototype.setTileset = function(which) {
   this._renderer.switchComponent(0, 'tileset', this.tileset);
 }
 
-Scene.prototype.on = function(eventName, callback) {
-  let allowed = ['keypress', 'click', 'ready', 'render'];
+Scene.prototype.on = function(optPlane, eventName, callback) {
+  let region = null;
+  // TODO: destructure instead
+  // ['plane?', 'string', 'function(1)']
+  if (types.isPlane(optPlane)) {
+    let pl = optPlane;
+    region = {
+      x: pl.offsetLeft, y: pl.offsetTop,
+      w: pl.width, h: pl.height,
+    };
+  } else {
+    callback = eventName;
+    eventName = optPlane;
+  }
+
+  let allowed = ['keypress', 'click', 'ready', 'render', 'message'];
   if (!allowed.includes(eventName)) {
     let expect = allowed.map((n)=>`"${n}"`).join(', ');
     throw new Error(`unknown event "${eventName}", only ${expect} supported`);
@@ -608,7 +625,17 @@ Scene.prototype.on = function(eventName, callback) {
     }
     return;
   }
-  this._display.handleEvent(eventName, callback);
+  if (eventName == 'message') {
+    this._messageListeners.push(callback);
+    return;
+  }
+  this._display.handleEvent(eventName, region, callback);
+}
+
+Scene.prototype.sendMessage = function(name, data) {
+  for (let listener of this._messageListeners) {
+    listener({name: name, data: data});
+  }
 }
 
 Scene.prototype.resize = function(x, y) {

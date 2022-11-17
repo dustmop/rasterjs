@@ -112,7 +112,7 @@ class MyDisplay extends baseDisplay.BaseDisplay {
     this.count = 1000;
   }
 
-  handleEvent(eventName, callback) {
+  handleEvent(eventName, region, callback) {
     this._eventHandler = callback;
   }
 

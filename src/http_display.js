@@ -28,7 +28,7 @@ class HTTPDisplay {
   setGrid(state) {
   }
 
-  handleEvent(eventName, callback) {
+  handleEvent(eventName, region, callback) {
   }
 
   renderLoop(nextFrame) {

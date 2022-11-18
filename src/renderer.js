@@ -9,6 +9,10 @@ const verboseLogger = require('./verbose_logger.js');
 
 let verbose = new verboseLogger.Logger();
 
+const R_INDEX = 0;
+const G_INDEX = 1;
+const B_INDEX = 2;
+
 class Renderer {
   constructor() {
     this._init();
@@ -289,6 +293,8 @@ class Renderer {
       }
     }
 
+    let rgbtuple = new Uint8Array(4);
+
     let targetPitch = layer.rgbSurface.pitch;
 
     let scrollY = Math.floor((layer.camera && layer.camera.y) || 0);
@@ -342,16 +348,15 @@ class Renderer {
           }
           let s = y*sourcePitch + x;
           let t = i*targetPitch + j*4;
-          let rgb;
           if (layer.colorspace) {
             let c = layer.colorspace.realizeIndexedColor(source[s], x, y);
-            rgb = this._toColor(layer, c);
+            this._toColor(layer, c, rgbtuple);
           } else {
-            rgb = this._toColor(layer, source[s]);
+            this._toColor(layer, source[s], rgbtuple);
           }
-          layer.rgbSurface.buff[t+0] = rgb.r;
-          layer.rgbSurface.buff[t+1] = rgb.g;
-          layer.rgbSurface.buff[t+2] = rgb.b;
+          layer.rgbSurface.buff[t+0] = rgbtuple[R_INDEX];
+          layer.rgbSurface.buff[t+1] = rgbtuple[G_INDEX];
+          layer.rgbSurface.buff[t+2] = rgbtuple[B_INDEX];
           // TODO: Incorrect
           if (!isBg && source[s] == 0) {
             layer.rgbSurface.buff[t+3] = 0x00;
@@ -418,16 +423,16 @@ class Renderer {
                 // TODO: test me!
                 c = (c % piece_size) + Math.floor(spr.a) * piece_size;
               }
-              let rgb = this._toColor(layer, c);
+              this._toColor(layer, c, rgbtuple);
               if (spr.m) {
-                layer.rgbSurface.buff[t+0] += rgb.r;
-                layer.rgbSurface.buff[t+1] += rgb.g;
-                layer.rgbSurface.buff[t+2] += rgb.b;
+                layer.rgbSurface.buff[t+0] += rgbtuple[R_INDEX];
+                layer.rgbSurface.buff[t+1] += rgbtuple[G_INDEX];
+                layer.rgbSurface.buff[t+2] += rgbtuple[B_INDEX];
                 layer.rgbSurface.buff[t+3] = 0xff;
               } else {
-                layer.rgbSurface.buff[t+0] = rgb.r;
-                layer.rgbSurface.buff[t+1] = rgb.g;
-                layer.rgbSurface.buff[t+2] = rgb.b;
+                layer.rgbSurface.buff[t+0] = rgbtuple[R_INDEX];
+                layer.rgbSurface.buff[t+1] = rgbtuple[G_INDEX];
+                layer.rgbSurface.buff[t+2] = rgbtuple[B_INDEX];
                 layer.rgbSurface.buff[t+3] = 0xff;
               }
             }
@@ -588,13 +593,12 @@ class Renderer {
     return null;
   }
 
-  _toColor(layer, c) {
+  _toColor(layer, c, rgbtuple) {
     let rgb;
     if (c !== 0 && !c) {
       throw new Error(`invalid color ${c}`);
     }
-    rgb = layer.palette.getRGBUsing(c, this._rgbmap);
-    return new rgbColor.RGBColor(rgb);
+    layer.palette.getRGBUsing(c, rgbtuple, this._rgbmap);
   }
 }
 

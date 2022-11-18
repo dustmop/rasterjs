@@ -211,11 +211,15 @@ class Palette {
     return this._rgbmap[Math.floor(n) % this._rgbmap.length]
   }
 
-  getRGBUsing(n, rgbmap) {
+  getRGBUsing(n, outtuple, rgbmap) {
     if (this._entries) {
       n = this._entries[Math.floor(n) % this._entries.length];
     }
-    return rgbmap[Math.floor(n) % rgbmap.length]
+    let v = +rgbmap[Math.floor(n) % rgbmap.length];
+    outtuple[0] = (v / 0x10000) % 0x100;
+    outtuple[1] = (v / 0x100)   % 0x100;
+    outtuple[2] = (v / 0x1)     % 0x100;
+    outtuple[3] = 0xff;
   }
 
   giveFeatures(fsacc, refScene) {

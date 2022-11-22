@@ -290,6 +290,9 @@ Scene.prototype.resetState = function() {
   this._renderer.clear();
   this._fsacc.clear();
   this._imgLoader.clear();
+  if (this._executor) {
+    this._executor.clear();
+  }
   this.time = 0.0;
   this.tick = 0;
   this.camera = {};
@@ -501,10 +504,12 @@ Scene.prototype.run = function(drawFunc, opt) {
 }
 
 Scene.prototype.runFrame = function(afterFunc) {
-  // TODO: force rendering, for when `drawFunc` is null
   this._ensureExecutor();
+  this._executor._forceRender = true;
   this._executor.nextFrame();
-  afterFunc();
+  if (afterFunc) {
+    afterFunc();
+  }
 }
 
 Scene.prototype.save = function(savepath) {

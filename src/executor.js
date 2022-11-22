@@ -9,11 +9,15 @@ class Executor {
   }
 
   _initialize() {
-    this._alwaysRenderFirstFrame = true;
+    this._forceRender = true; // always render first frame
     this._startTime = new Date();
     this.time = 0.0;
     this.tick = 0;
-    this._lockTime = false;
+    this._lockTime = true; // TODO: fix me!
+  }
+
+  clear() {
+    this._initialize();
   }
 
   execApp(drawFunc) {
@@ -43,11 +47,13 @@ class Executor {
       drawFunc();
       this.nextFrame();
       return true;
-    }
-    this.nextFrame();
-    if (this._alwaysRenderFirstFrame) {
-      this._alwaysRenderFirstFrame = false;
+    } else if (this._forceRender) {
+      this._forceRender = false;
       return true;
+    } else if (this._postRunFunc) {
+      this._postRunFunc();
+      this._postRunFunc = null;
+      return false;
     }
     return false;
   }
@@ -56,17 +62,17 @@ class Executor {
     if (this._numFrames > 0) {
       this._numFrames--;
       if (this._numFrames == 0) {
-        this.display.stopRunning();
-        // TODO: should run after display runs the final step
         if (this._postRunFunc) {
           this._postRunFunc();
+          this._postRunFunc = null;
         }
       }
     }
-    // TODO: rename to this.tick
     this.tick += 1;
     if (this._lockTime) {
       this.time = this.tick / 60.0;
+      // TODO: always lock the first N frames, to account for uncertainty
+      // in start-up performance
     } else {
       this.time = (new Date() - this._startTime) / 1000;
     }

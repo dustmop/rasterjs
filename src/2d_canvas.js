@@ -109,10 +109,18 @@ class TwoDeeDisplay extends baseDisplay.BaseDisplay {
         return;
       }
 
-      // Get the data buffer from the plane.
-      let res = self._renderer.render();
-      if (!frontBuffer) {
-        frontBuffer = res[0].buff;
+      // Create the next frame.
+      let hasFrame = nextFrame(id);
+      if (!self.isRunning()) {
+        return;
+      }
+
+      if (hasFrame) {
+        // Get the data buffer from the plane.
+        let res = self._renderer.render();
+        if (!frontBuffer) {
+          frontBuffer = res[0].buff;
+        }
       }
 
       if (frontBuffer) {
@@ -120,9 +128,6 @@ class TwoDeeDisplay extends baseDisplay.BaseDisplay {
         let image = new ImageData(buff, self._width, self._height);
         ctx.putImageData(image, 0, 0);
       }
-
-      // Create the next frame.
-      nextFrame();
 
       // Wait for next frame.
       requestAnimationFrame(renderIt);

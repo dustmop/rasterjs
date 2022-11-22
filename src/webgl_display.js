@@ -312,109 +312,62 @@ void main() {
   }
 
   _beginLoop(id, execNextFrame) {
-    let gl = this.gl;
-    let frontBuffer = null;
-    let topBuffer = null;
-    let gridLayer = null;
-    let self = this;
-    let gridHaveCopied = false;
+    let _gridHaveCopied = false;
 
-    let comps = self._renderAndDisplayComponents;
-    let settings = self._renderAndDisplaySettings;
-    self._renderer.onRenderComponents(comps, settings, function(type, surface) {
+    let comps = this._renderAndDisplayComponents;
+    let settings = this._renderAndDisplaySettings;
+    this._renderer.onRenderComponents(comps, settings, (type, surface) => {
       if (Array.isArray(surface)) {
         surface = surface[0];
       }
       if (type == 'palette') {
-        self._putSurfaceToElem(surface, 'palette-display');
+        this._putSurfaceToElem(surface, 'palette-display');
       } else if (type == 'palette-rgbmap') {
         // NOTE: this enables the element
         let id = 'palette-rgbmap-display';
         let displayElem = document.getElementById(id);
         displayElem.style.display = 'inline';
-        self._putSurfaceToElem(surface, id);
+        this._putSurfaceToElem(surface, id);
       } else if (type == 'plane') {
-        self._putSurfaceToElem(surface, 'plane-display');
+        this._putSurfaceToElem(surface, 'plane-display');
       } else if (type == 'tileset') {
-        self._putSurfaceToElem(surface, 'tileset-display');
+        this._putSurfaceToElem(surface, 'tileset-display');
       } else if (type == 'colorspace') {
-        self._putSurfaceToElem(surface, 'colorspace-display');
+        this._putSurfaceToElem(surface, 'colorspace-display');
       } else if (type == 'interrupts') {
-        self._putSurfaceToElem(surface, 'interrupts-display');
+        this._putSurfaceToElem(surface, 'interrupts-display');
       } else {
         throw new Error(`unknown component type ${type}`);
       }
     });
 
-    let renderIt = function() {
+    let surfaceList;
+
+    let renderIt = () => {
       // Did the app quit?
-      if (!self.isRunning()) {
+      if (!this.isRunning()) {
         return;
       }
 
-      if (self.currentRunId != id) {
-        return;
-      }
-
-      // Get the data buffer from the plane.
-      let res = self._renderer.render();
-      frontBuffer = res[0].buff;
-      topBuffer = res[1] && res[1].buff;
-      gridLayer = res.grid;
-
-      // Render front buffer to the display
-      if (frontBuffer) {
-        gl.activeTexture(gl.TEXTURE0);
-
-        let numPoints = self._width * self._height;
-        let numBytes = numPoints*4;
-        if (numBytes != frontBuffer.length) {
-          let msg = 'invalid buffer size for display: ';
-          msg += `${numBytes} != ${frontBuffer.length}`;
-          throw new Error(msg);
-        }
-
-        gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0,
-                         self._width, self._height,
-                         gl.RGBA, gl.UNSIGNED_BYTE, frontBuffer);
-      }
-
-      if (topBuffer) {
-        gl.activeTexture(gl.TEXTURE1);
-
-        let numPoints = self._width * self._height;
-        let numBytes = numPoints*4;
-        if (numBytes != topBuffer.length) {
-          let msg = 'invalid buffer size for display: ';
-          throw new Error(msg);
-        }
-
-        gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0,
-                         self._width, self._height,
-                         gl.RGBA, gl.UNSIGNED_BYTE, topBuffer);
-      }
-
-      // Render grid, only needs to be done once
-      if (gridLayer && !gridHaveCopied) {
-        gridHaveCopied = true;
-        gl.activeTexture(gl.TEXTURE7);
-        gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0,
-                         gridLayer.width, gridLayer.height,
-                         gl.RGBA, gl.UNSIGNED_BYTE, gridLayer.buff);
-      }
-
-      if (frontBuffer) {
-        gl.drawArrays(gl.TRIANGLES, 0, 6);
-      }
+      //if (this.currentRunId != id) {
+      //  return;
+      //}
 
       // Create the next frame.
-      execNextFrame();
+      let hasFrame = execNextFrame();
+      if (hasFrame) {
+        // Get the RGB data buffers from the plane.
+        surfaceList = this._renderer.render();
+      }
+      if (surfaceList) {
+        this.drawSurfacesToWebgl(surfaceList);
+      }
 
-      if (self._renderAndDisplayComponents) {
+      if (this._renderAndDisplayComponents) {
 
         // Hack to run the first IRQ, at scanline 0
-        if (self._renderer.interrupts) {
-          let first = self._renderer.interrupts.arr[0];
+        if (this._renderer.interrupts) {
+          let first = this._renderer.interrupts.arr[0];
           if (first.scanline == 0) {
             first.irq(0);
           }
@@ -427,6 +380,58 @@ void main() {
     };
 
     renderIt();
+  }
+
+  drawSurfacesToWebgl(surfaceList) {
+    let gl = this.gl;
+    let frontBuffer = surfaceList[0].buff;
+    let topBuffer = surfaceList[1]?.buff;
+    let gridLayer = surfaceList.grid;
+
+    // Render front buffer to the display
+    if (frontBuffer) {
+      gl.activeTexture(gl.TEXTURE0);
+
+      let numPoints = this._width * this._height;
+      let numBytes = numPoints*4;
+      if (numBytes != frontBuffer.length) {
+        let msg = 'invalid buffer size for display: ';
+        msg += `${numBytes} != ${frontBuffer.length}`;
+        throw new Error(msg);
+      }
+
+      gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0,
+                       this._width, this._height,
+                       gl.RGBA, gl.UNSIGNED_BYTE, frontBuffer);
+    }
+
+    if (topBuffer) {
+      gl.activeTexture(gl.TEXTURE1);
+
+      let numPoints = this._width * this._height;
+      let numBytes = numPoints*4;
+      if (numBytes != topBuffer.length) {
+        let msg = 'invalid buffer size for display: ';
+        throw new Error(msg);
+      }
+
+      gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0,
+                       this._width, this._height,
+                       gl.RGBA, gl.UNSIGNED_BYTE, topBuffer);
+    }
+
+    // Render grid, only needs to be done once
+    if (gridLayer && !self._gridHaveCopied) {
+      self._gridHaveCopied = true;
+      gl.activeTexture(gl.TEXTURE7);
+      gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0,
+                       gridLayer.width, gridLayer.height,
+                       gl.RGBA, gl.UNSIGNED_BYTE, gridLayer.buff);
+    }
+
+    if (frontBuffer) {
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+    }
   }
 
   handleEvent(eventName, region, callback) {

@@ -19,12 +19,11 @@ class TwoDeeDisplay extends baseDisplay.BaseDisplay {
   setRenderer(renderer) {
     this._renderer = renderer;
     this._hasDocumentBody = false;
-    let self = this;
-    window.addEventListener('DOMContentLoaded', function() {
-      self._hasDocumentBody = true;
+    window.addEventListener('DOMContentLoaded', () => {
+      this._hasDocumentBody = true;
     });
     if (document.readyState == 'complete' || document.readyState == 'loaded') {
-      self._hasDocumentBody = true;
+      this._hasDocumentBody = true;
     }
   }
 
@@ -37,10 +36,9 @@ class TwoDeeDisplay extends baseDisplay.BaseDisplay {
   }
 
   _createEventHandlers() {
-    let self = this;
-    document.addEventListener('keypress', function(e) {
-      if (self.sysEventHandler) {
-        self.sysEventHandler({
+    document.addEventListener('keypress', (e) => {
+      if (this.sysEventHandler) {
+        this.sysEventHandler({
           key: e.key
         });
       }
@@ -79,10 +77,9 @@ class TwoDeeDisplay extends baseDisplay.BaseDisplay {
   }
 
   waitForContentLoad(cb) {
-    let self = this;
-    setTimeout(function() {
-      if (!self._hasDocumentBody) {
-        self.waitForContentLoad(cb);
+    setTimeout(() => {
+      if (!this._hasDocumentBody) {
+        this.waitForContentLoad(cb);
         return;
       }
       cb();
@@ -90,10 +87,9 @@ class TwoDeeDisplay extends baseDisplay.BaseDisplay {
   }
 
   appLoop(id, nextFrame) {
-    let self = this;
-    this.waitForContentLoad(function() {
-      self._create2dCanvas();
-      self._beginLoop(id, nextFrame);
+    this.waitForContentLoad(() => {
+      this._create2dCanvas();
+      this._beginLoop(id, nextFrame);
     });
   }
 
@@ -102,22 +98,21 @@ class TwoDeeDisplay extends baseDisplay.BaseDisplay {
     let ctx = this.canvas.getContext('2d');
     ctx.imageSmoothingEnabled = false;
     ctx.mozImageSmoothingEnabled = false;
-    let self = this;
 
-    let renderIt = function() {
-      if (!self.isRunning()) {
+    let renderIt = () => {
+      if (!this.isRunning()) {
         return;
       }
 
       // Create the next frame.
       let hasFrame = nextFrame(id);
-      if (!self.isRunning()) {
+      if (!this.isRunning()) {
         return;
       }
 
       if (hasFrame) {
         // Get the data buffer from the plane.
-        let res = self._renderer.render();
+        let res = this._renderer.render();
         if (!frontBuffer) {
           frontBuffer = res[0].buff;
         }
@@ -125,7 +120,7 @@ class TwoDeeDisplay extends baseDisplay.BaseDisplay {
 
       if (frontBuffer) {
         let buff = Uint8ClampedArray.from(frontBuffer);
-        let image = new ImageData(buff, self._width, self._height);
+        let image = new ImageData(buff, this._width, this._height);
         ctx.putImageData(image, 0, 0);
       }
 

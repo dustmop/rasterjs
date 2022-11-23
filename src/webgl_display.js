@@ -28,12 +28,11 @@ class WebGLDisplay extends baseDisplay.BaseDisplay {
   setRenderer(renderer) {
     this._renderer = renderer;
     this._hasDocumentBody = false;
-    let self = this;
-    window.addEventListener('DOMContentLoaded', function() {
-      self._hasDocumentBody = true;
+    window.addEventListener('DOMContentLoaded', () => {
+      this._hasDocumentBody = true;
     });
     if (document.readyState == 'complete' || document.readyState == 'loaded') {
-      self._hasDocumentBody = true;
+      this._hasDocumentBody = true;
     }
   }
 
@@ -236,14 +235,13 @@ void main() {
     this._renderAndDisplayComponents = components;
     this._renderAndDisplaySettings = settings;
 
-    let self = this;
-    window.addEventListener('DOMContentLoaded', function(e) {
+    window.addEventListener('DOMContentLoaded', (e) => {
       let possible = ['plane', 'palette', 'tileset',
                       'colorspace', 'interrupts'];
       for (let i = 0; i < possible.length; i++) {
         let p = possible[i];
         if (components.indexOf(p) > -1) {
-          self.enableDisplayElem(`${p}-display`);
+          this.enableDisplayElem(`${p}-display`);
         }
       }
     });
@@ -289,10 +287,9 @@ void main() {
   }
 
   waitForContentLoad(cb) {
-    let self = this;
-    setTimeout(function() {
-      if (!self._hasDocumentBody) {
-        self.waitForContentLoad(cb);
+    setTimeout(() => {
+      if (!this._hasDocumentBody) {
+        this.waitForContentLoad(cb);
         return;
       }
       cb();
@@ -300,14 +297,13 @@ void main() {
   }
 
   appLoop(id, execNextFrame) {
-    let self = this;
-    self.currentRunId = id;
-    this.waitForContentLoad(function() {
-      self._createWebglCanvas();
-      if (self.onReadyHandler) {
-        self.onReadyHandler();
+    this.currentRunId = id;
+    this.waitForContentLoad(() => {
+      this._createWebglCanvas();
+      if (this.onReadyHandler) {
+        this.onReadyHandler();
       }
-      self._beginLoop(id, execNextFrame);
+      this._beginLoop(id, execNextFrame);
     });
   }
 
@@ -421,8 +417,8 @@ void main() {
     }
 
     // Render grid, only needs to be done once
-    if (gridLayer && !self._gridHaveCopied) {
-      self._gridHaveCopied = true;
+    if (gridLayer && !this._gridHaveCopied) {
+      this._gridHaveCopied = true;
       gl.activeTexture(gl.TEXTURE7);
       gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0,
                        gridLayer.width, gridLayer.height,

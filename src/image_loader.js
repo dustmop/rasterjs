@@ -66,8 +66,6 @@ class Loader {
       return this.list[index];
     }
 
-    let self = this;
-
     let img = new ImagePlane();
     img.refLoader = new weak.Ref(this);
     img.filename = filename;

@@ -73,6 +73,7 @@ class Plane {
     let methods = d.getMethods();
     for (let i = 0; i < methods.length; i++) {
       let [fname, paramSpec, converter, impl] = methods[i];
+      // Use a scoped function in order to acquire the method's `arguments`
       this[fname] = function() {
         let args = Array.from(arguments);
         if (paramSpec === undefined) {

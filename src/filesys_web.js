@@ -11,14 +11,12 @@ class FilesysAccess {
   }
 
   readImageData(filename, imgPlane) {
-    let self = this;
-
     // wait for the image to load
     this.numToLoad++;
 
     // html node for loading the Image
     let imgElem = new Image;
-    imgElem.onload = function() {
+    imgElem.onload = () => {
       // get the pixel data and save it on the resource
       let canvas = document.createElement('canvas');
       canvas.width = imgElem.width;
@@ -36,13 +34,13 @@ class FilesysAccess {
       if (imgPlane.whenRead) {
         imgPlane.whenRead();
       }
-      self.numLoadDone++;
+      this.numLoadDone++;
     }
     // handle errors
-    imgElem.onerror = function() {
+    imgElem.onerror = () => {
       imgPlane.loadState = -1;
-      self.loadFail = filename;
-      self.numLoadDone++;
+      this.loadFail = filename;
+      this.numLoadDone++;
     }
 
     // allow cross origin image loading
@@ -61,13 +59,12 @@ class FilesysAccess {
   }
 
   readText(filename) {
-    let self = this;
     let file = {src: filename};
-    self.numToLoad++;
-    fetch(filename).then(function(res) {
-      res.text().then(function(text) {
+    this.numToLoad++;
+    fetch(filename).then((res) => {
+      res.text().then((text) => {
         file.handleFileRead(text);
-        self.numLoadDone++;
+        this.numLoadDone++;
       });
     });
     return file;

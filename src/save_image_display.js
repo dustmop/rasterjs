@@ -95,7 +95,6 @@ class SaveImageDisplay extends baseDisplay.BaseDisplay {
     // Wait for each frame to render.
     if (this.isGif) {
       // Actually write the gif.
-      const self = this;
       this.createGif(width*this._zoomLevel, height*this._zoomLevel,
                      bufferList, this.targetPath);
     } else if (!hasTemplate) {

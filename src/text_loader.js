@@ -7,15 +7,14 @@ class TextLoader {
   }
 
   loadFont(filename, info) {
-    let self = this;
     if (filename.endsWith('.yaff')) {
       let file = this.fsacc.readText(filename);
       let font = {
         file: file,
         glyphs: null,
       };
-      file.handleFileRead = function(content) {
-        font.glyphs = self.parseFont(content);
+      file.handleFileRead = (content) => {
+        font.glyphs = this.parseFont(content);
       }
       if (file.content) {
         file.handleFileRead(file.content);
@@ -29,8 +28,8 @@ class TextLoader {
       let font = {
         glyphs: null,
       };
-      this.fsacc.whenLoaded(function() {
-        font.glyphs = self.parseGlyphsFromImage(surface, info);
+      this.fsacc.whenLoaded(() => {
+        font.glyphs = this.parseGlyphsFromImage(surface, info);
       });
       return font;
     }

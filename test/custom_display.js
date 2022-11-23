@@ -11,18 +11,26 @@ describe('Display', function() {
     ra.setSize({w:6, h:7});
     ra.setZoom(4);
     ra.drawCircle({x:1, y:1, r:3});
-    ra.run();
+    ra.run(null);
 
-    let expect = (
+    let expect1 = (
       1000 + // initialize
       4      // zoom
     );
-    assert.equal(display.count, expect);
+    let expect2 = (
+      1000 + // initialize
+      500  + // appLoop
+      4      // zoom
+    );
+    // TODO: Fix non-determinacy, caused by `run` using requestAnimationFrame
+    // which may or may not call the appLoop fast enough.
+    assert(display.count == expect1 || display.count == expect2);
 
     let gotKey = false;
     ra.on('keypress', function(e) {
       gotKey = true;
     });
+
     display._pushFakeEvent({key: 'ok'});
     assert.equal(gotKey, true);
   });
@@ -132,5 +140,8 @@ class MyDisplay extends baseDisplay.BaseDisplay {
 
   appLoop = function(runID, nextFrame) {
     this.count += 500;
+    // TODO: Remove need to call this twice, and firm up the display API.
+    nextFrame();
+    nextFrame();
   }
 }

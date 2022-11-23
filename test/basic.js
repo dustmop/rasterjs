@@ -3,6 +3,15 @@ var ra = require('../src/lib.js');
 var assert = require('assert');
 
 describe('Basic', function() {
+  it('fill square', function() {
+    ra.resetState();
+    ra.setSize(16, 16);
+    ra.fillColor(0);
+    ra.setColor(28);
+    ra.fillSquare({x: 3, y: 5, size: 7});
+    util.renderCompareTo(ra, 'test/testdata/green_square.png');
+  });
+
   it('then draw', function() {
     ra.resetState();
     ra.setSize(16, 16);
@@ -14,7 +23,7 @@ describe('Basic', function() {
     });
   });
 
- it('fill color orange', function() {
+  it('fill color orange', function() {
     ra.resetState();
     ra.setSize(8, 8);
     ra.fillColor(25);

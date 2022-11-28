@@ -1,6 +1,6 @@
 {
   "name": "raster",
-  "version": "0.7.0",
+  "version": "0.7.5",
   "description": "retro graphics framework",
   "author": "Dustin Long <me@dustmop.io> (dustmop.io)",
   "gypfile": true,

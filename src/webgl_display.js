@@ -27,13 +27,6 @@ class WebGLDisplay extends baseDisplay.BaseDisplay {
 
   setRenderer(renderer) {
     this._renderer = renderer;
-    this._hasDocumentBody = false;
-    window.addEventListener('DOMContentLoaded', () => {
-      this._hasDocumentBody = true;
-    });
-    if (document.readyState == 'complete' || document.readyState == 'loaded') {
-      this._hasDocumentBody = true;
-    }
   }
 
   setGrid(state) {
@@ -299,6 +292,14 @@ void main() {
   }
 
   appLoop(id, execNextFrame) {
+    this._hasDocumentBody = false;
+    window.addEventListener('DOMContentLoaded', () => {
+      this._hasDocumentBody = true;
+    });
+    let readyState = document.readyState;
+    if (readyState == 'interactive' || readyState == 'complete') {
+      this._hasDocumentBody = true;
+    }
     this.currentRunId = id;
     this.waitForContentLoad(() => {
       this._createWebglCanvas();

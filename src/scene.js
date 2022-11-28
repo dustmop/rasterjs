@@ -388,10 +388,10 @@ class Scene {
     return polygon;
   }
 
-  select(x, y, w, h) {
-    let spec = ['x:i', 'y:i', 'w:i', 'h:i'];
-    [x, y, w, h] = destructure.from('select', spec, arguments, null);
-    return this.aPlane.select(x, y, w, h);
+  select(x, y, w, h, name) {
+    let spec = ['x:i', 'y:i', 'w:i', 'h:i', 'name?s'];
+    [x, y, w, h, name] = destructure.from('select', spec, arguments, null);
+    return this.aPlane.select(x, y, w, h, name);
   }
 
   xform(name) {
@@ -562,6 +562,7 @@ class Scene {
       region = {
         x: pl.offsetLeft, y: pl.offsetTop,
         w: pl.width, h: pl.height,
+        name: pl.name,
       };
     } else {
       callback = eventName;

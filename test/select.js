@@ -1,5 +1,6 @@
 var util = require('./util.js');
 var ra = require('../src/lib.js');
+var assert = require('assert');
 
 describe('Select', function() {
   it('part of the plane', function() {
@@ -114,6 +115,14 @@ describe('Select', function() {
     });
 
     util.renderCompareTo(ra, 'test/testdata/select_with_frame.png');
+  });
+
+  it('can have name', function() {
+    ra.resetState();
+    ra.setSize(10);
+
+    let sel = ra.select({x: 1, y: 1, w: 6, h: 6, name: 'test'});
+    assert(sel.name, 'test');
   });
 
 });

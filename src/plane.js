@@ -331,9 +331,9 @@ class Plane {
     }
   }
 
-  select(x, y, w, h) {
-    let spec = ['x:i', 'y:i', 'w:i', 'h:i'];
-    [x, y, w, h] = destructure.from('select', spec, arguments, null);
+  select(x, y, w, h, name) {
+    let spec = ['x:i', 'y:i', 'w:i', 'h:i', 'name?s'];
+    [x, y, w, h, name] = destructure.from('select', spec, arguments, null);
 
     let make = this.clone();
     make.offsetLeft = (this.offsetLeft || 0) + x;
@@ -341,6 +341,7 @@ class Plane {
     make.width  = w;
     make.height = h;
     make.isSelection = true;
+    make.name = name || null;
     make._addMethods(true);
 
     return make;

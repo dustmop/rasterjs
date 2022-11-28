@@ -270,14 +270,16 @@ void main() {
         let posy = basey;
         let width = this._width;
         let height = this._height;
+        let name = '';
 
         if (region) {
           posx -= region.x;
           posy -= region.y;
           width = region.w;
           height = region.h;
+          name = region.name;
         }
-        if (posx < 0 || posx < 0 || posx >= width || posy >= height) {
+        if (posx < 0 || posy < 0 || posx >= width || posy >= height) {
           continue;
         }
         handler({x: posx, y: posy});

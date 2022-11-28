@@ -186,12 +186,12 @@ describe('Colorspace', function() {
     // Build colorspace
     let colors = new ra.Plane();
     colors.setSize(4);
-    colors.fillPattern([[0,1,1,1],
-                       [1,3,3,3],
-                       [2,2,1,0],
-                       [1,3,0,0],
-                      ]);
     ra.useColorspace(colors, {cell_width: 4, cell_height: 4, piece_size: 6});
+    ra.colorspace.fillPattern([[0,1,1,1],
+                               [1,3,3,3],
+                               [2,2,1,0],
+                               [1,3,0,0],
+                              ]);
 
     // Tileset / CHR
     let tiles = ra.loadImage('test/testdata/tiles.png');
@@ -232,11 +232,12 @@ describe('Colorspace', function() {
 
     let colors = new ra.Plane();
     colors.setSize(6, 6);
-    colors.fill(0);
-    colors.put(2, 0, 1);
-    colors.put(4, 3, 1);
-    colors.put(1, 5, 1);
     ra.useColorspace(colors, {cell_width: 6, cell_height: 6, piece_size: 4});
+
+    ra.colorspace.fill(0);
+    ra.colorspace.put(2, 0, 1);
+    ra.colorspace.put(4, 3, 1);
+    ra.colorspace.put(1, 5, 1);
 
     util.renderCompareTo(ra, 'test/testdata/colors_colorize.png');
   });

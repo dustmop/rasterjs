@@ -56,6 +56,27 @@ class Colorspace {
     return this;
   }
 
+  put(x, y, v) {
+    this.source.put(x, y, v);
+  }
+
+  fill(v) {
+    this.source.fill(v);
+  }
+
+  fillPattern(args) {
+    let row_size = null;
+    for (let y = 0; y < args.length; y++) {
+      let row = args[y];
+      if (!row_size) {
+        row_size = row.length;
+      }
+      for (let x = 0; x < row_size; x++) {
+        this.source.put(x, y, row[x]);
+      }
+    }
+  }
+
   ensureConsistentTileset(tiles, palette) {
     let pieceSize = this._getPieceSize();
 

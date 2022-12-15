@@ -1,6 +1,6 @@
 #ifndef SDL_FOUND
 
-#include "fake_display.h"
+#include "fake_backend.h"
 #include "type.h"
 
 Napi::FunctionReference g_displayConstructor;

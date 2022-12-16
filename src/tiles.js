@@ -4,6 +4,8 @@ const visualizer = require('./visualizer.js');
 
 class Tileset {
   constructor(sizeInfo) {
+    sizeInfo = sizeInfo || {};
+
     let deserializeData = null;
     if (sizeInfo.deserialize) {
       let text = sizeInfo.deserialize;
@@ -75,6 +77,26 @@ class Tileset {
     return make;
   }
 
+  newTile() {
+    let pitch = this.tileWidth;
+    let t = new Tile();
+    t.width = this.tileWidth;
+    t.height = this.tileHeight;
+    t.pitch = pitch;
+    t.data = new Uint8Array(pitch * this.tileHeight);
+    return t;
+  }
+
+  clear() {
+    this.data = [];
+    this._lookupContents = {};
+  }
+
+  isEmpty() {
+    return this.data.length == 0;
+  }
+
+
   _fillContents() {
     this.numTiles = this.data.length;
     // TODO: _lookupContents
@@ -99,6 +121,40 @@ class Tileset {
     return this.data.length;
   }
 
+  push(tile) {
+    return this.add(tile, true);
+  }
+
+  add(tile, allowDups) {
+    if (!types.isTile(tile)) {
+      throw new Error(`required: Tile, got ${JSON.stringify(tile)}`);
+    }
+    if (tile.width != this.tileWidth) {
+      throw new Error(`expected: tileWidth ${this.tileWidth} got ${tile.width}`);
+    }
+    if (tile.height != this.tileHeight) {
+      throw new Error(`expected: tileHeight ${this.tileHeight} got ${tile.height}`);
+    }
+    allowDups = allowDups || false;
+
+    let pitch = tile.pitch;
+    let key = this._makeKey(tile.data, pitch);
+    let tileID;
+
+    if (!allowDups) {
+      tileID = this._lookupContents[key];
+      if (tileID != null) {
+        return tileID;
+      }
+    }
+
+    tileID = this.data.length;
+    this.data.push(tile.clone());
+    this._lookupContents[key] = tileID;
+    this.numTiles = this.data.length;
+    return tileID;
+  }
+
   /**
    * carve up the plane into tiles, add them to this tileset
    * @param {Plane} pl - the plane to create tiles from
@@ -106,6 +162,9 @@ class Tileset {
    * @return {PatternTable} the pattern table for the added tiles
    */
   addFrom(pl, allowDups) {
+    if (!types.isPlane(pl)) {
+      throw new Error(`addFrom requires a Plane`);
+    }
     if (this.tileHeight > pl.height) {
       throw new Error(`Tileset's tile_height is larger than source data`);
     }
@@ -150,6 +209,27 @@ class Tileset {
     this.numTiles = this.data.length;
     return new PatternTable(patternData, patternPitch, numTilesX, numTilesY);
   }
+
+  insertFrom(other, opt) {
+    if (!types.isTileset(other)) {
+      throw new Error(`required: Tileset, got ${JSON.stringify(other)}`);
+    }
+
+    let num = (opt || {}).num;
+    if (!num) {
+      num = other.length;
+    }
+
+    for (let i = 0; i < num; i++) {
+      let t = other.get(i);
+      if (!t) {
+        t = this.newTile();
+      }
+      // allow duplicates
+      this.push(t);
+    }
+  }
+
 
   all() {
     return this.data;
@@ -273,6 +353,15 @@ class Tile {
   put(x, y, v) {
     let k = y * this.pitch + x;
     this.data[k] = v;
+  }
+
+  clone() {
+    let make = new Tile();
+    make.width = this.width;
+    make.height = this.height;
+    make.pitch = this.pitch;
+    make.data = this.data;
+    return make;
   }
 
   display() {

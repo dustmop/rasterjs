@@ -396,4 +396,50 @@ describe('Tileset', function() {
     assert.deepEqual(obj, expectSer);
   });
 
+  it('tileset methods', ()=>{
+    let tiles = new ra.Tileset({tile_width: 8, tile_height: 8});
+    assert(tiles.isEmpty());
+    assert.equal(tiles.length, 0);
+
+    // add an empty tile
+    tiles.add(tiles.newTile());
+    assert(!tiles.isEmpty());
+    assert.equal(tiles.length, 1);
+
+    // duplicate tile is ignored
+    tiles.add(tiles.newTile());
+    assert.equal(tiles.length, 1);
+
+    // push will add a dup
+    tiles.push(tiles.newTile());
+    assert.equal(tiles.length, 2);
+
+    // so will add with allowDups==true
+    tiles.add(tiles.newTile(), true);
+    assert.equal(tiles.length, 3);
+
+    tiles.clear();
+    assert(tiles.isEmpty());
+    assert.equal(tiles.length, 0);
+  });
+
+  it('tileset insertFrom and pattern table', ()=>{
+    let tiles = new ra.Tileset({tile_width: 4, tile_height: 4});
+    assert(tiles.isEmpty());
+    assert.equal(tiles.length, 0);
+
+    let image = ra.loadImage('test/testdata/tiles.png');
+    let more = new ra.Tileset({tile_width: 4, tile_height: 4});
+    let pattern = more.addFrom(image);
+
+    // serialize the pattern table
+    let obj = pattern.serialize();
+    let expectSer = '{"width":4,"height":2,"data":[0,1,2,3,4,5,6,7]}';
+    assert.deepEqual(obj, expectSer);
+
+    // insert from method, only take 4
+    tiles.insertFrom(more, {num: 4});
+    assert(tiles.length, 4);
+  });
+
 });

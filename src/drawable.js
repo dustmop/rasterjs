@@ -12,13 +12,14 @@ class Drawable {
       let pname = fname + '_params';
       let cname = fname + '_convert';
       if (this[pname]) {
-        result.push([fname, this[pname], this[cname], this[fname]]);
+        let paramspec = this[pname]();
+        result.push([fname, paramspec, this[cname], this[fname]]);
       }
     }
     return result;
   }
 
-  drawLine_params = ['x0:n', 'y0:n', 'x1:n', 'y1:n', 'cc?b'];
+  drawLine_params() { return ['x0:n', 'y0:n', 'x1:n', 'y1:n', 'cc?b'] }
   drawLine(x0, y0, x1, y1, cc) {
     this._prepare();
     cc = cc ? 1 : 0;
@@ -26,13 +27,13 @@ class Drawable {
     this.putSequence(res);
   }
 
-  drawDot_params = ['x:i', 'y:i'];
+  drawDot_params() { return ['x:i', 'y:i'] }
   drawDot(x, y) {
     let put = [[x, y]];
     this.putSequence(put);
   }
 
-  fillPattern_params = ['dots:any'];
+  fillPattern_params() { return ['dots:any'] }
   fillPattern(dots) {
     if (!types.is2dNumArray(dots)) {
       throw new Error(`fillPattern needs a 2d array, got ${dots}`);
@@ -54,7 +55,7 @@ class Drawable {
     }
   }
 
-  fillSquare_params = ['x:i', 'y:i', 'size:i'];
+  fillSquare_params() { return ['x:i', 'y:i', 'size:i'] }
   fillSquare(x, y, size) {
     if (Math.abs(size) < 0.5) {
       return;
@@ -62,7 +63,7 @@ class Drawable {
     _renderRect(this, x, y, size, size, true);
   }
 
-  drawSquare_params = ['x:i', 'y:i', 'size:i'];
+  drawSquare_params() { return ['x:i', 'y:i', 'size:i'] }
   drawSquare(x, y, size) {
     if (Math.abs(size) < 0.5) {
       return;
@@ -70,8 +71,8 @@ class Drawable {
     _renderRect(this, x, y, size, size, false);
   }
 
-  fillRect_params = ['x:i', 'y:i', 'w:i', 'h:i', '||',
-                     'x0:i', 'y0:i', 'x1:i', 'y1:i'];
+  fillRect_params() { return ['x:i', 'y:i', 'w:i', 'h:i', '||',
+                              'x0:i', 'y0:i', 'x1:i', 'y1:i'] }
   fillRect_convert(choice, vals) {
     return [vals[0], vals[1], vals[2] - vals[0], vals[3] - vals[1]];
   }
@@ -79,8 +80,8 @@ class Drawable {
     _renderRect(this, x, y, w, h, true);
   }
 
-  drawRect_params = ['x:i', 'y:i', 'w:i', 'h:i', '||',
-                                        'x0:i', 'y0:i', 'x1:i', 'y1:i'];
+  drawRect_params() { return ['x:i', 'y:i', 'w:i', 'h:i', '||',
+                              'x0:i', 'y0:i', 'x1:i', 'y1:i'] }
   drawRect_convert(_choice, vals) {
     return [vals[0], vals[1], vals[2] - vals[0], vals[3] - vals[1]];
   }
@@ -88,8 +89,8 @@ class Drawable {
     _renderRect(this, x, y, w, h, false);
   }
 
-  fillCircle_params = ['x:i', 'y:i', 'r:n', '||',
-                       'centerX:i', 'centerY:i', 'r:n'];
+  fillCircle_params() { return ['x:i', 'y:i', 'r:n', '||',
+                                'centerX:i', 'centerY:i', 'r:n'] }
   fillCircle_convert(_choice, vals) {
     return [vals[0]-vals[2]+0.5, vals[1]-vals[2]+0.5, vals[2]];
   }
@@ -102,8 +103,8 @@ class Drawable {
     this.putSequence(put);
   }
 
-  drawCircle_params = ['x:i', 'y:i', 'r:n', 'thick?i', '||',
-                       'centerX:i', 'centerY:i', 'r:n', 'thick?i'];
+  drawCircle_params() { return ['x:i', 'y:i', 'r:n', 'thick?i', '||',
+                                'centerX:i', 'centerY:i', 'r:n', 'thick?i'] }
   drawCircle_convert(_choice, vals) {
     return [vals[0]-vals[2], vals[1]-vals[2], vals[2], vals[3]];
   }
@@ -120,7 +121,7 @@ class Drawable {
     this.putSequence(put);
   }
 
-  fillPolygon_params = ['points:ps', 'x?i', 'y?i'];
+  fillPolygon_params() { return ['points:ps', 'x?i', 'y?i'] }
   fillPolygon(polygon, x, y) {
     x = x || 0;
     y = y || 0;
@@ -129,7 +130,7 @@ class Drawable {
     this.putSequence(res);
   }
 
-  drawPolygon_params = ['points:ps', 'x?i', 'y?i'];
+  drawPolygon_params() { return ['points:ps', 'x?i', 'y?i'] }
   drawPolygon(polygon, x, y) {
     x = x || 0;
     y = y || 0;
@@ -138,13 +139,13 @@ class Drawable {
     this.putSequence(res);
   }
 
-  fillFlood_params = ['x:i', 'y:i'];
+  fillFlood_params() { return ['x:i', 'y:i'] }
   fillFlood(x, y) {
     this._prepare();
     algorithm.flood(this, x, y, this.frontColor);
   }
 
-  fillFrame_params = ['options?o', 'fillerFunc:f'];
+  fillFrame_params() { return ['options?o', 'fillerFunc:f'] }
   fillFrame(options, fillerFunc) {
     // validate options given
     if (options) {
@@ -213,7 +214,7 @@ class Drawable {
     }
   }
 
-  paste_params = ['source:a', 'x?i', 'y?i'];
+  paste_params() { return ['source:a', 'x?i', 'y?i'] }
   paste(source, x, y) {
     if (!source.data) {
       let msg = 'paste: source has not been read, use ra.then to wait for it.';
@@ -230,7 +231,7 @@ class Drawable {
     this.putBlit(source, x, y);
   }
 
-  drawText_params = ['text:s', 'x:i', 'y:i'];
+  drawText_params() { return ['text:s', 'x:i', 'y:i'] }
   drawText(text, x, y) {
     let font = this.font;
     if (!font) {

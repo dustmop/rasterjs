@@ -91,9 +91,9 @@ class Scene {
     if (options.zoom) {
       this.setZoom(options.zoom);
     }
-    if (options.time_tick) {
-      this.tick = options.time_tick;
-      this.time = this.tick / 60.0;
+    if (options.tick) {
+      this._ensureExecutor();
+      this._executor.advanceTick(options.tick);
     }
     Object.defineProperty(this, 'timeClick', {
       get() {
@@ -453,11 +453,24 @@ class Scene {
     });
   }
 
-  runFrame(afterFunc) {
+  runFrame(param) {
     this._ensureExecutor();
     this._executor._forceRender = true;
-    this._executor.nextFrame();
-    if (afterFunc) {
+
+    let tickDelta = 1;
+    let afterFunc = null;
+    if (types.isFunction(param)) {
+      afterFunc = param;
+    } else if (types.isObject(param)) {
+      // TODO: use destructure
+      tickDelta = param.delta;
+      if (!types.isNumber(tickDelta)) {
+        throw new Error(`runFrame({delta}) must be a number`);
+      }
+    }
+
+    this._executor.advanceTick(tickDelta);
+    if (types.isFunction(afterFunc)) {
       afterFunc();
     }
   }
@@ -490,6 +503,10 @@ class Scene {
       throw new Error(`app not running, cannot quit`);
     }
     this._executor.appQuit();
+  }
+
+  pause() {
+    this._executor.setPauseState(!this._executor.isPaused);
   }
 
   mixColors(spec) {

@@ -41,10 +41,21 @@ class Executor {
     this._postRunFunc = postRunFunc;
   }
 
+  setPauseState(state) {
+    this.isPaused = !!state;
+  }
+
   _execNextFrame(drawFunc) {
+    if (this.isPaused && !this._forceRender) {
+      return false;
+    }
+    // TODO: test that setting ra.tick doesn't work, drawFunc
+    // uses the original value
+    this.updateSceneTime();
     if (drawFunc) {
       drawFunc();
-      this.nextFrame();
+      // TODO: slowdown?
+      this.advanceTick(this.isPaused ? 0 : 1);
       return true;
     } else if (this._forceRender) {
       this._forceRender = false;
@@ -57,8 +68,11 @@ class Executor {
     return false;
   }
 
-  nextFrame() {
+  advanceTick(delta) {
     if (this._numFrames > 0) {
+      if (delta != 1) {
+        throw new Error(`can only use numFrames with {delta: 1}`);
+      }
       this._numFrames--;
       if (this._numFrames == 0) {
         if (this._postRunFunc) {
@@ -67,7 +81,7 @@ class Executor {
         }
       }
     }
-    this.tick += 1;
+    this.tick += delta;
     if (this._lockTime) {
       this.time = this.tick / 60.0;
       // TODO: always lock the first N frames, to account for uncertainty

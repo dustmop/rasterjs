@@ -348,9 +348,11 @@ void main() {
         return;
       }
 
-      //if (this.currentRunId != id) {
-      //  return;
-      //}
+      // calling run() a second time stops the first loop
+      // useful for interactive web environments
+      if (this.currentRunId != id) {
+        return;
+      }
 
       // Create the next frame.
       let hasFrame = execNextFrame();

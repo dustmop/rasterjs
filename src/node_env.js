@@ -56,7 +56,7 @@ function getOptions() {
   parser.add_argument('--display', {type: 'str'});
   parser.add_argument('--colors', {type: 'str'});
   parser.add_argument('--zoom', {type: 'int'});
-  parser.add_argument('--time-tick', {type: 'int', dest: 'time_tick'});
+  parser.add_argument('--tick', {type: 'int', dest: 'tick'});
   parser.add_argument('--full-trace', {action: 'store_true', dest: 'full'})
   parser.add_argument('-v', {action: 'store_true'});
   let args = parser.parse_args(cmdlineArgs);

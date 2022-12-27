@@ -152,11 +152,11 @@ describe('Save', function() {
     });
   });
 
-  it('time-tick flag', function(success) {
+  it('tick flag', function(success) {
     let tmpdir = util.mkTmpDir();
     let tmpout = tmpdir + '/actual.png';
     let script = 'test/testdata/scripts/spin.js';
-    let cmd = `node ${script} --save ${tmpout} --time-tick 3`;
+    let cmd = `node ${script} --save ${tmpout} --tick 3`;
     let cwd = process.cwd();
     child_process.exec(cmd, function(error, stdout, stderr) {
       if (error) {

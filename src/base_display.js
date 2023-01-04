@@ -1,6 +1,10 @@
 class BaseDisplay {
   initialize() {}
 
+  isRealTime() {
+    return false;
+  }
+
   beginExec(refExec) {}
 
   setSize(width, height) {

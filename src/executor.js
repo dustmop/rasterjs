@@ -13,6 +13,7 @@ class Executor {
     this._startTime = new Date();
     this.time = 0.0;
     this.tick = 0;
+    this._fpsPrevTime = null;
     this._lockTime = true; // TODO: fix me!
   }
 
@@ -49,6 +50,12 @@ class Executor {
     if (this.isPaused && !this._forceRender) {
       return false;
     }
+
+    // frame skipping, allows us to lock the framerate at 60fps
+    if (!this._isReadyForNextFrame()) {
+      return false;
+    }
+
     // TODO: test that setting ra.tick doesn't work, drawFunc
     // uses the original value
     this.updateSceneTime();
@@ -66,6 +73,25 @@ class Executor {
       return false;
     }
     return false;
+  }
+
+  _isReadyForNextFrame() {
+    // if the display is not real-time, always ready for next frame
+    if (!this.display.isRealTime()) {
+      return true;
+    }
+
+    // make sure that enough time has passed
+    if (this._fpsPrevTime == null) {
+      this._fpsPrevTime = this._startTime;
+    }
+    let deltaMs = new Date() - this._fpsPrevTime;
+    if (deltaMs >= 13) {
+      this._fpsPrevTime = new Date(this._fpsPrevTime.getTime() + 16);
+      return true;
+    } else {
+      return false;
+    }
   }
 
   advanceTick(delta) {

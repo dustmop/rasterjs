@@ -25,6 +25,10 @@ class WebGLDisplay extends baseDisplay.BaseDisplay {
     this.currentRunId = null;
   }
 
+  isRealTime() {
+    return true;
+  }
+
   setRenderer(renderer) {
     this._renderer = renderer;
   }

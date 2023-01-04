@@ -1,9 +1,7 @@
 const baseDisplay = require('./base_display.js');
 
-// TODO: Move some logic here, such that the backend is the minimal required
-// to interact with SDL. Perhaps combine the `set*` methods into `configure`.
-
-class SDLDisplay extends baseDisplay.BaseDisplay {
+class TestDisplay extends baseDisplay.BaseDisplay {
+  // TODO: move the `backend` here, right now it's using SDL
   constructor(backend) {
     super();
     this._b = backend;
@@ -18,7 +16,7 @@ class SDLDisplay extends baseDisplay.BaseDisplay {
   }
 
   isRealTime() {
-    return true;
+    return false;
   }
 
   setSize(width, height) {
@@ -63,4 +61,4 @@ class SDLDisplay extends baseDisplay.BaseDisplay {
   }
 }
 
-module.exports.SDLDisplay = SDLDisplay;
+module.exports.TestDisplay = TestDisplay;

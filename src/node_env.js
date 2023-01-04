@@ -5,6 +5,7 @@ const saver = require('./save_image_display.js');
 const filesysLocal = require('./filesys_local.js');
 const httpDisplay = require('./http_display.js');
 const sdlDisplay = require('./sdl_display.js');
+const testDisplay = require('./test_display.js');
 
 function makeFilesysAccess() {
   let fsacc = new filesysLocal.FilesysAccess();
@@ -21,6 +22,9 @@ function detectDisplayBackend() {
 };
 
 function makeDisplay(name) {
+  if (runningAsTest()) {
+    return new testDisplay.TestDisplay(cppmodule.backend());
+  }
   if (!name) {
     return new sdlDisplay.SDLDisplay(detectDisplayBackend());
   } else if (name == 'sdl') {

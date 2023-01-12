@@ -988,6 +988,14 @@ Scene.prototype.Tileset = function() {
   return new tiles.Tileset(args[0]);
 }
 
+Scene.prototype.Tile = function() {
+  if (new.target === undefined) {
+    throw new Error('Tile constructor must be called with `new`');
+  }
+  let args = arguments;
+  return new tiles.Tile(args[0], args[1]);
+}
+
 Scene.prototype.SpriteList = function() {
   if (new.target === undefined) {
     throw new Error('SpriteList constructor must be called with `new`');

@@ -442,4 +442,30 @@ describe('Tileset', function() {
     assert(tiles.length, 4);
   });
 
+  it('get and put params cant be null', function() {
+    let t = new ra.Tile(4, 4);
+    t.fill([0,4,6,0,
+            5,7,2,9,
+            0,0,0,3,
+            0,1,8,0]);
+    assert.equal(t.get(2, 1), 2);
+
+    assert.throws(() => {
+      t.get(null, 1);
+    }, /get: x is null/);
+
+    assert.throws(() => {
+      t.get(2, null);
+    }, /get: y is null/);
+
+    assert.throws(() => {
+      t.put(null, 1, 9);
+    }, /put: x is null/);
+
+    assert.throws(() => {
+      t.put(2, null, 9);
+    }, /put: y is null/);
+  });
+
+
 });

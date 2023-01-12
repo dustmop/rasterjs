@@ -88,4 +88,30 @@ describe('Plane', function() {
     assert.deepEqual(expect, actual);
   });
 
+  it('get and put params cant be null', function() {
+    let pl = new ra.Plane();
+    pl.setSize(4, 4);
+    pl.fill([0,4,6,0,
+             5,7,2,9,
+             0,0,0,3,
+             0,1,8,0]);
+    assert.equal(pl.get(2, 1), 2);
+
+    assert.throws(() => {
+      pl.get(null, 1);
+    }, /get: x is null/);
+
+    assert.throws(() => {
+      pl.get(2, null);
+    }, /get: y is null/);
+
+    assert.throws(() => {
+      pl.put(null, 1, 9);
+    }, /put: x is null/);
+
+    assert.throws(() => {
+      pl.put(2, null, 9);
+    }, /put: y is null/);
+  });
+
 });

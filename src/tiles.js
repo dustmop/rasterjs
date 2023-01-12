@@ -337,20 +337,29 @@ class Tileset {
 
 
 class Tile {
-  constructor() {
-    this.width = null;
-    this.height = null;
-    this.pitch = null;
-    this.data = null;
+  constructor(width, height) {
+    let pitch = Math.floor(width);
+    let data;
+    if (pitch > 0 && height > 0) {
+      data = new Uint8Array(height * pitch);
+    }
+    this.width = Math.floor(width);
+    this.height = Math.floor(height);
+    this.pitch = pitch;
+    this.data = data;
     return this;
   }
 
   get(x, y) {
+    if (x == null) { throw new Error(`get: x is null`); }
+    if (y == null) { throw new Error(`get: y is null`); }
     let k = y * this.pitch + x;
     return this.data[k];
   }
 
   put(x, y, v) {
+    if (x == null) { throw new Error(`put: x is null`); }
+    if (y == null) { throw new Error(`put: y is null`); }
     let k = y * this.pitch + x;
     this.data[k] = v;
   }
@@ -379,9 +388,23 @@ class Tile {
   }
 
   fill(v) {
-    for (let k = 0; k < this.data.length; k++) {
-      this.data[k] = Math.floor(v);
+    if (types.isArray(v)) {
+      let k = 0;
+      for (let i = 0; i < this.height; i++) {
+        for (let j = 0; j < this.width; j++) {
+          this.put(j, i, v[k]);
+          k++;
+        }
+      }
+      return;
     }
+    if (types.isNumber(v)) {
+      for (let k = 0; k < this.data.length; k++) {
+        this.data[k] = Math.floor(v);
+      }
+      return;
+    }
+    throw new Error(`tile.fill needs array or number, got ${v}`);
   }
 
 }

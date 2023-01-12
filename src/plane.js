@@ -125,6 +125,8 @@ class Plane {
   }
 
   get(x, y) {
+    if (x == null) { throw new Error(`get: x is null`); }
+    if (y == null) { throw new Error(`get: y is null`); }
     this._prepare();
     this._offs = this.offsetTop * this.pitch + this.offsetLeft || 0;
     x = Math.floor(x);
@@ -137,6 +139,8 @@ class Plane {
   }
 
   put(x, y, v) {
+    if (x == null) { throw new Error(`put: x is null`); }
+    if (y == null) { throw new Error(`put: y is null`); }
     this._prepare();
     this._offs = this.offsetTop * this.pitch + this.offsetLeft || 0;
     x = Math.floor(x);

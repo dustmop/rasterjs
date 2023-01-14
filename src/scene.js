@@ -475,7 +475,11 @@ class Scene {
     }
   }
 
-  save(savepath) {
+  save(component, savepath) {
+    let spec = ['component?component', 'savepath=s'];
+    [component, savepath] = destructure.from(
+      'save', spec, arguments, null);
+    // TODO: use component
     let res = this.renderPrimaryPlane();
     if (!this._fsacc) {
       throw new Error('cannot save plane without filesys access');
@@ -534,10 +538,11 @@ class Scene {
   }
 
   oscil(namedOnly) {
-    let spec = ['!name', 'period?i=60', 'begin?n', 'max?n=1.0', 'tick?a'];
-    let [period, begin, max, tick] = destructure.from(
+    let spec = ['!name', 'period?i=60', 'begin?n', 'min?n=0.0', 'max?n=1.0', 'tick?a'];
+    let [period, begin, min, max, tick] = destructure.from(
       'oscil', spec, arguments, null);
 
+    let delta = max - min;
     period = period || 60;
     if (begin === undefined) {
       begin = 0.0;
@@ -546,7 +551,7 @@ class Scene {
       tick = this.tick;
     }
     tick = tick + Math.round(period * begin);
-    return max * ((1.0 - Math.cos(tick * this.TAU / period)) / 2.0000001);
+    return delta * ((1.0 - Math.cos(tick * this.TAU / period)) / 2.0000001) + min;
   }
 
   setFont(spec, opt) {

@@ -3,6 +3,59 @@ var util = require('./util.js');
 var destructure = require('../src/destructure.js');
 
 describe('Destructure', function() {
+
+  it('build simple', function() {
+    let patterns = destructure.build(['x:i']);
+    let expect = new destructure.DescribeSpec();
+    expect.allowPositional = true;
+    expect.choices = [
+      {
+        mapping: {
+          x: 0
+        },
+        needed: 1,
+        row: [
+          {
+            def: null,
+            name: 'x',
+            req: true,
+            type: 'i'
+          }
+        ]
+      }
+    ];
+    assert.deepEqual(patterns, expect);
+  });
+  it('build named params', function() {
+    let patterns = destructure.build(['!name', 'period?i=60', 'begin?n']);
+    let expect = new destructure.DescribeSpec();
+    expect.allowPositional = false;
+    expect.choices = [
+      {
+        mapping: {
+          begin: 1,
+          period: 0
+        },
+        needed: 0,
+        row: [
+          {
+            def: 60,
+            name: 'period',
+            req: false,
+            type: 'i'
+          },
+          {
+            def: undefined,
+            name: 'begin',
+            req: false,
+            type: 'n'
+          }
+        ]
+      }
+    ];
+    assert.deepEqual(patterns, expect);
+  });
+
   it('basic params', function() {
     let values = destructure.from('fn0', ['x:i'], [123]);
     assert.deepEqual(values, [123]);
@@ -20,24 +73,24 @@ describe('Destructure', function() {
   it('too few params', function() {
     assert.throws(function() {
       destructure.from('fn3', ['x:i', 'y:i', 'z:i'], [123, 456]);
-    }, /function fn3 expected 3 arguments, got 2/);
+    }, /function 'fn3' expected 3 arguments, got 2/);
   });
   it('too many params', function() {
     assert.throws(function() {
       destructure.from('fn4', ['x:i', 'y:i', 'z:i'], [12, 34, 56, 78]);
-    }, /function fn4 expected 3 arguments, got 4/);
+    }, /function 'fn4' expected 3 arguments, got 4/);
   });
   it('extra key', function() {
     assert.throws(function() {
       let args = [{'x': 123, 'y': 456, 'z': 789, 'a': 321}];
       destructure.from('fn5', ['x:i', 'y:i', 'z:i'], args);
-    }, /function fn5 unknown parameter a/);
+    }, /function 'fn5' unknown parameter a/);
   });
   it('missing key', function() {
     assert.throws(function() {
       let args = [{'x': 123, 'y': 456}];
       destructure.from('fn6', ['x:i', 'y:i', 'z:i'], args);
-    }, /function fn6 missing parameter z/);
+    }, /function 'fn6' missing parameter z/);
   });
   it('optional param, missing', function() {
     let values = destructure.from('fn7', ['x:i', 'width?i'], [123]);
@@ -89,4 +142,5 @@ describe('Destructure', function() {
       let vals = destructure.from('fn1', ['x:f', 'y:o'], [function(){}, 123.4]);
     }, /could not convert to object: 123.4/);
   });
+
 });

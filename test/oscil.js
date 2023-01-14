@@ -29,6 +29,12 @@ describe('Oscil', function() {
     let n = ra.oscil({max: 100});
     assert.almostEqual(n, 25, {epsilon: 0.01});
   });
+  it('min', function() {
+    ra.resetState();
+    ra.tick = 10;
+    let n = ra.oscil({min: 5, max: 20});
+    assert.almostEqual(n, 8.75, {epsilon: 0.01});
+  });
   it('period', function() {
     ra.resetState();
     ra.tick = 10;
@@ -56,6 +62,6 @@ describe('Oscil', function() {
     ra.resetState();
     assert.throws(function() {
       let n = ra.oscil({value: 123});
-    }, /function oscil unknown parameter value/);
+    }, /function 'oscil' unknown parameter value/);
   });
 });

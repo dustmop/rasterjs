@@ -1,3 +1,6 @@
+const types = require('./types.js');
+
+
 class DescribeSpec {
   constructor(choices, allowPositional) {
     this.choices = choices;
@@ -57,6 +60,11 @@ function toParam(paramText) {
     }
     return {name: name, type: type, req: false, def: def};
   }
+  pos = paramText.indexOf('=');
+  if (pos != -1) {
+    let [name, type] = paramText.split('=');
+    return {name: name, type: type, req: true, def: null, check: true};
+  }
   throw new Error(`could not convert param ${paramText}`);
 }
 
@@ -76,7 +84,7 @@ function from(fname, paramSpec, args, converter) {
       err = match.err;
     }
   }
-  throw new Error(`function ${fname} ${err}`);
+  throw new Error(`function '${fname}' ${err}`);
 }
 
 function tryMatch(spec, fname, choice, args) {
@@ -137,27 +145,39 @@ function tryMatchPositionalParam(choice, args) {
   let needed = choice.needed;
   let mapping = choice.mapping;
 
-  if (args.length == 1 && needed == 1 && allowed == 2) {
-    // Short-cut to handle optional param[0]
-    if (!row[0].req) {
-      return {values: [null, args[0]]};
-    }
-  }
-
   if (args.length < needed || args.length > allowed) {
     return {err: `expected ${allowed} arguments, got ${args.length}`};
   }
 
+  let allowOmitable = true;
+
   let values = [];
+  let n = 0; // arg index
+
   for (let i = 0; i < row.length; i++) {
     let p = row[i];
-    if (i >= args.length) {
+    if (p.req) {
+      allowOmitable = false;
+      if (p.check) {
+        if (!valueMatchType(args[n], p)) {
+          let got = getType(args[n]);
+          return {err: `arg ${n} bad type, got:${got} want:${p.type}`};
+        }
+      }
+    } else if (allowOmitable) {
+      if (!valueMatchType(args[n], p) && !p.def) {
+        values.push(null);
+        continue;
+      }
+    }
+    if (n >= args.length) {
       if (!p.req) {
         continue;
       }
-      return {err: `argument ${i} not found`};
+      return {err: `argument ${n} not found`};
     }
-    values.push(toValueLike(args[i], p));
+    values.push(toValueLike(args[n], p));
+    n++;
   }
   return {values: values};
 }
@@ -177,6 +197,63 @@ function toValueLike(value, param) {
     return param.def;
   }
   return typeCoerce(value, param.type);
+}
+
+function getType(value) {
+  if (value == null) {
+    return 'null';
+  }
+  let type = typeof value;
+  if (type == 'object') {
+    return value.constructor.name;
+  }
+  return '?';
+}
+
+function valueMatchType(value, param) {
+  let type = param.type;
+  if (type == 'i') {
+    // integer
+    return types.isInteger(value);
+  } else if (type == 'n') {
+    // number
+    return types.isNumber(value);
+  } else if (type == 'ps') {
+    // points
+    if (!types.isArray(value)) {
+      return false;
+    }
+    for (let elem of value) {
+      if (!types.isNumber(elem)) {
+        return false;
+      }
+    }
+    return true;
+  } else if (type == 'a' || type == 'any') {
+    // any
+    return true;
+  } else if (type == 's') {
+    // string
+    return types.isString(value);
+  } else if (type == 'b') {
+    // bool
+    return types.isBool(value);
+  } else if (type == 'o') {
+    // object
+    return types.isObject(value);
+  } else if (type == 'component') {
+    // component
+    if (types.isPlane(value) || types.isPalette(value) ||
+        types.isTileset(value) || types.isColorspace(value) ||
+        types.isInterrupts(value)) {
+      return true;
+    }
+    return false;
+  } else if (type == 'f') {
+    // function
+    return types.isFunction(value);
+  }
+  throw new Error(`TODO: type == ${type}`);
 }
 
 function typeCoerce(value, type) {
@@ -211,6 +288,17 @@ function typeCoerce(value, type) {
       return value;
     }
     throw new Error(`could not convert to object: ${value}`);
+  } else if (type == 'component') {
+    // component
+    if (!value) {
+      return null;
+    }
+    let objType = value.constructor.name;
+    let allowed = ['Plane', 'Palette', 'Tileset', 'Colorspace', 'Interrupts'];
+    if (allowed.indexOf(objType) > -1) {
+      return value;
+    }
+    throw new Error(`could not convert to component: ${value}`);
   } else if (type == 'f') {
     // function
     if (!value) {
@@ -227,3 +315,4 @@ function typeCoerce(value, type) {
 
 module.exports.from = from;
 module.exports.build = build;
+module.exports.DescribeSpec = DescribeSpec;

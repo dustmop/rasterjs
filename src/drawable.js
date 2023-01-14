@@ -121,7 +121,7 @@ class Drawable {
     this.putSequence(put);
   }
 
-  fillPolygon_params() { return ['points:ps', 'x?i', 'y?i'] }
+  fillPolygon_params() { return ['polygon:ps', 'x?i', 'y?i']; }
   fillPolygon(polygon, x, y) {
     x = x || 0;
     y = y || 0;
@@ -130,7 +130,7 @@ class Drawable {
     this.putSequence(res);
   }
 
-  drawPolygon_params() { return ['points:ps', 'x?i', 'y?i'] }
+  drawPolygon_params() { return ['polygon:ps', 'x?i', 'y?i'] }
   drawPolygon(polygon, x, y) {
     x = x || 0;
     y = y || 0;

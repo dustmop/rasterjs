@@ -70,7 +70,6 @@ class Tileset {
   clone() {
     let detail = {tile_width: this.tileWidth, tile_height: this.tileHeight};
     let make = new Tileset(detail);
-    make.giveFeatures(this._fsacc);
     make.data = this.data.slice();
     make._palette = this._palette;
     make._fillContents();
@@ -100,10 +99,6 @@ class Tileset {
   _fillContents() {
     this.numTiles = this.data.length;
     // TODO: _lookupContents
-  }
-
-  giveFeatures(fsacc) {
-    this._fsacc = fsacc;
   }
 
   get(i) {
@@ -271,14 +266,6 @@ class Tileset {
       t.data = new Uint8Array(t.height * pitch);
       this.data[i] = t;
     }
-  }
-
-  save(filename) {
-    if (!this._fsacc) {
-      throw new Error(`cannot save without fsacc`);
-    }
-    let res = this.visualize({palette: this._palette, numTileX: 16});
-    this._fsacc.saveTo(filename, res);
   }
 
   serialize() {

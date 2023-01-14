@@ -170,14 +170,6 @@ class Palette {
     this._cycleTopLevel(args, opt);
   }
 
-  save(filename) {
-    if (!this._fsacc) {
-      throw new Error(`cannot save without fsacc`);
-    }
-    let res = this.visualize();
-    this._fsacc.saveTo(filename, res);
-  }
-
   visualize(opt) {
     opt = opt || {};
     this.ensureRGBMap();
@@ -222,10 +214,11 @@ class Palette {
     outtuple[3] = 0xff;
   }
 
-  giveFeatures(fsacc, refScene) {
-    // palette.save needs `fsacc.saveTo`
-    this._fsacc = fsacc;
+  giveFeatures(refScene) {
     // palette.cycle needs `scene.tick`
+    if (!types.isWeakRef(refScene)) {
+      throw new Error(`giveFeatures needs a weak.Ref(scene)`);
+    }
     this._refScene = refScene;
   }
 
@@ -627,7 +620,6 @@ function buildFrom(param, opt) {
     make.pieceSize = pieceSize;
   }
   if (opt.copy) {
-    make._fsacc = opt.copy._fsacc;
     make._refScene = opt.copy._refScene;
   }
   // TODO: upon

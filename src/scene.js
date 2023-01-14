@@ -109,7 +109,7 @@ class Scene {
 
   _initPalette() {
     this.palette = new palette.Palette();
-    this.palette.giveFeatures(this._fsacc, new weak.Ref(this));
+    this.palette.giveFeatures(new weak.Ref(this));
     // TODO: possibly, this.palette.setDefaultRGBMap('quick');
     // then, don't have palette depend on rgb_map_quick
   }
@@ -479,7 +479,13 @@ class Scene {
     let spec = ['component?component', 'savepath=s'];
     [component, savepath] = destructure.from(
       'save', spec, arguments, null);
-    // TODO: use component
+    if (component) {
+      // render component
+      let res = component.visualize();
+      this._fsacc.saveTo(savepath, res);
+      return;
+    }
+    // render the main plane
     let res = this.renderPrimaryPlane();
     if (!this._fsacc) {
       throw new Error('cannot save plane without filesys access');
@@ -662,17 +668,13 @@ class Scene {
     }
     // Assign the palette to the scene
     this.palette._entries = items;
-    // TODO: can we use giveFeatures instead
-    this.palette._fsacc = this._fsacc;
-    this.palette._refScene = new weak.Ref(this);
+    this.palette.giveFeatures(new weak.Ref(this));
     return this.palette;
   }
 
   _newPaletteEntries(vals, shouldSort, optSize) {
     this._paletteSetIdentityEntries(optSize);
-    // TODO: can we use giveFeatures instead
-    this.palette._fsacc = this._fsacc;
-    this.palette._refScene = new weak.Ref(this);
+    this.palette.giveFeatures(new weak.Ref(this));
     if (vals != null) {
       this.palette._entries = new Array(vals.length).fill(0);
       for (let i = 0; i < vals.length; i++) {
@@ -881,7 +883,6 @@ class Scene {
     if (this.colorspace) {
       this.colorspace.ensureConsistentTileset(this.tileset, this.palette);
     }
-    this.tileset.giveFeatures(this._fsacc);
     return this.tileset;
   }
 

@@ -19,7 +19,7 @@ describe('HSV sort', function() {
 
       let pal = ra.palette;
       // Compare the palette to expectation
-      pal.save(tmpout);
+      ra.save(pal, tmpout);
       util.ensureFilesMatch('test/testdata/pal_sphere.png', tmpout);
 
       // Compare the plane data buffer
@@ -75,7 +75,7 @@ describe('HSV sort', function() {
 
       let pal = ra.palette;
       // Compare the palette to expectation
-      pal.save(tmpout);
+      ra.save(pal, tmpout);
       util.ensureFilesMatch('test/testdata/pal_sphere_sort.png', tmpout);
 
       let bin = ra.aPlane.pack();

@@ -192,7 +192,7 @@ describe('Palette', function() {
     ra.resetState();
 
     let palette = ra.palette;
-    palette.save(tmpout);
+    ra.save(palette, tmpout);
 
     util.ensureFilesMatch('test/testdata/pal_saved.png', tmpout);
   });
@@ -285,7 +285,7 @@ describe('Palette', function() {
     ra.usePalette('dos');
 
     let palette = ra.palette;
-    palette.save(tmpout);
+    ra.save(palette, tmpout);
 
     util.ensureFilesMatch('test/testdata/pal_dos_saved.png', tmpout);
   });

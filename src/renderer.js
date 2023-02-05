@@ -24,21 +24,10 @@ class Renderer {
   }
 
   _init() {
-    this._layers = [
-      {
-        rgbSurface: null,
-        camera: null,
-        plane: null,
-        tileset: null,
-        palette: null,
-        colorspace: null,
-        size: null,
-        spriteList: null,
-      }
-    ]
+    this._layers = [];
+    this._world = {};
     this.isConnected = false;
     this.interrupts = null;
-    this.grid = null;
     this.haveRenderedPlaneOnce = false;
     this._inspectScanline = null;
     this._inspectCallback = null;
@@ -48,59 +37,59 @@ class Renderer {
     if (this.isConnected) {
       return;
     }
-
     if (!types.isArray(inputList)) {
       throw new Error(`connect needs a list of layers`)
     }
-    let input = inputList[0];
 
-    let layer = this._layers[0];
-    let allow = ['plane', 'size', 'camera', 'palette-rgbmap',
-                 'tileset', 'palette', 'colorspace', 'interrupts', 'spriteList',
-                 'font', 'grid'];
-    let keys = Object.keys(input);
-    for (let k of keys) {
-      if (!allow.includes(k)) {
-        throw new Error(`connect param has unrecognized key "${k}"`);
-      }
+    let numLayers = inputList.length;
+    this._layers = new Array(numLayers);
+    for (let i = 0; i < numLayers; i++) {
+      this._layers[i] = this._createLayer(inputList[i]);
     }
 
-    verbose.log(`renderer.connect components: ${Object.keys(input)}`, 5);
+    this._world = inputList.world || {};
+    this._assertObjectKeys(this._world, ['interrupts', 'spriteList',
+                                         'palette', 'grid']);
 
-    if (!input.plane || !types.isPlane(input.plane)) {
-      throw new Error(`input.plane must be a non-null Plane`);
-    }
-    if (!input.palette || !types.isPalette(input.palette)) {
-      throw new Error(`input.palette must be a non-null Palette`);
-    }
-    if (input.tileset && !types.isTileset(input.tileset)) {
-      throw new Error(`input.tiles must be a Tileset, got ${input.tileset}`);
-    }
-    if (input.colorspace && !types.isColorspace(input.colorspace)) {
-      throw new Error(`input.coolorspace must be a Colorspace`);
-    }
-    if (input.interrupts && !types.isInterrupts(input.interrupts)) {
-      throw new Error(`input.interrupts must be a Interrupts`);
-    }
-
-    layer.plane    = input.plane;
-    layer.size     = input.size;
-    layer.camera   = input.camera;
-    layer.tileset  = input.tileset;
-    layer.palette  = input.palette;
-    layer.colorspace = input.colorspace;
-    layer.spriteList = input.spriteList;
-    this.grid        = input.grid;
-    this.interrupts  = input.interrupts;
     this.isConnected = true;
+  }
 
-    if (inputList.length > 1) {
-      let input = inputList[1];
-      if (this._layers.length == 1) {
-        this._layers.push({});
-        let upper = this._layers[1];
-        upper.plane = input.plane;
-        upper.conf = this._layers[0].conf;
+  _createLayer(item) {
+    let layer = {};
+    this._assertObjectKeys(item, ['plane', 'size', 'camera', 'palette-rgbmap',
+                                  'tileset', 'palette', 'colorspace']);
+
+    verbose.log(`renderer.connect components: ${Object.keys(item)}`, 5);
+
+    if (!item.plane || !types.isPlane(item.plane)) {
+      throw new Error(`layer.plane must be a non-null Plane`);
+    }
+    if (item.palette && !types.isPalette(item.palette)) {
+      throw new Error(`layer.palette must be a non-null Palette`);
+    }
+    if (item.tileset && !types.isTileset(item.tileset)) {
+      throw new Error(`layer.tiles must be a Tileset, got ${item.tileset}`);
+    }
+    if (item.colorspace && !types.isColorspace(item.colorspace)) {
+      throw new Error(`layer.colorspace must be a Colorspace`);
+    }
+
+    layer.plane    = item.plane;
+    layer.size     = item.size;
+    layer.camera   = item.camera;
+    layer.tileset  = item.tileset;
+    layer.palette  = item.palette;
+    layer.colorspace = item.colorspace;
+    this.isConnected = true;
+    return layer;
+  }
+
+
+  _assertObjectKeys(item, allowed) {
+    let keys = Object.keys(item);
+    for (let k of keys) {
+      if (!allowed.includes(k)) {
+        throw new Error(`unrecognized key "${k}"`);
       }
     }
   }
@@ -112,6 +101,15 @@ class Renderer {
 
   getFirstPlane() {
     return this._layers[0].plane;
+  }
+
+  changeGrid(zoomScale, width, height, unit) {
+    this._world.grid = {
+      zoom: zoomScale,
+      width: width,
+      height: height,
+      unit: unit,
+    };
   }
 
   switchComponent(layerNum, compName, obj) {
@@ -130,19 +128,25 @@ class Renderer {
   }
 
   render() {
-    let bottomPalette = this._layers[0].palette;
+    let world = this._world || {};
+
+    let bottomPalette = world.palette;
+    if (!bottomPalette) {
+      bottomPalette = this._layers[0].palette;
+    }
     bottomPalette.ensureRGBMap();
     this._rgbmap = bottomPalette._rgbmap;
 
     let res = [];
     for (let i = 0; i < this._layers.length; i++) {
-      res.push(this._renderLayer(this._layers[i], i == 0, this));
+      res.push(this._renderLayer(this._layers[i], i == 0, world));
     }
-    res.grid = this._gridSurface();
+    res.grid = this._gridSurface(world.grid);
+
     return res;
   }
 
-  _renderLayer(layer, isBg, system) {
+  _renderLayer(layer, isBg, world) {
     if (!layer.palette) {
       // set the bottom palette, need the rgbmap for rendering
       // TODO: does this break something?
@@ -162,8 +166,8 @@ class Renderer {
       }
     }
 
-    if (this.grid && !this.grid.buff) {
-      this._renderGrid();
+    if (this._world.grid && !this._world.grid.buff) {
+      this._renderGrid(this._world.grid);
     }
 
     // Allocate the buffer.
@@ -177,15 +181,15 @@ class Renderer {
     }
 
     // If no interrupts, render everything at once.
-    if (!system.interrupts) {
+    if (!world.interrupts) {
       return this._renderRegion(layer, isBg, 0, 0, width, height);
     }
 
     // Otherwise, collect IRQs per each scanline
     let perIRQs = [];
-    for (let k = 0; k < system.interrupts.length; k++) {
-      let row = system.interrupts.get(k);
-      if (types.isArray(row.scanline)) {
+    for (let k = 0; k < world.interrupts.length; k++) {
+      let row = world.interrupts.get(k);
+      if (world.isArray(row.scanline)) {
         let lineRange = row.scanline;
         // TODO: Assume a pair of integers
         for (let j = lineRange[0]; j < lineRange[1]+1; j++) {
@@ -225,7 +229,7 @@ class Renderer {
     }
 
     // Store x-positions so that they can visualize
-    system.interrupts.xposTrack = xposTrack;
+    world.interrupts.xposTrack = xposTrack;
 
     return layer.rgbSurface;
   }
@@ -367,8 +371,9 @@ class Renderer {
       }
     }
 
-    if (layer.spriteList && layer.spriteList.enabled) {
-      let chardat = layer.spriteList.chardat || layer.tileset;
+    let world = this._world || {};
+    if (world.spriteList && world.spriteList.enabled) {
+      let chardat = world.spriteList.chardat || layer.tileset;
       if (!chardat) {
         throw new Error('cannot render sprites without character data')
       }
@@ -377,8 +382,8 @@ class Renderer {
       let piece_size = 8;
 
       // draw back-to-front so that sprite[i] is above sprite[j] where i < j
-      for (let k = layer.spriteList.items.length - 1; k >= 0; k--) {
-        let spr = layer.spriteList.items[k];
+      for (let k = world.spriteList.items.length - 1; k >= 0; k--) {
+        let spr = world.spriteList.items[k];
         let sx = Math.floor(spr.x);
         let sy = Math.floor(spr.y);
         // ensure size of sprite is set
@@ -452,12 +457,12 @@ class Renderer {
   }
 
   renderComponents(components, settings, callback) {
-    let system = this;
+    let world = this._world;
     let myPlane = this._layers[0].plane;
     let myTiles = this._layers[0].tileset;
     let myPalette = this._layers[0].palette;
     let myColorspace = this._layers[0].colorspace;
-    let myInterrupts = system.interrupts;
+    let myInterrupts = world.interrupts;
     settings = settings || {};
     components = components || [];
 
@@ -543,14 +548,14 @@ class Renderer {
     }
   }
 
-  _renderGrid() {
-    let width = this.grid.width * this.grid.zoom;
-    let height = this.grid.height * this.grid.zoom;
-    let unit = this.grid.unit * this.grid.zoom;
+  _renderGrid(grid) {
+    let width = grid.width * grid.zoom;
+    let height = grid.height * grid.zoom;
+    let unit = grid.unit * grid.zoom;
     let pitch = width * 4;
 
     if (width == 0 || height == 0 || unit == 0) {
-      throw new Error('could not render grid, invalid dimensions: width=${width}, height=${height}, unit=${unit}');
+      throw new Error(`could not render grid, invalid dimensions: width=${width}, height=${height}, unit=${unit}`);
     }
 
     let targetPoint = unit;
@@ -575,19 +580,19 @@ class Renderer {
       }
     }
 
-    this.grid.width = width;
-    this.grid.height = height;
-    this.grid.buff = buff;
-    this.grid.pitch = pitch;
+    grid.width = width;
+    grid.height = height;
+    grid.buff = buff;
+    grid.pitch = pitch;
   }
 
-  _gridSurface() {
-    if (this.grid && this.grid.buff) {
+  _gridSurface(grid) {
+    if (grid && grid.buff) {
       return {
-        width: this.grid.width,
-        height: this.grid.height,
-        buff: this.grid.buff,
-        pitch: this.grid.pitch,
+        width: grid.width,
+        height: grid.height,
+        buff: grid.buff,
+        pitch: grid.pitch,
       };
     }
     return null;
@@ -598,7 +603,12 @@ class Renderer {
     if (c !== 0 && !c) {
       throw new Error(`invalid color ${c}`);
     }
-    layer.palette.getRGBUsing(c, rgbtuple, this._rgbmap);
+    // TODO: fix me
+    let palette = layer.palette;
+    if (palette == null) {
+      palette = this._world.palette;
+    }
+    palette.getRGBUsing(c, rgbtuple, this._rgbmap);
   }
 }
 

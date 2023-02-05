@@ -440,5 +440,40 @@ class PatternTable {
 }
 
 
+function createFrom(param, sizeInfo, sourcePlane, outExtra) {
+  let outTileset = null;
+  let outPattern = null;
+  if (types.isObject(param) && sizeInfo == null) {
+    // construct a tileset from the current plane, still need {sizeInfo}
+    sizeInfo = param;
+    outTileset = new Tileset(sizeInfo);
+    outPattern = outTileset.addFrom(sourcePlane, false).toPlane();
+    outExtra.fromCurrentPlane = true;
+
+  } else if (types.isTileset(param)) {
+    outTileset = param;
+
+  } else if (types.isPlane(param)) {
+    let inPlane = param;
+    outTileset = new Tileset(sizeInfo);
+    outPattern = outTileset.addFrom(inPlane, true).toPlane();
+
+  } else if (types.isNumber(param)) {
+    let numTiles = param;
+    let detail = {num: numTiles};
+    Object.assign(detail, sizeInfo);
+    outTileset = new Tileset(detail);
+
+  } else {
+    throw new Error(`cannot construct tileset from ${param}`);
+  }
+
+  if (outPattern) {
+    outExtra.pattern = outPattern;
+  }
+  return outTileset;;
+}
+
 module.exports.Tile = Tile;
 module.exports.Tileset = Tileset;
+module.exports.createFrom = createFrom;

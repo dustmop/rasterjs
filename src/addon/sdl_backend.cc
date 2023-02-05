@@ -46,6 +46,8 @@ SDLBackend::SDLBackend(const Napi::CallbackInfo& info)
   this->rendererHandle = NULL;
   this->mainLayer0 = NULL;
   this->mainLayer1 = NULL;
+  this->mainLayer2 = NULL;
+  this->mainLayer3 = NULL;
   this->gridLayer = NULL;
   this->gridWidth = 0;
   this->gridHeight = 0;
@@ -237,19 +239,20 @@ Napi::Value SDLBackend::RunDisplayLoop(const Napi::CallbackInfo& info) {
   }
 
   int numDataSources = 0;
-  this->dataSources = (unsigned char**)malloc(sizeof(unsigned char*)*3);
+  this->dataSources = (unsigned char**)malloc(sizeof(unsigned char*)*4);
   this->dataSources[0] = NULL;
   this->dataSources[1] = NULL;
   this->dataSources[2] = NULL;
+  this->dataSources[3] = NULL;
   // TODO: Ensure layers are same size.
   // TODO: Ensure layers use same pitch.
 
   Napi::Object resObj = Napi::Object(env, resVal);
   numDataSources = resObj.Get("length").ToNumber().Int32Value();
 
-  // For now, only handle up to 3 sources (2 layers + 1 grid).
-  if (numDataSources > 2) {
-    numDataSources = 2;
+  // For now, only handle up to 4 sources
+  if (numDataSources > 4) {
+    numDataSources = 4;
   }
 
   // Collect all data sources
@@ -316,7 +319,7 @@ Napi::Value SDLBackend::RunDisplayLoop(const Napi::CallbackInfo& info) {
     return Napi::Number::New(env, -1);
   }
 
-  // Create the texture for layer 0 (lower)
+  // Create the texture for layer 0 (bottom-most)
   this->mainLayer0 = SDL_CreateTexture(
       this->rendererHandle,
       SDL_PIXELFORMAT_ABGR8888,
@@ -325,7 +328,7 @@ Napi::Value SDLBackend::RunDisplayLoop(const Napi::CallbackInfo& info) {
       viewHeight);
   SDL_SetTextureBlendMode(this->mainLayer0, SDL_BLENDMODE_BLEND);
 
-  // Create the texture for layer 1 (upper)
+  // Create the texture for layer 1 (near-bottom)
   this->mainLayer1 = SDL_CreateTexture(
       this->rendererHandle,
       SDL_PIXELFORMAT_ABGR8888,
@@ -333,6 +336,24 @@ Napi::Value SDLBackend::RunDisplayLoop(const Napi::CallbackInfo& info) {
       viewWidth,
       viewHeight);
   SDL_SetTextureBlendMode(this->mainLayer1, SDL_BLENDMODE_BLEND);
+
+  // Create the texture for layer 2 (near-top)
+  this->mainLayer2 = SDL_CreateTexture(
+      this->rendererHandle,
+      SDL_PIXELFORMAT_ABGR8888,
+      SDL_TEXTUREACCESS_STREAMING,
+      viewWidth,
+      viewHeight);
+  SDL_SetTextureBlendMode(this->mainLayer2, SDL_BLENDMODE_BLEND);
+
+  // Create the texture for layer 3 (top-most)
+  this->mainLayer3 = SDL_CreateTexture(
+      this->rendererHandle,
+      SDL_PIXELFORMAT_ABGR8888,
+      SDL_TEXTUREACCESS_STREAMING,
+      viewWidth,
+      viewHeight);
+  SDL_SetTextureBlendMode(this->mainLayer3, SDL_BLENDMODE_BLEND);
 
   this->execOneFrame(info);
   return info.Env().Null();
@@ -491,6 +512,12 @@ void SDLBackend::execOneFrame(const CallbackInfo& info) {
   if (this->dataSources[1]) {
     SDL_UpdateTexture(this->mainLayer1, NULL, this->dataSources[1], viewPitch);
   }
+  if (this->dataSources[2]) {
+    SDL_UpdateTexture(this->mainLayer2, NULL, this->dataSources[2], viewPitch);
+  }
+  if (this->dataSources[3]) {
+    SDL_UpdateTexture(this->mainLayer3, NULL, this->dataSources[3], viewPitch);
+  }
 
   // create grid if renderer returns one
   if (this->gridRawBuff) {
@@ -510,6 +537,12 @@ void SDLBackend::execOneFrame(const CallbackInfo& info) {
   SDL_RenderCopy(this->rendererHandle, this->mainLayer0, NULL, NULL);
   if (this->mainLayer1 && this->dataSources[1]) {
     SDL_RenderCopy(this->rendererHandle, this->mainLayer1, NULL, NULL);
+  }
+  if (this->mainLayer2 && this->dataSources[2]) {
+    SDL_RenderCopy(this->rendererHandle, this->mainLayer2, NULL, NULL);
+  }
+  if (this->mainLayer3 && this->dataSources[3]) {
+    SDL_RenderCopy(this->rendererHandle, this->mainLayer3, NULL, NULL);
   }
   if (this->gridLayer) {
     SDL_RenderCopy(this->rendererHandle, this->gridLayer, NULL, NULL);

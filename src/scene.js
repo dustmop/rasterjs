@@ -43,9 +43,8 @@ class Scene {
     this.spriteList = null;
     this.aPlane = new plane.Plane();
 
-    this._upperPlane = null;
-    this._upperCamera = null;
-    this._lowerCamera = null;
+    this._banks = null;
+    this._layering = null;
     this._numFrames = FRAMES_LOOP_FOREVER;
 
     this._initialize();
@@ -213,6 +212,9 @@ class Scene {
   setComponent(compname, obj, opts) {
     opts = opts || {};
     if (compname == 'camera') {
+      // TODO: add tests, rename 'camera' to 'scroll'
+      throw new Error(`FIX ME`);
+/*
       if (!this._lowerCamera) {
         this._lowerCamera = this.camera;
       }
@@ -227,6 +229,7 @@ class Scene {
         this.camera = this._upperCamera;
         this._renderer.switchComponent(layer, 'camera', this.camera);
       }
+*/
     }
   }
 
@@ -242,9 +245,8 @@ class Scene {
     this.width = null;
     this.height = null;
     this.aPlane.clear();
-    this._upperPlane = null;
-    this._upperCamera = null;
-    this._lowerCamera = null;
+    this._banks = null;
+    this._layering = null;
     this._renderer.clear();
     this._fsacc.clear();
     this._imgLoader.clear();
@@ -301,12 +303,8 @@ class Scene {
     if (this._renderer) {
       // TODO: It is possible to get here with 0 width and 0 height if
       // setGrid is called before setSize / paste.
-      this._renderer.grid = {
-        zoom: this.config.zoomScale,
-        width: width,
-        height: height,
-        unit: this.config.gridUnit,
-      };
+      this._renderer.changeGrid(this.config.zoomScale, width, height,
+                                this.config.gridUnit);
     }
   }
 
@@ -410,13 +408,7 @@ class Scene {
     let plane = this.aPlane;
 
     if (!this.width || !this.height) {
-      if (!this.tileset) {
-        this.width = plane.width;
-        this.height = plane.height;
-      } else {
-        this.width = plane.width * this.tileset.tileWidth;
-        this.height = plane.height * this.tileset.tileHeight;
-      }
+      this._setDisplaySize();
     }
     this._renderer.connect(this.provide());
 
@@ -426,6 +418,35 @@ class Scene {
     }
 
     this._renderer.setInspector(this._inspectScanline, this._inspectCallback);
+  }
+
+  _setDisplaySize() {
+    let bottomTileset = null;
+    let bottomPlane = null;
+
+    if (this._layering) {
+      // if layering is in use, get a reference to the bottom plane
+      bottomPlane = this._banks.plane[this._layering[0].plane];
+
+      // Also see if the bottom layer uses a tileset
+      if (this.layering[0].tileset) {
+        bottomTileset = this._banks.tileset[this._layering[0].tileset];
+      }
+    } else {
+      bottomPlane = this.aPlane;
+      bottomTileset = this.tileset;
+    }
+
+
+    if (!bottomTileset) {
+      this.width = bottomPlane.width;
+      this.height = bottomPlane.height;
+    } else {
+      this.width = bottomPlane.width * bottomTileset.tileWidth;
+      this.height = bottomPlane.height * bottomTileset.tileHeight;
+    }
+
+    verbose.log(`display size set width=${this.width} height=${this.height}`, 5);
   }
 
   setNumFrames(num) {
@@ -573,10 +594,10 @@ class Scene {
 
   setTileset(which) {
     // TODO: remove, use setComponent() instead
-    if (which < 0 || which >= this.tilesetBanks.length) {
+    if (which < 0 || which >= this._banks.tileset.length) {
       throw new Error(`invalid tileset number ${which}`);
     }
-    this.tileset = this.tilesetBanks[which];
+    this.tileset = this._banks.tileset[which];
     // TODO:
     this._renderer.switchComponent(0, 'tileset', this.tileset);
   }
@@ -754,8 +775,17 @@ class Scene {
     }
     this.aPlane = pl[0];
     if (pl.length > 1) {
-      this._upperPlane = pl[1];
-      this._upperCamera = null;
+      // Create layering from the given planes
+      if (this._layering != null) {
+        throw new Error(`TODO: layering already exists`);
+      }
+      this._layering = new Array(pl.length);
+      for (let i = 0; i < pl.length; i++) {
+        this._layering[i] = {
+          plane: pl[i],
+        }
+      }
+      this._addComponentBanks('plane', pl);
     }
     this._removeMethods();
     this._removeAdditionalMethods();
@@ -844,41 +874,96 @@ class Scene {
     return palette;
   }
 
+  useLayering(configLayers) {
+    for (let i = 0; i < configLayers.length; i++) {
+      let cfgrow = configLayers[i];
+      //let spec = ['layer:i', 'plane:i', 'palette?i', 'tileset?i',
+      //            'colorspace?i'];
+      //let out = destructure.from('useLayering', spec, cfgrow, null);
+      //console.log(`${i} : ${JSON.stringify(cfgrow)} => ${out}`);
+      //let [layer, plane, palette, tileset, colorspace] = out;
+      let layer = cfgrow.layer;
+      let plane = cfgrow.plane;
+      let tileset = cfgrow.tileset || null;
+      let palette = cfgrow.palette || null;
+      let colorspace = cfgrow.colorspace || null;
+      if (layer != i) {
+        throw new Error(`layer must be equal to ${i}, got ${layer}`);
+      }
+      assertInRange(plane, 0, configLayers.length);
+      if (palette) {
+        // TODO: ensure exactly 1 palette has a unique rgbmap
+        assertInRange(palette, 0, configLayers.length);
+      }
+      if (tileset) {
+        assertInRange(tileset, 0, configLayers.length);
+      }
+      if (colorspace) {
+        assertInRange(colorspace, 0, configLayers.length);
+      }
+    }
+    this._layering = new Array(configLayers.length);
+    if (!this._banks) {
+      this._banks = {};
+    }
+    // TODO: validate banks accesses, it's an error for a layer to
+    // use an index larger than what the component banks contain
+    for (let i = 0; i < configLayers.length; i++) {
+      let build = {};
+      let layer = configLayers[i];
+      if (configLayers[i].plane != null) {
+        let index = configLayers[i].plane;
+        build.plane = this._banks.plane[index];
+      }
+      if (configLayers[i].palette != null) {
+        let index = configLayers[i].palette;
+        build.palette = this._banks.palette[index];
+      }
+      if (configLayers[i].tileset != null) {
+        let index = configLayers[i].tileset;
+        build.tileset = this._banks.tileset[index];
+      }
+      this._layering[i] = build;
+    }
+  }
+
+  _addComponentBanks(name, componentList) {
+    // TODO: assert length is valid!
+    if (!this._banks) {
+      this._banks = {}
+    }
+    if (!this._banks[name]) {
+      this._banks[name] = new Array(componentList.length);
+    }
+    for (let i = 0; i < componentList.length; i++) {
+      this._banks[name][i] = componentList[i];
+    }
+  }
+
   useTileset(something, sizeInfo) {
     if (!something) {
       throw new Error(`useTileset expects an argument`);
     }
-    if (types.isObject(something) && sizeInfo == null) {
-      // Construct a tileset from the current plane.
-      sizeInfo = something;
-      this.tileset = new tiles.Tileset(sizeInfo);
-      let patternTable = this.tileset.addFrom(this.aPlane, false);
-      this.aPlane = patternTable.toPlane();
-    } else if (types.isTileset(something)) {
-      this.tileset = something;
-    } else if (types.isArray(something)) {
-      // TODO: list of Tileset objects
-      // TODO: perhaps remove this functionality
-      let imageList = something;
-      let allBanks = [];
-      for (let i = 0; i < imageList.length; i++) {
-        let tileset = new tiles.Tileset(sizeInfo);
-        tileset.addFrom(imageList[i], true);
-        allBanks.push(tileset);
+    if (types.isArray(something)) {
+      if (something.length < 1) {
+        throw new Error(`useTileset expects at least 1 tileset`);
       }
-      this.tilesetBanks = allBanks;
-      this.tileset = allBanks[0];
-    } else if (types.isPlane(something)) {
-      let img = something;
-      this.tileset = new tiles.Tileset(sizeInfo);
-      this.tileset.addFrom(img, true);
-    } else if (types.isNumber(something)) {
-      let numTiles = something;
-      let detail = {num: numTiles};
-      Object.assign(detail, sizeInfo);
-      this.tileset = new tiles.Tileset(detail);
+      let outExtra = {};
+      let collect = [];
+      for (let param of something) {
+        collect.push(tiles.createFrom(param, sizeInfo, this.aPlane, outExtra));
+      }
+      this.tileset = collect[0];
+      this._addComponentBanks('tileset', collect);
     } else {
-      throw new Error(`cannot construct tileset from ${something}`);
+      let outExtra = {};
+      let t = tiles.createFrom(something, sizeInfo, this.aPlane, outExtra);
+      this.tileset = t;
+      if (outExtra.pattern && outExtra.fromCurrentPlane) {
+        // When buliding a tileset from the current plane, replace that
+        // plane with the generated pattern table.
+        this.aPlane = outExtra.pattern;
+      }
     }
     if (this.colorspace) {
       this.colorspace.ensureConsistentTileset(this.tileset, this.palette);
@@ -911,44 +996,51 @@ class Scene {
   }
 
   provide() {
-    let prov = {};
-    prov.plane = this.aPlane;
-    prov.size = {width: this.width, height: this.height};
-    if (this.camera) {
-      prov.camera = this.camera;
+    let provision = [];
+    if (this._layering == null) {
+      provision.push(this._addComponentsToLayer(this));
+    } else {
+      for (let i = 0; i < this._layering.length; i++) {
+        let res = this._addComponentsToLayer(this._layering[i]);
+        provision.push(res);
+      }
     }
-    if (this.tileset) {
-      prov.tileset = this.tileset;
-    }
-    if (this.palette) {
-      prov.palette = this.palette;
-    }
-    if (this.colorspace) {
-      prov.colorspace = this.colorspace;
-    }
-    if (this.interrupts) {
-      prov.interrupts = this.interrupts;
-    }
+
+    provision.world = {};
+    provision.world.interrupts = this.interrupts;
+    provision.world.spriteList = this.spriteList;
+    provision.world.palette = this.palette;
+
     if (this.config.gridUnit) {
-      prov.grid = {
+      provision.world.grid = {
         zoom: this.config.zoomScale,
         width: this.width,
         height: this.height,
         unit: this.config.gridUnit,
-      }
+      };
     }
-    if (this.spriteList) {
-      prov.spriteList = this.spriteList;
+    return provision;
+  }
+
+  _addComponentsToLayer(components) {
+    let res = {};
+    if (components.aPlane) {
+      res.plane = components.aPlane;
+    } else if (components.plane) {
+      res.plane = components.plane;
     }
-    let res = [prov];
-    // Upper layer hack
-    if (this._upperPlane) {
-      let upper = {};
-      upper.plane = this._upperPlane;
-      if (this._upperCamera) {
-        upper.camera = this._upperCamera;
-      }
-      res.push(upper);
+    res.size = {width: this.width, height: this.height};
+    if (components.camera) {
+      res.camera = components.camera;
+    }
+    if (components.tileset) {
+      res.tileset = components.tileset;
+    }
+    if (components.palette) {
+      res.palette = components.palette;
+    }
+    if (components.colorspace) {
+      res.colorspace = components.colorspace;
     }
     return res;
   }
@@ -1038,6 +1130,14 @@ function toNum(n) {
     return n.toInt();
   }
   throw new Error(`toNum: unknown type of ${n}`);
+}
+
+
+function assertInRange(value, min, maxExclusive) {
+  if (value >= min && value < maxExclusive) {
+    return;
+  }
+  throw new Error(`invalid value ${JSON.stringify(value)}, must be >= ${min} and < ${maxExclusive}`);
 }
 
 

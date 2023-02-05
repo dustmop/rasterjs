@@ -78,6 +78,8 @@ class SDLBackend : public Napi::ObjectWrap<SDLBackend> {
   SDL_Renderer* rendererHandle;
   SDL_Texture* mainLayer0;
   SDL_Texture* mainLayer1;
+  SDL_Texture* mainLayer2;
+  SDL_Texture* mainLayer3;
   SDL_Texture* gridLayer;
 };
 

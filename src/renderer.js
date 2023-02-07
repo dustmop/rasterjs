@@ -189,7 +189,7 @@ class Renderer {
     let perIRQs = [];
     for (let k = 0; k < world.interrupts.length; k++) {
       let row = world.interrupts.get(k);
-      if (world.isArray(row.scanline)) {
+      if (types.isArray(row.scanline)) {
         let lineRange = row.scanline;
         // TODO: Assume a pair of integers
         for (let j = lineRange[0]; j < lineRange[1]+1; j++) {

@@ -211,25 +211,15 @@ class Scene {
 
   setComponent(compname, obj, opts) {
     opts = opts || {};
+    let which = opts.layer || 0;
     if (compname == 'camera') {
-      // TODO: add tests, rename 'camera' to 'scroll'
-      throw new Error(`FIX ME`);
-/*
-      if (!this._lowerCamera) {
-        this._lowerCamera = this.camera;
+      let layer = this._layering[which];
+      if (!layer.camera) {
+        layer.camera = {x:0, y:0};
       }
-      if (!this._upperCamera) {
-        this._upperCamera = {x:0, y:0};
-      }
-      let layer = opts.layer;
-      if (layer == 0) {
-        this.camera = this._lowerCamera;
-        this._renderer.switchComponent(layer, 'camera', this.camera);
-      } else if (layer == 1) {
-        this.camera = this._upperCamera;
-        this._renderer.switchComponent(layer, 'camera', this.camera);
-      }
-*/
+      let camera = layer.camera;
+      this.camera = camera;
+      this._renderer.switchComponent(which, 'camera', this.camera);
     }
   }
 
@@ -426,10 +416,10 @@ class Scene {
 
     if (this._layering) {
       // if layering is in use, get a reference to the bottom plane
-      bottomPlane = this._banks.plane[this._layering[0].plane];
+      bottomPlane = this._layering[0].plane;
 
       // Also see if the bottom layer uses a tileset
-      if (this.layering[0].tileset) {
+      if (this._layering[0].tileset) {
         bottomTileset = this._banks.tileset[this._layering[0].tileset];
       }
     } else {
@@ -996,6 +986,7 @@ class Scene {
   }
 
   provide() {
+    // TODO: test directly, see what is provided for various (multilayer) setups
     let provision = [];
     if (this._layering == null) {
       provision.push(this._addComponentsToLayer(this));
@@ -1029,7 +1020,6 @@ class Scene {
     } else if (components.plane) {
       res.plane = components.plane;
     }
-    res.size = {width: this.width, height: this.height};
     if (components.camera) {
       res.camera = components.camera;
     }
@@ -1042,7 +1032,26 @@ class Scene {
     if (components.colorspace) {
       res.colorspace = components.colorspace;
     }
+    res.size = this._calculatePixelSize(res);
+    res.size.width = this.width;
+    res.size.height = this.height;
     return res;
+  }
+
+  _calculatePixelSize(res) {
+    let width = res.plane.width;
+    let height = res.plane.height;
+    if (res.tileset) {
+      width *= res.tileset.tileWidth;
+      height *= res.tileset.tileHeight;
+    }
+    if (width > this.width) {
+      width = this.width;
+    }
+    if (height > this.height) {
+      height = this.height;
+    }
+    return {width: width, height: height};
   }
 
   _saveSurfacesTo(surfaces, filename) {

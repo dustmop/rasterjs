@@ -24,7 +24,7 @@ class Renderer {
   }
 
   _init() {
-    this._layers = [];
+    this._layers = null;
     this._world = {};
     this.isConnected = false;
     this.interrupts = null;
@@ -113,6 +113,9 @@ class Renderer {
   }
 
   switchComponent(layerNum, compName, obj) {
+    if (!this._layers) {
+      return;
+    }
     if (compName == 'tileset') {
       this._layers[layerNum].tileset = obj;
     } else if (compName == 'camera') {
@@ -137,6 +140,11 @@ class Renderer {
     bottomPalette.ensureRGBMap();
     this._rgbmap = bottomPalette._rgbmap;
 
+    // size of bottom plane is used for size of display
+    // TODO: handle tileset
+    this.dispWidth = this._layers[0].plane.width;
+    this.dispHeight = this._layers[0].plane.height;
+
     let res = [];
     for (let i = 0; i < this._layers.length; i++) {
       res.push(this._renderLayer(this._layers[i], i == 0, world));
@@ -154,16 +162,15 @@ class Renderer {
     }
 
     // Calculate size of the buffer to render.
+    // NOTE: tilesets are not taken into account here, since this code path
+    // is only needed for visualizers. The normal renderer will get data from
+    // scene.provide, which always sets size, and uses the tileset to
+    // calculate this size.
     let width = (layer.size && layer.size.width);
     let height = (layer.size && layer.size.height);
     if (!width || !height) {
-      if (!layer.tileset) {
-        width = layer.plane.width;
-        height = layer.plane.height;
-      } else {
-        width = layer.plane.width * layer.tileset.tileWidth;
-        height = layer.plane.height * layer.tileset.tileHeight;
-      }
+      width = layer.plane.width;
+      height = layer.plane.height;
     }
 
     if (this._world.grid && !this._world.grid.buff) {
@@ -303,10 +310,21 @@ class Renderer {
 
     let scrollY = Math.floor((layer.camera && layer.camera.y) || 0);
     let scrollX = Math.floor((layer.camera && layer.camera.x) || 0);
-    scrollY = ((scrollY % sourceHeight) + sourceHeight) % sourceHeight;
-    scrollX = ((scrollX % sourceWidth) + sourceWidth) % sourceWidth;
 
-    for (let placement = 0; placement < 4; placement++) {
+    // TODO: allow layers aside from the bottom to enable wrap
+    let isWrapped = isBg;
+    if (sourceWidth >= this.dispWidth && sourceHeight >= this.dispHeight) {
+      isWrapped = true;
+    }
+    let numPlacements = 1;
+
+    if (isWrapped) {
+      numPlacements = 4;
+      scrollY = ((scrollY % sourceHeight) + sourceHeight) % sourceHeight;
+      scrollX = ((scrollX % sourceWidth) + sourceWidth) % sourceWidth;
+    }
+
+    for (let placement = 0; placement < numPlacements; placement++) {
       let regL, regR, regU, regD;
       if ((placement == 0) || (placement == 2)) {
         // left half
@@ -326,6 +344,11 @@ class Renderer {
         // bottom half
         regU = Math.max(scrollY - sourceHeight + top, 0);
         regD = scrollY - sourceHeight + bottom;
+      }
+
+      if (!isWrapped) {
+        regL = 0;
+        regR = layer.plane.width;
       }
 
       for (let y = regU; y < regD; y++) {
@@ -352,11 +375,16 @@ class Renderer {
           }
           let s = y*sourcePitch + x;
           let t = i*targetPitch + j*4;
+          let ok = false;
           if (layer.colorspace) {
             let c = layer.colorspace.realizeIndexedColor(source[s], x, y);
-            this._toColor(layer, c, rgbtuple);
+            ok = this._toColor(layer, c, rgbtuple);
           } else {
-            this._toColor(layer, source[s], rgbtuple);
+            ok = this._toColor(layer, source[s], rgbtuple);
+          }
+          if (!ok) {
+            layer.rgbSurface.buff[t+3] = 0x00;
+            continue;
           }
           layer.rgbSurface.buff[t+0] = rgbtuple[R_INDEX];
           layer.rgbSurface.buff[t+1] = rgbtuple[G_INDEX];
@@ -601,7 +629,9 @@ class Renderer {
   _toColor(layer, c, rgbtuple) {
     let rgb;
     if (c !== 0 && !c) {
-      throw new Error(`invalid color ${c}`);
+      // TODO: should be an error, but renderer needs to be guaranteed
+      // to only access valid colors
+      return false;
     }
     // TODO: fix me
     let palette = layer.palette;
@@ -609,6 +639,7 @@ class Renderer {
       palette = this._world.palette;
     }
     palette.getRGBUsing(c, rgbtuple, this._rgbmap);
+    return true;
   }
 }
 

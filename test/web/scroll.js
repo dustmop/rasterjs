@@ -3,7 +3,7 @@ describe('scroll', function () {
     let require = window['require'];
     let ra = require('raster');
     ra.resetState();
-    ra.setSize(16);
+    ra.setSize(16, 16);
     let img = ra.loadImage('img/simple.png');
     img.then(function() {
       ra.paste(img, 0, 0);

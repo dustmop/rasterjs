@@ -5,13 +5,13 @@ describe('plane size', function () {
     ra.resetState();
 
     let plane = new ra.Plane();
-    plane.setSize(16);
+    plane.setSize(16, 16);
     ra.usePlane(plane);
 
     plane.setColor(28);
     plane.fillSquare(3, 5, 7);
 
-    ra.setSize(10);
+    ra.setSize(10, 10);
     ra.setScrollX(4);
     ra.setScrollY(2);
 

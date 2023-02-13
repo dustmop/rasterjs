@@ -59,7 +59,7 @@ describe('Basic', function() {
 
   it('do not wrap', function() {
     ra.resetState();
-    ra.setSize(18);
+    ra.setSize(18, 18);
 
     let polygon = [
       [4, 7],
@@ -94,7 +94,7 @@ describe('Basic', function() {
   it('fold', function() {
     ra.resetState();
 
-    ra.setSize(14);
+    ra.setSize(14, 14);
     ra.fillColor(0);
     ra.setColor(31);
     ra.fold('fillRect', [{x: 1, y: 1, w: 3, h: 12}, {w: 10, h: 3}, {y: 10},

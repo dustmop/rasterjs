@@ -193,15 +193,20 @@ class Scene {
   }
 
   setSize(w, h, opt) {
-    let spec = ['w:i', 'h?i', 'opt?any'];
+    let spec = ['w?i', 'h?i', 'opt?any'];
     [w, h, opt] = destructure.from('setSize', spec, arguments, null);
-    if (h === undefined) { h = w; };
+    if (w == null || h == null) {
+      throw new Error(`width and height must be provided`);
+    }
     opt = opt || {};
     if (!opt.planeOnly) {
       this.width = w;
       this.height = h;
     }
-    if (this.plane.width == 0 || this.plane.height == 0) {
+    if (this._owned != null) {
+      if (this.plane.width != 0 || this.plane.height != 0) {
+        throw new Error(`cannot resize owned plane more than once`);
+      }
       this.plane.setSize(w, h);
     }
     // TODO: allow resizing? Need to understand how display vs plane size

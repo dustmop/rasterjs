@@ -6,7 +6,7 @@ describe('Size', function() {
     ra.resetState();
 
     ra.fillColor(4);
-    ra.setSize(8);
+    ra.setSize(8, 8);
 
     ra.setColor(0x22);
     ra.drawDot(5, 7);

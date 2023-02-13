@@ -6,7 +6,7 @@ describe('Select', function() {
   it('part of the plane', function() {
     ra.resetState();
 
-    ra.setSize(10);
+    ra.setSize(10, 10);
 
     ra.fillColor(25);
     ra.setColor(43);
@@ -26,7 +26,7 @@ describe('Select', function() {
   it('uses destructure for methods', function() {
     ra.resetState();
 
-    ra.setSize(10);
+    ra.setSize(10, 10);
 
     ra.fillColor(25);
     ra.setColor(43);
@@ -46,7 +46,7 @@ describe('Select', function() {
   it('can be called on selections', function() {
     ra.resetState();
 
-    ra.setSize(8);
+    ra.setSize(8, 8);
     ra.setZoom(20);
 
     ra.fillColor(4); // grey
@@ -76,7 +76,7 @@ describe('Select', function() {
   it('works with fillColor', function() {
     ra.resetState();
 
-    ra.setSize(16);
+    ra.setSize(16, 16);
     ra.fillColor(0);
 
     let sel = ra.select({x: 3, y: 5, w: 7, h: 7});
@@ -88,7 +88,7 @@ describe('Select', function() {
   it('works with fillPattern', function() {
     ra.resetState();
 
-    ra.setSize(10);
+    ra.setSize(10, 10);
 
     ra.fillColor(25);
     ra.setColor(43);
@@ -104,7 +104,7 @@ describe('Select', function() {
   it('works with fillFrame', function() {
     ra.resetState();
 
-    ra.setSize(10);
+    ra.setSize(10, 10);
 
     ra.fillColor(25);
     ra.setColor(43);
@@ -119,7 +119,7 @@ describe('Select', function() {
 
   it('can have name', function() {
     ra.resetState();
-    ra.setSize(10);
+    ra.setSize(10, 10);
 
     let sel = ra.select({x: 1, y: 1, w: 6, h: 6, name: 'test'});
     assert(sel.name, 'test');

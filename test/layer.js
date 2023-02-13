@@ -6,12 +6,12 @@ describe('Layers', function() {
     ra.resetState();
 
     let upper = new ra.Plane();
-    upper.setSize(16);
+    upper.setSize(16, 16);
 
     let lower = new ra.Plane();
-    lower.setSize(16);
+    lower.setSize(16, 16);
 
-    ra.setSize(16);
+    ra.setSize(16, 16);
     ra.usePlane([lower, upper]);
 
     // Draw upper plane, dirt on ground.

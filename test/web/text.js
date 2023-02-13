@@ -14,6 +14,7 @@ describe('Text', function() {
   it('error if not async', function(success) {
     let require = window['require'];
     let ra = require('raster');
+    ra.resetState();
     ra.setSize({w: 24, h: 12});
     ra.setFont('asset/romulus.yaff');
     let gotError = null;

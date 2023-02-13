@@ -1,7 +1,7 @@
 const ra = require('../../../src/lib.js');
 
 let plane = new ra.Plane();
-plane.setSize(4);
+plane.setSize(4, 4);
 ra.usePlane(plane);
 
 let tiles0 = ra.loadImage('test/testdata/tiles.png');

@@ -7,7 +7,7 @@ describe('Use plane', function() {
     ra.resetState();
 
     let plane = new ra.Plane();
-    plane.setSize(16);
+    plane.setSize(16, 16);
     ra.usePlane(plane);
 
     plane.setColor(28);
@@ -20,13 +20,13 @@ describe('Use plane', function() {
     ra.resetState();
 
     let plane = new ra.Plane();
-    plane.setSize(16);
+    plane.setSize(16, 16);
     ra.usePlane(plane);
 
     plane.setColor(28);
     plane.fillSquare(3, 5, 7);
 
-    ra.setSize(10);
+    ra.setSize(10, 10);
     ra.setScrollX(4);
     ra.setScrollY(2);
 
@@ -35,7 +35,7 @@ describe('Use plane', function() {
 
   it('scroll same plane', function() {
     ra.resetState();
-    ra.setSize(16);
+    ra.setSize(16, 16);
 
     let img = ra.loadImage('test/testdata/simple.png');
     ra.paste(img);
@@ -50,7 +50,7 @@ describe('Use plane', function() {
     ra.resetState();
 
     let plane = new ra.Plane();
-    plane.setSize(16);
+    plane.setSize(16, 16);
     ra.usePlane(plane);
 
     plane.setColor(28);
@@ -63,7 +63,7 @@ describe('Use plane', function() {
     ra.resetState();
 
     let plane = new ra.Plane();
-    plane.setSize(16);
+    plane.setSize(16, 16);
     ra.usePlane(plane);
 
     assert.throws(function() {

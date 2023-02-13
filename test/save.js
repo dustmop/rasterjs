@@ -120,6 +120,22 @@ describe('Save', function() {
     });
   });
 
+  it('save animation scroll layer', function(success) {
+    let tmpdir = util.mkTmpDir();
+    let tmpout = tmpdir + '/actual.gif';
+    let script = 'test/testdata/scripts/move_layers.js';
+    let cmd = `node ${script} --save ${tmpout} --num-frames 16`;
+    let cwd = process.cwd();
+    child_process.exec(cmd, function(error, stdout, stderr) {
+      if (error) {
+        throw error;
+      }
+      let goldenPath = 'test/testdata/movelayers.gif';
+      util.ensureFilesMatch(goldenPath, tmpout);
+      success();
+    });
+  });
+
   it('animation with zoom', function(success) {
     let tmpdir = util.mkTmpDir();
     let tmpout = tmpdir + '/actual.gif';

@@ -209,18 +209,53 @@ class Scene {
     this._renderer.clear();
   }
 
-  setComponent(compname, obj, opts) {
-    opts = opts || {};
-    let which = opts.layer || 0;
-    if (compname == 'camera') {
-      let layer = this._layering[which];
-      if (!layer.camera) {
-        layer.camera = {x:0, y:0};
-      }
-      let camera = layer.camera;
-      this.camera = camera;
-      this._renderer.switchComponent(which, 'camera', this.camera);
+  /**
+   * Set the named component by switching to the N-th installed component
+   */
+  setComponent(compname, fromBank, opts) {
+    /*
+     * Example: ra.setComponent('camera', 1);
+     *   assign this.camera to point at the 1-th bankable camera
+     *   by default, this is the camera used by layer #1
+     *
+     * Example: ra.setComponent('tileset', 3, {layer: 0});
+     *   assign this.tileset to point at the 3-th bankable tileset
+     *   change layer 0's tileset to use that same component
+     */
+    if (fromBank != null && !types.isNumber(fromBank)) {
+      throw new Error(`argument fromBank must be int, got ${fromBank}`);
     }
+
+    // assign the component field from the i-ith bankable obj
+    let assignComponent = null;
+    if (compname == 'camera') {
+      assignComponent = this._banks.camera[fromBank];
+      this.camera = assignComponent;
+
+    } else if (compname == 'tileset') {
+      assignComponent = this._banks.tileset[fromBank];
+      this.tileset = assignComponent;
+
+    } else {
+      throw new Error(`unknown component "${compname}"`);
+    }
+
+    // check for {layer: N} optional parameter
+    let layerIndex = (opts || {}).layer;
+    if (layerIndex == null) {
+      return;
+    }
+
+    if (!this._layering) {
+      this._layering = [
+        this._addComponentsToLayer(this),
+      ]
+    }
+
+    // if {layer: N} is given, modify the layer and the renderer
+    let layer = this._layering[layerIndex];
+    layer[compname] = assignComponent;
+    this._renderer.switchComponent(layerIndex, compname, assignComponent);
   }
 
   setScrollX(x) {
@@ -585,16 +620,6 @@ class Scene {
     this.plane.font = this._font;
   }
 
-  setTileset(which) {
-    // TODO: remove, use setComponent() instead
-    if (which < 0 || which >= this._banks.tileset.length) {
-      throw new Error(`invalid tileset number ${which}`);
-    }
-    this.tileset = this._banks.tileset[which];
-    // TODO:
-    this._renderer.switchComponent(0, 'tileset', this.tileset);
-  }
-
   on(optPlane, eventName, callback) {
     let region = null;
     // TODO: destructure instead
@@ -787,6 +812,7 @@ class Scene {
       }
       this._addComponentBanks('plane', pl);
     }
+    this._ensureBankableCameras();
 
     return this.plane;
   }
@@ -923,6 +949,7 @@ class Scene {
       }
       this._layering[i] = build;
     }
+    this._ensureBankableCameras();
   }
 
   _addComponentBanks(name, componentList) {
@@ -935,6 +962,25 @@ class Scene {
     this._banks[name] = new Array(componentList.length);
     for (let i = 0; i < componentList.length; i++) {
       this._banks[name][i] = componentList[i];
+    }
+  }
+
+  _ensureBankableCameras() {
+    if (!this._layering) {
+      return;
+    }
+    let numCameras = this._layering.length;
+    if (!this._banks.camera) {
+      this._banks.camera = new Array(numCameras);
+      for (let i = 0; i < numCameras; i++) {
+        this._banks.camera[i] = {x:0, y:0};
+      }
+    }
+    for (let i = 0; i < numCameras; i++) {
+      let layer = this._layering[i];
+      if (!layer.camera) {
+        layer.camera = this._banks.camera[i];
+      }
     }
   }
 

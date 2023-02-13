@@ -20,9 +20,9 @@ function draw() {
   }
   let c = Math.floor(ra.tick / 4) % 4;
   if (c == 3) {
-    ra.setTileset(1);
+    ra.setComponent('tileset', 1, {layer: 0});
   } else {
-    ra.setTileset(c);
+    ra.setComponent('tileset', c, {layer: 0});
   }
 }
 

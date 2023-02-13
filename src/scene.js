@@ -35,13 +35,16 @@ class Scene {
     this._renderer = new renderer.Renderer();
     this.palette = null;
 
+    this._owned = new plane.Plane();
+
+    this.plane = this._owned;
     this._font = null;
     this.camera = {};
     this.tileset = null;
     this.colorspace = null;
     this.interrupts = null;
     this.spriteList = null;
-    this.aPlane = new plane.Plane();
+
 
     this._banks = null;
     this._layering = null;
@@ -121,6 +124,7 @@ class Scene {
       let self = this;
       // Use a scoped function in order to acquire the method's `arguments`
       this[fname] = function() {
+        self._validateOwnedPlane();
         let args = Array.from(arguments);
         if (paramSpec === undefined) {
           throw new Error(`function ${fname} does not have parameter spec`);
@@ -129,37 +133,31 @@ class Scene {
         if (self.config.translateCenter) {
           self._translateArguments(paramSpec, realArgs);
         }
-        self.aPlane[fname].apply(self.aPlane, realArgs);
+        self._owned[fname].apply(self.plane, realArgs);
       }
     }
     this.setColor = function(n) {
+      this._validateOwnedPlane();
       this.palette.ensureRGBMap();
-      this.aPlane.setColor(n);
+      this.plane.setColor(n);
     }
     this.fillColor = function(n) {
+      this._validateOwnedPlane();
       this.palette.ensureRGBMap();
-      this.aPlane.fillColor(n);
+      this.plane.fillColor(n);
     }
   }
 
-  _removeMethods() {
-    let d = new drawable.Drawable();
-    let methods = d.getMethods();
-    for (let i = 0; i < methods.length; i++) {
-      let [fname, paramSpec, converter, impl] = methods[i];
-      delete this[fname];
+  _validateOwnedPlane() {
+    if (this._owned == null) {
+      let msg = `the scene does not own a plane, because ra.usePlane was called.\nModify the owned plane instead`;
+      throw new Error(msg);
     }
-  }
-
-  _removeAdditionalMethods() {
-    // TODO: improve this way specific methods are handled
-    delete this['setColor'];
-    delete this['fillColor'];
   }
 
   _translateArguments(params, args) {
-    let midX = this.aPlane.width / 2;
-    let midY = this.aPlane.height / 2;
+    let midX = this.plane.width / 2;
+    let midY = this.plane.height / 2;
     for (let i = 0; i < params.length; i++) {
       let param = params[i];
       let arg = args[i];
@@ -179,17 +177,19 @@ class Scene {
   }
 
   setTrueColor(rgb) {
+    this._validateOwnedPlane();
     rgb = new rgbColor.RGBColor(rgb);
     this.palette.ensureRGBMap();
     let color = this.palette.addRGBMap(rgb);
-    this.aPlane.setColor(color);
+    this.plane.setColor(color);
   }
 
   fillTrueColor(rgb) {
+    this._validateOwnedPlane();
     rgb = new rgbColor.RGBColor(rgb);
     this.palette.ensureRGBMap();
     let color = this.palette.addRGBMap(rgb);
-    this.aPlane.fillColor(color);
+    this.plane.fillColor(color);
   }
 
   setSize(w, h, opt) {
@@ -201,8 +201,8 @@ class Scene {
       this.width = w;
       this.height = h;
     }
-    if (this.aPlane.width == 0 || this.aPlane.height == 0) {
-      this.aPlane.setSize(w, h);
+    if (this.plane.width == 0 || this.plane.height == 0) {
+      this.plane.setSize(w, h);
     }
     // TODO: allow resizing? Need to understand how display vs plane size
     // interact when one or the other is changed
@@ -234,7 +234,8 @@ class Scene {
   resetState() {
     this.width = null;
     this.height = null;
-    this.aPlane.clear();
+    this._owned = new plane.Plane();
+    this.plane = this._owned;
     this._banks = null;
     this._layering = null;
     this._renderer.clear();
@@ -287,8 +288,8 @@ class Scene {
     }
     this.config.gridUnit = unit;
 
-    let width = this.width || this.aPlane.width;
-    let height = this.height || this.aPlane.height;
+    let width = this.width || this.plane.width;
+    let height = this.height || this.plane.height;
 
     if (this._renderer) {
       // TODO: It is possible to get here with 0 width and 0 height if
@@ -377,13 +378,15 @@ class Scene {
   }
 
   select(x, y, w, h, name) {
+    this._validateOwnedPlane();
     let spec = ['x:i', 'y:i', 'w:i', 'h:i', 'name?s'];
     [x, y, w, h, name] = destructure.from('select', spec, arguments, null);
-    return this.aPlane.select(x, y, w, h, name);
+    return this.plane.select(x, y, w, h, name);
   }
 
   xform(name) {
-    return this.aPlane.xform(name);
+    this._validateOwnedPlane();
+    return this.plane.xform(name);
   }
 
   fold(fname, paramList) {
@@ -395,7 +398,7 @@ class Scene {
   }
 
   _prepareRendering() {
-    let plane = this.aPlane;
+    let plane = this.plane;
 
     if (!this.width || !this.height) {
       this._setDisplaySize();
@@ -423,7 +426,7 @@ class Scene {
         bottomTileset = this._banks.tileset[this._layering[0].tileset];
       }
     } else {
-      bottomPlane = this.aPlane;
+      bottomPlane = this.plane;
       bottomTileset = this.tileset;
     }
 
@@ -579,7 +582,7 @@ class Scene {
       let filename = spec;
       this._font = this._textLoader.loadFont(filename, opt);
     }
-    this.aPlane.font = this._font;
+    this.plane.font = this._font;
   }
 
   setTileset(which) {
@@ -634,20 +637,24 @@ class Scene {
   }
 
   resize(x, y) {
-    return this.aPlane.resize(x, y);
+    this._validateOwnedPlane();
+    return this.plane.resize(x, y);
   }
 
   eyedrop(x, y) {
-    let c = this.aPlane.get(x, y);
+    this._validateOwnedPlane();
+    let c = this.plane.get(x, y);
     return this.palette.entry(c);
   }
 
   get(x, y) {
-    return this.aPlane.get(x, y);
+    this._validateOwnedPlane();
+    return this.plane.get(x, y);
   }
 
   put(x, y, v) {
-    return this.aPlane.put(x, y, v);
+    this._validateOwnedPlane();
+    return this.plane.put(x, y, v);
   }
 
   nge() {
@@ -724,7 +731,7 @@ class Scene {
         this.palette._entries[i] = i;
       }
       // Remap the colors in the data buffer
-      let pl = this.aPlane;
+      let pl = this.plane;
       for (let y = 0; y < pl.height; y++) {
         for (let x = 0; x < pl.width; x++) {
           let k = pl.pitch * y + x;
@@ -763,7 +770,10 @@ class Scene {
       }
       pl = [pl];
     }
-    this.aPlane = pl[0];
+    // stop owning the plane
+    this._owned = null;
+
+    this.plane = pl[0];
     if (pl.length > 1) {
       // Create layering from the given planes
       if (this._layering != null) {
@@ -777,10 +787,8 @@ class Scene {
       }
       this._addComponentBanks('plane', pl);
     }
-    this._removeMethods();
-    this._removeAdditionalMethods();
-    // TODO: test me
-    return this.aPlane;
+
+    return this.plane;
   }
 
   normalizePaletteColorspace() {
@@ -790,7 +798,7 @@ class Scene {
     // don't ensure the plane is consistent if it is a pattern table
     // TODO: rewrite colorspace, it has many problems
     if (!this.tileset) {
-      this.colorspace.ensureConsistentPlanePalette(this.aPlane, this.palette);
+      this.colorspace.ensureConsistentPlanePalette(this.plane, this.palette);
     }
   }
 
@@ -852,7 +860,7 @@ class Scene {
 
   _recolorPlaneToMatchPalette() {
     // TODO: verbose.log here
-    this.palette.agreeWithMe(this.aPlane);
+    this.palette.agreeWithMe(this.plane);
   }
 
   _coverUponPalette(coverageLook, palette) {
@@ -918,13 +926,13 @@ class Scene {
   }
 
   _addComponentBanks(name, componentList) {
-    // TODO: assert length is valid!
     if (!this._banks) {
       this._banks = {}
     }
-    if (!this._banks[name]) {
-      this._banks[name] = new Array(componentList.length);
+    if (this._banks[name]) {
+      throw new Error(`banks already exist for component "${name}"`);
     }
+    this._banks[name] = new Array(componentList.length);
     for (let i = 0; i < componentList.length; i++) {
       this._banks[name][i] = componentList[i];
     }
@@ -941,18 +949,18 @@ class Scene {
       let outExtra = {};
       let collect = [];
       for (let param of something) {
-        collect.push(tiles.createFrom(param, sizeInfo, this.aPlane, outExtra));
+        collect.push(tiles.createFrom(param, sizeInfo, this.plane, outExtra));
       }
       this.tileset = collect[0];
       this._addComponentBanks('tileset', collect);
     } else {
       let outExtra = {};
-      let t = tiles.createFrom(something, sizeInfo, this.aPlane, outExtra);
+      let t = tiles.createFrom(something, sizeInfo, this.plane, outExtra);
       this.tileset = t;
       if (outExtra.pattern && outExtra.fromCurrentPlane) {
         // When buliding a tileset from the current plane, replace that
         // plane with the generated pattern table.
-        this.aPlane = outExtra.pattern;
+        this.plane = outExtra.pattern;
       }
     }
     if (this.colorspace) {
@@ -1015,9 +1023,7 @@ class Scene {
 
   _addComponentsToLayer(components) {
     let res = {};
-    if (components.aPlane) {
-      res.plane = components.aPlane;
-    } else if (components.plane) {
+    if (components.plane) {
       res.plane = components.plane;
     }
     if (components.camera) {

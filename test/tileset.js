@@ -356,7 +356,7 @@ describe('Tileset', function() {
     assert.equal(tiles.length, 8);
     assert.equal(tiles.numTiles, 8);
 
-    let pattern = ra.aPlane.pack();
+    let pattern = ra.plane.pack();
     let expect = new Uint8Array([
       0, 1, 2, 3,
       1, 4, 4, 4,
@@ -364,8 +364,8 @@ describe('Tileset', function() {
       1, 7, 0, 0,
     ]);
     assert.deepEqual(expect, pattern);
-    assert.deepEqual(4, ra.aPlane.width);
-    assert.deepEqual(4, ra.aPlane.height);
+    assert.deepEqual(4, ra.plane.width);
+    assert.deepEqual(4, ra.plane.height);
   });
 
   it('cant construct from string', function() {

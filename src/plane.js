@@ -83,7 +83,7 @@ class Plane {
         if (shouldDestruct) {
           realArgs = destructure.from(fname, paramSpec, args, converter);
         }
-        impl.bind(self).apply(self.aPlane, realArgs);
+        impl.bind(self).apply(self.plane, realArgs);
       }
     }
   }

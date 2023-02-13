@@ -37,7 +37,7 @@ describe('Cycle palette', function() {
       0, 8, 8, 8, 8, 8, 8, 0,
       0, 0, 8, 8, 8, 8, 0, 0
     ]);
-    assert.deepEqual(expect, ra.aPlane.pack());
+    assert.deepEqual(expect, ra.plane.pack());
 
     // Compare the palette
     palette = ra.palette;
@@ -181,7 +181,7 @@ describe('Cycle palette', function() {
       1, 0, 0, 0, 0, 0, 0, 1,
       1, 1, 0, 0, 0, 0, 1, 1
     ]);
-    assert.deepEqual(expect, ra.aPlane.pack());
+    assert.deepEqual(expect, ra.plane.pack());
 
     // Compare the palette
     let palette = ra.palette;

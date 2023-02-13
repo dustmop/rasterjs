@@ -68,10 +68,11 @@ describe('Use plane', function() {
 
     assert.throws(function() {
       ra.setColor(28);
-    }, /ra.setColor is not a function/);
+    }, /the scene does not own a plane, because ra.usePlane was called./);
+
     assert.throws(function() {
       ra.fillSquare({x: 3, y: 5, size: 7});
-    }, /ra.fillSquare is not a function/);
+    }, /the scene does not own a plane, because ra.usePlane was called./);
   });
 
 });

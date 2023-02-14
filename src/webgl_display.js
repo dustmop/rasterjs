@@ -1,5 +1,5 @@
 const baseDisplay = require('./base_display.js');
-const compile = require('./compile.js');
+const glCompile = require('./gl_compile.js');
 
 const SHARPEN = 2;
 
@@ -122,7 +122,8 @@ void main() {
 }
 `;
 
-    var program = compile.createProgram(gl, vertexShaderText, fragmentShaderText);
+    var program = glCompile.createProgram(gl, vertexShaderText,
+                                          fragmentShaderText);
     this.program = program;
 
     // look up where the vertex data needs to go.

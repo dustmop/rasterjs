@@ -8,7 +8,6 @@ describe('HSV sort', function() {
     let tmpout = tmpdir + '/pal.png';
     ra.resetState();
 
-    ra.setZoom(12);
     ra.usePalette({rgbmap:[]});
     ra.fillTrueColor(0x40c060);
 
@@ -64,7 +63,6 @@ describe('HSV sort', function() {
     let tmpout = tmpdir + '/pal_sort.png';
     ra.resetState();
 
-    ra.setZoom(12);
     ra.usePalette({rgbmap:[]});
     ra.fillTrueColor(0x40c060);
 

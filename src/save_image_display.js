@@ -1,15 +1,14 @@
 const baseDisplay = require('./base_display.js');
-const cppmodule = require('../build/Release/native');
+const compositor = require('./compositor.js');
 const GIFEncoder = require('gif-encoder-2');
 const { createWriteStream, readdirSync } = require('fs');
 const { createCanvas, loadImage, ImageData } = require('canvas')
-const pngFileStream = require('png-file-stream');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
 const util = require('util');
 const randstr = require('randomstring');
-const algorithm = require('./algorithm');
+
 
 class SaveImageDisplay extends baseDisplay.BaseDisplay {
   constructor(targetPath, numFrames, fsacc) {
@@ -56,6 +55,8 @@ class SaveImageDisplay extends baseDisplay.BaseDisplay {
       }
     }
 
+    let comp = new compositor.Compositor();
+
     // Render each frame, and write to a file in a tmp directory.
     let bufferList = [];
     let doneCount = 0;
@@ -67,28 +68,12 @@ class SaveImageDisplay extends baseDisplay.BaseDisplay {
       execNextFrame();
       let frameNum = leftPad(count, 3, '0');
       let outFile = `${this._tmpdir}/${frameNum}.png`;
-      let renderedLayers = this._renderer.render();
+      let surfaces = this._renderer.render();
 
-      let targetWidth = this._width * this._zoomLevel;
-      let targetHeight = this._height * this._zoomLevel;
-      let create = algorithm.makeSurface(targetWidth, targetHeight);
-
-      for (let i = 0; i < renderedLayers.length; i++) {
-        let surface = renderedLayers[i];
-        if (surface == null) {
-          continue;
-        } else if (this._zoomLevel > 1) {
-          surface = algorithm.nearestNeighborSurface(surface, this._zoomLevel);
-        }
-        algorithm.mergeIntoSurface(create, surface);
-      }
-      let surface = renderedLayers.grid;
-      if (surface) {
-        algorithm.mergeIntoSurface(create, surface);
-      }
-
-      this._fsacc.saveTo(outFile, [create]);
-      bufferList.push(create.buff);
+      let combined = comp.combine(surfaces, this._width, this._height,
+                                  this._zoomLevel);
+      this._fsacc.saveTo(outFile, combined);
+      bufferList.push(combined[0].buff);
       this._renderer.flushBuffer();
     }
 

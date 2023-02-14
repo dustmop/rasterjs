@@ -12,6 +12,7 @@ const asciiDisplay = require('./ascii_display.js');
 const plane = require('./plane.js');
 const tiles = require('./tiles.js');
 const sprites = require('./sprites.js');
+const compositor = require('./compositor.js');
 const colorspace = require('./colorspace.js');
 const interrupts = require('./interrupts.js');
 const rgbColor = require('./rgb_color.js');
@@ -544,7 +545,10 @@ class Scene {
     if (!this._fsacc) {
       throw new Error('cannot save plane without filesys access');
     }
-    this._fsacc.saveTo(savepath, surfs);
+    let comp = new compositor.Compositor();
+    let combined = comp.combine(surfs, surfs[0].width, surfs[0].height,
+                                this.config.zoomScale);
+    this._fsacc.saveTo(savepath, combined);
   }
 
   renderPrimaryPlane() {
@@ -987,6 +991,11 @@ class Scene {
         layer.camera = this._banks.camera[i];
       }
     }
+    // copy x,y so that existing scroll values aren't erased
+    let preserve = this.camera;
+    this.camera = this._banks.camera[0];
+    this.camera.x = preserve.x;
+    this.camera.y = preserve.y;
   }
 
   useTileset(something, sizeInfo) {

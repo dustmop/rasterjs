@@ -7,8 +7,6 @@ describe('Sprite', function() {
   it('list of objects', function() {
     ra.resetState();
 
-    ra.setZoom(4);
-
     let imgObj0 = ra.loadImage('test/testdata/valgrind-obj0.png');
     let imgObj1 = ra.loadImage('test/testdata/valgrind-obj1.png');
     let imgObj2 = ra.loadImage('test/testdata/valgrind-obj2.png');
@@ -36,8 +34,6 @@ describe('Sprite', function() {
 
   it('tileset', function() {
     ra.resetState();
-
-    ra.setZoom(4);
 
     let imgTiles = ra.loadImage('test/testdata/valgrind-tiles.png');
     let imgBg = ra.loadImage('test/testdata/valgrind-bg.png');
@@ -71,8 +67,6 @@ describe('Sprite', function() {
 
   it('sheet', function() {
     ra.resetState();
-
-    ra.setZoom(4);
 
     let imgSheet = ra.loadImage('test/testdata/valgrind-sheet.png');
     let imgBg = ra.loadImage('test/testdata/valgrind-bg.png');
@@ -145,8 +139,6 @@ describe('Sprite', function() {
   it('behind layer', function() {
     ra.resetState();
 
-    ra.setZoom(4);
-
     let imgObj = ra.loadImage('test/testdata/small-fruit.png');
     let imgBg = ra.loadImage('test/testdata/letter_e.png');
 
@@ -165,8 +157,6 @@ describe('Sprite', function() {
 
   it('behind with scroll', function() {
     ra.resetState();
-
-    ra.setZoom(4);
 
     let imgObj = ra.loadImage('test/testdata/small-fruit.png');
     let imgBg = ra.loadImage('test/testdata/letter_e.png');
@@ -188,8 +178,6 @@ describe('Sprite', function() {
   it('hflip', function() {
     ra.resetState();
 
-    ra.setZoom(4);
-
     let imgObj = ra.loadImage('test/testdata/small-fruit.png');
     let imgBg = ra.loadImage('test/testdata/letter_e.png');
 
@@ -208,8 +196,6 @@ describe('Sprite', function() {
 
   it('vflip', function() {
     ra.resetState();
-
-    ra.setZoom(4);
 
     let imgObj = ra.loadImage('test/testdata/small-fruit.png');
     let imgBg = ra.loadImage('test/testdata/letter_e.png');
@@ -230,8 +216,6 @@ describe('Sprite', function() {
   it('both flip', function() {
     ra.resetState();
 
-    ra.setZoom(4);
-
     let imgObj = ra.loadImage('test/testdata/small-fruit.png');
     let imgBg = ra.loadImage('test/testdata/letter_e.png');
 
@@ -251,8 +235,6 @@ describe('Sprite', function() {
 
   it('overlap sprite layering', function() {
     ra.resetState();
-
-    ra.setZoom(4);
 
     // obj0 is the smaller ship
     let imgObj0 = ra.loadImage('test/testdata/valgrind-obj0.png');

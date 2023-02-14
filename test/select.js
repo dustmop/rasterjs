@@ -47,7 +47,6 @@ describe('Select', function() {
     ra.resetState();
 
     ra.setSize(8, 8);
-    ra.setZoom(20);
 
     ra.fillColor(4); // grey
 

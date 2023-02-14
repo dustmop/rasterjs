@@ -168,7 +168,7 @@ class Tileset {
     }
     allowDups = allowDups || false;
 
-    pl.ensureReady();
+    pl.fullyResolve();
     let pitch = pl.pitch;
     let source = pl.data.slice();
 

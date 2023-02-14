@@ -176,7 +176,7 @@ class ImagePlane {
     }
   }
 
-  ensureReady() {
+  fullyResolve() {
     this.fillData();
   }
 

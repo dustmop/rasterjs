@@ -19,7 +19,7 @@ class TestDisplay extends baseDisplay.BaseDisplay {
     return false;
   }
 
-  setSize(width, height) {
+  setSceneSize(width, height) {
     this._b.setSize(width, height);
   }
 

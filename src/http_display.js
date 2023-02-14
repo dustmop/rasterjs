@@ -15,21 +15,11 @@ class HTTPDisplay {
     return 'http';
   }
 
-  setSize(width, height) {
-  }
-
   setRenderer(renderer) {
     this.renderer = renderer;
   }
 
-  setZoom(zoom) {
-  }
-
-  setGrid(state) {
-  }
-
-  handleEvent(eventName, region, callback) {
-  }
+  handleEvent(eventName, region, callback) {}
 
   renderLoop(nextFrame) {
     this.nextFrame = nextFrame;

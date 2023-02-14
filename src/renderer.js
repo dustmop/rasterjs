@@ -25,12 +25,15 @@ class Renderer {
 
   _init() {
     this._layers = null;
+    this._surfs = null;
     this._world = {};
     this.isConnected = false;
     this.interrupts = null;
     this.haveRenderedPlaneOnce = false;
     this._inspectScanline = null;
     this._inspectCallback = null;
+    this._renderWidth = null;
+    this._renderHeight = null;
   }
 
   connect(inputList) {
@@ -95,8 +98,7 @@ class Renderer {
   }
 
   flushBuffer() {
-    let layer = this._layers[0];
-    layer.rgbSurface = null;
+    this._surfs = null;
   }
 
   getFirstPlane() {
@@ -130,6 +132,11 @@ class Renderer {
     this._inspectCallback = callback;
   }
 
+  setRenderSize(width, height) {
+    this._renderWidth = width;
+    this._renderHeight = height;
+  }
+
   render() {
     let world = this._world || {};
 
@@ -140,56 +147,44 @@ class Renderer {
     bottomPalette.ensureRGBMap();
     this._rgbmap = bottomPalette._rgbmap;
 
-    // size of bottom plane is used for size of display
-    // TODO: handle tileset
-    this.dispWidth = this._layers[0].plane.width;
-    this.dispHeight = this._layers[0].plane.height;
-
-    let res = [];
-    for (let i = 0; i < this._layers.length; i++) {
-      res.push(this._renderLayer(this._layers[i], i == 0, world));
+    if (!this._renderWidth || !this._renderHeight) {
+      let bottomPlane = this._layers[0].plane;
+      this._renderWidth = bottomPlane.width;
+      this._renderHeight = bottomPlane.height;
     }
-    res.grid = this._gridSurface(world.grid);
 
-    return res;
+    this._renderScene(world);
+    this._maybeGridToSurface(world.grid);
+
+    return this._surfs;
   }
 
-  _renderLayer(layer, isBg, world) {
-    if (!layer.palette) {
-      // set the bottom palette, need the rgbmap for rendering
-      // TODO: does this break something?
-      layer.palette = this._layers[0].palette;
-    }
+  _renderScene(world) {
+    let width = this._renderWidth;
+    let height = this._renderHeight;
 
-    // Calculate size of the buffer to render.
-    // NOTE: tilesets are not taken into account here, since this code path
-    // is only needed for visualizers. The normal renderer will get data from
-    // scene.provide, which always sets size, and uses the tileset to
-    // calculate this size.
-    let width = (layer.size && layer.size.width);
-    let height = (layer.size && layer.size.height);
-    if (!width || !height) {
-      width = layer.plane.width;
-      height = layer.plane.height;
+    // Allocate rendering results for each layer
+    if (this._surfs == null) {
+      let numPoints = width * height;
+      let numLayers = this._layers.length;
+      this._surfs = new Array(numLayers);
+      for (let i = 0; i < numLayers; i++) {
+        this._surfs[i] = {};
+        let surface = this._surfs[i];
+        surface.width = width;
+        surface.height = height;
+        surface.buff = new Uint8Array(numPoints * 4);
+        surface.pitch = width * 4;
+      }
     }
 
     if (this._world.grid && !this._world.grid.buff) {
       this._renderGrid(this._world.grid);
     }
 
-    // Allocate the buffer.
-    if (layer.rgbSurface == null) {
-      let numPoints = width * height;
-      layer.rgbSurface = {};
-      layer.rgbSurface.width = width;
-      layer.rgbSurface.height = height;
-      layer.rgbSurface.buff = new Uint8Array(numPoints*4);
-      layer.rgbSurface.pitch = width*4;
-    }
-
     // If no interrupts, render everything at once.
     if (!world.interrupts) {
-      return this._renderRegion(layer, isBg, 0, 0, width, height);
+      return this._renderScreenSection(world, 0, 0, width, height);
     }
 
     // Otherwise, collect IRQs per each scanline
@@ -198,7 +193,7 @@ class Renderer {
       let row = world.interrupts.get(k);
       if (types.isArray(row.scanline)) {
         let lineRange = row.scanline;
-        // TODO: Assume a pair of integers
+        // TODO: Asset it is a pair of integers
         for (let j = lineRange[0]; j < lineRange[1]+1; j++) {
           perIRQs.push({scanline: j, irq: row.irq});
         }
@@ -210,8 +205,10 @@ class Renderer {
       }
     }
 
-    // Track the x-position at each scanline
+    // Track the x-position at each scanline of the bottom layer
+    // TODO: generalize to multiple layers
     let xposTrack = {};
+    let bottomLayer = this._layers[0];
 
     // Per region rendering
     let renderBegin = 0;
@@ -224,8 +221,8 @@ class Renderer {
         scanLine = height;
       }
       if (scanLine > renderBegin) {
-        xposTrack[renderBegin] = layer.camera.x;
-        this._renderRegion(layer, isBg, 0, renderBegin, width, scanLine);
+        xposTrack[renderBegin] = bottomLayer.camera.x;
+        this._renderScreenSection(world, 0, renderBegin, width, scanLine);
       }
       // Execute the irq that interrupts rasterization
       if (k < perIRQs.length) {
@@ -237,13 +234,13 @@ class Renderer {
 
     // Store x-positions so that they can visualize
     world.interrupts.xposTrack = xposTrack;
-
-    return layer.rgbSurface;
   }
 
-  _renderRegion(layer, isBg, left, top, right, bottom) {
-    // If plane has not been rendered yet, do so now.
-    layer.plane.ensureReady();
+  _renderScreenSection(world, left, top, right, bottom) {
+    // If any layers have planes with pending changes, resolve them
+    for (let layer of this._layers) {
+      layer.plane.fullyResolve();
+    }
 
     // Dispatch any inspector events
     if (!this._inspectScanline && !top) {
@@ -256,8 +253,7 @@ class Renderer {
       }
     } else if (this._inspectScanline && this._inspectCallback) {
       if (this._inspectScanline >= top && this._inspectScanline < bottom) {
-        let eventObj = {
-        };
+        let eventObj = {};
         this._inspectCallback(eventObj);
 
         if (this._onRenderComponents) {
@@ -269,6 +265,16 @@ class Renderer {
         }
       }
     }
+
+    for (let i = 0; i < this._layers.length; i++) {
+      this._renderLayerRegion(this._layers[i], this._surfs[i], world, i == 0,
+                              left, top, right, bottom);
+    }
+    let lastSurface = this._surfs[this._surfs.length - 1];
+    this._renderSprites(world, lastSurface, left, top, right, bottom);
+  }
+
+  _renderLayerRegion(layer, surf, world, isBg, left, top, right, bottom) {
 
     let source = layer.plane.data;
     let sourcePitch = layer.plane.pitch;
@@ -306,14 +312,15 @@ class Renderer {
 
     let rgbtuple = new Uint8Array(4);
 
-    let targetPitch = layer.rgbSurface.pitch;
+    let targetPitch = surf.pitch;
 
     let scrollY = Math.floor((layer.camera && layer.camera.y) || 0);
     let scrollX = Math.floor((layer.camera && layer.camera.x) || 0);
 
     // TODO: allow layers aside from the bottom to enable wrap
-    let isWrapped = isBg;
-    if (sourceWidth >= this.dispWidth && sourceHeight >= this.dispHeight) {
+    let isWrapped = false;
+    if (sourceWidth >= this._renderWidth &&
+        sourceHeight >= this._renderHeight) {
       isWrapped = true;
     }
     let numPlacements = 1;
@@ -383,23 +390,31 @@ class Renderer {
             ok = this._toColor(layer, source[s], rgbtuple);
           }
           if (!ok) {
-            layer.rgbSurface.buff[t+3] = 0x00;
+            surf.buff[t+3] = 0x00;
             continue;
           }
-          layer.rgbSurface.buff[t+0] = rgbtuple[R_INDEX];
-          layer.rgbSurface.buff[t+1] = rgbtuple[G_INDEX];
-          layer.rgbSurface.buff[t+2] = rgbtuple[B_INDEX];
+          surf.buff[t+0] = rgbtuple[R_INDEX];
+          surf.buff[t+1] = rgbtuple[G_INDEX];
+          surf.buff[t+2] = rgbtuple[B_INDEX];
           // TODO: Incorrect
           if (!isBg && source[s] == 0) {
-            layer.rgbSurface.buff[t+3] = 0x00;
+            surf.buff[t+3] = 0x00;
           } else {
-            layer.rgbSurface.buff[t+3] = 0xff;
+            surf.buff[t+3] = 0xff;
           }
         }
       }
     }
+  }
 
-    let world = this._world || {};
+  _renderSprites(world, surf, _left, _top, right, bottom) {
+    // TODO: fix me
+    let layer = this._layers[this._layers.length - 1];
+    let targetPitch = surf.pitch;
+    let rgbtuple = new Uint8Array(4);
+    let scrollY = Math.floor((layer.camera && layer.camera.y) || 0);
+    let scrollX = Math.floor((layer.camera && layer.camera.x) || 0);
+
     if (world.spriteList && world.spriteList.enabled) {
       let chardat = world.spriteList.chardat || layer.tileset;
       if (!chardat) {
@@ -458,23 +473,21 @@ class Renderer {
               }
               this._toColor(layer, c, rgbtuple);
               if (spr.m) {
-                layer.rgbSurface.buff[t+0] += rgbtuple[R_INDEX];
-                layer.rgbSurface.buff[t+1] += rgbtuple[G_INDEX];
-                layer.rgbSurface.buff[t+2] += rgbtuple[B_INDEX];
-                layer.rgbSurface.buff[t+3] = 0xff;
+                surf.buff[t+0] += rgbtuple[R_INDEX];
+                surf.buff[t+1] += rgbtuple[G_INDEX];
+                surf.buff[t+2] += rgbtuple[B_INDEX];
+                surf.buff[t+3] = 0xff;
               } else {
-                layer.rgbSurface.buff[t+0] = rgbtuple[R_INDEX];
-                layer.rgbSurface.buff[t+1] = rgbtuple[G_INDEX];
-                layer.rgbSurface.buff[t+2] = rgbtuple[B_INDEX];
-                layer.rgbSurface.buff[t+3] = 0xff;
+                surf.buff[t+0] = rgbtuple[R_INDEX];
+                surf.buff[t+1] = rgbtuple[G_INDEX];
+                surf.buff[t+2] = rgbtuple[B_INDEX];
+                surf.buff[t+3] = 0xff;
               }
             }
           }
         }
       }
     }
-
-    return layer.rgbSurface;
   }
 
   onRenderComponents(components, settings, callback) {
@@ -614,16 +627,16 @@ class Renderer {
     grid.pitch = pitch;
   }
 
-  _gridSurface(grid) {
+  _maybeGridToSurface(grid) {
+    this._surfs.grid = null;
     if (grid && grid.buff) {
-      return {
+      this._surfs.grid = {
         width: grid.width,
         height: grid.height,
         buff: grid.buff,
         pitch: grid.pitch,
       };
     }
-    return null;
   }
 
   _toColor(layer, c, rgbtuple) {

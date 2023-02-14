@@ -49,7 +49,7 @@ class Colorspace {
       throw new Error(`Colorspace expects a Plane as an argument`);
     }
     if (!source.data) {
-      source.ensureReady();
+      source.fullyResolve();
     }
     this.source = source;
     this.sizeInfo = sizeInfo;

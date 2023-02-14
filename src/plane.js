@@ -63,7 +63,7 @@ class Plane {
     }
   }
 
-  ensureReady() {
+  fullyResolve() {
     this._prepare();
   }
 

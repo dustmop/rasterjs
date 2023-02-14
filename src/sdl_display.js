@@ -21,7 +21,7 @@ class SDLDisplay extends baseDisplay.BaseDisplay {
     return true;
   }
 
-  setSize(width, height) {
+  setSceneSize(width, height) {
     this._b.setSize(width, height);
   }
 

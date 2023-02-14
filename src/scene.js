@@ -443,6 +443,7 @@ class Scene {
     if (!this.width || !this.height) {
       this._setDisplaySize();
     }
+    this._renderer.setRenderSize(this.width, this.height);
     this._renderer.connect(this.provide());
 
     if (this.colorspace && !this._hasRenderedOnce) {
@@ -487,11 +488,10 @@ class Scene {
   }
 
   run(drawFunc, opt) {
-    this._prepareRendering();
-
     let postRunFunc = (opt || {}).postRun || null;
 
-    this._display.setSize(this.width, this.height);
+    this._prepareRendering();
+    this._display.setSceneSize(this.width, this.height);
     this._display.setRenderer(this._renderer);
     this._display.setZoom(this.config.zoomScale);
 
@@ -540,21 +540,21 @@ class Scene {
       return;
     }
     // render the main plane
-    let res = this.renderPrimaryPlane();
+    let surfs = this.renderPrimaryPlane();
     if (!this._fsacc) {
       throw new Error('cannot save plane without filesys access');
     }
-    this._fsacc.saveTo(savepath, res);
+    this._fsacc.saveTo(savepath, surfs);
   }
 
   renderPrimaryPlane() {
     this._prepareRendering();
     this._renderer.connect(this.provide());
-    let res = this._renderer.render();
-    if (res[0].width == 0 || res[0].height == 0 || res[0].pitch == 0) {
-      throw new Error(`invalid scene: ${JSON.stringify(res)}`);
+    let surfs = this._renderer.render();
+    if (surfs[0].width == 0 || surfs[0].height == 0 || surfs[0].pitch == 0) {
+      throw new Error(`invalid scene: ${JSON.stringify(surfs)}`);
     }
-    return res;
+    return surfs;
   }
 
   lockTimeToTick() {
@@ -1090,6 +1090,8 @@ class Scene {
       res.colorspace = components.colorspace;
     }
     res.size = this._calculatePixelSize(res);
+    // TODO: this is bad, forcing the layerSize to match the sceneSize
+    // This confuses a number of concepts and doesn't match the semantics
     res.size.width = this.width;
     res.size.height = this.height;
     return res;

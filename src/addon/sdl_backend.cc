@@ -51,6 +51,7 @@ SDLBackend::SDLBackend(const Napi::CallbackInfo& info)
   this->gridLayer = NULL;
   this->gridWidth = 0;
   this->gridHeight = 0;
+  this->gridRawBuff = NULL;
   this->dataSources = NULL;
   // TODO: properties instead of setters
   this->instrumentation = false;
@@ -187,7 +188,6 @@ Napi::Value SDLBackend::InsteadWriteBuffer(const Napi::CallbackInfo& info) {
 
 unsigned char* surfaceToRawBuffer(Napi::Value surfaceVal) {
   if (surfaceVal.IsNull()) {
-    //this->gridIndex = n;
     return NULL;
   }
   Napi::Object surfaceObj = surfaceVal.As<Napi::Object>();
@@ -256,7 +256,6 @@ Napi::Value SDLBackend::RunDisplayLoop(const Napi::CallbackInfo& info) {
   }
 
   // Collect all data sources
-  this->gridIndex = -1;
   for (int n = 0; n < numDataSources; n++) {
     Napi::Value surfaceVal = resObj.As<Napi::Array>()[uint32_t(n)];
     dataSources[n] = surfaceToRawBuffer(surfaceVal);

@@ -16,7 +16,7 @@ describe('webgl display', function() {
     };
 
     let display = new webglDisplay.WebGLDisplay();
-    display.setSize(100, 100);
+    display.setSceneSize(100, 100);
     display.handleEvent('click', {x: 20, y: 10, w: 40, h: 50}, getClick);
     display.handleEvent('click', {x: 70, y: 80, w: 6, h: 10}, getClick);
     // TODO: Order shouldn't matter for the null-region case

@@ -7,7 +7,7 @@ class BaseDisplay {
 
   beginExec(refExec) {}
 
-  setSize(width, height) {
+  setSceneSize(width, height) {
     this._width = width;
     this._height = height;
   }

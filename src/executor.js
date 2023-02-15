@@ -9,6 +9,7 @@ class Executor {
   }
 
   _initialize() {
+    this.isPaused = false;
     this._forceRender = true; // always render first frame
     this._startTime = new Date();
     this.time = 0.0;

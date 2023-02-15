@@ -1,5 +1,7 @@
 const types = require('./types.js');
 const plane = require('./plane.js');
+const palette = require('./palette.js');
+const rgbmap = require('./rgb_map.js');
 const visualizer = require('./visualizer.js');
 
 class Tileset {
@@ -290,13 +292,13 @@ class Tileset {
   visualize(opt) {
     opt = opt || {};
     let numTileX = opt.numTileX || 8;
-    let palette = opt.palette || (function() {
-      throw new Error('no palette');
+    let pal = opt.palette || (function() {
+      return new palette.Palette({rgbmap: rgbmap.rgb_map_quick});
     })();
     let twidth = this.tileWidth;
     let theight = this.tileHeight;
     let viz = new visualizer.Visualizer();
-    return viz.tilesetToSurface(this.data, palette, twidth, theight, numTileX);
+    return viz.tilesetToSurface(this.data, pal, twidth, theight, numTileX);
   }
 
   display() {

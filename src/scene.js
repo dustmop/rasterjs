@@ -9,6 +9,7 @@ const geometry = require('./geometry.js');
 const imageLoader = require('./image_loader.js');
 const textLoader = require('./text_loader.js');
 const asciiDisplay = require('./ascii_display.js');
+const tilesetBuilder = require('./tileset_builder.js');
 const plane = require('./plane.js');
 const tiles = require('./tiles.js');
 const sprites = require('./sprites.js');
@@ -283,7 +284,7 @@ class Scene {
     this._fsacc.clear();
     this._imgLoader.clear();
     if (this._executor) {
-      this._executor.clear();
+      this._executor = null;
     }
     this.time = 0.0;
     this.tick = 0;
@@ -348,11 +349,17 @@ class Scene {
     this.config.translateCenter = true;
   }
 
+  getDisplay() {
+    return this._display;
+  }
+
   useDisplay(nameOrDisplay) {
     if (types.isString(nameOrDisplay)) {
       // name of a built-in string
       if (nameOrDisplay == 'ascii') {
         this._display = new asciiDisplay.AsciiDisplay();
+      } else if (nameOrDisplay == 'tileset-builder') {
+        this._display = new tilesetBuilder.TilesetBuilderDisplay();
       } else {
         this._display = this._env.makeDisplay(nameOrDisplay);
         if (!this._display) {
@@ -1206,6 +1213,14 @@ Scene.prototype.RGBColor = function(_many) {
   }
   let args = arguments;
   return new rgbColor.RGBColor(args[0], args[1], args[2]);
+}
+
+Scene.prototype.TilesetBuilder = function() {
+  if (new.target === undefined) {
+    throw new Error('TilesetBuilder constructor must be called with `new`');
+  }
+  let args = arguments;
+  return new tilesetBuilder.TilesetBuilderDisplay(args[0]);
 }
 
 Scene.prototype.Display = baseDisplay.BaseDisplay;

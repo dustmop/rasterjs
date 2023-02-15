@@ -939,6 +939,7 @@ class Scene {
     if (!this._banks) {
       this._banks = {};
     }
+    this._addNewBankableCameras();
     // TODO: validate banks accesses, it's an error for a layer to
     // use an index larger than what the component banks contain
     for (let i = 0; i < configLayers.length; i++) {
@@ -956,6 +957,7 @@ class Scene {
         let index = configLayers[i].tileset;
         build.tileset = this._banks.tileset[index];
       }
+      build.camera = this._banks.camera[i];
       this._layering[i] = build;
     }
     this._ensureBankableCameras();
@@ -972,6 +974,17 @@ class Scene {
     for (let i = 0; i < componentList.length; i++) {
       this._banks[name][i] = componentList[i];
     }
+  }
+
+  _addNewBankableCameras() {
+    let numLayers = this._layering.length;
+    this._banks.camera = new Array(numLayers);
+    for (let i = 0; i < numLayers; i++) {
+      this._banks.camera[i] = {x:0, y:0};
+    }
+    this._banks.camera[0].x = this.camera.x;
+    this._banks.camera[0].y = this.camera.y;
+    this.camera = this._banks.camera;
   }
 
   _ensureBankableCameras() {

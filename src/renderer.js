@@ -356,6 +356,12 @@ class Renderer {
       if (!isWrapped) {
         regL = 0;
         regR = layer.plane.width;
+        if (layer.tileset) {
+          regR *= layer.tileset.tileWidth;
+        }
+        if (regR >= right) {
+          regR = right;
+        }
       }
 
       for (let y = regU; y < regD; y++) {

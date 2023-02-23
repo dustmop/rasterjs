@@ -30,8 +30,8 @@ class Renderer {
     this.isConnected = false;
     this.interrupts = null;
     this.haveRenderedPlaneOnce = false;
-    this._inspectScanline = null;
-    this._inspectCallback = null;
+    this._inspector = null;
+    this._renderEventCallback = null;
     this._renderWidth = null;
     this._renderHeight = null;
   }
@@ -127,14 +127,20 @@ class Renderer {
     }
   }
 
-  setInspector(scanline, callback) {
-    this._inspectScanline = scanline;
-    this._inspectCallback = callback;
+  getInspector() {
+    if (this._inspector == null) {
+      this._inspector = new Inspector(this);
+    }
+    return this._inspector;
   }
 
   setRenderSize(width, height) {
     this._renderWidth = width;
     this._renderHeight = height;
+  }
+
+  setOnRenderEvent(callback) {
+    this._renderEventCallback = callback;
   }
 
   render() {
@@ -155,6 +161,9 @@ class Renderer {
 
     this._renderScene(world);
     this._maybeGridToSurface(world.grid);
+    if (this._renderEventCallback) {
+      this._renderEventCallback();
+    }
 
     return this._surfs;
   }
@@ -184,7 +193,9 @@ class Renderer {
 
     // If no interrupts, render everything at once.
     if (!world.interrupts) {
-      return this._renderScreenSection(world, 0, 0, width, height);
+      this._renderScreenSection(world, 0, 0, width, height);
+      this._maybeHandleComponentsAndInspect(null, 0, height);
+      return;
     }
 
     // Otherwise, collect IRQs per each scanline
@@ -223,6 +234,7 @@ class Renderer {
       if (scanLine > renderBegin) {
         xposTrack[renderBegin] = bottomLayer.camera.x;
         this._renderScreenSection(world, 0, renderBegin, width, scanLine);
+        this._maybeHandleComponentsAndInspect(k, renderBegin, scanLine);
       }
       // Execute the irq that interrupts rasterization
       if (k < perIRQs.length) {
@@ -240,30 +252,6 @@ class Renderer {
     // If any layers have planes with pending changes, resolve them
     for (let layer of this._layers) {
       layer.plane.fullyResolve();
-    }
-
-    // Dispatch any inspector events
-    if (!this._inspectScanline && !top) {
-      if (this._onRenderComponents) {
-        this.renderComponents(
-          this._onRenderComponents,
-          this._onRenderSettings,
-          this._onRenderCallback,
-        );
-      }
-    } else if (this._inspectScanline && this._inspectCallback) {
-      if (this._inspectScanline >= top && this._inspectScanline < bottom) {
-        let eventObj = {};
-        this._inspectCallback(eventObj);
-
-        if (this._onRenderComponents) {
-          this.renderComponents(
-            this._onRenderComponents,
-            this._onRenderSettings,
-            this._onRenderCallback,
-          );
-        }
-      }
     }
 
     for (let i = 0; i < this._layers.length; i++) {
@@ -496,10 +484,109 @@ class Renderer {
     }
   }
 
+  _maybeHandleComponentsAndInspect(numSplit, top, bottom) {
+
+    let inspectX, inspectY;
+    if (this._inspector) {
+      if (this._inspector._unitType == 'display') {
+        inspectX = this._inspector._unitX / this._inspector._zoom;
+        inspectY = this._inspector._unitY / this._inspector._zoom;
+      } else {
+        throw new Error(`unknown unit type ${pixel._unitType}`);
+      }
+    }
+
+    if (numSplit == null || (!this._inspector && numSplit == 1) ||
+        (inspectY != null && inspectY >= top && inspectY < bottom)) {
+      // 1) if single region, render all components at top
+      // 2) if not being inspected, also render all components at top
+      // 3) if being inspected and there are multiple regions, pick the
+      //    region that corresponds to the inspected region
+      if (this._viewComponentList) {
+        this.renderComponents(
+          this._viewComponentList,
+          this._viewSettings,
+          this._afterViewCallback,
+        );
+      }
+    }
+
+    if (inspectY != null && inspectY >= top && inspectY < bottom) {
+      let layer = this._layers[0];
+      let pixel = this._inspector;
+      this.fillInspectorAt(this._inspector, numSplit, inspectX, inspectY);
+    }
+  }
+
+  fillInspectorAt(inspector, numSplit, x, y) {
+    //
+    let layer = this._layers[0];
+    this.inspectLayerAt(inspector, layer, numSplit, x, y);
+  }
+
+  inspectLayerAt(result, layer, numSplit, x, y) {
+    x = Math.floor(x);
+    y = Math.floor(y);
+    let scrollX = Math.floor((layer.camera && layer.camera.x) || 0);
+    let scrollY = Math.floor((layer.camera && layer.camera.y) || 0);
+
+    // TODO: How does this work if !isWrapped
+    let sourceWidth = layer.plane.width;
+    let sourceHeight = layer.plane.height;
+    if (layer.tileset) {
+      sourceWidth *= layer.tileset.tileWidth;
+      sourceHeight *= layer.tileset.tileHeight;
+    }
+
+    let posX = (x + scrollX) % sourceWidth;
+    let posY = (y + scrollY) % sourceHeight;
+
+    let tileX, tileY, tileID;
+    let elemX, elemY;
+    if (layer.tileset) {
+      elemX = Math.floor(posX / layer.tileset.tileWidth);
+      elemY = Math.floor(posY / layer.tileset.tileHeight);
+      tileX = elemX;
+      tileY = elemY;
+    } else {
+      elemX = Math.floor(posX);
+      elemY = Math.floor(posY);
+    }
+
+    let val = layer.plane.get(elemX, elemY);
+    if (layer.tileset) {
+      tileID = val;
+    }
+    if (val == null) {
+      result.stop();
+      return;
+    }
+
+    let palidx;
+    let color = val;
+    if (layer.palette) {
+      palidx = val;
+      color = layer.palette.entry(val % layer.palette.length).cval;
+    }
+
+    result.val = val;
+    result.x   = x;
+    result.y   = y;
+    result.color   = color;
+    result.piece   = 0;
+    result.tileX   = tileX;
+    result.tileY   = tileY;
+    result.tileID  = tileID;
+    result.palidx  = palidx;
+    result.scrollX = scrollX
+    result.scrollY = scrollY;
+    result.split = numSplit || 0;
+  }
+
   onRenderComponents(components, settings, callback) {
-    this._onRenderComponents = components;
-    this._onRenderSettings = settings;
-    this._onRenderCallback = callback;
+    this._viewComponentList = components;
+    this._viewSettings = settings;
+    this._afterViewCallback = callback;
     this.renderComponents(components, settings, callback);
   }
 
@@ -661,5 +748,51 @@ class Renderer {
     return true;
   }
 }
+
+
+class Inspector {
+  constructor(owner) {
+    this._owner = owner;
+    this._clear();
+  }
+
+  _clear() {
+    this.val = null;
+    this.x = null;
+    this.y = null;
+    this.color = null;
+    this.piece = null;
+    this.tileX = null;
+    this.tileY = null;
+    this.tileID = null;
+    this.palidx = null;
+    this.scrollX = null;
+    this.scrollY = null;
+  }
+
+  setZoom(zoom) {
+    this._zoom = zoom;
+  }
+
+  lookAt(x, y, optUnit) {
+    optUnit = optUnit || {};
+    this._unitX = x;
+    this._unitY = y;
+    // pixel, display, tile, interrupt
+    this._unitType = optUnit.unit || 'pixel';
+    x = Math.floor(x / 2);
+    y = Math.floor(y / 2);
+
+    // TODO: alternatively, if executor is stopped (has no drawFunc), fill
+    // inspector data based upon the previous render
+    //this._owner.fillInspectorAt(this, 0, x, y);
+    this._executor._forceRender = true;
+  }
+
+  stop() {
+    this._clear();
+  }
+}
+
 
 module.exports.Renderer = Renderer;

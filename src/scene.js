@@ -66,8 +66,6 @@ class Scene {
     this.camera = {};
 
     this._hasRenderedOnce = false;
-    this._inspectScanline = null;
-    this._inspectCallback = null;
     this._messageListeners = [];
 
     this.dip = {};
@@ -400,13 +398,6 @@ class Scene {
     }
   }
 
-  experimentalInspectScanline(scanline) {
-    this._inspectScanline = scanline;
-    if (this._renderer) {
-      this._renderer.setInspector(this._inspectScanline, this._inspectCallback);
-    }
-  }
-
   loadImage(filepath, opt) {
     opt = opt || {};
     return this._imgLoader.loadImage(filepath, opt);
@@ -458,8 +449,6 @@ class Scene {
       this.normalizePaletteColorspace();
       this._hasRenderedOnce = true;
     }
-
-    this._renderer.setInspector(this._inspectScanline, this._inspectCallback);
   }
 
   _setDisplaySize() {
@@ -658,10 +647,7 @@ class Scene {
       throw new Error(`unknown event "${eventName}", only ${expect} supported`);
     }
     if (eventName == 'render') {
-      this._inspectCallback = callback;
-      if (this._renderer) {
-        this._renderer.setInspector(this._inspectScanline, this._inspectCallback);
-      }
+      this._renderer.setOnRenderEvent(callback);
       return;
     }
     if (eventName == 'message') {
@@ -686,6 +672,13 @@ class Scene {
     this._validateOwnedPlane();
     let c = this.plane.get(x, y);
     return this.palette.entry(c);
+  }
+
+  pixelInspector() {
+    let inspector = this._renderer.getInspector();
+    inspector._executor = this._executor;
+    inspector.setZoom(this.config.zoomScale);
+    return inspector;
   }
 
   get(x, y) {

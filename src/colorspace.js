@@ -56,6 +56,14 @@ class Colorspace {
     return this;
   }
 
+  getCellAt(pixelX, pixelY) {
+    let pieceSize = this.sizeInfo.piece_size;
+    let cellX = Math.floor(pixelX / this.sizeInfo.cell_width);
+    let cellY = Math.floor(pixelY / this.sizeInfo.cell_height);
+    let pieceVal = this.source.get(cellX, cellY);
+    return [cellX, cellY, pieceSize, pieceVal];
+  }
+
   put(x, y, v) {
     this.source.put(x, y, v);
   }

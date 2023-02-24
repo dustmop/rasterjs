@@ -561,19 +561,29 @@ class Renderer {
       result.stop();
       return;
     }
+    let color = val;
+    let index = val;
+
+    let cellX, cellY, pieceSize, pieceVal;
+    if (layer.colorspace) {
+      let cell = layer.colorspace.getCellAt(elemX, elemY);
+      [cellX, cellY, pieceSize, pieceVal] = cell;
+      index = pieceVal * pieceSize + (index % pieceSize);
+    }
 
     let palidx;
-    let color = val;
     if (layer.palette) {
-      palidx = val;
-      color = layer.palette.entry(val % layer.palette.length).cval;
+      palidx = index % layer.palette.length;
+      color = layer.palette.entry(palidx).cval;
     }
 
     result.val = val;
     result.x   = x;
     result.y   = y;
     result.color   = color;
-    result.piece   = 0;
+    result.piece   = pieceVal;
+    result.cellX   = cellX;
+    result.cellY   = cellY;
     result.tileX   = tileX;
     result.tileY   = tileY;
     result.tileID  = tileID;

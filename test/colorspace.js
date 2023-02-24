@@ -242,6 +242,27 @@ describe('Colorspace', function() {
     util.renderCompareTo(ra, 'test/testdata/colors_colorize.png');
   });
 
+  it('getCellAt', function() {
+    ra.resetState();
+
+    // Build colorspace
+    let colors = new ra.Plane();
+    colors.setSize(4);
+    colors.fillPattern([[0,1,1,1],
+                       [1,3,3,3],
+                       [2,2,1,0],
+                       [1,3,0,0],
+                      ]);
+    ra.useColorspace(colors, {cell_width: 4, cell_height: 4, piece_size: 6});
+
+    let actualCell = ra.colorspace.getCellAt(3, 5);
+    assert.deepEqual(actualCell, [0, 1, 6, 1]);
+
+    actualCell = ra.colorspace.getCellAt(11, 7);
+    assert.deepEqual(actualCell, [2, 1, 6, 3]);
+  });
+
+
   it('visualize', function() {
     let tmpdir = util.mkTmpDir();
     let tmpout = tmpdir + '/actual.png';

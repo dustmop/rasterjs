@@ -1,11 +1,13 @@
+const component = require('./component.js');
 const types = require('./types.js');
 const plane = require('./plane.js');
 const palette = require('./palette.js');
 const rgbmap = require('./rgb_map.js');
 const visualizer = require('./visualizer.js');
 
-class Tileset {
+class Tileset extends component.Component {
   constructor(sizeInfo) {
+    super();
     sizeInfo = sizeInfo || {};
 
     let deserializeData = null;
@@ -67,6 +69,10 @@ class Tileset {
     }
 
     return this;
+  }
+
+  name() {
+    return 'tileset';
   }
 
   clone() {

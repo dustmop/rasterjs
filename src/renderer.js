@@ -1,4 +1,5 @@
 const algorithm = require('./algorithm.js');
+const component = require('./component.js');
 const rgbColor = require('./rgb_color.js');
 const plane = require('./plane.js');
 const tiles = require('./tiles.js');
@@ -115,16 +116,11 @@ class Renderer {
   }
 
   switchComponent(layerNum, compName, obj) {
+    component.ensureValidName(compName);
     if (!this._layers) {
       return;
     }
-    if (compName == 'tileset') {
-      this._layers[layerNum].tileset = obj;
-    } else if (compName == 'camera') {
-      this._layers[layerNum].camera = obj;
-    } else {
-      throw new Error(`switchComponent can only be used for "camera","tileset"`);
-    }
+    this._layers[layerNum][compName] = obj;
   }
 
   getInspector() {

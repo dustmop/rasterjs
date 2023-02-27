@@ -1,3 +1,4 @@
+const component = require('./component.js');
 const rgbMap = require('./rgb_map.js');
 const rgbColor = require('./rgb_color.js');
 const destructure = require('./destructure.js');
@@ -12,13 +13,14 @@ let verbose = new verboseLogger.Logger();
 /**
  * Palette is the map of RGB data to 8-bit colors, and entries for reordering
  */
-class Palette {
+class Palette extends component.Component {
 
   /**
    * construct a new palette
    * @param {object} opt - options. pieceSize, rgbmap
    */
   constructor(opt) {
+    super();
     opt = (opt || {});
     if (!types.isObject(opt)) {
       throw new Error(`palette constructor expected options, got ${opt}`);
@@ -35,6 +37,10 @@ class Palette {
     if (opt.entries) {
       this.setEntries(opt.entries);
     }
+  }
+
+  name() {
+    return 'palette';
   }
 
   /**

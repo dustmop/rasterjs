@@ -1,15 +1,17 @@
+const component = require('./component.js');
 const visualizer = require('./visualizer.js');
 const types = require('./types.js');
 const rgbColor = require('./rgb_color.js');
 
 
-class Colorspace {
+class Colorspace extends component.Component {
   // TODO: use arguments instead, optional arguments
   // Colorspace()
   // Colorspace(plane)
   // Colorspace(w, h)
   // Colorspace(palette)
   constructor(source, palette, sizeInfo) {
+    super();
     // TOOD: cell_width, cell_height -> cell_dim
     // TODO: indexed or container
     // sizeInfo looks like:
@@ -54,6 +56,10 @@ class Colorspace {
     this.source = source;
     this.sizeInfo = sizeInfo;
     return this;
+  }
+
+  name() {
+    return 'colorspace';
   }
 
   getCellAt(pixelX, pixelY) {

@@ -1,12 +1,18 @@
 const algorithm = require('./algorithm.js');
+const component = require('./component.js');
 const drawable = require('./drawable.js');
 const destructure = require('./destructure.js');
 const types = require('./types.js');
 
-class Plane {
+class Plane extends component.Component {
   constructor() {
+    super();
     this.clear();
     return this;
+  }
+
+  name() {
+    return 'plane';
   }
 
   clear() {

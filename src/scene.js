@@ -1,4 +1,5 @@
 const baseDisplay = require('./base_display.js');
+const component = require('./component.js');
 const drawable = require('./drawable.js');
 const destructure = require('./destructure.js');
 const algorithm = require('./algorithm.js');
@@ -231,19 +232,11 @@ class Scene {
       throw new Error(`argument fromBank must be int, got ${fromBank}`);
     }
 
+    component.ensureValidName(compname);
+
     // assign the component field from the i-ith bankable obj
-    let assignComponent = null;
-    if (compname == 'camera') {
-      assignComponent = this._banks.camera[fromBank];
-      this.camera = assignComponent;
-
-    } else if (compname == 'tileset') {
-      assignComponent = this._banks.tileset[fromBank];
-      this.tileset = assignComponent;
-
-    } else {
-      throw new Error(`unknown component "${compname}"`);
-    }
+    let assignComponent = this._banks[compname][fromBank];
+    this[compname] = assignComponent;
 
     // check for {layer: N} optional parameter
     let layerIndex = (opts || {}).layer;
@@ -261,6 +254,13 @@ class Scene {
     let layer = this._layering[layerIndex];
     layer[compname] = assignComponent;
     this._renderer.switchComponent(layerIndex, compname, assignComponent);
+  }
+
+  // TODO: duplicated in renderer.js
+  _validComponent(compname) {
+    return (compname == 'plane' || compname == 'palette' ||
+            compname == 'camera' ||
+            compname == 'tileset' || compname == 'colorspace');
   }
 
   setScrollX(x) {

@@ -299,7 +299,7 @@ class Tileset extends component.Component {
     opt = opt || {};
     let numTileX = opt.numTileX || 8;
     let pal = opt.palette || (function() {
-      return new palette.Palette({rgbmap: rgbmap.rgb_map_quick});
+      return new palette.Palette({rgbmap: rgbmap.rgb_map_dos});
     })();
     let twidth = this.tileWidth;
     let theight = this.tileHeight;

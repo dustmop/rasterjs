@@ -311,6 +311,24 @@ describe('Palette', function() {
     assert.equal(entry.getRGB(), 170);
   });
 
+  it('palette grey', function() {
+    let tmpdir = util.mkTmpDir();
+    let tmpout = tmpdir + '/actual.png';
+    ra.resetState();
+    ra.usePalette('grey');
+
+    let palette = ra.palette;
+    let surfaces = palette.visualize({
+      cell_width: 8, cell_height: 8,
+      cell_between: 0,
+      outer_top: 4, outer_left: 4,
+      row_size: 16, text: 'none',
+    });
+
+    ra._saveSurfacesTo(surfaces, tmpout);
+    util.ensureFilesMatch('test/testdata/pal_grey.png', tmpout);
+  });
+
   it('get all', function() {
     ra.resetState();
     ra.usePalette({rgbmap:[]});

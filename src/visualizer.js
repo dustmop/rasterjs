@@ -83,11 +83,15 @@ class Visualizer {
       if (digits.length < 2) {
         digits = '0' + digits;
       }
-      // foreground color is the opposite of background color
-      if (this._isLightColor(colorList[k])) {
-        target.setColor(addColor(colors, 0));
-      } else {
-        target.setColor(addColor(colors, 0xffffff));
+      if (textOpt != 'none') {
+        // TODO: If there's more than 128 colors, with text, then
+        // the palette will overflow. Need multi-planar functionality.
+        // make foreground color is the opposite of background color
+        if (this._isLightColor(colorList[k])) {
+          target.setColor(addColor(colors, 0));
+        } else {
+          target.setColor(addColor(colors, 0xffffff));
+        }
       }
 
       // draw the text

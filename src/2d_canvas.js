@@ -131,7 +131,7 @@ class TwoDeeDisplay extends baseDisplay.BaseDisplay {
     renderIt();
   }
 
-  handleEvent(eventName, region, callback) {
+  registerEventHandler(eventName, _region, callback) {
     if (eventName == 'keypress') {
       this.sysEventHandler = callback;
     } else if (eventName == 'click') {

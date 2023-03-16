@@ -19,7 +19,7 @@ class HTTPDisplay {
     this.renderer = renderer;
   }
 
-  handleEvent(eventName, region, callback) {}
+  registerEventHandler(eventName, region, callback) {}
 
   renderLoop(nextFrame) {
     this.nextFrame = nextFrame;

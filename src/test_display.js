@@ -52,7 +52,7 @@ class TestDisplay extends baseDisplay.BaseDisplay {
     return this._b.runDisplayLoop(loopID, execNextFrame);
   }
 
-  handleEvent(eventName, region, callback) {
+  registerEventHandler(eventName, region, callback) {
     return this._b.handleEvent(eventName, region, callback);
   }
 

@@ -67,6 +67,7 @@ class Scene {
     this.camera = {};
 
     this._hasRenderedOnce = false;
+    this._onDipChangeHandler = null;
     this._messageListeners = [];
 
     this.dip = {};
@@ -641,7 +642,8 @@ class Scene {
       eventName = optPlane;
     }
 
-    let allowed = ['keypress', 'click', 'ready', 'render', 'message'];
+    let allowed = ['keypress', 'click', 'ready', 'render', 'message',
+                   'dipchange'];
     if (!allowed.includes(eventName)) {
       let expect = allowed.map((n)=>`"${n}"`).join(', ');
       throw new Error(`unknown event "${eventName}", only ${expect} supported`);
@@ -649,12 +651,14 @@ class Scene {
     if (eventName == 'render') {
       this._renderer.setOnRenderEvent(callback);
       return;
-    }
-    if (eventName == 'message') {
+    } else if (eventName == 'message') {
       this._messageListeners.push(callback);
       return;
+    } else if (eventName == 'dipchange') {
+      this._onDipChangeHandler = callback;
+      return;
     }
-    this._display.handleEvent(eventName, region, callback);
+    this._display.registerEventHandler(eventName, region, callback);
   }
 
   sendMessage(name, data) {
@@ -697,12 +701,23 @@ class Scene {
     return Array.from(new Array(length), (x,i) => i+start)
   }
 
-  useDips(names) {
-    this._dipNames = names;
-    let make = {};
-    for (let n of names) {
-      make[n] = true;
+  useDips(obj) {
+    let names, type, make = {};
+    if (types.isArray(obj)) {
+      names = obj;
+      type = 'bool';
+      for (let n of names) {
+        make[n] = true;
+      }
+    } else if (types.isObject(obj)) {
+      names = Object.keys(obj);
+      type = 'float';
+      for (let n of names) {
+        make[n] = obj[n];
+      }
     }
+    this._dipNames = names;
+    this._dipType = type;
     this.dip = make;
     this.dip.length = names.length;
     return this.dip;
@@ -710,6 +725,22 @@ class Scene {
 
   dipNames() {
     return this._dipNames;
+  }
+
+  setDip(name, value) {
+    if (value === true) {
+      value = 1.0;
+    } else if (value === false) {
+      value = 0.0;
+    } else if (types.isString(value)) {
+      value = parseFloat(value);
+    } else {
+      throw new Error(`unknown value type for setDip`);
+    }
+    this.dip[name] = value;
+    if (this._onDipChangeHandler) {
+      this._onDipChangeHandler(name, value);
+    }
   }
 
   _newPaletteFromLookOfImage(look) {

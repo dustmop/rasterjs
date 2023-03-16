@@ -440,7 +440,7 @@ void main() {
     }
   }
 
-  handleEvent(eventName, region, callback) {
+  registerEventHandler(eventName, region, callback) {
     if (eventName == 'keypress') {
       this.eventKeypressHandler = callback;
     } else if (eventName == 'click') {

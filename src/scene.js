@@ -53,6 +53,13 @@ class Scene {
     this._layering = null;
     this._numFrames = FRAMES_LOOP_FOREVER;
 
+    Object.defineProperty(this, 'contrib', {
+      get() {
+        const contribModules = require('./contrib/index.js');
+        return contribModules.load();
+      }
+    });
+
     this._initialize();
     return this;
   }

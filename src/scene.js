@@ -74,7 +74,7 @@ class Scene {
     this.camera = {};
 
     this._hasRenderedOnce = false;
-    this._onDipChangeHandler = null;
+    this._onDipChangeHandlers = null;
     this._messageListeners = [];
 
     this.dip = {};
@@ -662,7 +662,10 @@ class Scene {
       this._messageListeners.push(callback);
       return;
     } else if (eventName == 'dipchange') {
-      this._onDipChangeHandler = callback;
+      if (this._onDipChangeHandlers == null) {
+        this._onDipChangeHandlers = [];
+      }
+      this._onDipChangeHandlers.push(callback);
       return;
     }
     this._display.registerEventHandler(eventName, region, callback);
@@ -739,14 +742,18 @@ class Scene {
       value = 1.0;
     } else if (value === false) {
       value = 0.0;
+    } else if (types.isNumber(value)) {
+      // pass
     } else if (types.isString(value)) {
       value = parseFloat(value);
     } else {
       throw new Error(`unknown value type for setDip`);
     }
     this.dip[name] = value;
-    if (this._onDipChangeHandler) {
-      this._onDipChangeHandler(name, value);
+    if (this._onDipChangeHandlers) {
+      for (let handler of this._onDipChangeHandlers) {
+        handler({name:name, value:value});
+      }
     }
   }
 

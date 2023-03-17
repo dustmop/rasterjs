@@ -259,6 +259,14 @@ void main() {
   }
 
   _processClick(e) {
+    let displayID = 'main-display';
+    if (this.elemID) {
+      displayID = this.elemID;
+    }
+    if (e.target && e.target.id != displayID) {
+      return;
+    }
+
     let basex = Math.floor(e.offsetX / this._zoomLevel);
     let basey = Math.floor(e.offsetY / this._zoomLevel);
 

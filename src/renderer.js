@@ -60,7 +60,7 @@ class Renderer {
 
   _createLayer(item) {
     let layer = {};
-    this._assertObjectKeys(item, ['field', 'size', 'camera', 'palette-rgbmap',
+    this._assertObjectKeys(item, ['field', 'size', 'scroll', 'palette-rgbmap',
                                   'tileset', 'palette', 'colorspace']);
 
     verbose.log(`renderer.connect components: ${Object.keys(item)}`, 5);
@@ -80,7 +80,7 @@ class Renderer {
 
     layer.field    = item.field;
     layer.size     = item.size;
-    layer.camera   = item.camera;
+    layer.scroll   = item.scroll;
     layer.tileset  = item.tileset;
     layer.palette  = item.palette;
     layer.colorspace = item.colorspace;
@@ -228,7 +228,7 @@ class Renderer {
         scanLine = height;
       }
       if (scanLine > renderBegin) {
-        xposTrack[renderBegin] = bottomLayer.camera.x;
+        xposTrack[renderBegin] = bottomLayer.scroll.x;
         this._renderScreenSection(world, 0, renderBegin, width, scanLine);
         this._maybeHandleComponentsAndInspect(k, renderBegin, scanLine);
       }
@@ -298,8 +298,8 @@ class Renderer {
 
     let targetPitch = surf.pitch;
 
-    let scrollY = Math.floor((layer.camera && layer.camera.y) || 0);
-    let scrollX = Math.floor((layer.camera && layer.camera.x) || 0);
+    let scrollY = Math.floor((layer.scroll && layer.scroll.y) || 0);
+    let scrollX = Math.floor((layer.scroll && layer.scroll.x) || 0);
 
     // TODO: allow layers aside from the bottom to enable wrap
     let isWrapped = false;
@@ -402,8 +402,8 @@ class Renderer {
     let layer = this._layers[this._layers.length - 1];
     let targetPitch = surf.pitch;
     let rgbtuple = new Uint8Array(4);
-    let scrollY = Math.floor((layer.camera && layer.camera.y) || 0);
-    let scrollX = Math.floor((layer.camera && layer.camera.x) || 0);
+    let scrollY = Math.floor((layer.scroll && layer.scroll.y) || 0);
+    let scrollX = Math.floor((layer.scroll && layer.scroll.x) || 0);
 
     if (world.spriteList && world.spriteList.enabled) {
       let chardat = world.spriteList.chardat || layer.tileset;
@@ -523,8 +523,8 @@ class Renderer {
   inspectLayerAt(result, layer, numSplit, x, y) {
     x = Math.floor(x);
     y = Math.floor(y);
-    let scrollX = Math.floor((layer.camera && layer.camera.x) || 0);
-    let scrollY = Math.floor((layer.camera && layer.camera.y) || 0);
+    let scrollX = Math.floor((layer.scroll && layer.scroll.x) || 0);
+    let scrollY = Math.floor((layer.scroll && layer.scroll.y) || 0);
 
     // TODO: How does this work if !isWrapped
     let sourceWidth = layer.field.width;

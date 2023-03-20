@@ -107,7 +107,7 @@ describe('Layers', function() {
     lower.setColor(42);
     lower.fillCircle({x: 2, y: 2, r: 6});
 
-    ra.setComponent('camera', 1);
+    ra.setComponent('scroll', 1);
     ra.setScrollX(5);
 
     util.renderCompareTo(ra, 'test/testdata/sunset_scroll_top.png');
@@ -145,7 +145,7 @@ describe('Layers', function() {
     lower.setColor(42);
     lower.fillCircle({x: 2, y: 2, r: 6});
 
-    ra.setComponent('camera', 1);
+    ra.setComponent('scroll', 1);
     ra.setScrollY(-12);
 
     util.renderCompareTo(ra, 'test/testdata/sunset_less.png');
@@ -183,7 +183,7 @@ describe('Layers', function() {
     lower.setColor(42);
     lower.fillCircle({x: 2, y: 2, r: 6});
 
-    ra.setComponent('camera', 1);
+    ra.setComponent('scroll', 1);
     ra.setScrollY(-12);
     ra.setScrollX(-4);
 
@@ -222,7 +222,7 @@ describe('Layers', function() {
     lower.setColor(42);
     lower.fillCircle({x: 2, y: 2, r: 6});
 
-    ra.setComponent('camera', 1);
+    ra.setComponent('scroll', 1);
     ra.setScrollY(-3);
     ra.setScrollX(-1);
 
@@ -261,7 +261,7 @@ describe('Layers', function() {
     lower.setColor(42);
     lower.fillCircle({x: 2, y: 2, r: 6});
 
-    ra.setComponent('camera', 1);
+    ra.setComponent('scroll', 1);
     ra.setScrollY(-2);
     ra.setScrollX(-2);
 
@@ -269,7 +269,7 @@ describe('Layers', function() {
       {
         scanline: 5,
         irq:() => {
-          ra.setComponent('camera', 1);
+          ra.setComponent('scroll', 1);
           ra.setScrollY(-999);
           ra.setScrollX(-999);
         }
@@ -277,7 +277,7 @@ describe('Layers', function() {
       {
         scanline: 13,
         irq:() => {
-          ra.setComponent('camera', 1);
+          ra.setComponent('scroll', 1);
           ra.setScrollY(-11);
           ra.setScrollX(-2);
         }
@@ -325,7 +325,7 @@ describe('Layers', function() {
       }
     ]);
 
-    ra.setComponent('camera', 1);
+    ra.setComponent('scroll', 1);
     ra.setScrollY(-12);
 
     util.renderCompareTo(ra, 'test/testdata/sunset_upper_tiles.png');
@@ -360,7 +360,7 @@ describe('Layers', function() {
     lower.fillCircle({x: 2, y: 2, r: 6});
 
     // set scroll before laying should still work
-    ra.setComponent('camera', 1);
+    ra.setComponent('scroll', 1);
     ra.setScrollY(-12);
 
     ra.useLayering([
@@ -373,7 +373,7 @@ describe('Layers', function() {
     ]);
 
     // BUG: calling useLayering after setScrollY will erase the old values
-    // in particular, the camera value is reset to 0
+    // in particular, the scroll value is reset to 0
     util.renderCompareTo(ra, 'test/testdata/sunset_upper_zero.png');
   });
 

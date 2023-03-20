@@ -42,12 +42,11 @@ class Scene {
 
     this.field = this._owned;
     this._font = null;
-    this.camera = {};
+    this.scroll = {};
     this.tileset = null;
     this.colorspace = null;
     this.interrupts = null;
     this.spriteList = null;
-
 
     this._banks = null;
     this._layering = null;
@@ -71,7 +70,7 @@ class Scene {
     this.TAU = 6.283185307179586;
     this.TURN = this.TAU;
     this.PI = this.TAU / 2;
-    this.camera = {};
+    this.scroll = {};
 
     this._hasRenderedOnce = false;
     this._onDipChangeHandlers = null;
@@ -228,9 +227,9 @@ class Scene {
    */
   setComponent(compname, fromBank, opts) {
     /*
-     * Example: ra.setComponent('camera', 1);
-     *   assign this.camera to point at the 1-th bankable camera
-     *   by default, this is the camera used by layer #1
+     * Example: ra.setComponent('scroll', 1);
+     *   assign this.scroll to point at the 1-th bankable scroll
+     *   by default, this is the scroll used by layer #1
      *
      * Example: ra.setComponent('tileset', 3, {layer: 0});
      *   assign this.tileset to point at the 3-th bankable tileset
@@ -267,16 +266,16 @@ class Scene {
   // TODO: duplicated in renderer.js
   _validComponent(compname) {
     return (compname == 'field' || compname == 'palette' ||
-            compname == 'camera' ||
+            compname == 'scroll' ||
             compname == 'tileset' || compname == 'colorspace');
   }
 
   setScrollX(x) {
-    this.camera.x = Math.floor(x);
+    this.scroll.x = Math.floor(x);
   }
 
   setScrollY(y) {
-    this.camera.y = Math.floor(y);
+    this.scroll.y = Math.floor(y);
   }
 
   resetState() {
@@ -294,7 +293,7 @@ class Scene {
     }
     this.time = 0.0;
     this.tick = 0;
-    this.camera = {};
+    this.scroll = {};
     this.tileset = null;
     this.colorspace = null;
     this.interrupts = null;
@@ -866,7 +865,7 @@ class Scene {
       }
       this._addComponentBanks('field', pl);
     }
-    this._ensureBankableCameras();
+    this._ensureBankableScroll();
 
     return this.field;
   }
@@ -984,7 +983,7 @@ class Scene {
     if (!this._banks) {
       this._banks = {};
     }
-    this._addNewBankableCameras();
+    this._addNewBankableScroll();
     // TODO: validate banks accesses, it's an error for a layer to
     // use an index larger than what the component banks contain
     for (let i = 0; i < configLayers.length; i++) {
@@ -1002,10 +1001,10 @@ class Scene {
         let index = configLayers[i].tileset;
         build.tileset = this._banks.tileset[index];
       }
-      build.camera = this._banks.camera[i];
+      build.scroll = this._banks.scroll[i];
       this._layering[i] = build;
     }
-    this._ensureBankableCameras();
+    this._ensureBankableScroll();
   }
 
   _addComponentBanks(name, componentList) {
@@ -1021,39 +1020,39 @@ class Scene {
     }
   }
 
-  _addNewBankableCameras() {
+  _addNewBankableScroll() {
     let numLayers = this._layering.length;
-    this._banks.camera = new Array(numLayers);
+    this._banks.scroll = new Array(numLayers);
     for (let i = 0; i < numLayers; i++) {
-      this._banks.camera[i] = {x:0, y:0};
+      this._banks.scroll[i] = {x:0, y:0};
     }
-    this._banks.camera[0].x = this.camera.x;
-    this._banks.camera[0].y = this.camera.y;
-    this.camera = this._banks.camera;
+    this._banks.scroll[0].x = this.scroll.x;
+    this._banks.scroll[0].y = this.scroll.y;
+    this.scroll = this._banks.scroll;
   }
 
-  _ensureBankableCameras() {
+  _ensureBankableScroll() {
     if (!this._layering) {
       return;
     }
-    let numCameras = this._layering.length;
-    if (!this._banks.camera) {
-      this._banks.camera = new Array(numCameras);
-      for (let i = 0; i < numCameras; i++) {
-        this._banks.camera[i] = {x:0, y:0};
+    let numScrolls = this._layering.length;
+    if (!this._banks.scroll) {
+      this._banks.scroll = new Array(numScrolls);
+      for (let i = 0; i < numScrolls; i++) {
+        this._banks.scroll[i] = {x:0, y:0};
       }
     }
-    for (let i = 0; i < numCameras; i++) {
+    for (let i = 0; i < numScrolls; i++) {
       let layer = this._layering[i];
-      if (!layer.camera) {
-        layer.camera = this._banks.camera[i];
+      if (!layer.scroll) {
+        layer.scroll = this._banks.scroll[i];
       }
     }
     // copy x,y so that existing scroll values aren't erased
-    let preserve = this.camera;
-    this.camera = this._banks.camera[0];
-    this.camera.x = preserve.x;
-    this.camera.y = preserve.y;
+    let preserve = this.scroll;
+    this.scroll = this._banks.scroll[0];
+    this.scroll.x = preserve.x;
+    this.scroll.y = preserve.y;
   }
 
   useTileset(something, sizeInfo) {
@@ -1144,8 +1143,8 @@ class Scene {
     if (components.field) {
       res.field = components.field;
     }
-    if (components.camera) {
-      res.camera = components.camera;
+    if (components.scroll) {
+      res.scroll = components.scroll;
     }
     if (components.tileset) {
       res.tileset = components.tileset;

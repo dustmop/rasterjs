@@ -32,7 +32,7 @@ let scrollX = 0;
 
 function draw() {
   scrollX += 0.3;
-  ra.setComponent('camera', 1);
+  ra.setComponent('scroll', 1);
   ra.setScrollX(scrollX);
 }
 

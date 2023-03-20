@@ -58,7 +58,7 @@ class Colorspace extends component.Component {
     return this;
   }
 
-  name() {
+  kind() {
     return 'colorspace';
   }
 

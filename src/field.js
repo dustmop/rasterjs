@@ -11,7 +11,7 @@ class Field extends component.Component {
     return this;
   }
 
-  name() {
+  kind() {
     return 'field';
   }
 

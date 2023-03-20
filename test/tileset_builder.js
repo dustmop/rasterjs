@@ -20,7 +20,7 @@ describe('Tileset Builder', function() {
 
     ra.useDisplay('tileset-builder');
     // TODO: hack to get the test to only render 1 frame
-    ra._display._numFrames = 1;
+    ra.display._numFrames = 1;
 
     ra.setSize(32, 32);
 
@@ -29,8 +29,7 @@ describe('Tileset Builder', function() {
     // TODO: Remove the need to call `run`
     ra.run();
 
-    let display = ra.getDisplay();
-    let tileset = display.getTileset();
+    let tileset = ra.display.getTileset();
 
     let tmpdir = util.mkTmpDir();
     let tmpout = tmpdir + '/actual.png';
@@ -40,7 +39,7 @@ describe('Tileset Builder', function() {
 
     util.ensureFilesMatch('test/testdata/made_tileset.png', tmpout);
 
-    let actualData = display.getGraphicsData().frames[0].data;
+    let actualData = ra.display.getGraphicsData().frames[0].data;
     let expectData = [0,1,1,2,
                       3,4,4,3,
                       3,4,4,3,
@@ -54,7 +53,7 @@ describe('Tileset Builder', function() {
     let display = new ra.TilesetBuilder({tile_width: 16, tile_height: 16});
     ra.useDisplay(display);
     // TODO: hack to get the test to only render 1 frame
-    ra._display._numFrames = 1;
+    ra.display._numFrames = 1;
 
     ra.setSize(32, 32);
 

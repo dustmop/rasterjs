@@ -20,6 +20,10 @@ class SaveImageDisplay extends baseDisplay.BaseDisplay {
     this._zoomLevel = 1;
   }
 
+  name() {
+    return 'save-image';
+  }
+
   initialize() {
     this._tmpdir = path.join(os.tmpdir(), 'raster-save-' + randstr.generate(8));
   }

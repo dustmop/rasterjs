@@ -2,12 +2,20 @@ var assert = require('assert');
 var ra = require('../src/lib.js');
 
 describe('Components', function() {
+
+  it('field', function() {
+    ra.resetState();
+    let f = new ra.Field();
+    assert.equal(f.kind(), 'field');
+  });
+
   it('palette', function() {
     ra.resetState();
     // number of palette entries
     let pal = ra.usePalette({numEntries: 5});
     assert.equal(pal.constructor.name, 'Palette');
     assert.equal(pal.length, 5);
+    assert.equal(pal.kind(), 'palette');
     // color values
     pal = ra.usePalette({entries: [12,23,34]});
     assert.equal(pal.constructor.name, 'Palette');
@@ -26,6 +34,7 @@ describe('Components', function() {
     let tiles = ra.useTileset(5, detail);
     assert.equal(tiles.constructor.name, 'Tileset');
     assert.equal(tiles.length, 5);
+    assert.equal(tiles.kind(), 'tileset');
     // error, field needs size
     assert.throws(() => {
       let pl = new ra.Field();
@@ -63,6 +72,7 @@ describe('Components', function() {
     pl.fillPattern([[0,1], [2,1]])
     let colors = ra.useColorspace(pl, detail);
     assert.equal(colors.constructor.name, 'Colorspace');
+    assert.equal(colors.kind(), 'colorspace');
   });
 
   // TODO: fields

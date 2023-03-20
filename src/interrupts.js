@@ -1,3 +1,4 @@
+const component = require('./component.js');
 const visualizer = require('./visualizer.js');
 const types = require('./types.js');
 
@@ -9,14 +10,19 @@ const types = require('./types.js');
 // By default, regions are stacked vertically, and scanlines are equivalent
 // to the y-position. If a scanline is a range, the irq is called for each
 // scanline in that range, passing the scanline number as the argument.
-class Interrupts {
+class Interrupts extends component.Component {
   constructor(arr, refScene) {
+    super();
     this.arr = arr;
     this.xposTrack = null;
     this.length = this.arr.length;
     this.refScene = refScene;
     this._assertInterruptFields();
     return this;
+  }
+
+  kind() {
+    return 'interrupts';
   }
 
   _assertInterruptFields() {

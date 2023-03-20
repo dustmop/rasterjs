@@ -39,7 +39,7 @@ class Palette extends component.Component {
     }
   }
 
-  name() {
+  kind() {
     return 'palette';
   }
 

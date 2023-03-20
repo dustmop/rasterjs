@@ -1,24 +1,24 @@
 class Component {
-  name() {
-    throw new Error(`Component must implement method "name"`);
+  kind() {
+    throw new Error(`Component must implement method "kind"`);
   }
 }
 
 
-function isValidName(name) {
-    return (name == 'field' || name == 'palette' ||
-            name == 'scroll' ||
-            name == 'tileset' || name == 'colorspace');
+function isValidKind(kind) {
+    return (kind == 'field' || kind == 'palette' ||
+            kind == 'scroll' ||
+            kind == 'tileset' || kind == 'colorspace');
 }
 
 
-function ensureValidName(name) {
-  if (!isValidName(name)) {
-    throw new Error(`unknown component "${name}"`);
+function ensureValidKind(kind) {
+  if (!isValidKind(kind)) {
+    throw new Error(`unknown component "${kind}"`);
   }
 }
 
 
 module.exports.Component = Component;
-module.exports.isValidName = isValidName;
-module.exports.ensureValidName = ensureValidName;
+module.exports.isValidKind = isValidKind;
+module.exports.ensureValidKind = ensureValidKind;

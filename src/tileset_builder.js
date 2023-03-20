@@ -15,6 +15,10 @@ class TilesetBuilderDisplay extends baseDisplay.BaseDisplay {
     this._numFrames = info.numFrames || 64;
   }
 
+  name() {
+    return 'tileset-builder';
+  }
+
   appLoop(renderID, eachFrame) {
     for (let i = 0; i < this._numFrames; i++) {
       eachFrame();

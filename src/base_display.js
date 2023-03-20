@@ -1,6 +1,14 @@
 class BaseDisplay {
   initialize() {}
 
+  kind() {
+    return 'display';
+  }
+
+  name() {
+    throw new Error(`NotImplemented: BaseDisplay.name`);
+  }
+
   isRealTime() {
     return false;
   }

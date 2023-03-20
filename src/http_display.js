@@ -1,9 +1,11 @@
+const baseDisplay = require('./base_display.js');
 const http = require('http');
 const PNG = require('pngjs').PNG;
 const PORT = 8444;
 
-class HTTPDisplay {
+class HTTPDisplay extends baseDisplay.BaseDisplay {
   constructor() {
+    super();
     return this;
   }
 

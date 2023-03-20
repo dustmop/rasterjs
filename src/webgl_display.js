@@ -25,6 +25,10 @@ class WebGLDisplay extends baseDisplay.BaseDisplay {
     this.currentRunId = null;
   }
 
+  name() {
+    return 'webgl';
+  }
+
   isRealTime() {
     return true;
   }
@@ -246,6 +250,7 @@ void main() {
   }
 
   _createEventHandlers() {
+    if (typeof document == 'undefined') { return; }
     document.addEventListener('keypress', (e) => {
       if (this.eventKeypressHandler) {
         this.eventKeypressHandler({

@@ -16,6 +16,10 @@ class TwoDeeDisplay extends baseDisplay.BaseDisplay {
   initialize() {
   }
 
+  name() {
+    return '2d';
+  }
+
   setRenderer(renderer) {
     this._renderer = renderer;
     this._hasDocumentBody = false;
@@ -36,6 +40,7 @@ class TwoDeeDisplay extends baseDisplay.BaseDisplay {
   }
 
   _createEventHandlers() {
+    if (typeof document == 'undefined') { return; }
     document.addEventListener('keypress', (e) => {
       if (this.sysEventHandler) {
         this.sysEventHandler({

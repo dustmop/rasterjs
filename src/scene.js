@@ -33,21 +33,20 @@ class Scene {
     this._addMethods();
     this._env = env;
     this._fsacc = env.makeFilesysAccess();
-    this._display = null;
 
     this._renderer = new renderer.Renderer();
-    this.palette = null;
-
     this._owned = new field.Field();
 
+    this.display = null;
+    this.palette = null;
     this.field = this._owned;
-    this._font = null;
     this.scroll = {};
     this.tileset = null;
     this.colorspace = null;
     this.interrupts = null;
     this.spriteList = null;
 
+    this._font = null;
     this._banks = null;
     this._layering = null;
     this._numFrames = FRAMES_LOOP_FOREVER;
@@ -92,9 +91,9 @@ class Scene {
       this.useDisplay(options.display);
     } else {
       // default display
-      this._display = this._env.makeDisplay();
+      this.display = this._env.makeDisplay();
     }
-    this._display.initialize();
+    this.display.initialize();
     if (options.colors) {
       this.useColors(options.colors);
     }
@@ -239,7 +238,7 @@ class Scene {
       throw new Error(`argument fromBank must be int, got ${fromBank}`);
     }
 
-    component.ensureValidName(compname);
+    component.ensureValidKind(compname);
 
     // assign the component field from the i-ith bankable obj
     let assignComponent = this._banks[compname][fromBank];
@@ -261,13 +260,6 @@ class Scene {
     let layer = this._layering[layerIndex];
     layer[compname] = assignComponent;
     this._renderer.switchComponent(layerIndex, compname, assignComponent);
-  }
-
-  // TODO: duplicated in renderer.js
-  _validComponent(compname) {
-    return (compname == 'field' || compname == 'palette' ||
-            compname == 'scroll' ||
-            compname == 'tileset' || compname == 'colorspace');
   }
 
   setScrollX(x) {
@@ -326,7 +318,7 @@ class Scene {
     if (opt && opt.enable !== undefined) {
       enable = opt.enable;
     }
-    this._display.setGrid(enable);
+    this.display.setGrid(enable);
     if (this.config.gridUnit) {
       return;
     }
@@ -354,31 +346,27 @@ class Scene {
     this.config.translateCenter = true;
   }
 
-  getDisplay() {
-    return this._display;
-  }
-
   useDisplay(nameOrDisplay) {
     if (types.isString(nameOrDisplay)) {
       // name of a built-in string
       if (nameOrDisplay == 'ascii') {
-        this._display = new asciiDisplay.AsciiDisplay();
+        this.display = new asciiDisplay.AsciiDisplay();
       } else if (nameOrDisplay == 'tileset-builder') {
-        this._display = new tilesetBuilder.TilesetBuilderDisplay();
+        this.display = new tilesetBuilder.TilesetBuilderDisplay();
       } else {
-        this._display = this._env.makeDisplay(nameOrDisplay);
-        if (!this._display) {
+        this.display = this._env.makeDisplay(nameOrDisplay);
+        if (!this.display) {
           throw new Error(`unknown built-in display name "${nameOrDisplay}"`);
         }
       }
     } else if (types.isDisplayObject(nameOrDisplay)) {
       // custom display object
-      this._display = nameOrDisplay;
+      this.display = nameOrDisplay;
     } else if (types.isObject(nameOrDisplay)) {
       // NOTE: An experimental feature.
       let opt = nameOrDisplay;
       if (opt.displayElemID) {
-        this._display.elemID = opt.displayElemID;
+        this.display.elemID = opt.displayElemID;
         return;
       }
       throw new Error(`illegal param for useDisplay: ${JSON.stringify(opt)}`);
@@ -386,7 +374,7 @@ class Scene {
       throw new Error(`illegal param for useDisplay: ${JSON.stringify(nameOrDisplay)}`);
     }
 
-    this._display.initialize();
+    this.display.initialize();
   }
 
   // TODO: Re-organize the methods in this file, into topics.
@@ -400,8 +388,8 @@ class Scene {
 
   // NOTE: An experimental feature.
   experimentalDisplayComponents(components, settings) {
-    if (this._display.renderAndDisplayEachComponent) {
-      this._display.renderAndDisplayEachComponent(components, settings);
+    if (this.display.renderAndDisplayEachComponent) {
+      this.display.renderAndDisplayEachComponent(components, settings);
     }
   }
 
@@ -495,9 +483,10 @@ class Scene {
     let postRunFunc = (opt || {}).postRun || null;
 
     this._prepareRendering();
-    this._display.setSceneSize(this.width, this.height);
-    this._display.setRenderer(this._renderer);
-    this._display.setZoom(this.config.zoomScale);
+    let _displayName = this.display.name();
+    this.display.setSceneSize(this.width, this.height);
+    this.display.setRenderer(this._renderer);
+    this.display.setZoom(this.config.zoomScale);
 
     this._ensureExecutor();
     this._executor.setLifetime(this._numFrames, postRunFunc);
@@ -506,7 +495,7 @@ class Scene {
       try {
         this._executor.execApp(drawFunc);
       } catch (e) {
-        this._env.handleErrorGracefully(e, this._display);
+        this._env.handleErrorGracefully(e, this.display);
       }
     });
   }
@@ -667,7 +656,7 @@ class Scene {
       this._onDipChangeHandlers.push(callback);
       return;
     }
-    this._display.registerEventHandler(eventName, region, callback);
+    this.display.registerEventHandler(eventName, region, callback);
   }
 
   sendMessage(name, data) {
@@ -1191,7 +1180,7 @@ class Scene {
 
   _ensureExecutor() {
     if (this._executor) { return; }
-    this._executor = new executor.Executor(this._display, new weak.Ref(this));
+    this._executor = new executor.Executor(this.display, new weak.Ref(this));
   }
 }
 

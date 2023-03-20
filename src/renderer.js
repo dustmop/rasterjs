@@ -116,7 +116,7 @@ class Renderer {
   }
 
   switchComponent(layerNum, compName, obj) {
-    component.ensureValidName(compName);
+    component.ensureValidKind(compName);
     if (!this._layers) {
       return;
     }

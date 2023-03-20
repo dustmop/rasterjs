@@ -1,6 +1,10 @@
 const baseDisplay = require('./base_display.js');
 
 class AsciiDisplay extends baseDisplay.BaseDisplay {
+  name() {
+    return 'ascii';
+  }
+
   appLoop(runID, nextFrame) {
     let _res = this._renderer.render();
     let field = this._renderer.getFirstField();

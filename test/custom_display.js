@@ -1,6 +1,14 @@
 var assert = require('assert');
 var ra = require('../src/lib.js');
 const baseDisplay = require('../src/base_display.js');
+const twoDeeDisplay = require('../src/2d_canvas.js');
+const asciiDisplay = require('../src/ascii_display.js');
+const httpDisplay = require('../src/http_display.js');
+const saveImageDisplay = require('../src/save_image_display.js');
+const sdlDisplay = require('../src/sdl_display.js');
+const testDisplay = require('../src/test_display.js');
+const tilesetBuilderDisplay = require('../src/tileset_builder.js');
+const webglDisplay = require('../src/webgl_display.js');
 
 describe('Display', function() {
   it('custom', function() {
@@ -103,6 +111,50 @@ describe('Display', function() {
     assert.equal(ra.config.gridUnit, 12);
   });
 
+  it('each display', function() {
+    ra.resetState();
+
+    let testSDLBackend = {
+      name() { return 'sdl'; }
+    };
+    let fakeBackend = {
+      name() { return 'fake'; }
+    };
+
+    let display = new twoDeeDisplay.TwoDeeDisplay();
+    assert.equal(display.kind(), 'display');
+    assert.equal(display.name(), '2d');
+
+    display = new asciiDisplay.AsciiDisplay();
+    assert.equal(display.kind(), 'display');
+    assert.equal(display.name(), 'ascii');
+
+    display = new httpDisplay.HTTPDisplay();
+    assert.equal(display.kind(), 'display');
+    assert.equal(display.name(), 'http');
+
+    display = new saveImageDisplay.SaveImageDisplay('tmp.gif');
+    assert.equal(display.kind(), 'display');
+    assert.equal(display.name(), 'save-image');
+
+    display = new sdlDisplay.SDLDisplay(testSDLBackend);
+    assert.equal(display.kind(), 'display');
+    assert.equal(display.name(), 'sdl');
+
+    display = new testDisplay.TestDisplay(fakeBackend);
+    assert.equal(display.kind(), 'display');
+    assert.equal(display.name(), 'fake');
+
+    display = new tilesetBuilderDisplay.TilesetBuilderDisplay();
+    assert.equal(display.kind(), 'display');
+    assert.equal(display.name(), 'tileset-builder');
+
+    display = new webglDisplay.WebGLDisplay();
+    assert.equal(display.kind(), 'display');
+    assert.equal(display.name(), 'webgl');
+
+  });
+
 });
 
 
@@ -118,6 +170,10 @@ class MyDisplay extends baseDisplay.BaseDisplay {
 
   initialize() {
     this.count = 1000;
+  }
+
+  name() {
+    return 'my-display';
   }
 
   registerEventHandler(eventName, region, callback) {

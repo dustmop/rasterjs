@@ -11,7 +11,7 @@ const imageLoader = require('./image_loader.js');
 const textLoader = require('./text_loader.js');
 const asciiDisplay = require('./ascii_display.js');
 const tilesetBuilder = require('./tileset_builder.js');
-const plane = require('./plane.js');
+const field = require('./field.js');
 const tiles = require('./tiles.js');
 const sprites = require('./sprites.js');
 const compositor = require('./compositor.js');
@@ -38,9 +38,9 @@ class Scene {
     this._renderer = new renderer.Renderer();
     this.palette = null;
 
-    this._owned = new plane.Plane();
+    this._owned = new field.Field();
 
-    this.plane = this._owned;
+    this.field = this._owned;
     this._font = null;
     this.camera = {};
     this.tileset = null;
@@ -133,7 +133,7 @@ class Scene {
       let self = this;
       // Use a scoped function in order to acquire the method's `arguments`
       this[fname] = function() {
-        self._validateOwnedPlane();
+        self._validateOwnedField();
         let args = Array.from(arguments);
         if (paramSpec === undefined) {
           throw new Error(`function ${fname} does not have parameter spec`);
@@ -142,31 +142,31 @@ class Scene {
         if (self.config.translateCenter) {
           self._translateArguments(paramSpec, realArgs);
         }
-        self._owned[fname].apply(self.plane, realArgs);
+        self._owned[fname].apply(self.field, realArgs);
       }
     }
     this.setColor = function(n) {
-      this._validateOwnedPlane();
+      this._validateOwnedField();
       this.palette.ensureRGBMap();
-      this.plane.setColor(n);
+      this.field.setColor(n);
     }
     this.fillColor = function(n) {
-      this._validateOwnedPlane();
+      this._validateOwnedField();
       this.palette.ensureRGBMap();
-      this.plane.fillColor(n);
+      this.field.fillColor(n);
     }
   }
 
-  _validateOwnedPlane() {
+  _validateOwnedField() {
     if (this._owned == null) {
-      let msg = `the scene does not own a plane, because ra.usePlane was called.\nModify the owned plane instead`;
+      let msg = `the scene does not own a field, because ra.useField was called.\nModify the owned field instead`;
       throw new Error(msg);
     }
   }
 
   _translateArguments(params, args) {
-    let midX = this.plane.width / 2;
-    let midY = this.plane.height / 2;
+    let midX = this.field.width / 2;
+    let midY = this.field.height / 2;
     for (let i = 0; i < params.length; i++) {
       let param = params[i];
       let arg = args[i];
@@ -186,19 +186,19 @@ class Scene {
   }
 
   setTrueColor(rgb) {
-    this._validateOwnedPlane();
+    this._validateOwnedField();
     rgb = new rgbColor.RGBColor(rgb);
     this.palette.ensureRGBMap();
     let color = this.palette.addRGBMap(rgb);
-    this.plane.setColor(color);
+    this.field.setColor(color);
   }
 
   fillTrueColor(rgb) {
-    this._validateOwnedPlane();
+    this._validateOwnedField();
     rgb = new rgbColor.RGBColor(rgb);
     this.palette.ensureRGBMap();
     let color = this.palette.addRGBMap(rgb);
-    this.plane.fillColor(color);
+    this.field.fillColor(color);
   }
 
   setSize(w, h, opt) {
@@ -208,17 +208,17 @@ class Scene {
       throw new Error(`width and height must be provided`);
     }
     opt = opt || {};
-    if (!opt.planeOnly) {
+    if (!opt.fieldOnly) {
       this.width = w;
       this.height = h;
     }
     if (this._owned != null) {
-      if (this.plane.width != 0 || this.plane.height != 0) {
-        throw new Error(`cannot resize owned plane more than once`);
+      if (this.field.width != 0 || this.field.height != 0) {
+        throw new Error(`cannot resize owned field more than once`);
       }
-      this.plane.setSize(w, h);
+      this.field.setSize(w, h);
     }
-    // TODO: allow resizing? Need to understand how display vs plane size
+    // TODO: allow resizing? Need to understand how display vs field size
     // interact when one or the other is changed
     this._renderer.clear();
   }
@@ -266,7 +266,7 @@ class Scene {
 
   // TODO: duplicated in renderer.js
   _validComponent(compname) {
-    return (compname == 'plane' || compname == 'palette' ||
+    return (compname == 'field' || compname == 'palette' ||
             compname == 'camera' ||
             compname == 'tileset' || compname == 'colorspace');
   }
@@ -282,8 +282,8 @@ class Scene {
   resetState() {
     this.width = null;
     this.height = null;
-    this._owned = new plane.Plane();
-    this.plane = this._owned;
+    this._owned = new field.Field();
+    this.field = this._owned;
     this._banks = null;
     this._layering = null;
     this._renderer.clear();
@@ -336,8 +336,8 @@ class Scene {
     }
     this.config.gridUnit = unit;
 
-    let width = this.width || this.plane.width;
-    let height = this.height || this.plane.height;
+    let width = this.width || this.field.width;
+    let height = this.height || this.field.height;
 
     if (this._renderer) {
       // TODO: It is possible to get here with 0 width and 0 height if
@@ -425,15 +425,15 @@ class Scene {
   }
 
   select(x, y, w, h, name) {
-    this._validateOwnedPlane();
+    this._validateOwnedField();
     let spec = ['x:i', 'y:i', 'w:i', 'h:i', 'name?s'];
     [x, y, w, h, name] = destructure.from('select', spec, arguments, null);
-    return this.plane.select(x, y, w, h, name);
+    return this.field.select(x, y, w, h, name);
   }
 
   xform(name) {
-    this._validateOwnedPlane();
-    return this.plane.xform(name);
+    this._validateOwnedField();
+    return this.field.xform(name);
   }
 
   fold(fname, paramList) {
@@ -445,7 +445,7 @@ class Scene {
   }
 
   _prepareRendering() {
-    let plane = this.plane;
+    let field = this.field;
 
     if (!this.width || !this.height) {
       this._setDisplaySize();
@@ -461,28 +461,28 @@ class Scene {
 
   _setDisplaySize() {
     let bottomTileset = null;
-    let bottomPlane = null;
+    let bottomField = null;
 
     if (this._layering) {
-      // if layering is in use, get a reference to the bottom plane
-      bottomPlane = this._layering[0].plane;
+      // if layering is in use, get a reference to the bottom field
+      bottomField = this._layering[0].field;
 
       // Also see if the bottom layer uses a tileset
       if (this._layering[0].tileset) {
         bottomTileset = this._banks.tileset[this._layering[0].tileset];
       }
     } else {
-      bottomPlane = this.plane;
+      bottomField = this.field;
       bottomTileset = this.tileset;
     }
 
 
     if (!bottomTileset) {
-      this.width = bottomPlane.width;
-      this.height = bottomPlane.height;
+      this.width = bottomField.width;
+      this.height = bottomField.height;
     } else {
-      this.width = bottomPlane.width * bottomTileset.tileWidth;
-      this.height = bottomPlane.height * bottomTileset.tileHeight;
+      this.width = bottomField.width * bottomTileset.tileWidth;
+      this.height = bottomField.height * bottomTileset.tileHeight;
     }
 
     verbose.log(`display size set width=${this.width} height=${this.height}`, 5);
@@ -544,10 +544,10 @@ class Scene {
       this._fsacc.saveTo(savepath, res);
       return;
     }
-    // render the main plane
-    let surfs = this.renderPrimaryPlane();
+    // render the main field
+    let surfs = this.renderPrimaryField();
     if (!this._fsacc) {
-      throw new Error('cannot save plane without filesys access');
+      throw new Error('cannot save field without filesys access');
     }
     let comp = new compositor.Compositor();
     let combined = comp.combine(surfs, surfs[0].width, surfs[0].height,
@@ -555,7 +555,7 @@ class Scene {
     this._fsacc.saveTo(savepath, combined);
   }
 
-  renderPrimaryPlane() {
+  renderPrimaryField() {
     this._prepareRendering();
     this._renderer.connect(this.provide());
     let surfs = this._renderer.render();
@@ -630,15 +630,15 @@ class Scene {
       let filename = spec;
       this._font = this._textLoader.loadFont(filename, opt);
     }
-    this.plane.font = this._font;
+    this.field.font = this._font;
   }
 
-  on(optPlane, eventName, callback) {
+  on(optField, eventName, callback) {
     let region = null;
     // TODO: destructure instead
-    // ['plane?', 'string', 'function(1)']
-    if (types.isPlane(optPlane)) {
-      let pl = optPlane;
+    // ['field?', 'string', 'function(1)']
+    if (types.isField(optField)) {
+      let pl = optField;
       region = {
         x: pl.offsetLeft, y: pl.offsetTop,
         w: pl.width, h: pl.height,
@@ -646,7 +646,7 @@ class Scene {
       };
     } else {
       callback = eventName;
-      eventName = optPlane;
+      eventName = optField;
     }
 
     let allowed = ['keypress', 'click', 'ready', 'render', 'message',
@@ -678,13 +678,13 @@ class Scene {
   }
 
   resize(x, y) {
-    this._validateOwnedPlane();
-    return this.plane.resize(x, y);
+    this._validateOwnedField();
+    return this.field.resize(x, y);
   }
 
   eyedrop(x, y) {
-    this._validateOwnedPlane();
-    let c = this.plane.get(x, y);
+    this._validateOwnedField();
+    let c = this.field.get(x, y);
     return this.palette.entry(c);
   }
 
@@ -696,13 +696,13 @@ class Scene {
   }
 
   get(x, y) {
-    this._validateOwnedPlane();
-    return this.plane.get(x, y);
+    this._validateOwnedField();
+    return this.field.get(x, y);
   }
 
   put(x, y, v) {
-    this._validateOwnedPlane();
-    return this.plane.put(x, y, v);
+    this._validateOwnedField();
+    return this.field.put(x, y, v);
   }
 
   nge() {
@@ -810,7 +810,7 @@ class Scene {
         this.palette._entries[i] = i;
       }
       // Remap the colors in the data buffer
-      let pl = this.plane;
+      let pl = this.field;
       for (let y = 0; y < pl.height; y++) {
         for (let x = 0; x < pl.width; x++) {
           let k = pl.pitch * y + x;
@@ -840,45 +840,45 @@ class Scene {
     }
   }
 
-  usePlane(pl) {
+  useField(pl) {
     if (types.isArray(pl)) {
       // pass
     } else {
-      if (!types.isPlane(pl)) {
-        throw new Error(`usePlane requires a Plane`);
+      if (!types.isField(pl)) {
+        throw new Error(`useField requires a Field`);
       }
       pl = [pl];
     }
-    // stop owning the plane
+    // stop owning the field
     this._owned = null;
 
-    this.plane = pl[0];
+    this.field = pl[0];
     if (pl.length > 1) {
-      // Create layering from the given planes
+      // Create layering from the given fields
       if (this._layering != null) {
         throw new Error(`TODO: layering already exists`);
       }
       this._layering = new Array(pl.length);
       for (let i = 0; i < pl.length; i++) {
         this._layering[i] = {
-          plane: pl[i],
+          field: pl[i],
         }
       }
-      this._addComponentBanks('plane', pl);
+      this._addComponentBanks('field', pl);
     }
     this._ensureBankableCameras();
 
-    return this.plane;
+    return this.field;
   }
 
   normalizePaletteColorspace() {
     if (!this.colorspace || !this.palette) {
       throw new Error(`need palette and colorspace`);
     }
-    // don't ensure the plane is consistent if it is a pattern table
+    // don't ensure the field is consistent if it is a pattern table
     // TODO: rewrite colorspace, it has many problems
     if (!this.tileset) {
-      this.colorspace.ensureConsistentPlanePalette(this.plane, this.palette);
+      this.colorspace.ensureConsistentFieldPalette(this.field, this.palette);
     }
   }
 
@@ -917,7 +917,7 @@ class Scene {
       if (opt && opt.upon) {
         this.palette = this._coverUponPalette(opt.upon, this.palette);
         // coverage implies agreement with me
-        this._recolorPlaneToMatchPalette();
+        this._recolorFieldToMatchPalette();
         return this.palette;
       }
       return this.palette;
@@ -930,7 +930,7 @@ class Scene {
       }
       this.palette = palette.buildFrom(param, {copy: this.palette});
       if (agree) {
-        this._recolorPlaneToMatchPalette();
+        this._recolorFieldToMatchPalette();
       }
       return this.palette;
     }
@@ -938,9 +938,9 @@ class Scene {
     throw new Error(`usePalette: unsupported param ${param}`);
   }
 
-  _recolorPlaneToMatchPalette() {
+  _recolorFieldToMatchPalette() {
     // TODO: verbose.log here
-    this.palette.agreeWithMe(this.plane);
+    this.palette.agreeWithMe(this.field);
   }
 
   _coverUponPalette(coverageLook, palette) {
@@ -955,20 +955,20 @@ class Scene {
   useLayering(configLayers) {
     for (let i = 0; i < configLayers.length; i++) {
       let cfgrow = configLayers[i];
-      //let spec = ['layer:i', 'plane:i', 'palette?i', 'tileset?i',
+      //let spec = ['layer:i', 'field:i', 'palette?i', 'tileset?i',
       //            'colorspace?i'];
       //let out = destructure.from('useLayering', spec, cfgrow, null);
       //console.log(`${i} : ${JSON.stringify(cfgrow)} => ${out}`);
-      //let [layer, plane, palette, tileset, colorspace] = out;
+      //let [layer, field, palette, tileset, colorspace] = out;
       let layer = cfgrow.layer;
-      let plane = cfgrow.plane;
+      let field = cfgrow.field;
       let tileset = cfgrow.tileset || null;
       let palette = cfgrow.palette || null;
       let colorspace = cfgrow.colorspace || null;
       if (layer != i) {
         throw new Error(`layer must be equal to ${i}, got ${layer}`);
       }
-      assertInRange(plane, 0, configLayers.length);
+      assertInRange(field, 0, configLayers.length);
       if (palette) {
         // TODO: ensure exactly 1 palette has a unique rgbmap
         assertInRange(palette, 0, configLayers.length);
@@ -990,9 +990,9 @@ class Scene {
     for (let i = 0; i < configLayers.length; i++) {
       let build = {};
       let layer = configLayers[i];
-      if (configLayers[i].plane != null) {
-        let index = configLayers[i].plane;
-        build.plane = this._banks.plane[index];
+      if (configLayers[i].field != null) {
+        let index = configLayers[i].field;
+        build.field = this._banks.field[index];
       }
       if (configLayers[i].palette != null) {
         let index = configLayers[i].palette;
@@ -1067,18 +1067,18 @@ class Scene {
       let outExtra = {};
       let collect = [];
       for (let param of something) {
-        collect.push(tiles.createFrom(param, sizeInfo, this.plane, outExtra));
+        collect.push(tiles.createFrom(param, sizeInfo, this.field, outExtra));
       }
       this.tileset = collect[0];
       this._addComponentBanks('tileset', collect);
     } else {
       let outExtra = {};
-      let t = tiles.createFrom(something, sizeInfo, this.plane, outExtra);
+      let t = tiles.createFrom(something, sizeInfo, this.field, outExtra);
       this.tileset = t;
-      if (outExtra.pattern && outExtra.fromCurrentPlane) {
-        // When buliding a tileset from the current plane, replace that
-        // plane with the generated pattern table.
-        this.plane = outExtra.pattern;
+      if (outExtra.pattern && outExtra.fromCurrentField) {
+        // When buliding a tileset from the current field, replace that
+        // field with the generated pattern table.
+        this.field = outExtra.pattern;
       }
     }
     if (this.colorspace) {
@@ -1141,8 +1141,8 @@ class Scene {
 
   _addComponentsToLayer(components) {
     let res = {};
-    if (components.plane) {
-      res.plane = components.plane;
+    if (components.field) {
+      res.field = components.field;
     }
     if (components.camera) {
       res.camera = components.camera;
@@ -1165,8 +1165,8 @@ class Scene {
   }
 
   _calculatePixelSize(res) {
-    let width = res.plane.width;
-    let height = res.plane.height;
+    let width = res.field.width;
+    let height = res.field.height;
     if (res.tileset) {
       width *= res.tileset.tileWidth;
       height *= res.tileset.tileHeight;
@@ -1197,11 +1197,11 @@ class Scene {
 }
 
 
-Scene.prototype.Plane = function() {
+Scene.prototype.Field = function() {
   if (new.target === undefined) {
-    throw new Error('Plane constructor must be called with `new`');
+    throw new Error('Field constructor must be called with `new`');
   }
-  let p = new plane.Plane();
+  let p = new field.Field();
   p._addMethods(true);
   return p;
 }

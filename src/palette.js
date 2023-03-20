@@ -267,8 +267,8 @@ class Palette extends component.Component {
   }
 
   agreeWithMe(pl) {
-    if (!types.isPlane(pl)) {
-      throw new Error(`agreeWithMe needs a Plane`);
+    if (!types.isField(pl)) {
+      throw new Error(`agreeWithMe needs a Field`);
     }
 
     let remap = {};

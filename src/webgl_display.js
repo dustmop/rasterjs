@@ -234,7 +234,7 @@ void main() {
     this._renderAndDisplaySettings = settings;
 
     window.addEventListener('DOMContentLoaded', (e) => {
-      let possible = ['plane', 'palette', 'tileset',
+      let possible = ['field', 'palette', 'tileset',
                       'colorspace', 'interrupts'];
       for (let i = 0; i < possible.length; i++) {
         let p = possible[i];
@@ -340,8 +340,8 @@ void main() {
         let displayElem = document.getElementById(id);
         displayElem.style.display = 'inline';
         this._putSurfaceToElem(surface, id);
-      } else if (type == 'plane') {
-        this._putSurfaceToElem(surface, 'plane-display');
+      } else if (type == 'field') {
+        this._putSurfaceToElem(surface, 'field-display');
       } else if (type == 'tileset') {
         this._putSurfaceToElem(surface, 'tileset-display');
       } else if (type == 'colorspace') {
@@ -370,7 +370,7 @@ void main() {
       // Create the next frame.
       let hasFrame = execNextFrame();
       if (hasFrame) {
-        // Get the RGB data buffers from the plane.
+        // Get the RGB data buffers from the field.
         surfaceList = this._renderer.render();
       }
       if (surfaceList) {

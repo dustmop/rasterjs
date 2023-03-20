@@ -35,14 +35,14 @@ describe('Render components', function() {
     ra.resetState();
     ra.usePalette({rgbmap:[]});
 
-    let plane = new ra.Plane();
-    plane.setSize(4);
+    let field = new ra.Field();
+    field.setSize(4);
 
     let tiles = ra.loadImage('test/testdata/tiles.png');
     ra.useTileset(tiles, {tile_width: 4, tile_height: 4});
-    ra.usePlane(plane);
+    ra.useField(field);
 
-    plane.fillPattern([[2, 6, 1, 3],
+    field.fillPattern([[2, 6, 1, 3],
                        [6, 7, 7, 7],
                        [5, 5, 1, 0],
                        [6, 4, 2, 2]]);

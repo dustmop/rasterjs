@@ -2,16 +2,16 @@ const ra = require('../../../src/lib.js');
 
 ra.setZoom(2);
 
-let upper = new ra.Plane();
+let upper = new ra.Field();
 upper.setSize(16, 16);
 
-let lower = new ra.Plane();
+let lower = new ra.Field();
 lower.setSize(16, 16);
 
 ra.setSize(16, 16);
-ra.usePlane([lower, upper]);
+ra.useField([lower, upper]);
 
-// Draw upper plane, dirt on ground.
+// Draw upper field, dirt on ground.
 upper.fillColor(0);
 upper.setColor(33);
 upper.fillRect({x: 0, y: 11, w: 16, h: 5});
@@ -25,7 +25,7 @@ upper.drawDot({x: 5, y: 15});
 upper.drawDot({x: 8, y: 13});
 upper.drawDot({x:12, y: 15});
 
-// Draw lower plane, the sun.
+// Draw lower field, the sun.
 lower.fillColor(32);
 lower.setColor(42);
 lower.fillCircle({x: 2, y: 2, r: 6});

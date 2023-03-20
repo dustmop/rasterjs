@@ -14,20 +14,20 @@ class FilesysAccess {
     this.loadFail = null;
   }
 
-  readImageData(filename, imgPlane, useAsync) {
+  readImageData(filename, imgField, useAsync) {
     this.numToLoad++;
     if (useAsync) {
       fs.readFile(filename, (err, bytes) => {
         if (err) { console.log(err); return; }
         if (filename.endsWith('.jpg') || filename.endsWith('.jpeg')) {
           // NOTE: synchronous call
-          this._loadJpegImage(bytes, imgPlane);
-          this._imageHasLoaded(imgPlane);
+          this._loadJpegImage(bytes, imgField);
+          this._imageHasLoaded(imgField);
           return;
         }
         if (filename.endsWith('.png')) {
-          this._loadPngImageAsync(bytes, imgPlane, () => {
-            this._imageHasLoaded(imgPlane);
+          this._loadPngImageAsync(bytes, imgField, () => {
+            this._imageHasLoaded(imgField);
           });
           return;
         }
@@ -42,13 +42,13 @@ class FilesysAccess {
       throw new Error(`image not found ${filename}`);
     }
     if (filename.endsWith('.jpg') || filename.endsWith('.jpeg')) {
-      this._loadJpegImage(bytes, imgPlane);
-      this._imageHasLoaded(imgPlane);
+      this._loadJpegImage(bytes, imgField);
+      this._imageHasLoaded(imgField);
       return 0; // success
     }
     if (filename.endsWith('.png')) {
-      this._loadPngImage(bytes, imgPlane);
-      this._imageHasLoaded(imgPlane);
+      this._loadPngImage(bytes, imgField);
+      this._imageHasLoaded(imgField);
       return 0; // success
     }
     throw new Error(`invalid image format type: ${filename}`);

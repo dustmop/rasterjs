@@ -1,7 +1,7 @@
 const algorithm = require('./algorithm.js');
 const component = require('./component.js');
 const rgbColor = require('./rgb_color.js');
-const plane = require('./plane.js');
+const field = require('./field.js');
 const tiles = require('./tiles.js');
 const palette = require('./palette.js');
 const colorspace = require('./colorspace.js');
@@ -30,7 +30,7 @@ class Renderer {
     this._world = {};
     this.isConnected = false;
     this.interrupts = null;
-    this.haveRenderedPlaneOnce = false;
+    this.haveRenderedFieldOnce = false;
     this._inspector = null;
     this._renderEventCallback = null;
     this._renderWidth = null;
@@ -60,13 +60,13 @@ class Renderer {
 
   _createLayer(item) {
     let layer = {};
-    this._assertObjectKeys(item, ['plane', 'size', 'camera', 'palette-rgbmap',
+    this._assertObjectKeys(item, ['field', 'size', 'camera', 'palette-rgbmap',
                                   'tileset', 'palette', 'colorspace']);
 
     verbose.log(`renderer.connect components: ${Object.keys(item)}`, 5);
 
-    if (!item.plane || !types.isPlane(item.plane)) {
-      throw new Error(`layer.plane must be a non-null Plane`);
+    if (!item.field || !types.isField(item.field)) {
+      throw new Error(`layer.field must be a non-null Field`);
     }
     if (item.palette && !types.isPalette(item.palette)) {
       throw new Error(`layer.palette must be a non-null Palette`);
@@ -78,7 +78,7 @@ class Renderer {
       throw new Error(`layer.colorspace must be a Colorspace`);
     }
 
-    layer.plane    = item.plane;
+    layer.field    = item.field;
     layer.size     = item.size;
     layer.camera   = item.camera;
     layer.tileset  = item.tileset;
@@ -102,8 +102,8 @@ class Renderer {
     this._surfs = null;
   }
 
-  getFirstPlane() {
-    return this._layers[0].plane;
+  getFirstField() {
+    return this._layers[0].field;
   }
 
   changeGrid(zoomScale, width, height, unit) {
@@ -150,9 +150,9 @@ class Renderer {
     this._rgbmap = bottomPalette._rgbmap;
 
     if (!this._renderWidth || !this._renderHeight) {
-      let bottomPlane = this._layers[0].plane;
-      this._renderWidth = bottomPlane.width;
-      this._renderHeight = bottomPlane.height;
+      let bottomField = this._layers[0].field;
+      this._renderWidth = bottomField.width;
+      this._renderHeight = bottomField.height;
     }
 
     this._renderScene(world);
@@ -245,9 +245,9 @@ class Renderer {
   }
 
   _renderScreenSection(world, left, top, right, bottom) {
-    // If any layers have planes with pending changes, resolve them
+    // If any layers have fields with pending changes, resolve them
     for (let layer of this._layers) {
-      layer.plane.fullyResolve();
+      layer.field.fullyResolve();
     }
 
     for (let i = 0; i < this._layers.length; i++) {
@@ -260,24 +260,24 @@ class Renderer {
 
   _renderLayerRegion(layer, surf, world, isBg, left, top, right, bottom) {
 
-    let source = layer.plane.data;
-    let sourcePitch = layer.plane.pitch;
-    let sourceWidth = layer.plane.width;
-    let sourceHeight = layer.plane.height;
+    let source = layer.field.data;
+    let sourcePitch = layer.field.pitch;
+    let sourceWidth = layer.field.width;
+    let sourceHeight = layer.field.height;
 
     if (layer.tileset != null) {
       // Calculate the size
       let tileSize = layer.tileset.tileWidth * layer.tileset.tileHeight;
-      let numPoints = layer.plane.height * layer.plane.width;
-      sourceWidth = layer.plane.width * layer.tileset.tileWidth;
-      sourceHeight = layer.plane.height * layer.tileset.tileHeight;
-      sourcePitch = layer.tileset.tileWidth * layer.plane.width;
+      let numPoints = layer.field.height * layer.field.width;
+      sourceWidth = layer.field.width * layer.tileset.tileWidth;
+      sourceHeight = layer.field.height * layer.tileset.tileHeight;
+      sourcePitch = layer.tileset.tileWidth * layer.field.width;
       source = new Uint8Array(numPoints * tileSize);
 
-      for (let yTile = 0; yTile < layer.plane.height; yTile++) {
-        for (let xTile = 0; xTile < layer.plane.width; xTile++) {
-          let k = yTile*layer.plane.pitch + xTile;
-          let c = layer.plane.data[k];
+      for (let yTile = 0; yTile < layer.field.height; yTile++) {
+        for (let xTile = 0; xTile < layer.field.width; xTile++) {
+          let k = yTile*layer.field.pitch + xTile;
+          let c = layer.field.data[k];
           let t = layer.tileset.get(c);
           if (t === undefined) {
             continue;
@@ -339,7 +339,7 @@ class Renderer {
 
       if (!isWrapped) {
         regL = 0;
-        regR = layer.plane.width;
+        regR = layer.field.width;
         if (layer.tileset) {
           regR *= layer.tileset.tileWidth;
         }
@@ -444,9 +444,9 @@ class Renderer {
             }
             // behind flag
             if (spr.b === 0) {
-              let lx = (x + scrollX + layer.plane.width) % layer.plane.width;
-              let ly = (y + scrollY + layer.plane.height) % layer.plane.height;
-              let v = layer.plane.get(lx, ly);
+              let lx = (x + scrollX + layer.field.width) % layer.field.width;
+              let ly = (y + scrollY + layer.field.height) % layer.field.height;
+              let v = layer.field.get(lx, ly);
               if (v > 0) {
                 continue;
               }
@@ -527,8 +527,8 @@ class Renderer {
     let scrollY = Math.floor((layer.camera && layer.camera.y) || 0);
 
     // TODO: How does this work if !isWrapped
-    let sourceWidth = layer.plane.width;
-    let sourceHeight = layer.plane.height;
+    let sourceWidth = layer.field.width;
+    let sourceHeight = layer.field.height;
     if (layer.tileset) {
       sourceWidth *= layer.tileset.tileWidth;
       sourceHeight *= layer.tileset.tileHeight;
@@ -549,7 +549,7 @@ class Renderer {
       elemY = Math.floor(posY);
     }
 
-    let val = layer.plane.get(elemX, elemY);
+    let val = layer.field.get(elemX, elemY);
     if (layer.tileset) {
       tileID = val;
     }
@@ -598,7 +598,7 @@ class Renderer {
 
   renderComponents(components, settings, callback) {
     let world = this._world;
-    let myPlane = this._layers[0].plane;
+    let myField = this._layers[0].field;
     let myTiles = this._layers[0].tileset;
     let myPalette = this._layers[0].palette;
     let myColorspace = this._layers[0].colorspace;
@@ -606,30 +606,30 @@ class Renderer {
     settings = settings || {};
     components = components || [];
 
-    if (settings.resize && !this.haveRenderedPlaneOnce) {
+    if (settings.resize && !this.haveRenderedFieldOnce) {
       let width = settings.resize.width;
-      let height = Math.floor(width / myPlane.width * myPlane.height);
-      myPlane = myPlane.resize(width, height);
+      let height = Math.floor(width / myField.width * myField.height);
+      myField = myField.resize(width, height);
     }
 
     for (let comp of components) {
-      if (comp == 'plane') {
-        if (this.haveRenderedPlaneOnce) {
+      if (comp == 'field') {
+        if (this.haveRenderedFieldOnce) {
           continue;
         }
-        this.haveRenderedPlaneOnce = true;
+        this.haveRenderedFieldOnce = true;
 
-        if (!this.innerPlaneRenderer) {
-          this.innerPlaneRenderer = new Renderer();
+        if (!this.innerFieldRenderer) {
+          this.innerFieldRenderer = new Renderer();
           let components = [{
-            plane: myPlane,
+            field: myField,
             palette: myPalette,
           }];
-          this.innerPlaneRenderer.connect(components);
+          this.innerFieldRenderer.connect(components);
         }
-        let surfaces = this.innerPlaneRenderer.render();
+        let surfaces = this.innerFieldRenderer.render();
         let layer = surfaces[0];
-        callback('plane', layer);
+        callback('field', layer);
 
       } else if (comp == 'palette') {
         let opt = {};

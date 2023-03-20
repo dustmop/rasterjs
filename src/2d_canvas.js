@@ -111,7 +111,7 @@ class TwoDeeDisplay extends baseDisplay.BaseDisplay {
       }
 
       if (hasFrame) {
-        // Get the data buffer from the plane.
+        // Get the data buffer from the field.
         let res = this._renderer.render();
         if (!frontBuffer) {
           frontBuffer = res[0].buff;

@@ -6,7 +6,7 @@ class Component {
 
 
 function isValidName(name) {
-    return (name == 'plane' || name == 'palette' ||
+    return (name == 'field' || name == 'palette' ||
             name == 'camera' ||
             name == 'tileset' || name == 'colorspace');
 }

@@ -243,7 +243,7 @@ function valueMatchType(value, param) {
     return types.isObject(value);
   } else if (type == 'component') {
     // component
-    if (types.isPlane(value) || types.isPalette(value) ||
+    if (types.isField(value) || types.isPalette(value) ||
         types.isTileset(value) || types.isColorspace(value) ||
         types.isInterrupts(value)) {
       return true;
@@ -294,7 +294,7 @@ function typeCoerce(value, type) {
       return null;
     }
     let objType = value.constructor.name;
-    let allowed = ['Plane', 'Palette', 'Tileset', 'Colorspace', 'Interrupts'];
+    let allowed = ['Field', 'Palette', 'Tileset', 'Colorspace', 'Interrupts'];
     if (allowed.indexOf(objType) > -1) {
       return value;
     }

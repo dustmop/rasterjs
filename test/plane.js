@@ -2,9 +2,9 @@ var assert = require('assert');
 var util = require('./util.js');
 var ra = require('../src/lib.js');
 
-describe('Plane', function() {
+describe('Field', function() {
   it('fillPattern works', function() {
-    let pl = new ra.Plane();
+    let pl = new ra.Field();
     pl.setSize(4, 4);
     pl.fillPattern([[0,7,7,0],
                     [7,7,0,7],
@@ -23,7 +23,7 @@ describe('Plane', function() {
   });
 
   it('fillPattern error', function() {
-    let pl = new ra.Plane();
+    let pl = new ra.Field();
     pl.setSize(4, 4);
     assert.throws(() => {
       pl.fillPattern([0,7,7,0,
@@ -35,7 +35,7 @@ describe('Plane', function() {
   });
 
   it('fill number', function() {
-    let pl = new ra.Plane();
+    let pl = new ra.Field();
     pl.setSize(4, 4);
     pl.fill(5);
     let bin = pl.pack();
@@ -50,7 +50,7 @@ describe('Plane', function() {
   });
 
   it('fill array', function() {
-    let pl = new ra.Plane();
+    let pl = new ra.Field();
     pl.setSize(4, 4);
     pl.fill([0,7,7,0,
              7,7,0,7,
@@ -68,16 +68,16 @@ describe('Plane', function() {
   });
 
   it('fill error', function() {
-    let first = new ra.Plane();
-    let pl = new ra.Plane();
+    let first = new ra.Field();
+    let pl = new ra.Field();
     pl.setSize(4, 4);
     assert.throws(() => {
       pl.fill(first);
-    }, /plane.fill needs array or number, got/);
+    }, /field.fill needs array or number, got/);
   });
 
   it('serialize', function() {
-    let pl = new ra.Plane();
+    let pl = new ra.Field();
     pl.setSize(4, 4);
     pl.fill([0,7,7,0,
              7,7,0,7,
@@ -89,7 +89,7 @@ describe('Plane', function() {
   });
 
   it('get and put params cant be null', function() {
-    let pl = new ra.Plane();
+    let pl = new ra.Field();
     pl.setSize(4, 4);
     pl.fill([0,4,6,0,
              5,7,2,9,

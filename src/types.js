@@ -1,5 +1,5 @@
 const rgbColor = require('./rgb_color.js');
-const plane = require('./plane.js');
+const field = require('./field.js');
 const baseDisplay = require('./base_display.js');
 const imageLoader = require('./image_loader.js');
 const tiles = require('./tiles.js');
@@ -87,10 +87,10 @@ function isSpriteSheet(obj) {
   return obj.constructor == sprites.SpriteSheet;
 }
 
-function isPlane(obj) {
+function isField(obj) {
   if (!obj) { return false; }
-  return (obj.constructor == plane.Plane ||
-          obj.constructor == imageLoader.ImagePlane);
+  return (obj.constructor == field.Field ||
+          obj.constructor == imageLoader.ImageField);
 }
 
 function isLookOfImage(obj) {
@@ -135,7 +135,7 @@ function ensureIsOneOf(obj, typesPossible) {
   throw new Error(`unknown type: ${obj.constructor.name}, wanted one of ${typesPossible}`);
 }
 
-module.exports.isPlane   = isPlane;
+module.exports.isField   = isField;
 module.exports.isNumber  = isNumber;
 module.exports.isInteger = isInteger;
 module.exports.isArray = isArray;

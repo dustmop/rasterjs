@@ -7,7 +7,7 @@ const rgbColor = require('./rgb_color.js');
 class Colorspace extends component.Component {
   // TODO: use arguments instead, optional arguments
   // Colorspace()
-  // Colorspace(plane)
+  // Colorspace(field)
   // Colorspace(w, h)
   // Colorspace(palette)
   constructor(source, palette, sizeInfo) {
@@ -19,7 +19,7 @@ class Colorspace extends component.Component {
     //   cell_width:  8,
     //   cell_height: 8,
     // }
-    // TODO: source is a Plane, Colorspace can also own Grid of values
+    // TODO: source is a Field, Colorspace can also own Grid of values
     if (!palette && !types.isPalette) {
       throw new Error(`palette must be null or a Palette`);
     }
@@ -48,7 +48,7 @@ class Colorspace extends component.Component {
       throw new Error(`Colorspace's cell_height must be > 0`);
     }
     if (types.isInteger(source)) {
-      throw new Error(`Colorspace expects a Plane as an argument`);
+      throw new Error(`Colorspace expects a Field as an argument`);
     }
     if (!source.data) {
       source.fullyResolve();
@@ -123,20 +123,20 @@ class Colorspace extends component.Component {
     return match.ranking[0].piece;
   }
 
-  ensureConsistentPlanePalette(plane, palette) {
-    let num_cell_x = plane.width  / this.sizeInfo.cell_width;
-    let num_cell_y = plane.height / this.sizeInfo.cell_height;
+  ensureConsistentFieldPalette(field, palette) {
+    let num_cell_x = field.width  / this.sizeInfo.cell_width;
+    let num_cell_y = field.height / this.sizeInfo.cell_height;
 
     let piece_size = this._getPieceSize();
 
     for (let i = 0; i < num_cell_y; i++) {
       for (let j = 0; j < num_cell_x; j++) {
-        let pal_index_needs = this._collectColorNeeds(plane, j, i);
+        let pal_index_needs = this._collectColorNeeds(field, j, i);
         let color_needs = this._lookupPaletteColors(pal_index_needs, palette);
         let was = this.source.get(j, i);
         let match = palette.findNearPieces(color_needs, piece_size);
         let cell_value = this._choosePieceNum(match, was);
-        this._downModulate(plane, j, i, piece_size);
+        this._downModulate(field, j, i, piece_size);
         this.source.put(j, i, cell_value);
       }
     }
@@ -161,13 +161,13 @@ class Colorspace extends component.Component {
     }
   }
 
-  _collectColorNeeds(plane, cell_x, cell_y) {
+  _collectColorNeeds(field, cell_x, cell_y) {
     let collect = {};
     for (let i = 0; i < this.sizeInfo.cell_height; i++) {
       for (let j = 0; j < this.sizeInfo.cell_width; j++) {
         let x = j + cell_x * this.sizeInfo.cell_width;
         let y = i + cell_y * this.sizeInfo.cell_height;
-        collect[plane.get(x, y)] = true;
+        collect[field.get(x, y)] = true;
       }
     }
     let needs = Object.keys(collect);
@@ -184,15 +184,15 @@ class Colorspace extends component.Component {
     return colors;
   }
 
-  _downModulate(plane, cell_x, cell_y, piece_size) {
+  _downModulate(field, cell_x, cell_y, piece_size) {
     let collect = {};
     for (let i = 0; i < this.sizeInfo.cell_height; i++) {
       for (let j = 0; j < this.sizeInfo.cell_width; j++) {
         let x = j + cell_x * this.sizeInfo.cell_width;
         let y = i + cell_y * this.sizeInfo.cell_height;
-        let v = plane.get(x, y);
+        let v = field.get(x, y);
         v = v % piece_size;
-        plane.put(x, y, v);
+        field.put(x, y, v);
       }
     }
   }

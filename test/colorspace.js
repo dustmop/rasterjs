@@ -15,7 +15,7 @@ describe('Colorspace', function() {
     // using this breaks things!
     //let pal = new palette.Palette();
 
-    let source = new ra.Plane();
+    let source = new ra.Field();
     // TODO: make this unnecessary
     source.setSize(1, 1);
     let sizeInfo = {
@@ -35,7 +35,7 @@ describe('Colorspace', function() {
   });
 
   it('choosePieceNum', () => {
-    let source = new ra.Plane();
+    let source = new ra.Field();
     let pal = new palette.Palette();
     let sizeInfo = {cell_width: 1, cell_height: 1};
     let colors = new colorspace.Colorspace(source, pal, sizeInfo);
@@ -99,7 +99,7 @@ describe('Colorspace', function() {
     let fruit = ra.loadImage('test/testdata/small-fruit.png');
     let pal = ra.palette;
 
-    let source = new ra.Plane();
+    let source = new ra.Field();
     source.setSize(1, 1);
     let sizeInfo = {cell_width: 8, cell_height: 8};
     let colors = new colorspace.Colorspace(source, pal, sizeInfo);
@@ -138,7 +138,7 @@ describe('Colorspace', function() {
     ra.usePalette({entries:ents});
 
     // Build colorspace
-    let colors = new ra.Plane();
+    let colors = new ra.Field();
     colors.setSize(4);
     colors.fillPattern([[0,1,1,1],
                        [1,3,3,3],
@@ -152,10 +152,10 @@ describe('Colorspace', function() {
     ra.useTileset(tiles, {tile_width: 4, tile_height: 4});
 
     // Pattern table / Nametable
-    let plane = new ra.Plane();
-    plane.setSize(4);
-    ra.usePlane(plane);
-    plane.fillPattern([[2, 6, 1, 3],
+    let field = new ra.Field();
+    field.setSize(4);
+    ra.useField(field);
+    field.fillPattern([[2, 6, 1, 3],
                        [6, 7, 7, 7],
                        [5, 5, 1, 0],
                        [6, 4, 2, 2]]);
@@ -184,7 +184,7 @@ describe('Colorspace', function() {
     ra.usePalette({entries:ents});
 
     // Build colorspace
-    let colors = new ra.Plane();
+    let colors = new ra.Field();
     colors.setSize(4);
     ra.useColorspace(colors, {cell_width: 4, cell_height: 4, piece_size: 6});
     ra.colorspace.fillPattern([[0,1,1,1],
@@ -198,10 +198,10 @@ describe('Colorspace', function() {
     ra.useTileset(tiles, {tile_width: 4, tile_height: 4});
 
     // Pattern table / Nametable
-    let plane = new ra.Plane();
-    plane.setSize(4);
-    ra.usePlane(plane);
-    plane.fillPattern([[2, 6, 1, 3],
+    let field = new ra.Field();
+    field.setSize(4);
+    ra.useField(field);
+    field.fillPattern([[2, 6, 1, 3],
                        [6, 7, 7, 7],
                        [5, 5, 1, 0],
                        [6, 4, 2, 2]]);
@@ -230,7 +230,7 @@ describe('Colorspace', function() {
                    26, 34, 42, 50];
     ra.usePalette({entries:entries});
 
-    let colors = new ra.Plane();
+    let colors = new ra.Field();
     colors.setSize(6, 6);
     ra.useColorspace(colors, {cell_width: 6, cell_height: 6, piece_size: 4});
 
@@ -246,7 +246,7 @@ describe('Colorspace', function() {
     ra.resetState();
 
     // Build colorspace
-    let colors = new ra.Plane();
+    let colors = new ra.Field();
     colors.setSize(4);
     colors.fillPattern([[0,1,1,1],
                        [1,3,3,3],
@@ -277,7 +277,7 @@ describe('Colorspace', function() {
     ra.usePalette({entries:ents});
 
     // Build colorspace
-    let dat = new ra.Plane();
+    let dat = new ra.Field();
     dat.setSize(4);
     dat.fillPattern([[0,1,1,1],
                      [1,3,3,3],
@@ -292,7 +292,7 @@ describe('Colorspace', function() {
     util.ensureFilesMatch('test/testdata/colors_saved.png', tmpout);
   });
 
-  // TODO: Test normalizePaletteColorspace will downcolor the plane
+  // TODO: Test normalizePaletteColorspace will downcolor the field
 
   // TODO: Test that winner will keep previous value if it works
 

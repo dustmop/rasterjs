@@ -4,7 +4,7 @@ const drawable = require('./drawable.js');
 const destructure = require('./destructure.js');
 const types = require('./types.js');
 
-class Plane extends component.Component {
+class Field extends component.Component {
   constructor() {
     super();
     this.clear();
@@ -12,7 +12,7 @@ class Plane extends component.Component {
   }
 
   name() {
-    return 'plane';
+    return 'field';
   }
 
   clear() {
@@ -29,7 +29,7 @@ class Plane extends component.Component {
 
   clone() {
     this._prepare();
-    let make = new Plane();
+    let make = new Field();
     make.width = this.width;
     make.height = this.height;
     make.pitch = this.pitch;
@@ -47,14 +47,14 @@ class Plane extends component.Component {
 
   setColor(color) {
     if (!types.isNumber(color)) {
-      throw new Error(`plane.setColor needs integer`);
+      throw new Error(`field.setColor needs integer`);
     }
     this.frontColor = Math.floor(color);
   }
 
   fillColor(color) {
     if (!types.isNumber(color)) {
-      throw new Error(`plane.fillColor needs integer`);
+      throw new Error(`field.fillColor needs integer`);
     }
     color = Math.floor(color);
     this.bgColor = color;
@@ -89,7 +89,7 @@ class Plane extends component.Component {
         if (shouldDestruct) {
           realArgs = destructure.from(fname, paramSpec, args, converter);
         }
-        impl.bind(self).apply(self.plane, realArgs);
+        impl.bind(self).apply(self.field, realArgs);
       }
     }
   }
@@ -176,7 +176,7 @@ class Plane extends component.Component {
       }
       return;
     }
-    throw new Error(`plane.fill needs array or number, got ${v}`);
+    throw new Error(`field.fill needs array or number, got ${v}`);
   }
 
   pack() {
@@ -205,7 +205,7 @@ class Plane extends component.Component {
           buff[j] = this.get(this.width - x - 1, y);
         }
       }
-      let make = new Plane();
+      let make = new Field();
       make.data = buff;
       make.pitch = newPitch;
       make.width = this.width;
@@ -222,7 +222,7 @@ class Plane extends component.Component {
           buff[j] = this.get(x, this.height - y - 1);
         }
       }
-      let make = new Plane();
+      let make = new Field();
       make.data = buff;
       make.pitch = newPitch;
       make.width = this.width;
@@ -381,4 +381,4 @@ class Plane extends component.Component {
   }
 }
 
-module.exports.Plane = Plane;
+module.exports.Field = Field;

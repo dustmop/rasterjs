@@ -1,6 +1,6 @@
 const webGLDisplay = require('./webgl_display.js');
 const twoDCanvas = require('./2d_canvas.js');
-const plane = require('./plane.js');
+const field = require('./field.js');
 const filesysWeb = require('./filesys_web.js');
 
 function makeFilesysAccess() {

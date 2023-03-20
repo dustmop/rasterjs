@@ -154,8 +154,8 @@ function flood(pl, initX, initY, color) {
 
 
 function nearestNeighbor(input, scaleX, scaleY) {
-  if (!types.isPlane(input)) {
-    throw new Error(`input must be a Plane`);
+  if (!types.isField(input)) {
+    throw new Error(`input must be a Field`);
   }
   scaleY = scaleY || scaleX;
 
@@ -268,10 +268,10 @@ function writeRGBAColor(surface, x, y, rgba) {
 }
 
 
-function renderLine(plane, x0, y0, x1, y1, connectCorners) {
+function renderLine(field, x0, y0, x1, y1, connectCorners) {
   if (!types.isInteger(x0) || !types.isInteger(y0) ||
       !types.isInteger(x1) || !types.isInteger(y1)) {
-    return renderLineFloat(plane, x0, y0, x1, y1);
+    return renderLineFloat(field, x0, y0, x1, y1);
   }
 
   // Integer based line drawing
@@ -304,7 +304,7 @@ function renderLine(plane, x0, y0, x1, y1, connectCorners) {
     let y = y0;
     for (let x = x0; x <= x1; x++) {
       // Draw a pixel
-      if (x >= 0 && x < plane.width && y >= 0 && y < plane.height) {
+      if (x >= 0 && x < field.width && y >= 0 && y < field.height) {
         put.push([x, y]);
       }
 
@@ -342,7 +342,7 @@ function renderLine(plane, x0, y0, x1, y1, connectCorners) {
     let x = x0;
     for (let y = y0; y <= y1; y++) {
       // Draw a pixel
-      if (x >= 0 && x < plane.width && y >= 0 && y < plane.height) {
+      if (x >= 0 && x < field.width && y >= 0 && y < field.height) {
         put.push([x, y]);
       }
 
@@ -361,7 +361,7 @@ function renderLine(plane, x0, y0, x1, y1, connectCorners) {
   return put;
 }
 
-function renderLineFloat(plane, x0, y0, x1, y1) {
+function renderLineFloat(field, x0, y0, x1, y1) {
   let put = [];
   let deltax = x1 - x0;
   let deltay = y1 - y0;
@@ -440,7 +440,7 @@ function fract(n) {
   return n - Math.floor(n);
 }
 
-function renderPolygon(plane, baseX, baseY, inPoints, fill) {
+function renderPolygon(field, baseX, baseY, inPoints, fill) {
   let isPixelPoly = types.isInteger(baseX) && types.isInteger(baseY);
   let points = [];
   for (let p of inPoints) {
@@ -450,9 +450,9 @@ function renderPolygon(plane, baseX, baseY, inPoints, fill) {
     points.push({x: p[0] + baseX, y: p[1] + baseY});
   }
   if (fill) {
-    return renderPolygonFill(plane, points, isPixelPoly);
+    return renderPolygonFill(field, points, isPixelPoly);
   } else {
-    return renderPolygonOutline(plane, points, isPixelPoly);
+    return renderPolygonOutline(field, points, isPixelPoly);
   }
 }
 
@@ -464,7 +464,7 @@ function asFloats(points) {
   return result;
 }
 
-function renderPolygonFill(plane, inPoints, isPixelPoly) {
+function renderPolygonFill(field, inPoints, isPixelPoly) {
   let put = [];
   let edgeX = [];
   let edgeDir = [];
@@ -507,8 +507,8 @@ function renderPolygonFill(plane, inPoints, isPixelPoly) {
   if (y0 < 0) {
     y0 = 0;
   }
-  if (y1 >= plane.height) {
-    y1 = plane.height - 1;
+  if (y1 >= field.height) {
+    y1 = field.height - 1;
   }
 
   //  Loop through the rows of the image.
@@ -587,8 +587,8 @@ function renderPolygonFill(plane, inPoints, isPixelPoly) {
       if (x0 < 0) {
         x0 = 0;
       }
-      if (x1 >= plane.width) {
-        x1 = plane.width - 1;
+      if (x1 >= field.width) {
+        x1 = field.width - 1;
       }
       let y = Math.floor(pixelY);
       put.push([x0, x1, y, y]);
@@ -596,12 +596,12 @@ function renderPolygonFill(plane, inPoints, isPixelPoly) {
   }
 
   // TODO: Handle fractional edges such that this call isn't needed.
-  let res = renderPolygonOutline(plane, inPoints);
+  let res = renderPolygonOutline(field, inPoints);
   put = put.concat(res);
   return put;
 }
 
-function renderPolygonOutline(plane, points) {
+function renderPolygonOutline(field, points) {
   let put = [];
   let i, j;
 
@@ -613,7 +613,7 @@ function renderPolygonOutline(plane, points) {
     }
     let p = points[i];
     let q = points[j];
-    let res = renderLine(plane, p.x, p.y, q.x, q.y, false);
+    let res = renderLine(field, p.x, p.y, q.x, q.y, false);
     put = put.concat(res);
   }
 

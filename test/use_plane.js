@@ -2,16 +2,16 @@ var assert = require('assert');
 var util = require('./util.js');
 var ra = require('../src/lib.js');
 
-describe('Use plane', function() {
+describe('Use field', function() {
   it('draw to it', function() {
     ra.resetState();
 
-    let plane = new ra.Plane();
-    plane.setSize(16, 16);
-    ra.usePlane(plane);
+    let field = new ra.Field();
+    field.setSize(16, 16);
+    ra.useField(field);
 
-    plane.setColor(28);
-    plane.fillSquare(3, 5, 7);
+    field.setColor(28);
+    field.fillSquare(3, 5, 7);
 
     util.renderCompareTo(ra, 'test/testdata/green_square.png');
   });
@@ -19,12 +19,12 @@ describe('Use plane', function() {
   it('set scroll', function() {
     ra.resetState();
 
-    let plane = new ra.Plane();
-    plane.setSize(16, 16);
-    ra.usePlane(plane);
+    let field = new ra.Field();
+    field.setSize(16, 16);
+    ra.useField(field);
 
-    plane.setColor(28);
-    plane.fillSquare(3, 5, 7);
+    field.setColor(28);
+    field.fillSquare(3, 5, 7);
 
     ra.setSize(10, 10);
     ra.setScrollX(4);
@@ -33,7 +33,7 @@ describe('Use plane', function() {
     util.renderCompareTo(ra, 'test/testdata/scroll_square.png');
   });
 
-  it('scroll same plane', function() {
+  it('scroll same field', function() {
     ra.resetState();
     ra.setSize(16, 16);
 
@@ -49,12 +49,12 @@ describe('Use plane', function() {
   it('methods can destructure', function() {
     ra.resetState();
 
-    let plane = new ra.Plane();
-    plane.setSize(16, 16);
-    ra.usePlane(plane);
+    let field = new ra.Field();
+    field.setSize(16, 16);
+    ra.useField(field);
 
-    plane.setColor(28);
-    plane.fillSquare({x: 3, y: 5, size: 7});
+    field.setColor(28);
+    field.fillSquare({x: 3, y: 5, size: 7});
 
     util.renderCompareTo(ra, 'test/testdata/green_square.png');
   });
@@ -62,17 +62,17 @@ describe('Use plane', function() {
   it('ra loses methods', function() {
     ra.resetState();
 
-    let plane = new ra.Plane();
-    plane.setSize(16, 16);
-    ra.usePlane(plane);
+    let field = new ra.Field();
+    field.setSize(16, 16);
+    ra.useField(field);
 
     assert.throws(function() {
       ra.setColor(28);
-    }, /the scene does not own a plane, because ra.usePlane was called./);
+    }, /the scene does not own a field, because ra.useField was called./);
 
     assert.throws(function() {
       ra.fillSquare({x: 3, y: 5, size: 7});
-    }, /the scene does not own a plane, because ra.usePlane was called./);
+    }, /the scene does not own a field, because ra.useField was called./);
   });
 
 });

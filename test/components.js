@@ -19,20 +19,20 @@ describe('Components', function() {
     let detail = {tile_width: 8, tile_height: 8};
     // error, null constructor does not exist
     assert.throws(() => {
-      // TODO: Tileset without arguments should convert the primary plane
+      // TODO: Tileset without arguments should convert the primary field
       let tiles = ra.useTileset();
     }, /useTileset expects an argument/);
     // number of tiles
     let tiles = ra.useTileset(5, detail);
     assert.equal(tiles.constructor.name, 'Tileset');
     assert.equal(tiles.length, 5);
-    // error, plane needs size
+    // error, field needs size
     assert.throws(() => {
-      let pl = new ra.Plane();
+      let pl = new ra.Field();
       tiles = ra.useTileset(pl, detail);
     }, /Tileset's tile_height is larger than source data/);
-    // plane
-    let pl = new ra.Plane();
+    // field
+    let pl = new ra.Field();
     pl.setSize(16, 16);
     pl.drawCircle(3, 5, 7);
     tiles = ra.useTileset(pl, detail);
@@ -56,16 +56,16 @@ describe('Components', function() {
     // error, number of cells
     assert.throws(() => {
       let tiles = ra.useColorspace(5, detail);
-    }, /Colorspace expects a Plane as an argument/);
-    // plane
-    let pl = new ra.Plane();
+    }, /Colorspace expects a Field as an argument/);
+    // field
+    let pl = new ra.Field();
     pl.setSize(2);
     pl.fillPattern([[0,1], [2,1]])
     let colors = ra.useColorspace(pl, detail);
     assert.equal(colors.constructor.name, 'Colorspace');
   });
 
-  // TODO: planes
+  // TODO: fields
   // TODO: interrupts
 
 });

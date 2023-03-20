@@ -42,9 +42,9 @@ describe('Basic', function() {
     ra.setSize(8, 8);
     assert.throws(() => {
       ra.fillColor('hi');
-    }, /plane.fillColor needs integer/);
+    }, /field.fillColor needs integer/);
     ra.fillColor(3.5);
-    assert.equal(ra.plane.bgColor, 3);
+    assert.equal(ra.field.bgColor, 3);
   });
 
   it('set color needs number', function() {
@@ -52,9 +52,9 @@ describe('Basic', function() {
     ra.setSize(8, 8);
     assert.throws(() => {
       ra.setColor('hi');
-    }, /plane.setColor needs integer/);
+    }, /field.setColor needs integer/);
     ra.setColor(7.1);
-    assert.equal(ra.plane.frontColor, 7);
+    assert.equal(ra.field.frontColor, 7);
   });
 
   it('do not wrap', function() {

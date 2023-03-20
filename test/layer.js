@@ -6,16 +6,16 @@ describe('Layers', function() {
     ra.resetState();
     ra.setZoom(2);
 
-    let upper = new ra.Plane();
+    let upper = new ra.Field();
     upper.setSize(16, 16);
 
-    let lower = new ra.Plane();
+    let lower = new ra.Field();
     lower.setSize(16, 16);
 
     ra.setSize(16, 16);
-    ra.usePlane([lower, upper]);
+    ra.useField([lower, upper]);
 
-    // Draw upper plane, dirt on ground.
+    // Draw upper field, dirt on ground.
     upper.fillColor(0);
     upper.setColor(33);
     upper.fillRect({x: 0, y: 11, w: 16, h: 5});
@@ -29,7 +29,7 @@ describe('Layers', function() {
     upper.drawDot({x: 8, y: 13});
     upper.drawDot({x:12, y: 15});
 
-    // Draw lower plane, the sun.
+    // Draw lower field, the sun.
     lower.fillColor(32);
     lower.setColor(42);
     lower.fillCircle({x: 2, y: 2, r: 6});
@@ -41,16 +41,16 @@ describe('Layers', function() {
     ra.resetState();
     ra.setZoom(2);
 
-    let upper = new ra.Plane();
+    let upper = new ra.Field();
     upper.setSize(16, 16);
 
-    let lower = new ra.Plane();
+    let lower = new ra.Field();
     lower.setSize(16, 16);
 
     ra.setSize(16, 16);
-    ra.usePlane([lower, upper]);
+    ra.useField([lower, upper]);
 
-    // Draw upper plane, dirt on ground.
+    // Draw upper field, dirt on ground.
     upper.fillColor(0);
     upper.setColor(33);
     upper.fillRect({x: 0, y: 11, w: 16, h: 5});
@@ -64,7 +64,7 @@ describe('Layers', function() {
     upper.drawDot({x: 8, y: 13});
     upper.drawDot({x:12, y: 15});
 
-    // Draw lower plane, the sun.
+    // Draw lower field, the sun.
     lower.fillColor(32);
     lower.setColor(42);
     lower.fillCircle({x: 2, y: 2, r: 6});
@@ -79,16 +79,16 @@ describe('Layers', function() {
     ra.resetState();
     ra.setZoom(2);
 
-    let upper = new ra.Plane();
+    let upper = new ra.Field();
     upper.setSize(16, 16);
 
-    let lower = new ra.Plane();
+    let lower = new ra.Field();
     lower.setSize(16, 16);
 
     ra.setSize(16, 16);
-    ra.usePlane([lower, upper]);
+    ra.useField([lower, upper]);
 
-    // Draw upper plane, dirt on ground.
+    // Draw upper field, dirt on ground.
     upper.fillColor(0);
     upper.setColor(33);
     upper.fillRect({x: 0, y: 11, w: 16, h: 5});
@@ -102,7 +102,7 @@ describe('Layers', function() {
     upper.drawDot({x: 8, y: 13});
     upper.drawDot({x:12, y: 15});
 
-    // Draw lower plane, the sun.
+    // Draw lower field, the sun.
     lower.fillColor(32);
     lower.setColor(42);
     lower.fillCircle({x: 2, y: 2, r: 6});
@@ -117,16 +117,16 @@ describe('Layers', function() {
     ra.resetState();
     ra.setZoom(2);
 
-    let upper = new ra.Plane();
+    let upper = new ra.Field();
     upper.setSize(16, 4);
 
-    let lower = new ra.Plane();
+    let lower = new ra.Field();
     lower.setSize(16, 16);
 
     ra.setSize(16, 16);
-    ra.usePlane([lower, upper]);
+    ra.useField([lower, upper]);
 
-    // Draw upper plane, dirt on ground.
+    // Draw upper field, dirt on ground.
     upper.fillColor(0);
     upper.setColor(33);
     upper.fillRect({x: 0, y: 0, w: 16, h: 4});
@@ -140,7 +140,7 @@ describe('Layers', function() {
     upper.drawDot({x: 8, y: 1});
     upper.drawDot({x:12, y: 3});
 
-    // Draw lower plane, the sun.
+    // Draw lower field, the sun.
     lower.fillColor(32);
     lower.setColor(42);
     lower.fillCircle({x: 2, y: 2, r: 6});
@@ -155,16 +155,16 @@ describe('Layers', function() {
     ra.resetState();
     ra.setZoom(2);
 
-    let upper = new ra.Plane();
+    let upper = new ra.Field();
     upper.setSize(16, 4);
 
-    let lower = new ra.Plane();
+    let lower = new ra.Field();
     lower.setSize(16, 16);
 
     ra.setSize(16, 16);
-    ra.usePlane([lower, upper]);
+    ra.useField([lower, upper]);
 
-    // Draw upper plane, dirt on ground.
+    // Draw upper field, dirt on ground.
     upper.fillColor(0);
     upper.setColor(33);
     upper.fillRect({x: 0, y: 0, w: 16, h: 4});
@@ -178,7 +178,7 @@ describe('Layers', function() {
     upper.drawDot({x: 8, y: 1});
     upper.drawDot({x:12, y: 3});
 
-    // Draw lower plane, the sun.
+    // Draw lower field, the sun.
     lower.fillColor(32);
     lower.setColor(42);
     lower.fillCircle({x: 2, y: 2, r: 6});
@@ -194,16 +194,16 @@ describe('Layers', function() {
     ra.resetState();
     ra.setZoom(2);
 
-    let upper = new ra.Plane();
+    let upper = new ra.Field();
     upper.setSize(12, 4);
 
-    let lower = new ra.Plane();
+    let lower = new ra.Field();
     lower.setSize(16, 16);
 
     ra.setSize(16, 16);
-    ra.usePlane([lower, upper]);
+    ra.useField([lower, upper]);
 
-    // Draw upper plane, dirt on ground.
+    // Draw upper field, dirt on ground.
     upper.fillColor(0);
     upper.setColor(33);
     upper.fillRect({x: 0, y: 0, w: 16, h: 4});
@@ -217,7 +217,7 @@ describe('Layers', function() {
     upper.drawDot({x: 8, y: 1});
     upper.drawDot({x:12, y: 3});
 
-    // Draw lower plane, the sun.
+    // Draw lower field, the sun.
     lower.fillColor(32);
     lower.setColor(42);
     lower.fillCircle({x: 2, y: 2, r: 6});
@@ -233,16 +233,16 @@ describe('Layers', function() {
     ra.resetState();
     ra.setZoom(2);
 
-    let upper = new ra.Plane();
+    let upper = new ra.Field();
     upper.setSize(12, 4);
 
-    let lower = new ra.Plane();
+    let lower = new ra.Field();
     lower.setSize(16, 16);
 
     ra.setSize(16, 16);
-    ra.usePlane([lower, upper]);
+    ra.useField([lower, upper]);
 
-    // Draw upper plane, dirt on ground.
+    // Draw upper field, dirt on ground.
     upper.fillColor(0);
     upper.setColor(33);
     upper.fillRect({x: 0, y: 0, w: 16, h: 4});
@@ -256,7 +256,7 @@ describe('Layers', function() {
     upper.drawDot({x: 8, y: 1});
     upper.drawDot({x:12, y: 3});
 
-    // Draw lower plane, the sun.
+    // Draw lower field, the sun.
     lower.fillColor(32);
     lower.setColor(42);
     lower.fillCircle({x: 2, y: 2, r: 6});
@@ -297,20 +297,20 @@ describe('Layers', function() {
     let tileset = new ra.Tileset({tile_width: 4, tile_height: 4});
     tileset.addFrom(img);
 
-    let upper = new ra.Plane();
+    let upper = new ra.Field();
     upper.setSize(4, 1);
 
-    let lower = new ra.Plane();
+    let lower = new ra.Field();
     lower.setSize(16, 16);
 
     ra.setSize(16, 16);
-    ra.usePlane([lower, upper]);
+    ra.useField([lower, upper]);
     ra.useTileset([tileset]);
 
-    // Draw upper plane, dirt on ground.
+    // Draw upper field, dirt on ground.
     upper.fillPattern([[2, 2, 6, 2]]);
 
-    // Draw lower plane, the sun.
+    // Draw lower field, the sun.
     lower.fillColor(32);
     lower.setColor(42);
     lower.fillCircle({x: 2, y: 2, r: 6});
@@ -318,10 +318,10 @@ describe('Layers', function() {
     // create layering and then later on scroll
     ra.useLayering([
       {
-        layer: 0, plane: 0,
+        layer: 0, field: 0,
       },
       {
-        layer: 1, plane: 1, tileset: 0,
+        layer: 1, field: 1, tileset: 0,
       }
     ]);
 
@@ -341,20 +341,20 @@ describe('Layers', function() {
     let tileset = new ra.Tileset({tile_width: 4, tile_height: 4});
     tileset.addFrom(img);
 
-    let upper = new ra.Plane();
+    let upper = new ra.Field();
     upper.setSize(4, 1);
 
-    let lower = new ra.Plane();
+    let lower = new ra.Field();
     lower.setSize(16, 16);
 
     ra.setSize(16, 16);
-    ra.usePlane([lower, upper]);
+    ra.useField([lower, upper]);
     ra.useTileset([tileset]);
 
-    // Draw upper plane, dirt on ground.
+    // Draw upper field, dirt on ground.
     upper.fillPattern([[2, 2, 6, 2]]);
 
-    // Draw lower plane, the sun.
+    // Draw lower field, the sun.
     lower.fillColor(32);
     lower.setColor(42);
     lower.fillCircle({x: 2, y: 2, r: 6});
@@ -365,10 +365,10 @@ describe('Layers', function() {
 
     ra.useLayering([
       {
-        layer: 0, plane: 0,
+        layer: 0, field: 0,
       },
       {
-        layer: 1, plane: 1, tileset: 0,
+        layer: 1, field: 1, tileset: 0,
       }
     ]);
 

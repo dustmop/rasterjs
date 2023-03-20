@@ -3,7 +3,7 @@ var ra = require('../src/lib.js');
 var assert = require('assert');
 
 describe('Select', function() {
-  it('part of the plane', function() {
+  it('part of the field', function() {
     ra.resetState();
 
     ra.setSize(10, 10);

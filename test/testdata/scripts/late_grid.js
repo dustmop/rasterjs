@@ -6,7 +6,7 @@ ra.setZoom(4);
 let img = ra.loadImage('test/testdata/small-fruit.png');
 ra.paste(img);
 
-ra.renderPrimaryPlane();
+ra.renderPrimaryField();
 ra.setGrid(2);
 
 ra.run();

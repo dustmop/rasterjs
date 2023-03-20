@@ -1,6 +1,6 @@
 const component = require('./component.js');
 const types = require('./types.js');
-const plane = require('./plane.js');
+const field = require('./field.js');
 const palette = require('./palette.js');
 const rgbmap = require('./rgb_map.js');
 const visualizer = require('./visualizer.js');
@@ -159,14 +159,14 @@ class Tileset extends component.Component {
   }
 
   /**
-   * carve up the plane into tiles, add them to this tileset
-   * @param {Plane} pl - the plane to create tiles from
+   * carve up the field into tiles, add them to this tileset
+   * @param {Field} pl - the field to create tiles from
    * @param {bool} allowDups - whether to allow duplicates (or combine them)
    * @return {PatternTable} the pattern table for the added tiles
    */
   addFrom(pl, allowDups) {
-    if (!types.isPlane(pl)) {
-      throw new Error(`addFrom requires a Plane`);
+    if (!types.isField(pl)) {
+      throw new Error(`addFrom requires a Field`);
     }
     if (this.tileHeight > pl.height) {
       throw new Error(`Tileset's tile_height is larger than source data`);
@@ -432,14 +432,14 @@ class PatternTable {
     return JSON.stringify(obj);
   }
 
-  toPlane() {
-    // "Why is a PatternTable not just a Plane"?
+  toField() {
+    // "Why is a PatternTable not just a Field"?
     //
-    // A Plane is defined to hold 8-bit values. But a PatternTable
+    // A Field is defined to hold 8-bit values. But a PatternTable
     // is allowed to have arbitrary values, since a Tileset is allowed
     // to have any num of tiles. This method down-samples to an 8-bit
-    // plane by truncating large values
-    let pl = new plane.Plane();
+    // field by truncating large values
+    let pl = new field.Field();
     pl.setSize(this.width, this.height);
     pl.fill(this.data);
     return pl;
@@ -448,23 +448,23 @@ class PatternTable {
 }
 
 
-function createFrom(param, sizeInfo, sourcePlane, outExtra) {
+function createFrom(param, sizeInfo, sourceField, outExtra) {
   let outTileset = null;
   let outPattern = null;
   if (types.isObject(param) && sizeInfo == null) {
-    // construct a tileset from the current plane, still need {sizeInfo}
+    // construct a tileset from the current field, still need {sizeInfo}
     sizeInfo = param;
     outTileset = new Tileset(sizeInfo);
-    outPattern = outTileset.addFrom(sourcePlane, false).toPlane();
-    outExtra.fromCurrentPlane = true;
+    outPattern = outTileset.addFrom(sourceField, false).toField();
+    outExtra.fromCurrentField = true;
 
   } else if (types.isTileset(param)) {
     outTileset = param;
 
-  } else if (types.isPlane(param)) {
-    let inPlane = param;
+  } else if (types.isField(param)) {
+    let inField = param;
     outTileset = new Tileset(sizeInfo);
-    outPattern = outTileset.addFrom(inPlane, true).toPlane();
+    outPattern = outTileset.addFrom(inField, true).toField();
 
   } else if (types.isNumber(param)) {
     let numTiles = param;

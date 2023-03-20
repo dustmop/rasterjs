@@ -1,15 +1,15 @@
-describe('plane size', function () {
+describe('field size', function () {
   it('smaller and scroll', function(success) {
     let require = window['require'];
     let ra = require('raster');
     ra.resetState();
 
-    let plane = new ra.Plane();
-    plane.setSize(16, 16);
-    ra.usePlane(plane);
+    let field = new ra.Field();
+    field.setSize(16, 16);
+    ra.useField(field);
 
-    plane.setColor(28);
-    plane.fillSquare(3, 5, 7);
+    field.setColor(28);
+    field.fillSquare(3, 5, 7);
 
     ra.setSize(10, 10);
     ra.setScrollX(4);

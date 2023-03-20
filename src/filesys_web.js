@@ -10,7 +10,7 @@ class FilesysAccess {
     this.loadFail = null;
   }
 
-  readImageData(filename, imgPlane) {
+  readImageData(filename, imgField) {
     // wait for the image to load
     this.numToLoad++;
 
@@ -24,21 +24,21 @@ class FilesysAccess {
       let ctx = canvas.getContext('2d');
       ctx.drawImage(imgElem, 0, 0, imgElem.width, imgElem.height);
       let pixels = ctx.getImageData(0, 0, imgElem.width, imgElem.height);
-      // assign to the imagePlane being opened
-      imgPlane.rgbBuff = pixels.data;
-      imgPlane.width = pixels.width;
+      // assign to the imageField being opened
+      imgField.rgbBuff = pixels.data;
+      imgField.width = pixels.width;
       // TODO: Fix me
-      imgPlane.pitch = pixels.width;
-      imgPlane.height = pixels.height;
+      imgField.pitch = pixels.width;
+      imgField.height = pixels.height;
       // callback for when image loading, down-sample RGB to 8-bit values
-      if (imgPlane.whenRead) {
-        imgPlane.whenRead();
+      if (imgField.whenRead) {
+        imgField.whenRead();
       }
       this.numLoadDone++;
     }
     // handle errors
     imgElem.onerror = () => {
-      imgPlane.loadState = -1;
+      imgField.loadState = -1;
       this.loadFail = filename;
       this.numLoadDone++;
     }

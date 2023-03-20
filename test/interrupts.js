@@ -67,7 +67,7 @@ describe('Interrupts', function() {
       {scanline: [90,99], irq: (ln) => { ra.setScrollX(ln) }},
     ]);
 
-    ra.renderPrimaryPlane();
+    ra.renderPrimaryField();
 
     let surfaces = interrupts.visualize();
     ra._saveSurfacesTo(surfaces, tmpout);

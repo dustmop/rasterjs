@@ -5,7 +5,7 @@ var ra = require('../src/lib.js');
 describe('Tileset', function() {
   it('tiles from image', function() {
     ra.resetState();
-    ra.setSize(6, 6, {planeOnly: true});
+    ra.setSize(6, 6, {fieldOnly: true});
 
     let tiles = ra.loadImage('test/testdata/tiles.png');
     ra.useTileset(tiles, {tile_width: 4, tile_height: 4});
@@ -18,17 +18,17 @@ describe('Tileset', function() {
     util.renderCompareTo(ra, 'test/testdata/map_image.png');
   });
 
-  it('tiles with separate plane', function() {
+  it('tiles with separate field', function() {
     ra.resetState();
 
-    let plane = new ra.Plane();
-    plane.setSize(4);
+    let field = new ra.Field();
+    field.setSize(4);
 
     let tiles = ra.loadImage('test/testdata/tiles.png');
     ra.useTileset(tiles, {tile_width: 4, tile_height: 4});
-    ra.usePlane(plane);
+    ra.useField(field);
 
-    plane.fillPattern([[2, 6, 1, 3],
+    field.fillPattern([[2, 6, 1, 3],
                        [6, 7, 7, 7],
                        [5, 5, 1, 0],
                        [6, 4, 2, 2]]);
@@ -39,14 +39,14 @@ describe('Tileset', function() {
   it('draw tiles', function() {
     ra.resetState();
 
-    let plane = new ra.Plane();
-    plane.setSize(4);
+    let field = new ra.Field();
+    field.setSize(4);
 
-    let tilePlane = new ra.Plane();
-    tilePlane.setSize(16, 16);
+    let tileField = new ra.Field();
+    tileField.setSize(16, 16);
 
-    let tiles = ra.useTileset(tilePlane, {tile_width: 8, tile_height: 8});
-    ra.usePlane(plane);
+    let tiles = ra.useTileset(tileField, {tile_width: 8, tile_height: 8});
+    ra.useField(field);
 
     let modTile = tiles.get(0);
     modTile.put(0, 0, 34);
@@ -64,7 +64,7 @@ describe('Tileset', function() {
     modTile.put(4, 4, 34);
     modTile.put(5, 5, 34);
 
-    plane.fillPattern([[ 0, 0, 1, 0],
+    field.fillPattern([[ 0, 0, 1, 0],
                        [ 0, 1, 0, 0],
                        [ 0, 0, 1, 2],
                        [ 0, 0, 0, 0],
@@ -82,8 +82,8 @@ describe('Tileset', function() {
   it('draw using tileset', function() {
     ra.resetState();
 
-    let plane = new ra.Plane();
-    plane.setSize(4);
+    let field = new ra.Field();
+    field.setSize(4);
 
     let tileset = new ra.Tileset({num: 4, tile_width: 8, tile_height: 8});
 
@@ -104,9 +104,9 @@ describe('Tileset', function() {
     t.put(5, 5, 34);
 
     ra.useTileset(tileset);
-    ra.usePlane(plane);
+    ra.useField(field);
 
-    plane.fillPattern([[ 0, 0, 1, 0],
+    field.fillPattern([[ 0, 0, 1, 0],
                        [ 0, 1, 0, 0],
                        [ 0, 0, 1, 2],
                        [ 0, 0, 0, 0],
@@ -125,10 +125,10 @@ describe('Tileset', function() {
   it('tiles with palette', function() {
     ra.resetState();
 
-    let plane = new ra.Plane();
-    plane.setSize(4);
+    let field = new ra.Field();
+    field.setSize(4);
 
-    let tiles = new ra.Plane();
+    let tiles = new ra.Field();
     tiles.setSize(16);
 
     // tile 0
@@ -149,9 +149,9 @@ describe('Tileset', function() {
     ra.usePalette({entries:[ 4, 31, 37, 34, 31]});
 
     ra.useTileset(tiles, {tile_width: 8, tile_height: 8});
-    ra.usePlane(plane);
+    ra.useField(field);
 
-    plane.fillPattern([[ 0, 1, 2, 0],
+    field.fillPattern([[ 0, 1, 2, 0],
                        [ 0, 1, 0, 2],
                        [ 1, 3, 1, 2],
                        [ 2, 2, 0, 0],
@@ -163,8 +163,8 @@ describe('Tileset', function() {
   it('missing dimension', function() {
     ra.resetState();
 
-    let plane = new ra.Plane();
-    plane.setSize(4);
+    let field = new ra.Field();
+    field.setSize(4);
 
     let tiles = ra.loadImage('test/testdata/tiles.png');
     assert.throws(function() {
@@ -175,8 +175,8 @@ describe('Tileset', function() {
   it('invalid dimension', function() {
     ra.resetState();
 
-    let plane = new ra.Plane();
-    plane.setSize(4);
+    let field = new ra.Field();
+    field.setSize(4);
 
     let tiles = ra.loadImage('test/testdata/tiles.png');
     assert.throws(function() {
@@ -187,14 +187,14 @@ describe('Tileset', function() {
   it('bad tile number', function() {
     ra.resetState();
 
-    let plane = new ra.Plane();
-    plane.setSize(4);
+    let field = new ra.Field();
+    field.setSize(4);
 
     let tiles = ra.loadImage('test/testdata/tiles.png');
     ra.useTileset(tiles, {tile_width: 4, tile_height: 4});
-    ra.usePlane(plane);
+    ra.useField(field);
 
-    plane.fillPattern([[2, 6, 1, 3],
+    field.fillPattern([[2, 6, 1, 3],
                        [6, 7,15, 7],
                        [5, 5, 1, 0],
                        [6, 4, 2, 2]]);
@@ -221,7 +221,7 @@ describe('Tileset', function() {
     ra.usePalette({entries:ents});
 
     // Build colorspace
-    let colors = new ra.Plane();
+    let colors = new ra.Field();
     colors.setSize(4);
     colors.fillPattern([[0,1,1,1],
                         [1,3,3,3],
@@ -235,10 +235,10 @@ describe('Tileset', function() {
     ra.useTileset(tiles, {tile_width: 4, tile_height: 4});
 
     // Pattern table / Nametable
-    let plane = new ra.Plane();
-    plane.setSize(4);
-    ra.usePlane(plane);
-    plane.fillPattern([[2, 6, 1, 3],
+    let field = new ra.Field();
+    field.setSize(4);
+    ra.useField(field);
+    field.fillPattern([[2, 6, 1, 3],
                        [6, 7, 7, 7],
                        [5, 5, 1, 0],
                        [6, 4, 2, 2]]);
@@ -266,7 +266,7 @@ describe('Tileset', function() {
     ra.usePalette({entries:ents});
 
     // Build colorspace
-    let colors = new ra.Plane();
+    let colors = new ra.Field();
     colors.setSize(4);
     colors.fillPattern([[0,1,1,1],
                         [1,3,3,3],
@@ -280,10 +280,10 @@ describe('Tileset', function() {
     ra.useTileset(tiles, {tile_width: 4, tile_height: 4});
 
     // Pattern table / Nametable
-    let plane = new ra.Plane();
-    plane.setSize(4);
-    ra.usePlane(plane);
-    plane.fillPattern([[2, 6, 1, 3],
+    let field = new ra.Field();
+    field.setSize(4);
+    ra.useField(field);
+    field.fillPattern([[2, 6, 1, 3],
                        [6, 7, 7, 7],
                        [5, 5, 1, 0],
                        [6, 4, 2, 2]]);
@@ -312,7 +312,7 @@ describe('Tileset', function() {
     ra.usePalette({entries:ents});
 
     // Build attributes
-    let dat = new ra.Plane();
+    let dat = new ra.Field();
     dat.setSize(4);
     dat.fillPattern([[0,1,1,1],
                      [1,3,3,3],
@@ -344,7 +344,7 @@ describe('Tileset', function() {
     util.ensureFilesMatch('test/testdata/tiles_saved_4wide.png', tmpout);
   });
 
-  it('build from plane', function() {
+  it('build from field', function() {
     let tmpdir = util.mkTmpDir();
     let tmpout = tmpdir + '/actual.png';
     ra.resetState();
@@ -356,7 +356,7 @@ describe('Tileset', function() {
     assert.equal(tiles.length, 8);
     assert.equal(tiles.numTiles, 8);
 
-    let pattern = ra.plane.pack();
+    let pattern = ra.field.pack();
     let expect = new Uint8Array([
       0, 1, 2, 3,
       1, 4, 4, 4,
@@ -364,8 +364,8 @@ describe('Tileset', function() {
       1, 7, 0, 0,
     ]);
     assert.deepEqual(expect, pattern);
-    assert.deepEqual(4, ra.plane.width);
-    assert.deepEqual(4, ra.plane.height);
+    assert.deepEqual(4, ra.field.width);
+    assert.deepEqual(4, ra.field.height);
   });
 
   it('cant construct from string', function() {
@@ -376,7 +376,7 @@ describe('Tileset', function() {
 
   it('tiles addFrom', function() {
     ra.resetState();
-    ra.setSize(3, 3, {planeOnly: true});
+    ra.setSize(3, 3, {fieldOnly: true});
 
     let firstSet = ra.loadImage('test/testdata/tiles.png');
     let secondSet = ra.loadImage('test/testdata/dark_sphere_with_bg.png');

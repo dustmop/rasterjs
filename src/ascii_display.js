@@ -3,14 +3,14 @@ const baseDisplay = require('./base_display.js');
 class AsciiDisplay extends baseDisplay.BaseDisplay {
   appLoop(runID, nextFrame) {
     let _res = this._renderer.render();
-    let plane = this._renderer.getFirstPlane();
-    let buffer = plane.data;
-    let pitch = plane.pitch;
+    let field = this._renderer.getFirstField();
+    let buffer = field.data;
+    let pitch = field.pitch;
 
-    for (let y = 0; y < plane.height; y++) {
+    for (let y = 0; y < field.height; y++) {
       let line = '';
-      for (let x = 0; x < plane.width; x++) {
-        let k = y * plane.pitch + x;
+      for (let x = 0; x < field.width; x++) {
+        let k = y * field.pitch + x;
         line += byteToAscii(buffer[k]);
       }
       line += '\n';

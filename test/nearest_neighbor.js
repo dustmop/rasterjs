@@ -9,7 +9,7 @@ describe('Nearest neighbor', function() {
     let img = ra.loadImage('test/testdata/simple.png');
     ra.paste(img);
 
-    let res = ra.renderPrimaryPlane();
+    let res = ra.renderPrimaryField();
     let surf = res[0];
     surf = algorithm.nearestNeighborSurface(surf, 2);
 
@@ -20,38 +20,38 @@ describe('Nearest neighbor', function() {
     util.ensureFilesMatch(actual, 'test/testdata/simple-times-2.png');
   });
 
-  it('plane scale by 2', function() {
+  it('field scale by 2', function() {
     ra.resetState();
 
     let img = ra.loadImage('test/testdata/simple.png');
     ra.paste(img);
 
     let upscale = ra.resize(32, 32);
-    ra.usePlane(upscale);
+    ra.useField(upscale);
 
     util.renderCompareTo(ra, 'test/testdata/simple-times-2.png');
   });
 
-  it('plane upscale', function() {
+  it('field upscale', function() {
     ra.resetState();
 
     let img = ra.loadImage('test/testdata/simple.png');
     ra.paste(img);
 
     let upscale = ra.resize(29, 33);
-    ra.usePlane(upscale);
+    ra.useField(upscale);
 
     util.renderCompareTo(ra, 'test/testdata/simple-upscale.png');
   });
 
-  it('plane downscale', function() {
+  it('field downscale', function() {
     ra.resetState();
 
     let img = ra.loadImage('test/testdata/simple.png');
     ra.paste(img);
 
     let upscale = ra.resize(13, 11);
-    ra.usePlane(upscale);
+    ra.useField(upscale);
 
     util.renderCompareTo(ra, 'test/testdata/simple-downscale.png');
   });

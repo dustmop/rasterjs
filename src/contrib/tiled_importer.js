@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const xmlParser = require('fast-xml-parser');
 const ra = require('../lib.js');
-const plane = require('../plane.js');
+const field = require('../field.js');
 const tileset = require('../tiles.js');
 
 class TiledImporter {
@@ -23,13 +23,13 @@ class TiledImporter {
   _loadAsJson(filename, content) {
     let structure = JSON.parse(content);
     let firstLayer = structure.layers[0];
-    let planeHeight = firstLayer.height;
-    let planeWidth = firstLayer.width;
-    let planeData = firstLayer.data;
+    let fieldHeight = firstLayer.height;
+    let fieldWidth = firstLayer.width;
+    let fieldData = firstLayer.data;
 
-    let pl = new plane.Plane();
-    pl.setSize(planeWidth, planeHeight);
-    pl.fill(planeData.map((e)=>e-1));
+    let pl = new field.Field();
+    pl.setSize(fieldWidth, fieldHeight);
+    pl.fill(fieldData.map((e)=>e-1));
 
     let rootpath = path.dirname(filename);
     let imagepath = path.join(rootpath, structure.tilesets[0].image);
@@ -43,7 +43,7 @@ class TiledImporter {
     ts.addFrom(image, true);
 
     return {
-      plane: pl,
+      field: pl,
       tileset: ts,
     }
   }
@@ -53,21 +53,21 @@ class TiledImporter {
     let parser = new xmlParser.XMLParser(options);
     let xmlDoc = parser.parse(content);
     let dataObj = xmlDoc.map.layer.data['#text'];
-    let planeData = dataObj.replace('\n', '').split(',');
+    let fieldData = dataObj.replace('\n', '').split(',');
 
     let imageObj = xmlDoc.map.tileset.image;
     let rootpath = path.dirname(filename);
     let imagepath = path.join(rootpath, imageObj['@_source']);
     let image = ra.loadImage(imagepath);
 
-    let planeWidth = parseInt(xmlDoc.map['@_width'], 10);
-    let planeHeight = parseInt(xmlDoc.map['@_height'], 10);
+    let fieldWidth = parseInt(xmlDoc.map['@_width'], 10);
+    let fieldHeight = parseInt(xmlDoc.map['@_height'], 10);
     let tilewidth = parseInt(xmlDoc.map['@_tilewidth'], 10);
     let tileheight = parseInt(xmlDoc.map['@_tileheight'], 10);
 
-    let pl = new plane.Plane();
-    pl.setSize(planeWidth, planeHeight);
-    pl.fill(planeData.map((e)=>e-1));
+    let pl = new field.Field();
+    pl.setSize(fieldWidth, fieldHeight);
+    pl.fill(fieldData.map((e)=>e-1));
 
     let detail = {
       tile_width: tilewidth,
@@ -77,7 +77,7 @@ class TiledImporter {
     ts.addFrom(image, true);
 
     return {
-      plane: pl,
+      field: pl,
       tileset: ts,
     }
   }

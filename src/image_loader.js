@@ -47,18 +47,18 @@ class Loader {
 
     if (this.addedFiles[filename]) {
       let found = this.addedFiles[filename];
-      let planePitch = found.width;
-      let imgPlane = new ImagePlane();
-      imgPlane.offsetTop = found.offsetTop || 0;
-      imgPlane.offsetLeft = found.offsetLeft || 0;
-      imgPlane.rgbBuff = found.buff;
-      imgPlane.width = found.width;
-      imgPlane.pitch = planePitch;
-      imgPlane.height = found.height;
-      imgPlane.palette = palette;
-      imgPlane.loadState = LOAD_STATE_READ;
-      imgPlane.fillData();
-      return imgPlane;
+      let fieldPitch = found.width;
+      let imgField = new ImageField();
+      imgField.offsetTop = found.offsetTop || 0;
+      imgField.offsetLeft = found.offsetLeft || 0;
+      imgField.rgbBuff = found.buff;
+      imgField.width = found.width;
+      imgField.pitch = fieldPitch;
+      imgField.height = found.height;
+      imgField.palette = palette;
+      imgField.loadState = LOAD_STATE_READ;
+      imgField.fillData();
+      return imgField;
     }
 
     if (this.references[asAliasString] != null) {
@@ -66,7 +66,7 @@ class Loader {
       return this.list[index];
     }
 
-    let img = new ImagePlane();
+    let img = new ImageField();
     img.refLoader = new weak.Ref(this);
     img.filename = filename;
     img.id = this.list.length;
@@ -146,7 +146,7 @@ class LookOfImage {
   }
 }
 
-class ImagePlane {
+class ImageField {
   constructor() {
     this.refLoader = null;
     this.filename = null;
@@ -181,7 +181,7 @@ class ImagePlane {
   }
 
   select(x, y, w, h) {
-    let make = new ImagePlane();
+    let make = new ImageField();
     make.refLoader = this.refLoader;
     make.filename = this.filename;
     make.id = this.id;
@@ -199,7 +199,7 @@ class ImagePlane {
   }
 
   clone() {
-    let make = new ImagePlane();
+    let make = new ImageField();
     make.refLoader = this.refLoader;
     make.filename = this.filename;
     make.id = this.id;
@@ -429,5 +429,5 @@ class ImagePlane {
 }
 
 module.exports.Loader = Loader;
-module.exports.ImagePlane = ImagePlane;
+module.exports.ImageField = ImageField;
 module.exports.LookOfImage = LookOfImage;

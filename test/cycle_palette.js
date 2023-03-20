@@ -37,7 +37,7 @@ describe('Cycle palette', function() {
       0, 8, 8, 8, 8, 8, 8, 0,
       0, 0, 8, 8, 8, 8, 0, 0
     ]);
-    assert.deepEqual(expect, ra.plane.pack());
+    assert.deepEqual(expect, ra.field.pack());
 
     // Compare the palette
     palette = ra.palette;
@@ -149,8 +149,8 @@ describe('Cycle palette', function() {
   });
 
 
-  // Palette can make the plane agree with it, to remap its colors
-  it('explicit valued palette can remap the plane', function() {
+  // Palette can make the field agree with it, to remap its colors
+  it('explicit valued palette can remap the field', function() {
     ra.resetState();
     ra.usePalette('pico8');
 
@@ -181,7 +181,7 @@ describe('Cycle palette', function() {
       1, 0, 0, 0, 0, 0, 0, 1,
       1, 1, 0, 0, 0, 0, 1, 1
     ]);
-    assert.deepEqual(expect, ra.plane.pack());
+    assert.deepEqual(expect, ra.field.pack());
 
     // Compare the palette
     let palette = ra.palette;

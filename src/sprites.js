@@ -94,7 +94,7 @@ class SpriteSheet {
       let border = res[i];
       let slice = {x:border.x+1, y:border.y+1};
       let offset = slice.y * pl.pitch + slice.x;
-      // TODO: Don't need to use tile, it's just a generic plane.
+      // TODO: Don't need to use tile, it's just a generic field.
       let ch = new tiles.Tile();
       ch.width = border.r - border.x - 1;
       ch.height = border.d - border.y - 1;

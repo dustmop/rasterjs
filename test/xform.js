@@ -11,7 +11,7 @@ describe('xform', function() {
     ra.paste(img);
 
     let pl = ra.xform('hflip');
-    ra.usePlane(pl);
+    ra.useField(pl);
 
     util.renderCompareTo(ra, 'test/testdata/fruit-hflip.png');
   });
@@ -23,7 +23,7 @@ describe('xform', function() {
     ra.paste(img);
 
     let pl = ra.xform('vflip');
-    ra.usePlane(pl);
+    ra.useField(pl);
 
     util.renderCompareTo(ra, 'test/testdata/fruit-vflip.png');
   });

@@ -8,7 +8,7 @@ describe('Tiled importer', function() {
     let importer = new ra.contrib.TiledImporter()
     let res = importer.load('test/testdata/example.json');
 
-    ra.usePlane(res.plane);
+    ra.useField(res.field);
     ra.useTileset(res.tileset);
 
     util.renderCompareTo(ra, 'test/testdata/tiled_example.png');
@@ -20,7 +20,7 @@ describe('Tiled importer', function() {
     let importer = new ra.contrib.TiledImporter()
     let res = importer.load('test/testdata/example.tmx');
 
-    ra.usePlane(res.plane);
+    ra.useField(res.field);
     ra.useTileset(res.tileset);
 
     util.renderCompareTo(ra, 'test/testdata/tiled_example.png');

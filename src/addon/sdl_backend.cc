@@ -164,7 +164,13 @@ Napi::Value SDLBackend::HandleEvent(const Napi::CallbackInfo& info) {
   // TODO: handle click, click-with-region
   if (eventName.Utf8Value() == std::string("keypress")) {
     Napi::Function handleFunc = info[2].As<Napi::Function>();
-    this->keyHandleFunc = Napi::Persistent(handleFunc);
+    this->keyDownHandleFunc = Napi::Persistent(handleFunc);
+  } else if (eventName.Utf8Value() == std::string("keyup")) {
+    Napi::Function handleFunc = info[2].As<Napi::Function>();
+    this->keyUpHandleFunc = Napi::Persistent(handleFunc);
+  } else if (eventName.Utf8Value() == std::string("keydown")) {
+    Napi::Function handleFunc = info[2].As<Napi::Function>();
+    this->keyDownHandleFunc = Napi::Persistent(handleFunc);
   }
   return Napi::Number::New(env, 0);
 }
@@ -421,14 +427,28 @@ void SDLBackend::execOneFrame(const CallbackInfo& info) {
       if (event.key.keysym.sym == SDLK_ESCAPE) {
         this->isRunning = false;
         return;
-      } else if (!this->keyHandleFunc.IsEmpty()) {
+      } else if (!this->keyDownHandleFunc.IsEmpty()) {
         int code = event.key.keysym.sym;
         std::string s(1, char(code));
         Napi::String str = Napi::String::New(env, s);
         Napi::Object obj = Napi::Object::New(env);
         obj["key"] = str;
         napi_value val = obj;
-        this->keyHandleFunc.Call({val});
+        this->keyDownHandleFunc.Call({val});
+        if (env.IsExceptionPending()) {
+            return;
+        }
+      }
+      break;
+    case SDL_KEYUP:
+      if (!this->keyUpHandleFunc.IsEmpty()) {
+        int code = event.key.keysym.sym;
+        std::string s(1, char(code));
+        Napi::String str = Napi::String::New(env, s);
+        Napi::Object obj = Napi::Object::New(env);
+        obj["key"] = str;
+        napi_value val = obj;
+        this->keyUpHandleFunc.Call({val});
         if (env.IsExceptionPending()) {
             return;
         }

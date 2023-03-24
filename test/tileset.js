@@ -467,5 +467,55 @@ describe('Tileset', function() {
     }, /put: y is null/);
   });
 
+  it('xform', function() {
+    let input = [0,4,6,0,
+                 5,7,2,9,
+                 0,0,0,3,
+                 0,1,8,0];
+
+    let t = new ra.Tile(4, 4);
+    t.fill(input);
+    let actual = t.serialize();
+    let expect = {
+      width: 4,
+      height: 4,
+      data: input,
+    };
+    assert.deepEqual(actual, JSON.stringify(expect));
+
+    actual = t.xform('hflip').serialize();
+    expect = {
+      width: 4,
+      height: 4,
+      data: [0,6,4,0,
+             9,2,7,5,
+             3,0,0,0,
+             0,8,1,0],
+    };
+    assert.deepEqual(actual, JSON.stringify(expect));
+
+    actual = t.xform('vflip').serialize();
+    expect = {
+      width: 4,
+      height: 4,
+      data: [0,1,8,0,
+             0,0,0,3,
+             5,7,2,9,
+             0,4,6,0],
+    };
+    assert.deepEqual(actual, JSON.stringify(expect));
+
+    actual = t.xform('vhflip').serialize();
+    expect = {
+      width: 4,
+      height: 4,
+      data: [0,8,1,0,
+             3,0,0,0,
+             9,2,7,5,
+             0,6,4,0],
+    };
+    assert.deepEqual(actual, JSON.stringify(expect));
+
+  });
 
 });

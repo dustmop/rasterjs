@@ -50,7 +50,8 @@ class SDLBackend : public Napi::ObjectWrap<SDLBackend> {
   bool hasWriteBuffer;
   Napi::Reference<Napi::Value> writeBuffer;
 
-  Napi::FunctionReference keyHandleFunc;
+  Napi::FunctionReference keyUpHandleFunc;
+  Napi::FunctionReference keyDownHandleFunc;
   int sdlInitialized;
   int zoomLevel;
 

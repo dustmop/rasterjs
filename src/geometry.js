@@ -33,6 +33,21 @@ class Polygon {
       result.push([rot_x + this._centerX, rot_y + this._centerY]);
     }
     this._points = result;
+    return this;
+  }
+
+  resize(factor) {
+    let newPoints = [];
+    for (let p of this._points) {
+      var x = p[0] * factor;
+      var y = p[1] * factor;
+      newPoints.push([x, y]);
+    }
+    let newCenterAxis = {
+      x: this._centerX * factor,
+      y: this._centerY * factor,
+    };
+    return new Polygon(newPoints, newCenterAxis);
   }
 }
 

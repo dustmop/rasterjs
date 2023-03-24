@@ -95,4 +95,17 @@ describe('Polygon', function() {
 
     util.renderCompareTo(ra, 'test/testdata/polygon_float.png');
   });
+
+  it('resize polygon', function() {
+    ra.resetState();
+
+    ra.setSize({w: 36, h: 34});
+    ra.fillColor(0);
+
+    let polygon = new ra.Polygon([[2, 3], [14, 3], [10, 7], [6, 7]]);
+    let bigger = polygon.resize(2);
+    ra.drawPolygon(bigger, 1, 4);
+
+    util.renderCompareTo(ra, 'test/testdata/polygon_resize.png');
+  });
 });

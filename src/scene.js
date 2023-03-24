@@ -528,15 +528,12 @@ class Scene {
       'save', spec, arguments, null);
     if (component) {
       // render component
-      let res = component.visualize();
+      let res = component.visualize({palette: this.palette});
       this._fsacc.saveTo(savepath, res);
       return;
     }
     // render the main field
     let surfs = this.renderPrimaryField();
-    if (!this._fsacc) {
-      throw new Error('cannot save field without filesys access');
-    }
     let comp = new compositor.Compositor();
     let combined = comp.combine(surfs, surfs[0].width, surfs[0].height,
                                 this.config.zoomScale);
@@ -637,8 +634,8 @@ class Scene {
       eventName = optField;
     }
 
-    let allowed = ['keypress', 'click', 'ready', 'render', 'message',
-                   'dipchange'];
+    let allowed = ['keypress', 'keydown', 'keyup', 'click', 'ready',
+                   'render', 'message', 'dipchange'];
     if (!allowed.includes(eventName)) {
       let expect = allowed.map((n)=>`"${n}"`).join(', ');
       throw new Error(`unknown event "${eventName}", only ${expect} supported`);

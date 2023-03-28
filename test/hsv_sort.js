@@ -22,14 +22,14 @@ describe('HSV sort', function() {
       util.ensureFilesMatch('test/testdata/pal_sphere.png', tmpout);
 
       // Compare the field data buffer
-      let bin = ra.field.pack();
+      let bin = ra.field.toArrays();
       let pitch = 16;
 
       let actual = '';
       for (let y = 0; y < 16; y++) {
         for (let x = 0; x < 16; x++) {
           let k = y*pitch+x;
-          actual += `${bin[k]} `;
+          actual += `${bin[y][x]} `;
         }
         actual += '\n';
       }
@@ -76,7 +76,7 @@ describe('HSV sort', function() {
       ra.save(pal, tmpout);
       util.ensureFilesMatch('test/testdata/pal_sphere_sort.png', tmpout);
 
-      let bin = ra.field.pack();
+      let bin = ra.field.toArrays();
       let pitch = 16;
 
       // Compare the field data buffer
@@ -84,7 +84,7 @@ describe('HSV sort', function() {
       for (let y = 0; y < 16; y++) {
         for (let x = 0; x < 16; x++) {
           let k = y*pitch+x;
-          actual += `${bin[k]} `;
+          actual += `${bin[y][x]} `;
         }
         actual += '\n';
       }

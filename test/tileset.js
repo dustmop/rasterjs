@@ -356,13 +356,13 @@ describe('Tileset', function() {
     assert.equal(tiles.length, 8);
     assert.equal(tiles.numTiles, 8);
 
-    let pattern = ra.field.pack();
-    let expect = new Uint8Array([
-      0, 1, 2, 3,
-      1, 4, 4, 4,
-      5, 5, 2, 6,
-      1, 7, 0, 0,
-    ]);
+    let pattern = ra.field.toArrays();
+    let expect = [
+      [0, 1, 2, 3],
+      [1, 4, 4, 4],
+      [5, 5, 2, 6],
+      [1, 7, 0, 0],
+    ];
     assert.deepEqual(expect, pattern);
     assert.deepEqual(4, ra.field.width);
     assert.deepEqual(4, ra.field.height);

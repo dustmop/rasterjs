@@ -47,17 +47,17 @@ describe('Image', function() {
     util.renderCompareTo(ra, 'test/testdata/small-fruit.png');
 
     // 8-bit data array is using pico8 values
-    let expect = new Uint8Array([
-      0, 0, 0, 0, 4, 0, 0, 0,
-      0, 0, 0, 0, 0, 4, 0, 0,
-      0, 2, 8, 8, 8, 4, 2, 0,
-      2, 8,14, 8, 4, 8, 8, 2,
-      8,14,14, 8, 8, 8, 8, 8,
-      8, 8, 8, 8, 8, 8, 8, 8,
-      0, 8, 8, 8, 8, 8, 8, 0,
-      0, 0, 8, 8, 8, 8, 0, 0
-    ]);
-    assert.deepEqual(expect, ra.field.pack());
+    let expect = [
+      [0, 0, 0, 0, 4, 0, 0, 0],
+      [0, 0, 0, 0, 0, 4, 0, 0],
+      [0, 2, 8, 8, 8, 4, 2, 0],
+      [2, 8,14, 8, 4, 8, 8, 2],
+      [8,14,14, 8, 8, 8, 8, 8],
+      [8, 8, 8, 8, 8, 8, 8, 8],
+      [0, 8, 8, 8, 8, 8, 8, 0],
+      [0, 0, 8, 8, 8, 8, 0, 0],
+    ];
+    assert.deepEqual(expect, ra.field.toArrays());
   });
 
 
@@ -71,17 +71,17 @@ describe('Image', function() {
 
     util.renderCompareTo(ra, 'test/testdata/small-fruit.png');
 
-    let expect = new Uint8Array([
-      0, 0, 0, 0, 1, 0, 0, 0,
-      0, 0, 0, 0, 0, 1, 0, 0,
-      0, 4, 2, 2, 2, 1, 4, 0,
-      4, 2, 5, 2, 1, 2, 2, 4,
-      2, 5, 5, 2, 2, 2, 2, 2,
-      2, 2, 2, 2, 2, 2, 2, 2,
-      0, 2, 2, 2, 2, 2, 2, 0,
-      0, 0, 2, 2, 2, 2, 0, 0
-    ]);
-    assert.deepEqual(expect, ra.field.pack());
+    let expect = [
+      [0, 0, 0, 0, 1, 0, 0, 0],
+      [0, 0, 0, 0, 0, 1, 0, 0],
+      [0, 4, 2, 2, 2, 1, 4, 0],
+      [4, 2, 5, 2, 1, 2, 2, 4],
+      [2, 5, 5, 2, 2, 2, 2, 2],
+      [2, 2, 2, 2, 2, 2, 2, 2],
+      [0, 2, 2, 2, 2, 2, 2, 0],
+      [0, 0, 2, 2, 2, 2, 0, 0],
+    ];
+    assert.deepEqual(expect, ra.field.toArrays());
 
     // Compare the palette
     let palette = ra.palette;
@@ -160,17 +160,17 @@ describe('Image', function() {
     util.renderCompareTo(ra, 'test/testdata/small-fruit-quant.png');
 
     // 8-bit data array is using pico8 values
-    let expect = new Uint8Array([
-       1, 1,39, 1, 3,32,27,38,
-       0,30,36,28,31, 5,40,26,
-      37,42, 9,14, 7, 4,45,35,
-      43,54,58,21,24,55,19,44,
-      17,57,59,50,15,18,46,22,
-      53, 6,56,48,47, 8,13,16,
-      41,51,20,10,17,18,52,34,
-      25,29,12,11,23,49,33, 2,
-    ]);
-    assert.deepEqual(expect, ra.field.pack());
+    let expect = [
+      [ 1, 1,39, 1, 3,32,27,38],
+      [ 0,30,36,28,31, 5,40,26],
+      [37,42, 9,14, 7, 4,45,35],
+      [43,54,58,21,24,55,19,44],
+      [17,57,59,50,15,18,46,22],
+      [53, 6,56,48,47, 8,13,16],
+      [41,51,20,10,17,18,52,34],
+      [25,29,12,11,23,49,33, 2],
+    ];
+    assert.deepEqual(expect, ra.field.toArrays());
   });
 
 

@@ -179,18 +179,20 @@ class Field extends component.Component {
     throw new Error(`field.fill needs array or number, got ${v}`);
   }
 
-  pack() {
+  toArrays() {
     let newPitch = this.width;
     let numPixels = this.height * newPitch;
-    let newBuff = new Uint8Array(numPixels);
+    let newArrays = new Array(this.height);
     for (let y = 0; y < this.height; y++) {
+      let newRow = new Array(this.width);
       for (let x = 0; x < this.width; x++) {
         let k = y*this.pitch + x;
         let j = y*newPitch + x;
-        newBuff[j] = this.data[k];
+        newRow[x] = this.data[k];
       }
+      newArrays[y] = newRow;
     }
-    return newBuff;
+    return newArrays;
   }
 
   xform(kind) {

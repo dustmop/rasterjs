@@ -11,14 +11,14 @@ describe('Field', function() {
                     [0,0,0,7],
                     [0,7,7,0],
                    ]);
-    let bin = pl.pack();
+    let bin = pl.toArrays();
 
-    let expect = new Uint8Array([
-      0, 7, 7, 0,
-      7, 7, 0, 7,
-      0, 0, 0, 7,
-      0, 7, 7, 0,
-    ]);
+    let expect = [
+      [0, 7, 7, 0],
+      [7, 7, 0, 7],
+      [0, 0, 0, 7],
+      [0, 7, 7, 0],
+    ];
     assert.deepEqual(expect, bin);
   });
 
@@ -38,14 +38,14 @@ describe('Field', function() {
     let pl = new ra.Field();
     pl.setSize(4, 4);
     pl.fill(5);
-    let bin = pl.pack();
+    let bin = pl.toArrays();
 
-    let expect = new Uint8Array([
-      5, 5, 5, 5,
-      5, 5, 5, 5,
-      5, 5, 5, 5,
-      5, 5, 5, 5,
-    ]);
+    let expect = [
+      [5, 5, 5, 5],
+      [5, 5, 5, 5],
+      [5, 5, 5, 5],
+      [5, 5, 5, 5],
+    ];
     assert.deepEqual(expect, bin);
   });
 
@@ -56,14 +56,14 @@ describe('Field', function() {
              7,7,0,7,
              0,0,0,7,
              0,7,7,0]);
-    let bin = pl.pack();
+    let bin = pl.toArrays();
 
-    let expect = new Uint8Array([
-      0, 7, 7, 0,
-      7, 7, 0, 7,
-      0, 0, 0, 7,
-      0, 7, 7, 0,
-    ]);
+    let expect = [
+      [0, 7, 7, 0],
+      [7, 7, 0, 7],
+      [0, 0, 0, 7],
+      [0, 7, 7, 0],
+    ];
     assert.deepEqual(expect, bin);
   });
 

@@ -27,17 +27,17 @@ describe('Cycle palette', function() {
 
     util.renderCompareTo(ra, 'test/testdata/green-fruit.png');
 
-    let expect = new Uint8Array([
-      0, 0, 0, 0, 4, 0, 0, 0,
-      0, 0, 0, 0, 0, 4, 0, 0,
-      0, 2, 8, 8, 8, 4, 2, 0,
-      2, 8,14, 8, 4, 8, 8, 2,
-      8,14,14, 8, 8, 8, 8, 8,
-      8, 8, 8, 8, 8, 8, 8, 8,
-      0, 8, 8, 8, 8, 8, 8, 0,
-      0, 0, 8, 8, 8, 8, 0, 0
-    ]);
-    assert.deepEqual(expect, ra.field.pack());
+    let expect = [
+     [ 0, 0, 0, 0, 4, 0, 0, 0],
+     [ 0, 0, 0, 0, 0, 4, 0, 0],
+     [ 0, 2, 8, 8, 8, 4, 2, 0],
+     [ 2, 8,14, 8, 4, 8, 8, 2],
+     [ 8,14,14, 8, 8, 8, 8, 8],
+     [ 8, 8, 8, 8, 8, 8, 8, 8],
+     [ 0, 8, 8, 8, 8, 8, 8, 0],
+     [ 0, 0, 8, 8, 8, 8, 0, 0],
+    ];
+    assert.deepEqual(expect, ra.field.toArrays());
 
     // Compare the palette
     palette = ra.palette;
@@ -171,17 +171,17 @@ describe('Cycle palette', function() {
     let img = ra.loadImage('test/testdata/small-fruit.png');
     ra.paste(img);
 
-    let expect = new Uint8Array([
-      1, 1, 1, 1, 4, 1, 1, 1,
-      1, 1, 1, 1, 1, 4, 1, 1,
-      1, 2, 0, 0, 0, 4, 2, 1,
-      2, 0, 3, 0, 4, 0, 0, 2,
-      0, 3, 3, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0,
-      1, 0, 0, 0, 0, 0, 0, 1,
-      1, 1, 0, 0, 0, 0, 1, 1
-    ]);
-    assert.deepEqual(expect, ra.field.pack());
+    let expect = [
+      [1, 1, 1, 1, 4, 1, 1, 1],
+      [1, 1, 1, 1, 1, 4, 1, 1],
+      [1, 2, 0, 0, 0, 4, 2, 1],
+      [2, 0, 3, 0, 4, 0, 0, 2],
+      [0, 3, 3, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [1, 0, 0, 0, 0, 0, 0, 1],
+      [1, 1, 0, 0, 0, 0, 1, 1],
+    ];
+    assert.deepEqual(expect, ra.field.toArrays());
 
     // Compare the palette
     let palette = ra.palette;

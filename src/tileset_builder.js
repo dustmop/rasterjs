@@ -12,7 +12,7 @@ class TilesetBuilderDisplay extends baseDisplay.BaseDisplay {
     }
     this._tileset = new tiles.Tileset(details);
     this._frames = [];
-    this._numFrames = info.numFrames || 64;
+    this._numFrames = info.numFrames || 256;
   }
 
   name() {

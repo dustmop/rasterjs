@@ -7,13 +7,13 @@ describe('SDL', function() {
   it('capture from window', function() {
     ra.resetState();
     let buff = new Uint8Array(16384);
-    if (ra._display.name() != 'sdl') {
+    if (ra.display.name() != 'sdl') {
       console.log(`
 [ERROR]: This test will only pass if raster.js's native
 add-on is built with SDL support!
 `);
     }
-    ra._display.insteadWriteBuffer(buff);
+    ra.display.insteadWriteBuffer(buff);
 
     ra.setZoom(4);
     ra.setGrid(2);

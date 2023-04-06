@@ -5,6 +5,6 @@ const util = {
       ra.quit();
       ensureImageMatch(filename, success);
     }});
-    ra._display._hasDocumentBody = true;
+    ra.display._hasDocumentBody = true;
   }
 };

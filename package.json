@@ -25,7 +25,7 @@
     "gif-encoder-2": "^1.0.5",
     "jpeg-js": "^0.4.3",
     "node-addon-api": "^3.1.0",
-    "png-file-stream": "^1.2.1",
+    "png-file-stream": "^1.0.1",
     "pngjs": "^6.0.0",
     "randomstring": "^1.1.5",
     "rgbquant": "^1.1.2"
@@ -35,10 +35,10 @@
     "karma-firefox-launcher": "^2.1.1",
     "karma-mocha": "^2.0.1",
     "karma-webpack": "^5.0.0",
-    "mocha": "^8.2.1",
-    "uglifyjs-webpack-plugin": "^2.2.0",
-    "webpack": "^5.20.0",
-    "webpack-cli": "^4.5.0"
+    "mocha": "^10.2.0",
+    "terser-webpack-plugin": "^5.3.7",
+    "webpack": "^5.78.0",
+    "webpack-cli": "^5.0.1"
   },
   "browser": {
     "./src/node_env.js": false,

@@ -1,7 +1,7 @@
 var fs = require('fs');
 var path = require('path');
 
-var SYSTEM_PATHS = [
+var LIB_PATHS = [
   '/lib',
   '/usr/lib',
   '/usr/lib64',
@@ -15,8 +15,8 @@ var SYSTEM_PATHS = [
 ];
 
 function locateSDL(mode) {
-  if (mode != 'include' && mode != 'lib' && mode != 'symbol') {
-    throw new Error(`illegal mode "${mode}", use "include", "lib", or "symbol"`);
+  if (mode != 'include' && mode != 'lib' && mode != 'dll' && mode != 'symbol') {
+    throw new Error(`illegal mode "${mode}", use "include", "lib", 'dll', or "symbol"`);
   }
   if (process.platform == 'darwin') {
     return locateSDLMacos(mode);
@@ -29,13 +29,16 @@ function locateSDL(mode) {
 
 function locateSDLMacos(mode) {
   let basename = '';
-  for (let i = 0; i < SYSTEM_PATHS.length; i++) {
-    let root = SYSTEM_PATHS[i];
+  for (let i = 0; i < LIB_PATHS.length; i++) {
+    let root = LIB_PATHS[i];
     if (mode == 'include') {
       root = root.replace('/lib', '/include');
       basename = 'SDL2';
     } else if (mode == 'lib') {
       basename = 'libSDL2.dylib';
+    } else if (mode == 'dll') {
+      root = root.replace('/lib', '/bin');
+      basename = 'SDL2.dll';
     } else if (mode == 'symbol') {
       basename = 'libSDL2.dylib';
     }
@@ -60,6 +63,9 @@ function locateSDLWindows(mode) {
   } else if (mode == 'lib') {
     let dir = getWindowsSDLDir('c:/SDL/');
     return path.posix.join(dir, "/lib/libSDL2.dll.a");
+  } else if (mode == 'dll') {
+    let dir = getWindowsSDLDir('c:/SDL/');
+    return path.posix.join(dir, "/bin/SDL2.dll");
   } else if (mode == 'symbol') {
     let dir = getWindowsSDLDir('c:/SDL/');
     if (fs.existsSync(path.posix.join(dir, "/lib/libSDL2.dll.a"))) {
@@ -96,6 +102,8 @@ function findFolderInDir(dir, regex) {
   }
   return '';
 }
+
+module.exports.locateSDL = locateSDL;
 
 if (require.main === module) {
   var mode = process.argv[2];

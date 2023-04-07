@@ -36,7 +36,7 @@ ra.show();
 
 ![](asset/example.png)
 
-# Building
+# Installing
 
 You can use raster.js either in the browser using canvas, or on the command-line using node.js (graphics will appear in a new SDL window).
 
@@ -50,9 +50,17 @@ npm run build
 
 which outputs `dist/raster.min.js`
 
+You can also create a development build (less efficient, but better for debugging) by running:
+
+```
+npm run dev
+```
+
 ### Node.js
 
-Building requires SDL2 development libraries. See below for platform specific details. Once you have them properly setup, run
+Installing raster.js for use with node.js requires setting up an environment that can build native add-ons. This means you need to install Python and a C++ compiler, see [the node-gyp instructions for your operating system](https://github.com/nodejs/node-gyp#installation).
+
+Using SDL requires the installing the SDL2 development libraries. See below for platform specific details. Once you have them properly setup, run
 
 ```
 npm install raster
@@ -64,7 +72,7 @@ On macos, run `brew install sdl2` to get SDL2.
 
 ### SDL2, Windows
 
-For Windows, only [msys2](https://www.msys2.org/) is currently supported. Go to [this page](https://www.libsdl.org/download-2.0.php) and get `SDL2-devel-2.0.16-mingw.tar.gz`. Extract the `SDL2-2.0.16` folder and place it within the directory `c:/SDL/`, so that it ends up at `c:/SDL/SDL2-2.0.16/`. If you use to use a different location instead of `c:/SDL/`, assign that location to the environment variable `SDL_PATH`.
+For Windows, it is recommended to use [msys2](https://www.msys2.org/), but Powershell and WSL will probably work too. Grab the latest [SDL release](https://github.com/libsdl-org/SDL/releases) and get `SDL2-devel-<version>-mingw.zip`. Extract this zip to get the `SDL2-<version>` folder and place it within the directory `c:/SDL/`, so that it ends up at `c:/SDL/SDL2-<version>/`. If you use to use a different location instead of `c:/SDL/`, assign that location to the environment variable `SDL_PATH`.
 
 # Getting started
 

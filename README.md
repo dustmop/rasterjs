@@ -186,7 +186,7 @@ Use a specific colorMap. See `useColors` in the docs for the names of built-in c
 
 The default colorMap for raster.js is the "quick" colors, shown here:
 
-![](asset/quick-colormap.png)
+![](asset/quick-rgbmap.png)
 
 # API
 

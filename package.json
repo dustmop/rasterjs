@@ -13,6 +13,7 @@
     "test": "npm run node-test && npm run web-test && npm run sdl-test",
     "node-test": "mocha",
     "sdl-test": "mocha test/sdl/",
+    "example-test": "mocha test/example/",
     "web-test": "karma start --single-run --browsers FirefoxHeadless karma.conf.js --",
     "build": "webpack",
     "dev": "webpack --config webpack.dev.js",

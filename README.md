@@ -56,7 +56,11 @@ You can also create a development build (less efficient, but better for debuggin
 npm run dev
 ```
 
-### Node.js
+### Webpack
+
+See [this example](src/contrib/example-web/) for how to build a web app using raster.js with webpack.
+
+### Node.js with SDL
 
 Installing raster.js for use with node.js requires setting up an environment that can build native add-ons. This means you need to install Python and a C++ compiler, see [the node-gyp instructions for your operating system](https://github.com/nodejs/node-gyp#installation).
 

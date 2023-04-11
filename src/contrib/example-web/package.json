@@ -1,0 +1,20 @@
+{
+  "name": "example-raster-web",
+  "version": "0.1.0",
+  "description": "example of how to use raster.js with webpack",
+  "scripts": {
+    "build": "webpack",
+    "devserver": "webpack serve --open"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "raster": "0.7.9"
+  },
+  "devDependencies": {
+    "webpack": "5.78.0",
+    "webpack-cli": "5.0.1",
+    "webpack-dev-server": "4.13.2"
+  }
+}

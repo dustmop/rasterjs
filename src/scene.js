@@ -211,13 +211,14 @@ class Scene {
       this.height = h;
     }
     if (this._owned != null) {
-      if (this.field.width != 0 || this.field.height != 0) {
+      if ((this.field.width != 0 && this.field.width != w) ||
+          (this.field.height != 0 && this.field.height != h)) {
+        // TODO: allow resizing? Need to understand how display vs field size
+        // interact when one or the other is changed
         throw new Error(`cannot resize owned field more than once`);
       }
       this.field.setSize(w, h);
     }
-    // TODO: allow resizing? Need to understand how display vs field size
-    // interact when one or the other is changed
     this._renderer.clear();
   }
 

@@ -75,4 +75,18 @@ describe('Use field', function() {
     }, /the scene does not own a field, because ra.useField was called./);
   });
 
+  it('resize twice error', function() {
+    ra.resetState();
+    ra.setSize(16, 16);
+    assert.throws(() => {
+      ra.setSize(32, 32);
+    }, /cannot resize owned field more than once/);
+  });
+
+  it('resize twice same values okay', function() {
+    ra.resetState();
+    ra.setSize(16, 16);
+    ra.setSize(16, 16);
+  });
+
 });

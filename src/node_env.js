@@ -40,6 +40,30 @@ function makeDisplay(name) {
 var _fullStackTrace = false;
 
 function getOptions() {
+
+  // A user of raster.js can disable command-line arguments entirely by
+  // adding "dev_rasterjs.noargv" to their package.json:
+  // {
+  //   "name": "_your_package_",
+  //   ...
+  //   "dev_rasterjs": { "noargv": true }
+  // }
+  try {
+    let currDir = process.cwd();
+    const thisPackageJson = require(path.join(currDir, 'package.json'));
+    if (thisPackageJson.dev_rasterjs.noargv === true) {
+      return {};
+    }
+  } catch (e) {
+    // pass
+  }
+
+  // Command-line arguments can also be disabled using the environment
+  // variable "RASTERJS_NOARGV"
+  if (process.env.RASTERJS_NOARGV) {
+    return {};
+  }
+
   // If running as a test, don't parse command-line arguments. This allows
   // the test runner to process its own arguments instead.
   if (runningAsTest()) {
@@ -85,6 +109,7 @@ function handleErrorGracefully(err, _display) {
   }
   let trace = _removeStackUntilAboveRasterScene(err);
   process.stderr.write(trace);
+  process.stderr.write(`to get full stack trace use --full-trace`);
   process.exit(1);
 }
 

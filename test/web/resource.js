@@ -29,7 +29,7 @@ describe('resources', function () {
         surface.buff[k+3] = 0xff;
       }
     }
-    let resources = ra.makeImageResources();
+    let resources = ra.newImageResources();
     ra.useImageResources(resources);
     resources.insert('shape.png', surface);
     let img = ra.loadImage('shape.png');

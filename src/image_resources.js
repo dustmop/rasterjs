@@ -7,7 +7,6 @@ class ImageResources {
     if (!types.isWeakRef(refScene)) {
       throw new Error('needs weak ref for scene object')
     }
-    console.log(refScene.deref());
     this.refScene = refScene;
     this._holding = {};
   }

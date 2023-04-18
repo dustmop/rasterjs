@@ -487,8 +487,15 @@ class Renderer {
       if (this._inspector._unitType == 'display') {
         inspectX = this._inspector._unitX / this._inspector._zoom;
         inspectY = this._inspector._unitY / this._inspector._zoom;
+      } else if (this._inspector._unitType == 'pixel') {
+        inspectX = this._inspector._unitX;
+        inspectY = this._inspector._unitY;
+      } else if (this._inspector._unitType == 'tile') {
+        let layer = this._layers[0];
+        inspectX = this._inspector._unitX * layer.tileset.tileWidth;
+        inspectY = this._inspector._unitY * layer.tileset.tileHeight;
       } else {
-        throw new Error(`unknown unit type ${pixel._unitType}`);
+        throw new Error(`unknown unit type ${this._inspector._unitType}`);
       }
     }
 
@@ -792,7 +799,9 @@ class Inspector {
     // TODO: alternatively, if executor is stopped (has no drawFunc), fill
     // inspector data based upon the previous render
     //this._owner.fillInspectorAt(this, 0, x, y);
-    this._executor._forceRender = true;
+    if (this._executor) {
+      this._executor._forceRender = true;
+    }
   }
 
   stop() {

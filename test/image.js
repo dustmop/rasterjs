@@ -1,7 +1,7 @@
 var assert = require('assert');
 var util = require('./util.js');
 var ra = require('../src/lib.js');
-var imageLoader = require('../src/image_loader.js');
+var imageField = require('../src/image_field.js');
 
 describe('Image', function() {
 
@@ -116,14 +116,14 @@ describe('Image', function() {
 
     let img = ra.loadImage('test/testdata/small-fruit.png');
     assert.equal(img.numColors(), 5);
-    let expect = new imageLoader.LookOfImage([0, 4, 2, 8, 14], 3)
+    let expect = new imageField.LookOfImage([0, 4, 2, 8, 14], 3)
     assert.deepEqual(img.look, expect);
   });
 
 
   // Look object has some functions
   it('look has min and max', function() {
-    let look = new imageLoader.LookOfImage([3, 5, 8, 4, 2, 7], 1);
+    let look = new imageField.LookOfImage([3, 5, 8, 4, 2, 7], 1);
     assert.equal(look.min(), 2);
     assert.equal(look.max(), 8);
     assert.deepEqual(look.toInts(), [3, 5, 8, 4, 2, 7]);

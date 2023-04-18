@@ -1,7 +1,7 @@
 const rgbColor = require('./rgb_color.js');
 const field = require('./field.js');
 const baseDisplay = require('./base_display.js');
-const imageLoader = require('./image_loader.js');
+const imageField = require('./image_field.js');
 const tiles = require('./tiles.js');
 const colorspace = require('./colorspace.js');
 const palette = require('./palette.js');
@@ -90,12 +90,12 @@ function isSpriteSheet(obj) {
 function isField(obj) {
   if (!obj) { return false; }
   return (obj.constructor == field.Field ||
-          obj.constructor == imageLoader.ImageField);
+          obj.constructor == imageField.ImageField);
 }
 
 function isLookOfImage(obj) {
   if (!obj) { return false; }
-  return obj.constructor == imageLoader.LookOfImage;
+  return obj.constructor == imageField.LookOfImage;
 }
 
 function isPaletteEntry(obj) {

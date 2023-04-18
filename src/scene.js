@@ -8,6 +8,7 @@ const renderer = require('./renderer.js');
 const executor = require('./executor.js');
 const geometry = require('./geometry.js');
 const imageLoader = require('./image_loader.js');
+const imageResources = require('./image_resources.js');
 const textLoader = require('./text_loader.js');
 const asciiDisplay = require('./ascii_display.js');
 const tilesetBuilder = require('./tileset_builder.js');
@@ -378,13 +379,14 @@ class Scene {
     this.display.initialize();
   }
 
+  newImageResources() {
+    return new imageResources.ImageResources(new weak.Ref(this));
+  }
+
   // TODO: Re-organize the methods in this file, into topics.
 
-  insertResource(name, imageSurf) {
-    if (!types.isSurface(imageSurf)) {
-      throw new Error(`insertResource: expects surface`);
-    }
-    this._imgLoader.insert(name, imageSurf);
+  useImageResources(resources) {
+    this._imgLoader.useResources(resources);
   }
 
   // NOTE: An experimental feature.

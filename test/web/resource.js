@@ -29,7 +29,9 @@ describe('resources', function () {
         surface.buff[k+3] = 0xff;
       }
     }
-    ra.insertResource('shape.png', surface);
+    let resources = ra.makeImageResources();
+    ra.useImageResources(resources);
+    resources.insert('shape.png', surface);
     let img = ra.loadImage('shape.png');
     ra.paste(img);
     util.renderCompareTo(ra, 'img/spin-frame00.png', success);

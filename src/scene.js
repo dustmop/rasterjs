@@ -71,6 +71,7 @@ class Scene {
     this.TURN = this.TAU;
     this.PI = this.TAU / 2;
     this.scroll = {};
+    this.slowdown = null;
 
     this._hasRenderedOnce = false;
     this._onDipChangeHandlers = null;
@@ -270,6 +271,10 @@ class Scene {
 
   setScrollY(y) {
     this.scroll.y = Math.floor(y);
+  }
+
+  setSlowdown(s) {
+    this.slowdown = s;
   }
 
   resetState() {

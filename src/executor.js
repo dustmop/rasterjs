@@ -121,8 +121,12 @@ class Executor {
 
   updateSceneTime() {
     let scene = this.refOwner.deref();
-    scene.time = this.time;
-    scene.tick = this.tick;
+    let slowdown = scene.slowdown ?? 1.0;
+    scene.time = this.time / slowdown;
+    scene.tick = Math.floor(this.tick / slowdown);
+    // TODO: allow period to be assigned
+    scene.period = 60.0;
+    scene.theta = (scene.tick % scene.period) / scene.period;
   }
 
 }

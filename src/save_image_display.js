@@ -18,6 +18,7 @@ class SaveImageDisplay extends baseDisplay.BaseDisplay {
     this.isGif = this.targetPath.endsWith('gif');
     this._fsacc = fsacc;
     this._zoomLevel = 1;
+    this._slowdown = null;
   }
 
   name() {
@@ -31,6 +32,9 @@ class SaveImageDisplay extends baseDisplay.BaseDisplay {
   beginExec(refExec) {
     let exec = refExec.deref();
     exec.setLockTime(true);
+    let scene = exec.refOwner.deref();
+    this._slowdown = scene.slowdown ?? 1.0;
+    scene.slowdown = null;
   }
 
   appLoop(runID, execNextFrame) {
@@ -46,7 +50,7 @@ class SaveImageDisplay extends baseDisplay.BaseDisplay {
 
     let numFrames = this._numFrames;
     if (!numFrames || numFrames < 0) {
-      numFrames = 64;
+      numFrames = 60;
     }
     if (!this.isGif) {
       if (this._numFrames > 1) {
@@ -106,14 +110,14 @@ class SaveImageDisplay extends baseDisplay.BaseDisplay {
   createGif(width, height, frames, outName) {
     const encoder = new GIFEncoder(width, height, 'octree', false, frames.length);
 
-    const writeStream = createWriteStream(outName)
+    const writeStream = createWriteStream(outName);
     // when stream closes GIF is created so resolve promise
     writeStream.on('close', () => {
       console.log(`wrote ${outName}`);
     })
 
     encoder.createReadStream().pipe(writeStream);
-    encoder.setDelay(16);
+    encoder.setDelay(16.667 * this._slowdown);
     encoder.start();
 
     let canvas = createCanvas(width, height);

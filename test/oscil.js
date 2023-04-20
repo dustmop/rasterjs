@@ -41,10 +41,10 @@ describe('Oscil', function() {
     let n = ra.oscil({period: 120});
     assert.almostEqual(n, 0.067);
   });
-  it('begin', function() {
+  it('phase', function() {
     ra.resetState();
     ra.tick = 10;
-    let n = ra.oscil({begin: 0.5});
+    let n = ra.oscil({phase: 0.5});
     assert.almostEqual(n, 0.75);
   });
   it('tick', function() {

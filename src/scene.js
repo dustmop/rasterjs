@@ -432,11 +432,13 @@ class Scene {
   }
 
   fold(fname, paramList) {
+    let result = [];
     let params = {};
     for (let row of paramList) {
       params = Object.assign(params, row);
-      this[fname].bind(this).call(this, params);
+      result.push(this[fname].bind(this).call(this, params));
     }
+    return result;
   }
 
   _prepareRendering() {
@@ -599,19 +601,20 @@ class Scene {
   }
 
   oscil(namedOnly) {
-    let spec = ['!name', 'period?i=60', 'begin?n', 'min?n=0.0', 'max?n=1.0', 'tick?a'];
-    let [period, begin, min, max, tick] = destructure.from(
+    let spec = ['!name', 'period?i=60', 'phase?n', 'min?n=0.0', 'max?n=1.0', 'tick?a'];
+    let [period, phase, min, max, tick] = destructure.from(
       'oscil', spec, arguments, null);
 
     let delta = max - min;
     period = period || 60;
-    if (begin === undefined) {
-      begin = 0.0;
+    if (phase === undefined) {
+      phase = 0.0;
     }
+    phase = phase % 1;
     if (tick === null) {
       tick = this.tick;
     }
-    tick = tick + Math.round(period * begin);
+    tick = tick + Math.round(period * phase);
     return delta * ((1.0 - Math.cos(tick * this.TAU / period)) / 2.0000001) + min;
   }
 

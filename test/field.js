@@ -3,6 +3,22 @@ var util = require('./util.js');
 var ra = require('../src/lib.js');
 
 describe('Field', function() {
+  it('fill circle with destructure', function() {
+    let pl = new ra.Field();
+    pl.setSize(4, 4);
+    pl.setColor(2);
+    pl.fillCircle({centerX: 1, centerY: 2, r: 1.5});
+    let bin = pl.toArrays();
+
+    let expect = [
+      [0, 0, 0, 0],
+      [0, 2, 0, 0],
+      [2, 2, 2, 0],
+      [0, 2, 0, 0],
+    ];
+    assert.deepEqual(expect, bin);
+  });
+
   it('fillPattern works', function() {
     let pl = new ra.Field();
     pl.setSize(4, 4);

@@ -36,7 +36,7 @@ class Scene {
     this._fsacc = env.makeFilesysAccess();
 
     this._renderer = new renderer.Renderer();
-    this._owned = new field.Field();
+    this._owned = new field.Field({drawableDisableDestructure: true});
 
     this.display = null;
     this.palette = null;
@@ -280,7 +280,7 @@ class Scene {
   resetState() {
     this.width = null;
     this.height = null;
-    this._owned = new field.Field();
+    this._owned = new field.Field({drawableDisableDestructure: true});
     this.field = this._owned;
     this._banks = null;
     this._layering = null;

@@ -5,8 +5,11 @@ const destructure = require('./destructure.js');
 const types = require('./types.js');
 
 class Field extends component.Component {
-  constructor() {
+  constructor(opt) {
     super();
+    if (opt && opt.drawableDisableDestructure) {
+      this._disableDestructure = true;
+    }
     this.clear();
     return this;
   }
@@ -24,7 +27,7 @@ class Field extends component.Component {
     this.bgColor = 0;
     this.frontColor = 7;
     this.font = null;
-    this._addMethods();
+    this._addMethods(!this._disableDestructure);
   }
 
   clone() {
@@ -47,7 +50,7 @@ class Field extends component.Component {
 
   setColor(color) {
     if (!types.isNumber(color)) {
-      throw new Error(`field.setColor needs integer`);
+      throw new Error(`field.setColor needs integer, got ${color}`);
     }
     this.frontColor = Math.floor(color);
   }

@@ -1,8 +1,9 @@
 const rgbColor = require('./rgb_color.js');
+const field = require('./field.js');
 const tiles = require('./tiles.js');
 const types = require('./types.js');
 
-class SpriteList {
+class Spritelist {
   constructor(numSprites, resource) {
     // ensure first param is a number
     if (!types.isNumber(numSprites)) {
@@ -32,6 +33,44 @@ class SpriteList {
     this.enabled = true;
     return this;
   }
+
+  clear() {
+    this.items = new Array(0);
+    this.length = 0;
+    this.enabled = true;
+  }
+
+  createChar(opt, createFunc) {
+    let num = opt.num;
+    let x = opt.x;
+    let y = opt.y;
+    let chardat = [];
+    for (let i = 0; i < num; i++) {
+      let f = new field.Field();
+      f.setSize(x, y);
+      createFunc(f, i);
+      chardat.push(f);
+    }
+    this.chardat = new ArrayWrapper(chardat);
+    this.enabled = true;
+  }
+
+  set(index, properties) {
+    let sprite = new Sprite();
+    sprite.assign(properties);
+    this.items[index] = sprite;
+    this[index] = this.items[index];
+    this.length = this.items.length;
+  }
+
+  toString() {
+    let result = [];
+    for (let i = 0; i < this.items.length; i++) {
+      let item = this.items[i];
+      result.push({x: Math.floor(item.x), y: Math.floor(item.y), c: item.c, p: item.p});
+    }
+    return JSON.stringify(result);
+  }
 }
 
 
@@ -42,7 +81,7 @@ class Sprite {
     item.y = null;
     item.c = null;
     item.m = null;
-    item.a = null;
+    item.p = null;
     item.i = null;
     item.h = null;
     item.v = null;
@@ -61,7 +100,7 @@ class Sprite {
 // x, y   position
 // c      character
 // m      mix
-// a      attribute (which piece of the palette)
+// p      palette offset or piece
 // i      invisible
 // h, v   flips
 // b      behind
@@ -189,7 +228,7 @@ class ArrayWrapper {
 }
 
 
-module.exports.SpriteList = SpriteList;
+module.exports.Spritelist = Spritelist;
 module.exports.SpriteSheet = SpriteSheet;
 // for testing
 module.exports.buildRecursiveCases = buildRecursiveCases;

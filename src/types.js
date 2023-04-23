@@ -87,6 +87,11 @@ function isSpriteSheet(obj) {
   return obj.constructor == sprites.SpriteSheet;
 }
 
+function isSpritelist(obj) {
+  if (!obj) { return false; }
+  return obj.constructor == sprites.Spritelist;
+}
+
 function isField(obj) {
   if (!obj) { return false; }
   return (obj.constructor == field.Field ||
@@ -152,6 +157,7 @@ module.exports.isTileset = isTileset;
 module.exports.isColorspace = isColorspace;
 module.exports.isPalette = isPalette;
 module.exports.isSpriteSheet = isSpriteSheet;
+module.exports.isSpritelist = isSpritelist;
 module.exports.isSurface = isSurface;
 module.exports.isWeakRef = isWeakRef;
 module.exports.isDisplayObject = isDisplayObject;

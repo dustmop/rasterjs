@@ -52,7 +52,7 @@ class Renderer {
     }
 
     this._world = inputList.world || {};
-    this._assertObjectKeys(this._world, ['interrupts', 'spriteList',
+    this._assertObjectKeys(this._world, ['interrupts', 'spritelist',
                                          'palette', 'grid']);
 
     this.isConnected = true;
@@ -405,74 +405,80 @@ class Renderer {
     let scrollY = Math.floor((layer.scroll && layer.scroll.y) || 0);
     let scrollX = Math.floor((layer.scroll && layer.scroll.x) || 0);
 
-    if (world.spriteList && world.spriteList.enabled) {
-      let chardat = world.spriteList.chardat || layer.tileset;
-      if (!chardat) {
-        throw new Error('cannot render sprites without character data')
+    if (!world.spritelist || !world.spritelist.enabled) {
+      return;
+    }
+    if (world.spritelist.items.length == 0) {
+      return;
+    }
+
+    let chardat = world.spritelist.chardat || layer.tileset;
+    if (!chardat) {
+      throw new Error('cannot render sprites without character data')
+    }
+
+    // draw back-to-front so that sprite[i] is above sprite[j] where i < j
+    for (let k = world.spritelist.items.length - 1; k >= 0; k--) {
+      let spr = world.spritelist.items[k];
+
+      if (spr.a) {
+        throw new Error(`deprecated: sprite.a, use sprite.p`);
       }
 
-      // TODO: assuming the default piece_size, FIXME
-      let piece_size = 8;
-
-      // draw back-to-front so that sprite[i] is above sprite[j] where i < j
-      for (let k = world.spriteList.items.length - 1; k >= 0; k--) {
-        let spr = world.spriteList.items[k];
-        let sx = Math.floor(spr.x);
-        let sy = Math.floor(spr.y);
-        // ensure size of sprite is set
-        if (sx === null || sx === undefined || sx < 0 || sx >= right) {
-          continue;
-        }
-        if (sy === null || sy === undefined || sy < 0 || sy >= bottom) {
-          continue;
-        }
-        // invisible flag
-        if (spr.i) {
-          continue;
-        }
-        // the character object
-        let obj = chardat.get(spr.c);
-        if (!obj) {
-          continue;
-        }
-        for (let py = 0; py < obj.height; py++) {
-          for (let px = 0; px < obj.width; px++) {
-            let x = px + sx;
-            let y = py + sy;
-            if (x >= right || y >= bottom) {
+      let sx = Math.floor(spr.x);
+      let sy = Math.floor(spr.y);
+      // ensure size of sprite is set
+      if (sx === null || sx === undefined || sx < 0 || sx >= right) {
+        continue;
+      }
+      if (sy === null || sy === undefined || sy < 0 || sy >= bottom) {
+        continue;
+      }
+      // invisible flag
+      if (spr.i) {
+        continue;
+      }
+      // the character object
+      let obj = chardat.get(spr.c);
+      if (!obj) {
+        continue;
+      }
+      for (let py = 0; py < obj.height; py++) {
+        for (let px = 0; px < obj.width; px++) {
+          let x = px + sx;
+          let y = py + sy;
+          if (x >= right || y >= bottom) {
+            continue;
+          }
+          // behind flag
+          if (spr.b === 0) {
+            let lx = (x + scrollX + layer.field.width) % layer.field.width;
+            let ly = (y + scrollY + layer.field.height) % layer.field.height;
+            let v = layer.field.get(lx, ly);
+            if (v > 0) {
               continue;
             }
-            // behind flag
-            if (spr.b === 0) {
-              let lx = (x + scrollX + layer.field.width) % layer.field.width;
-              let ly = (y + scrollY + layer.field.height) % layer.field.height;
-              let v = layer.field.get(lx, ly);
-              if (v > 0) {
-                continue;
-              }
+          }
+          let t = y*targetPitch + x*4;
+          // color value for this pixel
+          let rx = spr.h ? obj.width  - px - 1 : px;
+          let ry = spr.v ? obj.height - py - 1 : py;
+          let c = obj.get(rx, ry);
+          if (c > 0) {
+            if (spr.p != null) {
+              c += spr.p;
             }
-            let t = y*targetPitch + x*4;
-            // color value for this pixel
-            let rx = spr.h ? obj.width  - px - 1 : px;
-            let ry = spr.v ? obj.height - py - 1 : py;
-            let c = obj.get(rx, ry);
-            if (c > 0) {
-              if (spr.a !== null && spr.a !== undefined) {
-                // TODO: test me!
-                c = (c % piece_size) + Math.floor(spr.a) * piece_size;
-              }
-              this._toColor(layer, c, rgbtuple);
-              if (spr.m) {
-                surf.buff[t+0] += rgbtuple[R_INDEX];
-                surf.buff[t+1] += rgbtuple[G_INDEX];
-                surf.buff[t+2] += rgbtuple[B_INDEX];
-                surf.buff[t+3] = 0xff;
-              } else {
-                surf.buff[t+0] = rgbtuple[R_INDEX];
-                surf.buff[t+1] = rgbtuple[G_INDEX];
-                surf.buff[t+2] = rgbtuple[B_INDEX];
-                surf.buff[t+3] = 0xff;
-              }
+            this._toColor(layer, c, rgbtuple);
+            if (spr.m) {
+              surf.buff[t+0] += rgbtuple[R_INDEX];
+              surf.buff[t+1] += rgbtuple[G_INDEX];
+              surf.buff[t+2] += rgbtuple[B_INDEX];
+              surf.buff[t+3] = 0xff;
+            } else {
+              surf.buff[t+0] = rgbtuple[R_INDEX];
+              surf.buff[t+1] = rgbtuple[G_INDEX];
+              surf.buff[t+2] = rgbtuple[B_INDEX];
+              surf.buff[t+3] = 0xff;
             }
           }
         }

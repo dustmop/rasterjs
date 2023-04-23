@@ -45,7 +45,7 @@ class Scene {
     this.tileset = null;
     this.colorspace = null;
     this.interrupts = null;
-    this.spriteList = null;
+    this.spritelist = new sprites.Spritelist(0);
 
     this._font = null;
     this._banks = null;
@@ -185,6 +185,10 @@ class Scene {
     }
   }
 
+  get color() {
+    return this.field.frontColor;
+  }
+
   setTrueColor(rgb) {
     this._validateOwnedField();
     rgb = new rgbColor.RGBColor(rgb);
@@ -296,7 +300,7 @@ class Scene {
     this.tileset = null;
     this.colorspace = null;
     this.interrupts = null;
-    this.spriteList = null;
+    this.spritelist.clear();
     this.rgbBuffer = null;
     this._initPalette();
     this._initConfig();
@@ -1121,7 +1125,7 @@ class Scene {
 
     provision.world = {};
     provision.world.interrupts = this.interrupts;
-    provision.world.spriteList = this.spriteList;
+    provision.world.spritelist = this.spritelist;
     provision.world.palette = this.palette;
 
     if (this.config.gridUnit) {
@@ -1180,10 +1184,12 @@ class Scene {
     this._fsacc.saveTo(filename, surfaces);
   }
 
-  useSpriteList(sprites) {
-    // TODO: handle multiple different arguments
-    this.spriteList = sprites;
-    return this.spriteList;
+  useSpritelist(spritelist) {
+    if (!types.isSpritelist(spritelist)) {
+        throw new Error(`useSpritelist requires a Spritelist`);
+    }
+    this.spritelist = spritelist;
+    return this.spritelist;
   }
 
   _ensureExecutor() {
@@ -1225,12 +1231,12 @@ Scene.prototype.Tile = function() {
   return new tiles.Tile(args[0], args[1]);
 }
 
-Scene.prototype.SpriteList = function() {
+Scene.prototype.Spritelist = function() {
   if (new.target === undefined) {
-    throw new Error('SpriteList constructor must be called with `new`');
+    throw new Error('Spritelist constructor must be called with `new`');
   }
   let args = arguments;
-  return new sprites.SpriteList(args[0], args[1]);
+  return new sprites.Spritelist(args[0], args[1]);
 }
 
 Scene.prototype.SpriteSheet = function() {

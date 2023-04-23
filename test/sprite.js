@@ -14,8 +14,8 @@ describe('Sprite', function() {
 
     ra.paste(imgBg);
 
-    let sprites = new ra.SpriteList(3, {chardat: [imgObj0, imgObj1, imgObj2]});
-    ra.useSpriteList(sprites);
+    let sprites = new ra.Spritelist(3, {chardat: [imgObj0, imgObj1, imgObj2]});
+    ra.useSpritelist(sprites);
 
     sprites[0].x = 16;
     sprites[0].y = 48;
@@ -43,8 +43,8 @@ describe('Sprite', function() {
     let tiles = new ra.Tileset({tile_width: 16, tile_height: 16});
     tiles.addFrom(imgTiles);
 
-    let sprites = new ra.SpriteList(4, tiles);
-    ra.useSpriteList(sprites);
+    let sprites = new ra.Spritelist(4, tiles);
+    ra.useSpritelist(sprites);
 
     sprites[0].x = 16;
     sprites[0].y = 48;
@@ -75,8 +75,8 @@ describe('Sprite', function() {
 
     let sheet = new ra.SpriteSheet(imgSheet, {trueColorBorder: '#000cd4'});
 
-    let sprites = new ra.SpriteList(3, sheet);
-    ra.useSpriteList(sprites);
+    let sprites = new ra.Spritelist(3, sheet);
+    ra.useSpritelist(sprites);
 
     sprites[0].x = 16;
     sprites[0].y = 48;
@@ -136,6 +136,22 @@ describe('Sprite', function() {
     assert.deepEqual(res, expect);
   });
 
+  it('createChar to make sprites', function() {
+    ra.resetState();
+    ra.setSize(8, 8);
+    ra.fillColor(38);
+
+    ra.spritelist.createChar({num: 2, x: 3, y: 3}, (field, i)=> {
+      field.setColor(i+40);
+      field.fillCircle(0, 0, 1.5);
+    });
+
+    ra.spritelist.set(0, {x: 1, y: 0, c: 0});
+    ra.spritelist.set(1, {x: 5, y: 4, c: 1});
+
+    util.renderCompareTo(ra, 'test/testdata/some-sprites.png');
+  });
+
   it('behind layer', function() {
     ra.resetState();
 
@@ -144,8 +160,8 @@ describe('Sprite', function() {
 
     ra.paste(imgBg);
 
-    let sprites = new ra.SpriteList(1, {chardat: [imgObj]});
-    ra.useSpriteList(sprites);
+    let sprites = new ra.Spritelist(1, {chardat: [imgObj]});
+    ra.useSpritelist(sprites);
 
     sprites[0].x = 4;
     sprites[0].y = 3;
@@ -164,8 +180,8 @@ describe('Sprite', function() {
     ra.paste(imgBg);
     ra.setScrollX(4);
 
-    let sprites = new ra.SpriteList(1, {chardat: [imgObj]});
-    ra.useSpriteList(sprites);
+    let sprites = new ra.Spritelist(1, {chardat: [imgObj]});
+    ra.useSpritelist(sprites);
 
     sprites[0].x = 4;
     sprites[0].y = 3;
@@ -183,8 +199,8 @@ describe('Sprite', function() {
 
     ra.paste(imgBg);
 
-    let sprites = new ra.SpriteList(1, {chardat: [imgObj]});
-    ra.useSpriteList(sprites);
+    let sprites = new ra.Spritelist(1, {chardat: [imgObj]});
+    ra.useSpritelist(sprites);
 
     sprites[0].x = 4;
     sprites[0].y = 3;
@@ -202,8 +218,8 @@ describe('Sprite', function() {
 
     ra.paste(imgBg);
 
-    let sprites = new ra.SpriteList(1, {chardat: [imgObj]});
-    ra.useSpriteList(sprites);
+    let sprites = new ra.Spritelist(1, {chardat: [imgObj]});
+    ra.useSpritelist(sprites);
 
     sprites[0].x = 4;
     sprites[0].y = 3;
@@ -221,8 +237,8 @@ describe('Sprite', function() {
 
     ra.paste(imgBg);
 
-    let sprites = new ra.SpriteList(1, {chardat: [imgObj]});
-    ra.useSpriteList(sprites);
+    let sprites = new ra.Spritelist(1, {chardat: [imgObj]});
+    ra.useSpritelist(sprites);
 
     sprites[0].x = 4;
     sprites[0].y = 3;
@@ -244,8 +260,8 @@ describe('Sprite', function() {
     ra.setSize(24, 36);
     ra.fillColor(0);
 
-    let sprites = new ra.SpriteList(3, {chardat: [imgObj0, imgObj1]});
-    ra.useSpriteList(sprites);
+    let sprites = new ra.Spritelist(3, {chardat: [imgObj0, imgObj1]});
+    ra.useSpritelist(sprites);
 
     // smaller ship appears at index 0, should appear on top
     sprites[0].x = 1;

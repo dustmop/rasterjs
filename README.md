@@ -20,21 +20,49 @@ It aims to serve as a tool for prototyping, experimentation, and learning about 
 
 ```
 const ra = require('raster');
-ra.setSize(32, 30);
+
+ra.setSize(32, 32);
 ra.setZoom(8);
+ra.setSlowdown(5);
+ra.palette.setEntries([0, 1, 2, 3, 4, 5, 27, 43, 38, 54]);
 
-ra.fillColor(19);
-ra.setColor(37);
-ra.fillCircle({x: 9, y: 16, r: 6});
-ra.drawPolygon([[22, 3], [30, 11], [17, 13]]);
-ra.setColor(33);
-ra.drawRect({x: 4, y: 2, w: 6, h: 10});
-ra.fillFlood(22, 8);
+// create 3 fields to use for sprite character data
+ra.spritelist.createChar({num: 3, x: 10, y: 10}, (field, i)=>{
+  field.setColor(6);
+  field.fillCircle({centerX: 5, centerY: 5, r: i + 3});
+  field.setColor(7);
+  field.fillSquare({x: 4 - i, y: 3 - i, size: i + 1});
+});
 
-ra.show();
+// make a background using a few rectangles
+for (let i = 0; i < 6; i++) {
+  ra.setColor(i);
+  ra.fillRect({x: 0, y: i*6 - 2, w: 32, h: 8});
+}
+
+function draw() {
+  // move two spheres
+  for (let i = 0; i < 2; i++) {
+    // pick which z-layer, and which character graphic to use for the sprite
+    let z = (ra.theta < 0.5) ? i : 1 - i;
+    let c = Math.abs((ra.theta % 0.5) - 0.25) >= 0.19 ? 1 : (1 - z) * 2;
+
+    // move in a circular motion around each other
+    let x = 0.5 + ra.oscil({max: 21, phase: i/2});
+    let y = 7.5 + ra.oscil({max:  6, phase: i/2 + 0.25});
+
+    ra.spritelist.set(z, {x: x, y: y, c: c, p: i*2});
+  }
+
+  // cycle the background colors by changing entries 0..6
+  let bg = [57, 62, 58, 7, 60, 56, 59, 63, 61];
+  ra.palette.cycle({values: bg, endIndex: 6, tick: ra.tick * 0.45});
+}
+
+ra.run(draw);
 ```
 
-![](asset/example.png)
+![](asset/example-spheres.gif)
 
 # Installing
 
@@ -78,80 +106,6 @@ On macos, run `brew install sdl2` to get SDL2.
 
 For Windows, it is recommended to use [msys2](https://www.msys2.org/), but Powershell and WSL will probably work too. Grab the latest [SDL release](https://github.com/libsdl-org/SDL/releases) and get `SDL2-devel-<version>-mingw.zip`. Extract this zip to get the `SDL2-<version>` folder and place it within the directory `c:/SDL/`, so that it ends up at `c:/SDL/SDL2-<version>/`. If you use to use a different location instead of `c:/SDL/`, assign that location to the environment variable `SDL_PATH`.
 
-# Getting started
-
-Using raster.js starts with importing the library, usually naming it simply `ra`.
-
-```
-const ra = require('raster');
-```
-
-This library gives a number of useful functions.
-
-## Setup
-
-The size of the display (measured in pixels) can be set using the `setSize` method. First comes `x` (the width), then `y` (the height).
-
-```
-ra.setSize(32, 30);
-```
-
-The display can increase the size of its pixels, as it appears on your physical screen, using the `setZoom` method. Note that this does not change the number of the pixels themselves.
-
-```
-ra.setZoom(8);
-```
-
-## Drawing pixels
-
-Clearing the display can be done using the `fillColor` method. Raster.js uses a limited color palette, just like many retro computer systems, limited to at most 256 colors. The default palette can be found in the "colors" section below. Functions that require a color parameter, such as `fillColor`, therefore only require a single numerical parameter, which uses that color from the palette.
-
-```
-ra.fillColor(12);
-```
-
-For other drawing functions, use `setColor` to choose what color to draw with.
-
-```
-ra.setColor(37)
-```
-
-Then draw some things to the display.
-
-```
-ra.fillCircle({x: 9, y: 16, r: 6});
-ra.drawPolygon([[22, 3], [30, 11], [17, 13]]);
-```
-
-The same color will be using for drawing until it is changed again with `setColor`.
-
-```
-ra.setColor(33);
-ra.drawRect({x: 4, y: 2, w: 6, h: 10});
-ra.fillFlood(22, 8);
-```
-
-## Showing it
-
-Once this is complete, and the image is ready for display, use `ra.show` to see it.
-
-```
-ra.show();
-```
-
-## Animation
-
-For animation, use `ra.run` instead of `ra.show`, and pass a draw function that is used to update the display every frame.
-
-```
-function draw() {
-  ra.setColor(8+ra.time/2);
-  ra.drawLine(0, 0, ra.oscil({max:80}), ra.oscil({max:80,begin:0.5}));
-}
-
-ra.run(draw);
-```
-
 # Command-line options
 
 When running from a node.js script, you can pass command-line parameters to modify raster.js's behaviour.
@@ -181,18 +135,12 @@ Change the display. See `useDisplay` in the docs for supported displays.
 Change the zoom level.
 
 ```
---colors [colorMap]
+--palette [name]
 ```
 
-Use a specific colorMap. See `useColors` in the docs for the names of built-in colorMaps.
+Use a specific palette by name, such as `c64` and `nes`. See `usePalette` in the docs for the names of built-in palettes.
 
-# Colors
-
-The default colorMap for raster.js is the "quick" colors, shown here:
-
-![](asset/quick-rgbmap.png)
-
-# API
+# Docs
 
 See [the docs](docs.md) for the full documentation of the methods available in raster.js.
 

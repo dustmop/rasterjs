@@ -96,8 +96,8 @@ class Scene {
       this.display = this._env.makeDisplay();
     }
     this.display.initialize();
-    if (options.colors) {
-      this.useColors(options.colors);
+    if (options.palette) {
+      this.usePalette(options.palette);
     }
     if (options.zoom) {
       this.setZoom(options.zoom);

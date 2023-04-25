@@ -88,6 +88,22 @@ describe('Save', function() {
     });
   });
 
+  it('palette change', function(success) {
+    let tmpdir = util.mkTmpDir();
+    let tmpout = tmpdir + '/actual.png';
+    let script = 'test/testdata/scripts/triangles.js';
+    let cmd = `node ${script} --save ${tmpout} --palette nes`;
+    let cwd = process.cwd();
+    child_process.exec(cmd, function(error, stdout, stderr) {
+      if (error) {
+        throw error;
+      }
+      let goldenPath = 'test/testdata/fill_nes_palette.png';
+      assert.ok(util.compareFiles(goldenPath, tmpout), `Failed file comparison, expect: ${goldenPath}, actual: ${tmpout}`);
+      success();
+    });
+  });
+
   it('save animation', function(success) {
     let tmpdir = util.mkTmpDir();
     let tmpout = tmpdir + '/actual.gif';

@@ -82,7 +82,7 @@ function getOptions() {
   parser.add_argument('--num-frames', {type: 'int'});
   parser.add_argument('--save', {type: 'str', dest: 'save_filename'});
   parser.add_argument('--display', {type: 'str'});
-  parser.add_argument('--colors', {type: 'str'});
+  parser.add_argument('--palette', {type: 'str'});
   parser.add_argument('--zoom', {type: 'int'});
   parser.add_argument('--tick', {type: 'int', dest: 'tick'});
   parser.add_argument('--full-trace', {action: 'store_true', dest: 'full'})

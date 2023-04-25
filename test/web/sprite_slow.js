@@ -12,8 +12,8 @@ describe('sprite slow', function () {
 
       let sheet = new ra.SpriteSheet(imgSheet, {trueColorBorder: '#000cd4'});
 
-      let sprites = new ra.SpriteList(3, sheet);
-      ra.useSpriteList(sprites);
+      let sprites = new ra.Spritelist(3, sheet);
+      ra.useSpritelist(sprites);
 
       sprites[0].assign({x: 16, y: 48, c: 0});
       sprites[1].assign({x: 32, y:  8, c: 2});

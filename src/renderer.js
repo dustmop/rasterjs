@@ -24,6 +24,12 @@ class Renderer {
     this._init();
   }
 
+  clearExceptInitCallback() {
+    let preserve = this._renderEventCallback;
+    this.clear();
+    this._renderEventCallback = preserve;
+  }
+
   _init() {
     this._layers = null;
     this._surfs = null;
@@ -522,13 +528,12 @@ class Renderer {
 
     if (inspectY != null && inspectY >= top && inspectY < bottom) {
       let layer = this._layers[0];
-      let pixel = this._inspector;
       this.fillInspectorAt(this._inspector, numSplit, inspectX, inspectY);
     }
   }
 
   fillInspectorAt(inspector, numSplit, x, y) {
-    //
+    // TODO: how to inspect multiple layers?
     let layer = this._layers[0];
     this.inspectLayerAt(inspector, layer, numSplit, x, y);
   }

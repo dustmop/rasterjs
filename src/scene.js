@@ -225,7 +225,7 @@ class Scene {
       }
       this.field.setSize(w, h);
     }
-    this._renderer.clear();
+    this._renderer.clearExceptInitCallback();
   }
 
   /**

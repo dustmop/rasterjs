@@ -1,3 +1,7 @@
+const PNG = require('pngjs/browser').PNG;
+const jpeg = require('jpeg-js');
+
+
 class FilesysAccess {
   constructor() {
     this.clear();
@@ -11,50 +15,63 @@ class FilesysAccess {
   }
 
   readImageData(filename, imgField) {
-    // wait for the image to load
-    this.numToLoad++;
-
-    // html node for loading the Image
-    let imgElem = new Image;
-    imgElem.onload = () => {
-      // get the pixel data and save it on the resource
-      let canvas = document.createElement('canvas');
-      canvas.width = imgElem.width;
-      canvas.height = imgElem.height;
-      let ctx = canvas.getContext('2d');
-      ctx.drawImage(imgElem, 0, 0, imgElem.width, imgElem.height);
-      let pixels = ctx.getImageData(0, 0, imgElem.width, imgElem.height);
-      // assign to the imageField being opened
-      imgField.rgbBuff = pixels.data;
-      imgField.width = pixels.width;
-      // TODO: Fix me
-      imgField.pitch = pixels.width;
-      imgField.height = pixels.height;
-      // callback for when image loading, down-sample RGB to 8-bit values
-      if (imgField.whenRead) {
-        imgField.whenRead();
-      }
-      this.numLoadDone++;
-    }
-    // handle errors
-    imgElem.onerror = () => {
-      imgField.loadState = -1;
-      this.loadFail = filename;
-      this.numLoadDone++;
-    }
-
-    // allow cross origin image loading
-    imgElem.crossOrigin = 'Anonymous';
-
     // artificially slow down image loading, used by tests
     if (filename.startsWith('SLOW:')) {
       setTimeout(() => {
-        filename = filename.slice(5);
-        imgElem.src = filename;
+        let filenameWithoutPrefix = filename.slice(5);
+        this.readImageData(filenameWithoutPrefix, imgField);
       }, 50);
       return 1;
     }
-    imgElem.src = filename;
+
+    // wait for the image to load
+    this.numToLoad++;
+    if (filename.endsWith('.jpg') || filename.endsWith('.jpeg')) {
+      this._readImageJpg(filename, imgField);
+      return 1;
+    }
+    if (filename.endsWith('.png')) {
+      this._readImagePng(filename, imgField);
+      return 1;
+    }
+    let ext = filename.substring(filename.length - 4);
+    throw new Error(`unknown filetype ${ext}`);
+  }
+
+  _readImageJpg(filename, imgField) {
+    fetch(filename).then(res => res.blob()).then(blob => {
+      blob.arrayBuffer().then(bytes => {
+        let parsedJpeg = jpeg.decode(bytes, {useTArray: true});
+        imgField.rgbBuff =  parsedJpeg.data;
+        imgField.width = parsedJpeg.width;
+        imgField.height = parsedJpeg.height;
+        imgField.pitch = parsedJpeg.height;
+        // callback for when image loading, down-sample RGB to 8-bit values
+        if (imgField.whenRead) {
+          imgField.whenRead();
+        }
+        this.numLoadDone++;
+      });
+    });
+  };
+
+  _readImagePng(filename, imgField) {
+    fetch(filename).then(res => res.blob()).then(blob => {
+      blob.arrayBuffer().then(bytes => {
+        let parser = new PNG().parse(bytes, (err, pngImg) => {
+          imgField.rgbBuff = pngImg.data;
+          imgField.width = pngImg.width;
+          imgField.pitch = pngImg.width;
+          imgField.height = pngImg.height;
+          // callback for when image loading, down-sample RGB to 8-bit values
+          if (imgField.whenRead) {
+            imgField.whenRead();
+          }
+          this.numLoadDone++;
+        });
+      });
+    });
+
     return 1; // async
   }
 

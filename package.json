@@ -10,7 +10,7 @@
     "url": "https://github.com/dustmop/rasterjs.git"
   },
   "scripts": {
-    "test": "npm run node-test && npm run web-test && npm run sdl-test",
+    "test": "npm run node-test && npm run web-test && npm run sdl-test && npm run example-test",
     "node-test": "mocha",
     "sdl-test": "mocha test/sdl/",
     "example-test": "mocha test/example/",

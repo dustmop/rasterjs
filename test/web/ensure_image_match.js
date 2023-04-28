@@ -40,7 +40,7 @@ function compareImage(left, right, callback) {
         match = false;
       }
     }
-    if (!match ) {
+    if (!match) {
       console.log(dataURL);
       return callback(`mismatch, data`);
     }

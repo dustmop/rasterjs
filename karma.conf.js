@@ -43,6 +43,9 @@ module.exports = function(config) {
 
 // Ability to run tests 1 at a time, by name.
 // Source: https://medium.com/@bebraw/running-individual-tests-with-karma-mocha-89aece8ba18b
+// Example:
+//   `npm run web-test -- "basic"` // runs 4 tests from test/web/basic.js
+//   `npm run web-test -- "basic draw"` // run 1 test from test/web/basic.js
 function parseTestPattern(argv) {
   var found = false;
   var pattern = argv.map(function(v) {

@@ -69,10 +69,21 @@ class RGBColor {
   }
 
   equals(other) {
-    if (other.constructor !== RGBColor) {
+    if (!types.isRGBColor(other)) {
       throw new Error('RGBColor.equals can only compare to RGBColor');
     }
     return (this.r == other.r && this.g == other.g && this.b == other.b);
+  }
+
+  diff(other) {
+    if (!types.isRGBColor(other)) {
+      throw new Error('RGBColor.diff requires a RGBColor');
+    }
+    let delta = 0;
+    delta += Math.pow(this.r - other.r, 2);
+    delta += Math.pow(this.g - other.g, 2);
+    delta += Math.pow(this.b - other.b, 2);
+    return Math.sqrt(delta);
   }
 
   interpolate(other, val, inp) {
@@ -150,7 +161,7 @@ function ensureIs(rgb) {
   if (rgb == null) {
     throw new Error(`rgb value invalid, is null`);
   }
-  if (rgb.constructor !== RGBColor) {
+  if (!types.isRGBColor(rgb)) {
     throw new Error(`rgb value invalid, is ${rgb}`);
   }
 }

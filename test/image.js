@@ -61,6 +61,33 @@ describe('Image', function() {
   });
 
 
+  // If rgbmap exists, use it for nearest color match
+  it('rgbmap nearness', function() {
+    ra.resetState();
+    ra.usePalette('pico8');
+
+    let img = ra.loadImage('test/testdata/discolor-fruit.png');
+    ra.paste(img);
+
+    assert.equal(ra.palette.length, 16);
+
+    util.renderCompareTo(ra, 'test/testdata/small-fruit.png');
+
+    // 8-bit data array is using pico8 values
+    let expect = [
+      [0, 0, 0, 0, 4, 0, 0, 0],
+      [0, 0, 0, 0, 0, 4, 0, 0],
+      [0, 2, 8, 8, 8, 4, 2, 0],
+      [2, 8,14, 8, 4, 8, 8, 2],
+      [8,14,14, 8, 8, 8, 8, 8],
+      [8, 8, 8, 8, 8, 8, 8, 8],
+      [0, 8, 8, 8, 8, 8, 8, 0],
+      [0, 0, 8, 8, 8, 8, 0, 0],
+    ];
+    assert.deepEqual(expect, ra.field.toArrays());
+  });
+
+
   // Colors that didn't exist in the rgbmap are added to it
   it('draw adds colors', function() {
     ra.resetState();

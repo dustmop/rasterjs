@@ -268,8 +268,6 @@ class ImageField {
         if (palette.isExpandable()) {
           c = palette.addRGBMap(rgbval);
         } else {
-          // TODO: Implement me!
-          throw new Error(`IMPLEMENT ME: palette.roundNearestColor`);
           c = palette.roundNearestColor(rgbval);
         }
       }

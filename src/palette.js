@@ -26,9 +26,9 @@ class Palette extends component.Component {
       throw new Error(`palette constructor expected options, got ${opt}`);
     }
     this.name = null;
+    this.expandable = true;
     this._rgbmap = null;
     this._entries = null;
-    this._expandable = false;
     this._system = null;
     this._pieceSize = opt.pieceSize || null;
     if (opt.rgbmap) {
@@ -75,8 +75,7 @@ class Palette extends component.Component {
   }
 
   isExpandable() {
-    // TODO: test, will affect image down-sampling
-    return true;
+    return this.expandable;
   }
 
   setEntries(vals) {
@@ -139,6 +138,20 @@ class Palette extends component.Component {
       }
     }
     return null;
+  }
+
+  roundNearestColor(rgbval) {
+    let input = new rgbColor.RGBColor(rgbval);
+    let closest = null;
+    let winner = -1;
+    for (let i = 0; i < this._rgbmap.length; i++) {
+      let delta = input.diff(new rgbColor.RGBColor(this._rgbmap[i]));
+      if (winner == -1 || delta < closest) {
+        closest = delta;
+        winner = i;
+      }
+    }
+    return winner;
   }
 
   reset() {
@@ -350,7 +363,7 @@ class Palette extends component.Component {
     if (this.isPending()) {
       verbose.log(`creating empty and expanding rgbMap`, 4);
       this._rgbmap = [];
-      this._expandable = true;
+      this.expandable = true;
     }
   }
 

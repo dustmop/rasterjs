@@ -303,6 +303,7 @@ class Scene {
     this.spritelist.clear();
     this.rgbBuffer = null;
     this._initPalette();
+    this._hasRenderedOnce = false;
     this._initConfig();
     this._addMethods();
   }
@@ -1092,8 +1093,7 @@ class Scene {
       // TODO: Colorspace without a palette just slices up colorMap
       throw new Error('cannot useColorpsace without a palette');
     }
-    // TODO: validate sizeInfo
-    this.colorspace = new colorspace.Colorspace(pl, this.palette, sizeInfo);
+    this.colorspace = new colorspace.Colorspace(pl, sizeInfo);
     if (this.tileset) {
       this.colorspace.ensureConsistentTileset(this.tileset, this.palette);
     }

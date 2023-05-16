@@ -378,21 +378,24 @@ class Renderer {
           }
           let s = y*sourcePitch + x;
           let t = i*targetPitch + j*4;
-          let ok = false;
+          let c = source[s];
           if (layer.colorspace) {
-            let c = layer.colorspace.realizeIndexedColor(source[s], x, y);
-            ok = this._toColor(layer, c, rgbtuple);
-          } else {
-            ok = this._toColor(layer, source[s], rgbtuple);
+            let cell = layer.colorspace.getCellAtPixel(x, y);
+            let attr = cell.attr;
+            if (Array.isArray(attr)) {
+              c = attr[c % attr.length];
+            } else {
+              c = layer.colorspace.realizeIndexedColor(c, x, y);
+            }
           }
-          if (!ok) {
+          if (!this._toColor(layer, c, rgbtuple)) {
             surf.buff[t+3] = 0x00;
             continue;
           }
           surf.buff[t+0] = rgbtuple[R_INDEX];
           surf.buff[t+1] = rgbtuple[G_INDEX];
           surf.buff[t+2] = rgbtuple[B_INDEX];
-          // TODO: Incorrect
+          // TODO: Incorrect, 
           if (!isBg && source[s] == 0) {
             surf.buff[t+3] = 0x00;
           } else {

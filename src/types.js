@@ -33,6 +33,19 @@ function isArray(obj) {
   return Array.isArray(obj);
 }
 
+function isNumArray(obj) {
+  if (!isArray(obj)) {
+    return false;
+  }
+  for (let i = 0; i < obj.length; i++) {
+    let elem = obj[i];
+    if (!isNumber(elem)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 function is2dNumArray(obj) {
   if (!isArray(obj)) {
     return false;
@@ -140,10 +153,15 @@ function ensureIsOneOf(obj, typesPossible) {
   throw new Error(`unknown type: ${obj.constructor.name}, wanted one of ${typesPossible}`);
 }
 
+function ensureType(obj, possible) {
+  ensureIsOneOf(obj, [possible]);
+}
+
 module.exports.isField   = isField;
 module.exports.isNumber  = isNumber;
 module.exports.isInteger = isInteger;
 module.exports.isArray = isArray;
+module.exports.isNumArray = isNumArray;
 module.exports.is2dNumArray = is2dNumArray;
 module.exports.isInterrupts = isInterrupts;
 module.exports.isString = isString;
@@ -163,3 +181,4 @@ module.exports.isWeakRef = isWeakRef;
 module.exports.isDisplayObject = isDisplayObject;
 module.exports.ensureKeys = ensureKeys;
 module.exports.ensureIsOneOf = ensureIsOneOf;
+module.exports.ensureType = ensureType;

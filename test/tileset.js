@@ -249,7 +249,7 @@ describe('Tileset', function() {
   it('tiles then change colorspaces', function() {
     ra.resetState();
 
-    // ColorMap has 22 values
+    // Rgbmap has 22 values
     ra.usePalette({rgbmap:[
       0x000000, 0x565656, 0x664019, 0x858585, 0xa5a5a5, 0xc0c0c0,
       0xffffff, 0xffb973, 0xff7373, 0xff3333, 0xff9933, 0xf1ff73,
@@ -288,12 +288,12 @@ describe('Tileset', function() {
                        [5, 5, 1, 0],
                        [6, 4, 2, 2]]);
 
-    colors.put(1, 0, 3);
-    colors.put(3, 0, 0);
-    colors.put(3, 1, 2);
-    colors.put(0, 2, 1);
-    colors.put(2, 2, 2);
-    colors.put(2, 3, 1);
+    ra.colorspace.put(1, 0, 3);
+    ra.colorspace.put(3, 0, 0);
+    ra.colorspace.put(3, 1, 2);
+    ra.colorspace.put(0, 2, 1);
+    ra.colorspace.put(2, 2, 2);
+    ra.colorspace.put(2, 3, 1);
 
     util.renderCompareTo(ra, 'test/testdata/colors_change.png');
   });

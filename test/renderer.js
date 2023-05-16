@@ -31,7 +31,7 @@ describe('Render components', function() {
     util.ensureFilesMatch('test/testdata/c64-rgbmap.png', tmprgbmap);
   });
 
-  it('tileset and colorMap', function() {
+  it('tileset and rgbmap', function() {
     ra.resetState();
     ra.usePalette({rgbmap:[]});
 

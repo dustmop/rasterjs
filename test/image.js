@@ -36,8 +36,8 @@ describe('Image', function() {
   });
 
 
-  // If a colorMap exists, image uses it to convert rgb to 8-bit.
-  it('draw using colormap', function() {
+  // If a rgbmap exists, image uses it to convert rgb to 8-bit.
+  it('draw convert using rgbmap', function() {
     ra.resetState();
     ra.usePalette('pico8');
 
@@ -61,7 +61,7 @@ describe('Image', function() {
   });
 
 
-  // Colors that didn't exist in the colorMap are added to it
+  // Colors that didn't exist in the rgbmap are added to it
   it('draw adds colors', function() {
     ra.resetState();
     ra.usePalette({rgbmap:[0x000000, 0xab5236, 0xff004d, 0x29adff]});

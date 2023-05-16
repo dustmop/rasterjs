@@ -442,7 +442,7 @@ describe('Palette', function() {
       }
     });
 
-    // Cycle using the set of values from the loaded colormap
+    // Cycle using the set of values from the loaded rgbmap
     palette.cycle({values: cycleColors.look, incStep: 1, tick: 1});
     util.renderCompareTo(ra, 'test/testdata/cycle-after1.png');
 

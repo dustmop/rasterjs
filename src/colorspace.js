@@ -8,21 +8,16 @@ class Colorspace extends component.Component {
   // TODO: use arguments instead, optional arguments
   // Colorspace()
   // Colorspace(field)
-  // Colorspace(w, h)
-  // Colorspace(palette)
-  constructor(source, palette, sizeInfo) {
+  // Colorspace(array[array[int|array[int]]])
+  constructor(source, sizeInfo) {
     super();
+
     // TOOD: cell_width, cell_height -> cell_dim
-    // TODO: indexed or container
     // sizeInfo looks like:
     // {
     //   cell_width:  8,
     //   cell_height: 8,
     // }
-    // TODO: source is a Field, Colorspace can also own Grid of values
-    if (!palette && !types.isPalette) {
-      throw new Error(`palette must be null or a Palette`);
-    }
     if (!source && !sizeInfo) {
       throw new Error(`Colorspace expects an argument`);
     }
@@ -47,14 +42,23 @@ class Colorspace extends component.Component {
     if (sizeInfo.cell_height <= 0) {
       throw new Error(`Colorspace's cell_height must be > 0`);
     }
-    if (types.isInteger(source)) {
+
+    if (types.isField(source)) {
+      this.pitch = source.pitch;
+      this._table = source.toArrays();
+      this.width = source.width;
+      this.height = source.height;
+    } else if (types.isArray(source)) {
+      let res = makeColorspaceContent(source);
+      this.pitch = res.pitch;
+      this._table = res.table;
+      this.width = res.width;
+      this.height = res.height;
+    } else {
       throw new Error(`Colorspace expects a Field as an argument`);
     }
-    if (!source.data) {
-      source.fullyResolve();
-    }
-    this.source = source;
-    this.sizeInfo = sizeInfo;
+
+    this._sizeInfo = sizeInfo;
     return this;
   }
 
@@ -62,20 +66,36 @@ class Colorspace extends component.Component {
     return 'colorspace';
   }
 
-  getCellAt(pixelX, pixelY) {
-    let pieceSize = this.sizeInfo.piece_size;
-    let cellX = Math.floor(pixelX / this.sizeInfo.cell_width);
-    let cellY = Math.floor(pixelY / this.sizeInfo.cell_height);
-    let pieceVal = this.source.get(cellX, cellY);
-    return [cellX, cellY, pieceSize, pieceVal];
+  getCellAtPixel(pixelX, pixelY) {
+    let pieceSize = this._sizeInfo.piece_size;
+    let cellX = Math.floor(pixelX / this._sizeInfo.cell_width);
+    let cellY = Math.floor(pixelY / this._sizeInfo.cell_height);
+    let attr = this.get(cellX, cellY);
+    return {
+      cellX: cellX,
+      cellY: cellY,
+      pieceSize: pieceSize,
+      attr: attr,
+    };
+  }
+
+  get(x, y) {
+    return this._table[y][x];
   }
 
   put(x, y, v) {
-    this.source.put(x, y, v);
+    this._table[y][x] = v;
   }
 
   fill(v) {
-    this.source.fill(v);
+    if (!types.isNumber(v)) { throw new Error(`fill needs number`); }
+    v = Math.floor(v);
+    for (let y = 0; y < this.height; y++) {
+      let row = this._table[y];
+      for (let x = 0; x < row.length; x++) {
+        row[x] = v;
+      }
+    }
   }
 
   fillPattern(args) {
@@ -86,7 +106,7 @@ class Colorspace extends component.Component {
         row_size = row.length;
       }
       for (let x = 0; x < row_size; x++) {
-        this.source.put(x, y, row[x]);
+        this.put(x, y, row[x]);
       }
     }
   }
@@ -124,8 +144,8 @@ class Colorspace extends component.Component {
   }
 
   ensureConsistentFieldPalette(field, palette) {
-    let num_cell_x = field.width  / this.sizeInfo.cell_width;
-    let num_cell_y = field.height / this.sizeInfo.cell_height;
+    let num_cell_x = field.width  / this._sizeInfo.cell_width;
+    let num_cell_y = field.height / this._sizeInfo.cell_height;
 
     let piece_size = this._getPieceSize();
 
@@ -133,11 +153,18 @@ class Colorspace extends component.Component {
       for (let j = 0; j < num_cell_x; j++) {
         let pal_index_needs = this._collectColorNeeds(field, j, i);
         let color_needs = this._lookupPaletteColors(pal_index_needs, palette);
-        let was = this.source.get(j, i);
+        let cellValue = this.get(j, i);
+        if (Array.isArray(cellValue)) {
+          // cell has palette entries, index those instead of full bit color
+          let entries = cellValue;
+          this._shrinkCellColor(field, j, i, null, entries);
+          continue;
+        }
         let match = palette.findNearPieces(color_needs, piece_size);
-        let cell_value = this._choosePieceNum(match, was);
-        this._downModulate(field, j, i, piece_size);
-        this.source.put(j, i, cell_value);
+        let cell_value = this._choosePieceNum(match, cellValue);
+        this._shrinkCellColor(field, j, i, piece_size, null);
+        // update colorspace value
+        this.put(j, i, cell_value);
       }
     }
   }
@@ -145,9 +172,9 @@ class Colorspace extends component.Component {
   _getPieceSize() {
     // TODO: cascade attribute palette spritelist colorMap (quick = 8)
     // TODO: order?
-    if (this.sizeInfo.piece_size) {
+    if (this._sizeInfo.piece_size) {
       // TODO: test me
-      return this.sizeInfo.piece_size;
+      return this._sizeInfo.piece_size;
     } else if (this.palette && this.palette.size_info) {
       // TODO: test me
       return this.palette.size_info;
@@ -163,10 +190,10 @@ class Colorspace extends component.Component {
 
   _collectColorNeeds(field, cell_x, cell_y) {
     let collect = {};
-    for (let i = 0; i < this.sizeInfo.cell_height; i++) {
-      for (let j = 0; j < this.sizeInfo.cell_width; j++) {
-        let x = j + cell_x * this.sizeInfo.cell_width;
-        let y = i + cell_y * this.sizeInfo.cell_height;
+    for (let i = 0; i < this._sizeInfo.cell_height; i++) {
+      for (let j = 0; j < this._sizeInfo.cell_width; j++) {
+        let x = j + cell_x * this._sizeInfo.cell_width;
+        let y = i + cell_y * this._sizeInfo.cell_height;
         collect[field.get(x, y)] = true;
       }
     }
@@ -184,15 +211,22 @@ class Colorspace extends component.Component {
     return colors;
   }
 
-  _downModulate(field, cell_x, cell_y, piece_size) {
-    let collect = {};
-    for (let i = 0; i < this.sizeInfo.cell_height; i++) {
-      for (let j = 0; j < this.sizeInfo.cell_width; j++) {
-        let x = j + cell_x * this.sizeInfo.cell_width;
-        let y = i + cell_y * this.sizeInfo.cell_height;
+  _shrinkCellColor(field, cell_x, cell_y, piece_size, entries) {
+    for (let i = 0; i < this._sizeInfo.cell_height; i++) {
+      for (let j = 0; j < this._sizeInfo.cell_width; j++) {
+        let x = j + cell_x * this._sizeInfo.cell_width;
+        let y = i + cell_y * this._sizeInfo.cell_height;
         let v = field.get(x, y);
-        v = v % piece_size;
-        field.put(x, y, v);
+        if (piece_size) {
+          v = v % piece_size;
+          field.put(x, y, v);
+          continue;
+        }
+        if (entries) {
+          v = entries.indexOf(v);
+          field.put(x, y, v != -1 ? v : 0);
+          continue;
+        }
       }
     }
   }
@@ -231,23 +265,61 @@ class Colorspace extends component.Component {
   }
 
   realizeIndexedColor(c, x, y) {
-    let cellX = Math.floor(x / this.sizeInfo.cell_width);
-    let cellY = Math.floor(y / this.sizeInfo.cell_height);
-    let pieceSize = this.sizeInfo.piece_size;
-    let k = cellY * this.source.pitch + cellX;
-    let choice = this.source.data[k];
+    let cellX = Math.floor(x / this._sizeInfo.cell_width);
+    let cellY = Math.floor(y / this._sizeInfo.cell_height);
+    let pieceSize = this._sizeInfo.piece_size;
+    let choice = this.get(cellX, cellY);
     return (c % pieceSize) + (choice * pieceSize);
   }
 
   visualize() {
     let viz = new visualizer.Visualizer();
-    return viz.colorspaceToSurface(this.source, this.sizeInfo);
+    return viz.colorspaceToSurface(this, this._sizeInfo);
   }
 
 }
 
 function setContains(container, want) {
   return want.every(function(e) { return container.indexOf(e) >= 0; });
+}
+
+function makeColorspaceContent(source) {
+  types.ensureType(source, 'Array');
+  let minWidth, maxWidth;
+  let height = source.length;
+  for (let y = 0; y < height; y++) {
+    let row = source[y];
+    types.ensureType(row, 'Array');
+    if (minWidth == null || row.length < minWidth) {
+      minWidth = row.length;
+    }
+    if (maxWidth == null || row.length > maxWidth) {
+      maxWidth = row.length;
+    }
+    for (let x = 0; x < row.length; x++) {
+      let elem = row[x];
+      if (!types.isNumber(elem) && !types.isNumArray(elem)) {
+        throw new Error(`colorspace must be 2d grid of nums or lists of nums`);
+      }
+    }
+  }
+
+  // fill the data
+  let width = minWidth;
+  let pitch = maxWidth;
+  let data = new Array(height);
+  for (let y = 0; y < height; y++) {
+    let row = new Array(pitch);
+    for (let j = 0; j < pitch; j++) {
+      let elem = source[y][j];
+      if (types.isArray(elem)) {
+        elem = elem.slice();
+      }
+      row[j] = elem;
+    }
+    data[y] = row;
+  }
+  return {table: data, width: width, height: height, pitch: pitch};
 }
 
 module.exports.Colorspace = Colorspace;

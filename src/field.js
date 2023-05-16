@@ -183,6 +183,8 @@ class Field extends component.Component {
   }
 
   toArrays() {
+    // TODO: test that non-prepared field needs this
+    this._prepare();
     let newPitch = this.width;
     let numPixels = this.height * newPitch;
     let newArrays = new Array(this.height);

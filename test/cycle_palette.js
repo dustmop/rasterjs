@@ -4,13 +4,12 @@ var ra = require('../src/lib.js');
 
 describe('Cycle palette', function() {
 
-  // Colors used in small-fruit.png, from pico8 colorMap
+  // Colors used in small-fruit.png, from pico8 rgbmap
   //  0x000000  0  black
   //  0x7e2553  2  purple
   //  0xab5236  4  brown
   //  0xff004d  8  red
   //  0xff77a8 14  pink
-
 
   // Functionality we want, draw an image then change the palette
   it('change to green', function() {
@@ -123,8 +122,8 @@ describe('Cycle palette', function() {
   });
 
 
-  // Image uses color in the colorMap, but not in palette
-  it('image uses colors in colorMap, but not in palette', function() {
+  // Image uses color in the rgbmap, but not in palette
+  it('image uses colors in rgbmap, but not in palette', function() {
     ra.resetState();
     ra.usePalette('pico8');
     ra.usePalette({entries: [8, 0, 2]});
@@ -203,7 +202,7 @@ describe('Cycle palette', function() {
 
     assert.throws(function() {
       ra.loadImage('test/testdata/small-fruit.png');
-    }, /Error: palette exists, and image test\/testdata\/small-fruit.png uses a color not found in the colorMap: RGBColor{#ab5236}/);
+    }, /Error: palette exists, and image test\/testdata\/small-fruit.png uses a color not found in the rgbmap: RGBColor{#ab5236}/);
   });
 
 });

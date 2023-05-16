@@ -160,16 +160,11 @@ class Visualizer {
     return rend.render();
   }
 
-  colorspaceToSurface(source, sizeInfo, opt) {
-    let srcWidth = source.width;
-    let srcHeight = source.height;
-    let srcPitch = source.pitch;
-    let srcData = source.data;
-
+  colorspaceToSurface(cspace, sizeInfo, opt) {
     let sz = 22;
 
-    let width = srcWidth * sz;
-    let height = srcHeight * sz;
+    let width = cspace.width * sz;
+    let height = cspace.height * sz;
     let unit = sz;
 
     let target = new field.Field();
@@ -178,9 +173,9 @@ class Visualizer {
 
     let colors = palette.constructRGBMapFrom('quick');
 
-    for (let y = 0; y < srcHeight; y++) {
-      for (let x = 0; x < srcWidth; x++) {
-        let v = srcData[srcPitch*y + x];
+    for (let y = 0; y < cspace.height; y++) {
+      for (let x = 0; x < cspace.width; x++) {
+        let v = cspace.get(x, y);
         target.setColor(v + 24);
         target.fillRect(x*unit, y*unit, unit, unit);
       }

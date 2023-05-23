@@ -1,9 +1,6 @@
 const baseDisplay = require('./base_display.js');
 
-// TODO: Move some logic here, such that the backend is the minimal required
-// to interact with SDL. Perhaps combine the `set*` methods into `configure`.
-
-class SDLDisplay extends baseDisplay.BaseDisplay {
+class NativeDisplay extends baseDisplay.BaseDisplay {
   constructor(backend) {
     super();
     this._b = backend;
@@ -22,27 +19,28 @@ class SDLDisplay extends baseDisplay.BaseDisplay {
   }
 
   setSceneSize(width, height) {
-    this._b.setSize(width, height);
+    this.width = width;
+    this.height = height;
   }
 
   setRenderer(renderer) {
-    this._b.setRenderer(renderer);
+    this._renderer = renderer;
   }
 
   setZoom(zoomLevel) {
-    this._b.setZoom(zoomLevel);
+    this._b.config('zoom', zoomLevel);
   }
 
   setGrid(unit) {
-    this._b.setGrid(unit);
+    this._b.config('grid', unit);
   }
 
   setInstrumentation(inst) {
-    this._b.setInstrumentation(inst);
+    this._b.config('instrumentation', inst);
   }
 
   setVeryVerboseTiming(timing) {
-    this._b.setVeryVerboseTiming(timing);
+    this._b.config('vv', timing);
   }
 
   stopRunning() {
@@ -51,7 +49,8 @@ class SDLDisplay extends baseDisplay.BaseDisplay {
   }
 
   appLoop(loopID, execNextFrame) {
-    return this._b.runDisplayLoop(loopID, execNextFrame);
+    this._b.beginRender(this.width, this.height, this._renderer);
+    return this._b.runAppLoop(loopID, execNextFrame);
   }
 
   registerEventHandler(eventName, region, callback) {
@@ -63,4 +62,4 @@ class SDLDisplay extends baseDisplay.BaseDisplay {
   }
 }
 
-module.exports.SDLDisplay = SDLDisplay;
+module.exports.NativeDisplay = NativeDisplay;

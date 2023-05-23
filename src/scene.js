@@ -89,12 +89,7 @@ class Scene {
 
     let options = this._env.getOptions();
     this._numFrames = options.num_frames || FRAMES_LOOP_FOREVER;
-    if (options.display) {
-      this.useDisplay(options.display);
-    } else {
-      // default display
-      this.display = this._env.makeDisplay();
-    }
+    this.useDisplay(options.display);
     this.display.initialize();
     if (options.palette) {
       this.usePalette(options.palette);
@@ -359,17 +354,27 @@ class Scene {
   }
 
   useDisplay(nameOrDisplay) {
+    if (this._namedDisplays == null) {
+      this._namedDisplays = this._env.displays();
+      // built-in displays
+      this._namedDisplays['ascii'] = ()=>{
+        return new asciiDisplay.AsciiDisplay();
+      };
+      this._namedDisplays['tileset-builder'] = ()=>{
+        return new tilesetBuilder.TilesetBuilderDisplay();
+      };
+    }
+    if (!nameOrDisplay) {
+      nameOrDisplay = Object.keys(this._namedDisplays)[0];
+    }
     if (types.isString(nameOrDisplay)) {
       // name of a built-in string
-      if (nameOrDisplay == 'ascii') {
-        this.display = new asciiDisplay.AsciiDisplay();
-      } else if (nameOrDisplay == 'tileset-builder') {
-        this.display = new tilesetBuilder.TilesetBuilderDisplay();
-      } else {
-        this.display = this._env.makeDisplay(nameOrDisplay);
-        if (!this.display) {
-          throw new Error(`unknown built-in display name "${nameOrDisplay}"`);
-        }
+      let constructFunc = this._namedDisplays[nameOrDisplay];
+      if (constructFunc) {
+        this.display = constructFunc();
+      }
+      if (!this.display) {
+        throw new Error(`unknown built-in display name "${nameOrDisplay}"`);
       }
     } else if (types.isDisplayObject(nameOrDisplay)) {
       // custom display object

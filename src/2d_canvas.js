@@ -92,6 +92,7 @@ class TwoDeeDisplay extends baseDisplay.BaseDisplay {
   }
 
   appLoop(id, nextFrame) {
+    this.currentRunId = id;
     this.waitForContentLoad(() => {
       this._create2dCanvas();
       this._beginLoop(id, nextFrame);
@@ -106,6 +107,9 @@ class TwoDeeDisplay extends baseDisplay.BaseDisplay {
 
     let renderIt = () => {
       if (!this.isRunning()) {
+        return;
+      }
+      if (this.currentRunId != id) {
         return;
       }
 

@@ -5,7 +5,7 @@ const twoDeeDisplay = require('../src/2d_canvas.js');
 const asciiDisplay = require('../src/ascii_display.js');
 const httpDisplay = require('../src/http_display.js');
 const saveImageDisplay = require('../src/save_image_display.js');
-const sdlDisplay = require('../src/sdl_display.js');
+const nativeDisplay = require('../src/native_display.js');
 const testDisplay = require('../src/test_display.js');
 const tilesetBuilderDisplay = require('../src/tileset_builder.js');
 const webglDisplay = require('../src/webgl_display.js');
@@ -114,11 +114,11 @@ describe('Display', function() {
   it('each display', function() {
     ra.resetState();
 
-    let testSDLBackend = {
+    let sdlBackend = {
       name() { return 'sdl'; }
     };
-    let fakeBackend = {
-      name() { return 'fake'; }
+    let rpiBackend = {
+      name() { return 'rpi'; }
     };
 
     let display = new twoDeeDisplay.TwoDeeDisplay();
@@ -137,13 +137,17 @@ describe('Display', function() {
     assert.equal(display.kind(), 'display');
     assert.equal(display.name(), 'save-image');
 
-    display = new sdlDisplay.SDLDisplay(testSDLBackend);
+    display = new nativeDisplay.NativeDisplay(sdlBackend);
     assert.equal(display.kind(), 'display');
     assert.equal(display.name(), 'sdl');
 
-    display = new testDisplay.TestDisplay(fakeBackend);
+    display = new nativeDisplay.NativeDisplay(rpiBackend);
     assert.equal(display.kind(), 'display');
-    assert.equal(display.name(), 'fake');
+    assert.equal(display.name(), 'rpi');
+
+    display = new testDisplay.TestDisplay();
+    assert.equal(display.kind(), 'display');
+    assert.equal(display.name(), 'test');
 
     display = new tilesetBuilderDisplay.TilesetBuilderDisplay();
     assert.equal(display.kind(), 'display');

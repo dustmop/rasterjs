@@ -1,44 +1,68 @@
 #include <napi.h>
 
-
-#ifdef SDL_FOUND
-
-  #include "sdl_backend.h"
-
-  // SDLBackend compiled into this add-on if the library is found
-
-  void initialize(Napi::Env env, Napi::Object exports) {
-    SDLBackend::InitClass(env, exports);
-  }
-
-  Napi::Object CreateBackend(const Napi::CallbackInfo& info) {
-    return SDLBackend::NewInstance(info.Env(), info[0]);
-  }
-
-#else
-
-  #include "fake_backend.h"
-
-  // FakeBackend cannot actually display anything
-
-  void initialize(Napi::Env env, Napi::Object exports) {
-    FakeBackend::InitClass(env, exports);
-  }
-
-  Napi::Object CreateBackend(const Napi::CallbackInfo& info) {
-    return FakeBackend::NewInstance(info.Env(), info[0]);
-  }
-
+#ifdef SDL_ENABLED
+#include "sdl_backend.h"
 #endif
 
+#ifdef RPI_ENABLED
+#include "rpi_backend.h"
+#endif
+
+void initialize(Napi::Env env, Napi::Object exports) {
+
+  #ifdef SDL_ENABLED
+  SDLBackend::InitClass(env, exports);
+  #endif
+
+  #ifdef RPI_ENABLED
+  RPIBackend::InitClass(env, exports);
+  #endif
+}
+
+Napi::Object MakeBackend(const Napi::CallbackInfo& info) {
+  Napi::String name = info[0].ToString();
+
+  #ifdef SDL_ENABLED
+  if (name.Utf8Value() == std::string("sdl")) {
+    return SDLBackend::NewInstance(info.Env(), info[0]);
+  }
+  #endif
+
+  #ifdef RPI_ENABLED
+  if (name.Utf8Value() == std::string("rpi")) {
+    return RPIBackend::NewInstance(info.Env(), info[0]);
+  }
+  #endif
+
+  return info.Env().Null().ToObject();
+}
+
+Napi::Object Supports(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  Napi::Array list = Napi::Array::New(env);
+  int i = 0;
+
+  #ifdef SDL_ENABLED
+  list[i] = "sdl";
+  i++;
+  #endif
+
+  #ifdef RPI_ENABLED
+  list[i] = "rpi";
+  i++;
+  #endif
+
+  return list;
+}
 
 Napi::Object InitAll(Napi::Env env, Napi::Object exports) {
-  exports.Set("backend",
-      Napi::Function::New(env, CreateBackend, "CreateBackend"));
+  exports.Set("make",
+      Napi::Function::New(env, MakeBackend, "MakeBackend"));
+  exports.Set("supports",
+      Napi::Function::New(env, Supports, "Supports"));
   Napi::HandleScope scope(env);
   initialize(env, exports);
   return exports;
 }
-
 
 NODE_API_MODULE(addon, InitAll)

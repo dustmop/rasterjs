@@ -1,4 +1,4 @@
-#ifdef SDL_FOUND
+#ifdef SDL_ENABLED
 
 #include "sdl_backend.h"
 #include "type.h"
@@ -8,7 +8,7 @@
 
 using namespace Napi;
 
-Napi::FunctionReference g_displayConstructor;
+Napi::FunctionReference g_sdlDisplayConstructor;
 
 typedef unsigned char u8;
 
@@ -21,19 +21,14 @@ void SDLBackend::InitClass(Napi::Env env, Napi::Object exports) {
       "Display",
       {InstanceMethod("initialize", &SDLBackend::Initialize),
        InstanceMethod("name", &SDLBackend::Name),
-       InstanceMethod("setSize", &SDLBackend::SetSize),
-       InstanceMethod("setRenderer", &SDLBackend::SetRenderer),
-       InstanceMethod("setZoom", &SDLBackend::SetZoom),
-       InstanceMethod("setGrid", &SDLBackend::SetGrid),
-       InstanceMethod("setInstrumentation", &SDLBackend::SetInstrumentation),
-       InstanceMethod("setVeryVerboseTiming", &SDLBackend::SetVeryVerboseTiming),
-       InstanceMethod("handleEvent", &SDLBackend::HandleEvent),
-       InstanceMethod("runDisplayLoop", &SDLBackend::RunDisplayLoop),
-       InstanceMethod("exitLoop", &SDLBackend::ExitLoop),
+       InstanceMethod("beginRender", &SDLBackend::BeginRender),
+       InstanceMethod("config", &SDLBackend::Config),
+       InstanceMethod("eventReceiver", &SDLBackend::EventReceiver),
+       InstanceMethod("runAppLoop", &SDLBackend::RunAppLoop),
        InstanceMethod("insteadWriteBuffer", &SDLBackend::InsteadWriteBuffer),
   });
-  g_displayConstructor = Napi::Persistent(func);
-  g_displayConstructor.SuppressDestruct();
+  g_sdlDisplayConstructor = Napi::Persistent(func);
+  g_sdlDisplayConstructor.SuppressDestruct();
 }
 
 SDLBackend::SDLBackend(const Napi::CallbackInfo& info)
@@ -60,14 +55,12 @@ SDLBackend::SDLBackend(const Napi::CallbackInfo& info)
   this->tookTimeUs = 0;
   this->maxDelta = -9999999;
   this->minDelta = 9999999;
-  // TODO: lock fps at 60
-  // TODO: implement for the web
   // TODO: allow caller to access performance
 };
 
 Napi::Object SDLBackend::NewInstance(Napi::Env env, Napi::Value arg) {
   Napi::EscapableHandleScope scope(env);
-  Napi::Object obj = g_displayConstructor.New({arg});
+  Napi::Object obj = g_sdlDisplayConstructor.New({arg});
   return scope.Escape(napi_value(obj)).ToObject();
 }
 
@@ -86,92 +79,70 @@ Napi::Value SDLBackend::Name(const Napi::CallbackInfo& info) {
   return Napi::String::New(env, "sdl");
 }
 
-Napi::Value SDLBackend::SetSize(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-
-  if (info.Length() < 2) {
-    printf("SetSize needs two parameters\n");
-    exit(1);
-  }
-
-  this->displayWidth = info[0].ToNumber().Int32Value();
-  this->displayHeight = info[1].ToNumber().Int32Value();
-
-  return Napi::Number::New(env, 0);
-}
-
-Napi::Value SDLBackend::SetRenderer(const Napi::CallbackInfo& info) {
+Napi::Value SDLBackend::BeginRender(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   if (!this->sdlInitialized) {
     return Napi::Number::New(env, -1);
   }
 
-  if (info.Length() < 1) {
-    printf("SetRenderer needs renderer\n");
+  if (info.Length() < 3) {
+    printf("BeginRender needs renderer\n");
     exit(1);
   }
 
-  Napi::Object rendererObj = info[0].As<Napi::Object>();
+  this->displayWidth = info[0].ToNumber().Int32Value();
+  this->displayHeight = info[1].ToNumber().Int32Value();
+
+  Napi::Object rendererObj = info[2].As<Napi::Object>();
   napi_create_reference(env, rendererObj, 1, &this->rendererRef);
 
   return Napi::Number::New(env, 0);
 }
 
-Napi::Value SDLBackend::SetZoom(const Napi::CallbackInfo& info) {
+Napi::Value SDLBackend::Config(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  if (info.Length() < 1) {
-    printf("SetZoom needs zoom\n");
+
+  if (info.Length() < 2) {
+    printf("Config needs two parameters\n");
     exit(1);
   }
-  if (!info[0].IsNumber()) {
-    this->zoomLevel = 1;
-  } else {
-    this->zoomLevel = info[0].As<Napi::Number>().Int32Value();
+
+  Napi::String fieldStr = info[0].As<Napi::String>();
+  if (fieldStr.Utf8Value() == std::string("zoom")) {
+    // config('zoom', num)
+    if (!info[1].IsNumber()) {
+      this->zoomLevel = 1;
+    } else {
+      this->zoomLevel = info[1].As<Napi::Number>().Int32Value();
+    }
+
+  } else if (fieldStr.Utf8Value() == std::string("grid")) {
+    // config('grid', state)
+    bool value = info[1].ToBoolean();
+    if (!this->gridLayer) {
+      // NOTE: grid layer not allocated yet
+    } else if (value) {
+      SDL_SetTextureAlphaMod(this->gridLayer, 0xff);
+    } else {
+      SDL_SetTextureAlphaMod(this->gridLayer, 0x00);
+    }
+
+  } else if (fieldStr.Utf8Value() == std::string("instrumentation")) {
+    // config('instrumentation', state)
+    this->instrumentation = info[1].ToNumber().Int32Value();
+
+  } else if (fieldStr.Utf8Value() == std::string("vv")) {
+    // config('grid', state)
+    this->veryVerboseTiming = info[1].ToNumber().Int32Value();
+
   }
-  return Napi::Number::New(env, 0);
 }
 
-Napi::Value SDLBackend::SetGrid(const Napi::CallbackInfo& info) {
+Napi::Value SDLBackend::EventReceiver(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  if (info.Length() < 1) {
-    printf("SetGrid needs state\n");
-    exit(1);
-  }
-  Napi::Value arg = info[0];
-  bool value = arg.ToBoolean();
-  if (value) {
-    SDL_SetTextureAlphaMod(this->gridLayer, 0xff);
-  } else {
-    SDL_SetTextureAlphaMod(this->gridLayer, 0x00);
-  }
-  return Napi::Number::New(env, 0);
-}
-
-Napi::Value SDLBackend::SetInstrumentation(const Napi::CallbackInfo& info) {
-  this->instrumentation = info[0].ToNumber().Int32Value();
-  return info.Env().Null();
-}
-
-Napi::Value SDLBackend::SetVeryVerboseTiming(const Napi::CallbackInfo& info) {
-  this->veryVerboseTiming = info[0].ToNumber().Int32Value();
-  return info.Env().Null();
-}
-
-Napi::Value SDLBackend::HandleEvent(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  Napi::String eventName = info[0].ToString();
-  // TODO: handle click, click-with-region
-  if (eventName.Utf8Value() == std::string("keypress")) {
-    Napi::Function handleFunc = info[2].As<Napi::Function>();
-    this->keyDownHandleFunc = Napi::Persistent(handleFunc);
-  } else if (eventName.Utf8Value() == std::string("keyup")) {
-    Napi::Function handleFunc = info[2].As<Napi::Function>();
-    this->keyUpHandleFunc = Napi::Persistent(handleFunc);
-  } else if (eventName.Utf8Value() == std::string("keydown")) {
-    Napi::Function handleFunc = info[2].As<Napi::Function>();
-    this->keyDownHandleFunc = Napi::Persistent(handleFunc);
-  }
+  Napi::Function receiverFunc = info[0].As<Napi::Function>();
+  this->eventReceiverFunc = Napi::Persistent(receiverFunc);
   return Napi::Number::New(env, 0);
 }
 
@@ -216,7 +187,7 @@ unsigned char* surfaceToRawBuffer(Napi::Value surfaceVal) {
   return (unsigned char*)arrBuff.Data();
 }
 
-Napi::Value SDLBackend::RunDisplayLoop(const Napi::CallbackInfo& info) {
+Napi::Value SDLBackend::RunAppLoop(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
   this->isRunning = true;
@@ -423,37 +394,43 @@ void SDLBackend::execOneFrame(const CallbackInfo& info) {
     case SDL_QUIT:
       this->isRunning = false;
       break;
+
     case SDL_KEYDOWN:
       if (event.key.keysym.sym == SDLK_ESCAPE) {
         this->isRunning = false;
         return;
-      } else if (!this->keyDownHandleFunc.IsEmpty()) {
+      } else if (!this->eventReceiverFunc.IsEmpty()) {
+        // TODO: refactor with SDL_KEYUP
+        Napi::String eventName = Napi::String::New(env, "keydown");
         int code = event.key.keysym.sym;
         std::string s(1, char(code));
         Napi::String str = Napi::String::New(env, s);
         Napi::Object obj = Napi::Object::New(env);
         obj["key"] = str;
         napi_value val = obj;
-        this->keyDownHandleFunc.Call({val});
+        this->eventReceiverFunc.Call({eventName, val});
         if (env.IsExceptionPending()) {
             return;
         }
       }
       break;
+
     case SDL_KEYUP:
-      if (!this->keyUpHandleFunc.IsEmpty()) {
+      if (!this->eventReceiverFunc.IsEmpty()) {
+        Napi::String eventName = Napi::String::New(env, "keyup");
         int code = event.key.keysym.sym;
         std::string s(1, char(code));
         Napi::String str = Napi::String::New(env, s);
         Napi::Object obj = Napi::Object::New(env);
         obj["key"] = str;
         napi_value val = obj;
-        this->keyUpHandleFunc.Call({val});
+        this->eventReceiverFunc.Call({eventName, val});
         if (env.IsExceptionPending()) {
             return;
         }
       }
       break;
+
     case SDL_WINDOWEVENT_CLOSE:
       this->isRunning = false;
       return;
@@ -625,11 +602,6 @@ void SDLBackend::nextWithoutPresent(Napi::Env env) {
                                             "<unknown>", this);
   WaitFrame* w = new WaitFrame(cont, 16);
   w->Queue();
-}
-
-Napi::Value SDLBackend::ExitLoop(const Napi::CallbackInfo& info) {
-  this->isRunning = false;
-  return info.Env().Null();
 }
 
 #endif

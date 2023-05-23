@@ -6,6 +6,7 @@ const PNG = require('pngjs').PNG;
 describe('SDL', function() {
   it('capture from window', function() {
     ra.resetState();
+    ra.useDisplay('sdl');
     let buff = new Uint8Array(16384);
     if (ra.display.name() != 'sdl') {
       console.log(`

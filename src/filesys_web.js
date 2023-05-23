@@ -45,7 +45,7 @@ class FilesysAccess {
         imgField.rgbBuff =  parsedJpeg.data;
         imgField.width = parsedJpeg.width;
         imgField.height = parsedJpeg.height;
-        imgField.pitch = parsedJpeg.height;
+        imgField.pitch = parsedJpeg.width;
         // callback for when image loading, down-sample RGB to 8-bit values
         if (imgField.whenRead) {
           imgField.whenRead();

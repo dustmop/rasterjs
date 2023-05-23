@@ -23,14 +23,14 @@ class HTTPDisplay extends baseDisplay.BaseDisplay {
 
   registerEventHandler(eventName, region, callback) {}
 
-  renderLoop(nextFrame) {
+  appLoop(_loopID, nextFrame) {
     this.nextFrame = nextFrame;
-    const server = http.createServer(this.requestListener.bind(this));
+    const server = http.createServer(this._requestListener.bind(this));
     console.log(`listening at http://localhost:${PORT}`);
     server.listen(PORT);
   }
 
-  requestListener(req, res) {
+  _requestListener(req, res) {
     if (!this._image) {
       this.nextFrame();
       let renderedLayers = this.renderer.render();

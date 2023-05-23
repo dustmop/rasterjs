@@ -4,97 +4,99 @@ const path = require('path');
 const saver = require('./save_image_display.js');
 const filesysLocal = require('./filesys_local.js');
 const httpDisplay = require('./http_display.js');
-const sdlDisplay = require('./sdl_display.js');
+const nativeDisplay = require('./native_display.js');
 const testDisplay = require('./test_display.js');
 
-function makeFilesysAccess() {
-  let fsacc = new filesysLocal.FilesysAccess();
-  return fsacc;
-}
-
-function detectDisplayBackend() {
-  // default: detect the display. use either `sdl` (default) or `http`
-  let backend = cppmodule.backend();
-  if (backend.name() == 'fake') {
-    return new httpDisplay.HTTPDisplay();
+class NodeEnv {
+  makeFilesysAccess() {
+    return new filesysLocal.FilesysAccess();
   }
-  return backend;
-};
 
-function makeDisplay(name) {
-  if (runningAsTest()) {
-    return new testDisplay.TestDisplay(cppmodule.backend());
-  }
-  if (!name) {
-    return new sdlDisplay.SDLDisplay(detectDisplayBackend());
-  } else if (name == 'sdl') {
-    // force the `sdl` backend, even if it is `fake`
-    return new sdlDisplay.SDLDisplay(cppmodule.backend());
-  } else if (name == 'http') {
-    return new httpDisplay.HTTPDisplay();
-  } else {
-    throw new Error(`unknown display name "${name}"`);
-  }
-}
+  displays() {
+    let result = {};
+    if (runningAsTest()) {
+      result['test'] = ()=>{
+        return new testDisplay.TestDisplay();
+      };
+    }
+    for (let name of cppmodule.supports()) {
+      result[name] = ()=>{
+        return new nativeDisplay.NativeDisplay(cppmodule.make(name));
+      };
+    }
+    result['sdl-failed'] = ()=>{
+      console.log('SDL is not supported, serving rendered images over http. You can save as a png or gif using --save. If you set up SDL development libraries, you can run `npm install` again to enable SDL support.');
+      return new httpDisplay.HTTPDisplay();
+    }
+    result['http'] = ()=>{
+      return new httpDisplay.HTTPDisplay();
+    }
+    return result;
+  };
 
-var _fullStackTrace = false;
+  getOptions() {
+    // TODO: only parse command-line args if raster.js is an "app runner"
+    // TODO: startswith(read(process.argv[1])) == "const ra = require('raster')"
 
-function getOptions() {
+    // A user of raster.js can disable command-line arguments entirely by
+    // adding "dev_rasterjs.noargv" to their package.json:
+    // {
+    //   "name": "_your_package_",
+    //   ...
+    //   "dev_rasterjs": { "noargv": true }
+    // }
+    try {
+      let currDir = process.cwd();
+      const thisPackageJson = require(path.join(currDir, 'package.json'));
+      if (thisPackageJson.dev_rasterjs.noargv === true) {
+        return {};
+      }
+    } catch (e) {
+      // pass
+    }
 
-  // A user of raster.js can disable command-line arguments entirely by
-  // adding "dev_rasterjs.noargv" to their package.json:
-  // {
-  //   "name": "_your_package_",
-  //   ...
-  //   "dev_rasterjs": { "noargv": true }
-  // }
-  try {
-    let currDir = process.cwd();
-    const thisPackageJson = require(path.join(currDir, 'package.json'));
-    if (thisPackageJson.dev_rasterjs.noargv === true) {
+    // Command-line arguments can also be disabled using the environment
+    // variable "RASTERJS_NOARGV"
+    if (process.env.RASTERJS_NOARGV) {
       return {};
     }
-  } catch (e) {
-    // pass
+
+    // If running as a test, don't parse command-line arguments. This allows
+    // the test runner to process its own arguments instead.
+    if (runningAsTest()) {
+      return {};
+    }
+
+    // Skip any command-line args after "--"
+    let cmdlineArgs = process.argv.slice(2);
+    let pos = cmdlineArgs.indexOf('--');
+    if (pos >= 0) {
+      cmdlineArgs = cmdlineArgs.slice(0, pos);
+    }
+
+    // Parse them
+    const parser = new argparse.ArgumentParser({});
+    parser.add_argument('--num-frames', {type: 'int'});
+    parser.add_argument('--save', {type: 'str', dest: 'save_filename'});
+    parser.add_argument('--display', {type: 'str'});
+    parser.add_argument('--palette', {type: 'str'});
+    parser.add_argument('--zoom', {type: 'int'});
+    parser.add_argument('--tick', {type: 'int', dest: 'tick'});
+    parser.add_argument('--full-trace', {action: 'store_true', dest: 'full'})
+    parser.add_argument('-v', {action: 'store_true'});
+    let args = parser.parse_args(cmdlineArgs);
+    if (args.save_filename) {
+      let fsacc = new filesysLocal.FilesysAccess();
+      args.display = new saver.SaveImageDisplay(args.save_filename,
+                                                args.num_frames, fsacc);
+    }
+    return args;
   }
 
-  // Command-line arguments can also be disabled using the environment
-  // variable "RASTERJS_NOARGV"
-  if (process.env.RASTERJS_NOARGV) {
-    return {};
-  }
 
-  // If running as a test, don't parse command-line arguments. This allows
-  // the test runner to process its own arguments instead.
-  if (runningAsTest()) {
-    return {};
+  handleErrorGracefully(error) {
+    throw error;
   }
-
-  // Skip any command-line args after "--"
-  let cmdlineArgs = process.argv.slice(2);
-  let pos = cmdlineArgs.indexOf('--');
-  if (pos >= 0) {
-    cmdlineArgs = cmdlineArgs.slice(0, pos);
-  }
-
-  // Parse them
-  const parser = new argparse.ArgumentParser({});
-  parser.add_argument('--num-frames', {type: 'int'});
-  parser.add_argument('--save', {type: 'str', dest: 'save_filename'});
-  parser.add_argument('--display', {type: 'str'});
-  parser.add_argument('--palette', {type: 'str'});
-  parser.add_argument('--zoom', {type: 'int'});
-  parser.add_argument('--tick', {type: 'int', dest: 'tick'});
-  parser.add_argument('--full-trace', {action: 'store_true', dest: 'full'})
-  parser.add_argument('-v', {action: 'store_true'});
-  let args = parser.parse_args(cmdlineArgs);
-  if (args.save_filename) {
-    let fsacc = new filesysLocal.FilesysAccess();
-    args.display = new saver.SaveImageDisplay(args.save_filename,
-                                              args.num_frames, fsacc);
-  }
-  _fullStackTrace = args.full;
-  return args;
 }
 
 function runningAsTest() {
@@ -102,49 +104,8 @@ function runningAsTest() {
   return (args[0].endsWith('/node') && args[1].endsWith('/mocha'));
 }
 
-function handleErrorGracefully(err, _display) {
-  if (_fullStackTrace) {
-    console.log(err);
-    process.exit(1);
-  }
-  let trace = _removeStackUntilAboveRasterScene(err);
-  process.stderr.write(trace);
-  process.stderr.write(`to get full stack trace use --full-trace`);
-  process.exit(1);
+function make() {
+  return new NodeEnv();
 }
 
-function _removeStackUntilAboveRasterScene(err) {
-  let lines = err.stack.split('\n');
-  lines = lines.slice(1); // remove reason
-  let target = 'rasterjs/src/scene.js:';
-  let target2 = 'rasterjs/src/';
-  let st = 0;
-  let i = 0;
-  let build = [];
-  while (i < lines.length) {
-    if (st == 0) {
-      if (lines[i].indexOf(target) > -1) {
-        // found the first line within scene impl
-        st = 1;
-        continue;
-      }
-    } else if (st == 1) {
-      if (lines[i].indexOf(target) == -1) {
-        // found following line *without* scene
-        st = 2;
-        continue;
-      }
-    } else if (st == 2) {
-      if (lines[i].indexOf(target2) == -1) {
-        build.push(lines[i]);
-      }
-    }
-    i++;
-  }
-  return err.name + ': ' + err.message + '\n' + build.join('\n');
-}
-
-module.exports.makeDisplay = makeDisplay;
-module.exports.makeFilesysAccess = makeFilesysAccess;
-module.exports.getOptions = getOptions;
-module.exports.handleErrorGracefully = handleErrorGracefully;
+module.exports.make = make;

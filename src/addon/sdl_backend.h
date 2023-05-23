@@ -23,20 +23,14 @@ class SDLBackend : public Napi::ObjectWrap<SDLBackend> {
  private:
   Napi::Value Initialize(const Napi::CallbackInfo& info);
   Napi::Value Name(const Napi::CallbackInfo& info);
-
-  Napi::Value SetSize(const Napi::CallbackInfo& info);
-  Napi::Value SetRenderer(const Napi::CallbackInfo& info);
-  Napi::Value SetZoom(const Napi::CallbackInfo& info);
-  Napi::Value SetGrid(const Napi::CallbackInfo& info);
-
-  Napi::Value HandleEvent(const Napi::CallbackInfo& info);
-  Napi::Value RunDisplayLoop(const Napi::CallbackInfo& info);
-
-  Napi::Value ExitLoop(const Napi::CallbackInfo& info);
-
+  // (width, height, renderer)
+  Napi::Value BeginRender(const Napi::CallbackInfo& info);
+  // (['zoom', 'grid', 'instrumentation', 'vv', 'running'], value)
+  Napi::Value Config(const Napi::CallbackInfo& info);
+  // ((msg, event)=>{})
+  Napi::Value EventReceiver(const Napi::CallbackInfo& info);
+  Napi::Value RunAppLoop(const Napi::CallbackInfo& info);
   Napi::Value InsteadWriteBuffer(const Napi::CallbackInfo& info);
-  Napi::Value SetInstrumentation(const Napi::CallbackInfo& info);
-  Napi::Value SetVeryVerboseTiming(const Napi::CallbackInfo& info);
 
   void frameInstrumentation();
   void next(Napi::Env env);
@@ -50,8 +44,7 @@ class SDLBackend : public Napi::ObjectWrap<SDLBackend> {
   bool hasWriteBuffer;
   Napi::Reference<Napi::Value> writeBuffer;
 
-  Napi::FunctionReference keyUpHandleFunc;
-  Napi::FunctionReference keyDownHandleFunc;
+  Napi::FunctionReference eventReceiverFunc;
   int sdlInitialized;
   int zoomLevel;
 

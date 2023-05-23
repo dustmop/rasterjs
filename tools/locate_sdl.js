@@ -45,13 +45,13 @@ function locateSDLMacos(mode) {
     let locate = path.posix.join(root, basename);
     if (fs.existsSync(locate)) {
       if (mode == 'symbol') {
-        return 'SDL_FOUND';
+        return 'SDL_ENABLED';
       }
       return locate;
     }
   }
   if (mode == 'symbol') {
-    return 'SDL_NOT_FOUND';
+    return 'SDL_DISABLED';
   }
   return '';
 }
@@ -69,9 +69,9 @@ function locateSDLWindows(mode) {
   } else if (mode == 'symbol') {
     let dir = getWindowsSDLDir('c:/SDL/');
     if (fs.existsSync(path.posix.join(dir, "/lib/libSDL2.dll.a"))) {
-      return 'SDL_FOUND';
+      return 'SDL_ENABLED';
     }
-    return 'SDL_NOT_FOUND';
+    return 'SDL_DISABLED';
   }
 }
 

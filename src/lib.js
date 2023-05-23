@@ -6,10 +6,10 @@ const scene = require('./scene.js');
 var env = null;
 if (typeof window === 'undefined' && typeof process !== 'undefined') {
   // Node.js
-  env = require('./node_env.js');
+  env = require('./node_env.js').make();
 } else {
   // Webpack or browserify
-  env = require('./web_env.js');
+  env = require('./browser_env.js').make();
 }
 
 var singleton = new scene.Scene(env);

@@ -4,7 +4,7 @@
 #include "sdl_backend.h"
 #endif
 
-#ifdef RPI_ENABLED
+#ifdef RASPBERRYPI
 #include "rpi_backend.h"
 #endif
 
@@ -14,7 +14,7 @@ void initialize(Napi::Env env, Napi::Object exports) {
   SDLBackend::InitClass(env, exports);
   #endif
 
-  #ifdef RPI_ENABLED
+  #ifdef RASPBERRYPI
   RPIBackend::InitClass(env, exports);
   #endif
 }
@@ -28,7 +28,7 @@ Napi::Object MakeBackend(const Napi::CallbackInfo& info) {
   }
   #endif
 
-  #ifdef RPI_ENABLED
+  #ifdef RASPBERRYPI
   if (name.Utf8Value() == std::string("rpi")) {
     return RPIBackend::NewInstance(info.Env(), info[0]);
   }
@@ -47,7 +47,7 @@ Napi::Object Supports(const Napi::CallbackInfo& info) {
   i++;
   #endif
 
-  #ifdef RPI_ENABLED
+  #ifdef RASPBERRYPI
   list[i] = "rpi";
   i++;
   #endif

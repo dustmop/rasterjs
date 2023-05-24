@@ -22,6 +22,8 @@ function locateSDL(mode) {
     return locateSDLMacos(mode);
   } else if (process.platform == 'win32') {
     return locateSDLWindows(mode);
+  } else if (process.platform == 'linux') {
+    return locateSDLLinux(mode);
   } else {
     throw new Error(`unknown platform "${process.platform}"`);
   }
@@ -72,6 +74,33 @@ function locateSDLWindows(mode) {
       return 'SDL_ENABLED';
     }
     return 'SDL_DISABLED';
+  }
+}
+
+function locateSDLLinux(mode) {
+  if (fs.existsSync('/opt/vc/include/bcm_host.h')) {
+    return locateRaspberryPI(mode);
+  }
+  throw new Error(`TODO: linux (non-rpi) support`);
+}
+
+function locateRaspberryPI(mode) {
+  if (mode == 'include') {
+    return [
+      '/opt/vc/include/',
+      '/opt/vc/include/interface/vmcs_host/linux',
+    ].join('\n');
+  } else if (mode == 'lib') {
+    return [
+      '/usr/lib/arm-linux-gnueabihf/libpng.a',
+      '/usr/lib/arm-linux-gnueabihf/libm.a',
+      '/opt/vc/lib/libbcm_host.so',
+      '/opt/vc/lib/libvchostif.a',
+    ].join('\n');
+  } else if (mode == 'dll') {
+    return '';
+  } else if (mode == 'symbol') {
+    return 'RASPBERRYPI';
   }
 }
 

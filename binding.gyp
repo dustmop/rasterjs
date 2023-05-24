@@ -15,10 +15,11 @@
       "sources": [
         "src/addon/native.cc",
         "src/addon/sdl_backend.cc",
+        "src/addon/rpi_backend.cc",
       ],
       "include_dirs": [
         "<!@(node -p \"require('node-addon-api').include\")",
-        "<!(node ./tools/locate_sdl include)",
+        "<!@(node ./tools/locate_sdl include)",
       ],
       "libraries": [
         "<!@(node ./tools/locate_sdl lib)",

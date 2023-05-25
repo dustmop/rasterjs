@@ -106,6 +106,43 @@ On macos, run `brew install sdl2` to get SDL2.
 
 For Windows, it is recommended to use [msys2](https://www.msys2.org/), but Powershell and WSL will probably work too. Grab the latest [SDL release](https://github.com/libsdl-org/SDL/releases) and get `SDL2-devel-<version>-mingw.zip`. Extract this zip to get the `SDL2-<version>` folder and place it within the directory `c:/SDL/`, so that it ends up at `c:/SDL/SDL2-<version>/`. If you use to use a different location instead of `c:/SDL/`, assign that location to the environment variable `SDL_PATH`.
 
+### Raspberry PI
+
+On RaspberryPI, raster.js will use the dispmanx API for its display rather than SDL.
+
+Compiled on a RaspberryPI 1 B+ (revision 1000010 / hardware BCM2835). Other models may work, but have not yet been tested.
+
+Using Raspbian Buster: 2020-02-13-raspbian-buster. Other versions of buster should also work, but have not been tested. Rasperry PiOS will not work because it does not ship with the videocore libraries in /opt/vc/ but they can probably be installed.
+
+Steps:
+
+Download an unofficial node.js build, (used v18.9.1)
+
+https://unofficial-builds.nodejs.org/download/release/
+
+Extract the contents of this to some folder on your RPI, add this folder to your PATH
+
+I used:
+
+```
+/home/pi/app/node-v18.9.1-linux-armv6l/bin
+```
+
+Install dependencies for the node-canvas npm package (only used for building gifs, may be removed in the future)
+
+```
+sudo apt-get update
+sudo apt-get install build-essential \
+  libcairo2-dev libpango1.0-dev \
+  libjpeg-dev libgif-dev librsvg2-dev
+```
+
+Clone this repository and build the native addon that will use the dispmanx backend:
+
+```
+npm install
+```
+
 # Command-line options
 
 When running from a node.js script, you can pass command-line parameters to modify raster.js's behaviour.

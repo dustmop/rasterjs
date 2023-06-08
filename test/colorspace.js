@@ -12,9 +12,6 @@ describe('Colorspace', function() {
     let fruit = ra.loadImage('test/testdata/small-fruit.png');
     let pal = ra.palette;
 
-    // using this breaks things!
-    //let pal = new palette.Palette();
-
     let source = new ra.Field();
     // TODO: make this unnecessary
     source.setSize(1, 1);
@@ -103,17 +100,17 @@ describe('Colorspace', function() {
     let colors = new colorspace.Colorspace(source, sizeInfo);
     colors._shrinkCellColor(fruit, 0, 0, 8, null);
 
-    let expect = new Uint8Array([
-      0, 0, 0, 0, 4, 0, 0, 0,
-      0, 0, 0, 0, 0, 4, 0, 0,
-      0, 2, 0, 0, 0, 4, 2, 0,
-      2, 0, 6, 0, 4, 0, 0, 2,
-      0, 6, 6, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0,
-      0, 0, 0, 0, 0, 0, 0, 0
-    ]);
-    assert.deepEqual(expect, fruit.clone().data);
+    let expect = [
+      [0, 0, 0, 0, 4, 0, 0, 0],
+      [0, 0, 0, 0, 0, 4, 0, 0],
+      [0, 2, 0, 0, 0, 4, 2, 0],
+      [2, 0, 6, 0, 4, 0, 0, 2],
+      [0, 6, 6, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+      [0, 0, 0, 0, 0, 0, 0, 0],
+    ];
+    assert.deepEqual(expect, fruit.toArrays());
   });
 
   it('normal', function() {

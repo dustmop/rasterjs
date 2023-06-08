@@ -1,9 +1,3 @@
-* attributes
-  * NES / C64 / zx-spectrum style color restrictions
-  * IN PROGRESS
-* raspberry pi backend
-  * output using dispmanx instead of SDL
-  * IN PROGRESS
 * support more systems
   * zx-Spectrum
   * C64
@@ -29,4 +23,3 @@
   * per-scanline limits like on NES and Mega Drive
 * typescript
   * support for top-level APIs
-

@@ -1,7 +1,6 @@
 const baseDisplay = require('./base_display.js');
 
 class TestDisplay extends baseDisplay.BaseDisplay {
-  // TODO: move the `backend` here, right now it's using SDL
   constructor() {
     super();
   }

@@ -1,5 +1,6 @@
 const cppmodule = require('../build/Release/native');
 const argparse = require('argparse');
+const fs = require('fs');
 const path = require('path');
 const saver = require('./save_image_display.js');
 const filesysLocal = require('./filesys_local.js');
@@ -35,35 +36,21 @@ class NodeEnv {
   };
 
   getOptions() {
-    // TODO: only parse command-line args if raster.js is an "app runner"
-    // TODO: startswith(read(process.argv[1])) == "const ra = require('raster')"
+    // If running as a test, don't parse command-line arguments. This allows
+    // the test runner to process its own arguments instead.
+    if (runningAsTest()) {
+      return {};
+    }
 
-    // A user of raster.js can disable command-line arguments entirely by
-    // adding "dev_rasterjs.noargv" to their package.json:
-    // {
-    //   "name": "_your_package_",
-    //   ...
-    //   "dev_rasterjs": { "noargv": true }
-    // }
-    try {
-      let currDir = process.cwd();
-      const thisPackageJson = require(path.join(currDir, 'package.json'));
-      if (thisPackageJson.dev_rasterjs.noargv === true) {
-        return {};
-      }
-    } catch (e) {
-      // pass
+    // Only parse command-line args if script is an "app runner"
+    // This means the script starts with `const ra = require('raster')`
+    if (!this._isAppRunnerScript(process.argv)) {
+      return {};
     }
 
     // Command-line arguments can also be disabled using the environment
     // variable "RASTERJS_NOARGV"
     if (process.env.RASTERJS_NOARGV) {
-      return {};
-    }
-
-    // If running as a test, don't parse command-line arguments. This allows
-    // the test runner to process its own arguments instead.
-    if (runningAsTest()) {
       return {};
     }
 
@@ -93,6 +80,22 @@ class NodeEnv {
     return args;
   }
 
+  _isAppRunnerScript(argv) {
+    if (!argv[0].endsWith('/node')) {
+      return false;
+    }
+
+    let scriptName = argv[1];
+    let content = fs.readFileSync(scriptName).toString();
+    if (content.startsWith("const ra = require('raster')")) {
+      return true;
+    }
+    if (content.startsWith('const ra = require("raster")')) {
+      return true;
+    }
+
+    return false;
+  }
 
   handleErrorGracefully(error) {
     throw error;

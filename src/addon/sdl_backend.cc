@@ -399,35 +399,17 @@ void SDLBackend::execOneFrame(const CallbackInfo& info) {
       if (event.key.keysym.sym == SDLK_ESCAPE) {
         this->isRunning = false;
         return;
-      } else if (!this->eventReceiverFunc.IsEmpty()) {
-        // TODO: refactor with SDL_KEYUP
-        Napi::String eventName = Napi::String::New(env, "keydown");
-        int code = event.key.keysym.sym;
-        std::string s(1, char(code));
-        Napi::String str = Napi::String::New(env, s);
-        Napi::Object obj = Napi::Object::New(env);
-        obj["key"] = str;
-        napi_value val = obj;
-        this->eventReceiverFunc.Call({eventName, val});
-        if (env.IsExceptionPending()) {
-            return;
-        }
+      }
+      this->sendKeyEvent(env, "keydown", event.key.keysym.sym);
+      if (env.IsExceptionPending()) {
+        return;
       }
       break;
 
     case SDL_KEYUP:
-      if (!this->eventReceiverFunc.IsEmpty()) {
-        Napi::String eventName = Napi::String::New(env, "keyup");
-        int code = event.key.keysym.sym;
-        std::string s(1, char(code));
-        Napi::String str = Napi::String::New(env, s);
-        Napi::Object obj = Napi::Object::New(env);
-        obj["key"] = str;
-        napi_value val = obj;
-        this->eventReceiverFunc.Call({eventName, val});
-        if (env.IsExceptionPending()) {
-            return;
-        }
+      this->sendKeyEvent(env, "keyup", event.key.keysym.sym);
+      if (env.IsExceptionPending()) {
+        return;
       }
       break;
 
@@ -574,6 +556,24 @@ void SDLBackend::execOneFrame(const CallbackInfo& info) {
   }
 
   this->next(env);
+}
+
+
+void SDLBackend::sendKeyEvent(Napi::Env env, const std::string& msg, int code) {
+  if (this->eventReceiverFunc.IsEmpty()) {
+    return;
+  }
+  if (code & 0x40000000) {
+    code = (code & 0xff) | 0x8000;
+  } else {
+    code = code & 0xff;
+  }
+  Napi::Object obj = Napi::Object::New(env);
+  Napi::Number codeNum = Napi::Number::New(env, code);
+  obj["code"] = codeNum;
+  napi_value val = obj;
+  Napi::String eventName = Napi::String::New(env, msg);
+  this->eventReceiverFunc.Call({eventName, val});
 }
 
 

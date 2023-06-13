@@ -32,6 +32,7 @@ class SDLBackend : public Napi::ObjectWrap<SDLBackend> {
   Napi::Value RunAppLoop(const Napi::CallbackInfo& info);
   Napi::Value InsteadWriteBuffer(const Napi::CallbackInfo& info);
 
+  void sendKeyEvent(Napi::Env env, const std::string& msg, int code);
   void frameInstrumentation();
   void next(Napi::Env env);
   void nextWithoutPresent(Napi::Env env);

@@ -48,8 +48,8 @@ class BaseDisplay {
     this._isRunning = false;
   }
 
-  registerEventHandler(eventName, region, callback) {
-    throw new Error(`NotImplemented: BaseDisplay.registerEventHandler`);
+  forwardNativeEvents(eventManager) {
+    // many displays will not handle native events
   }
 }
 

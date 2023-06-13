@@ -119,6 +119,22 @@ class ImageField {
     this.data[k] = Math.floor(v);
   }
 
+  toArrays() {
+    let newPitch = this.width;
+    let numPixels = this.height * newPitch;
+    let newArrays = new Array(this.height);
+    for (let y = 0; y < this.height; y++) {
+      let newRow = new Array(this.width);
+      for (let x = 0; x < this.width; x++) {
+        let k = y*this.pitch + x;
+        let j = y*newPitch + x;
+        newRow[x] = this.data[k];
+      }
+      newArrays[y] = newRow;
+    }
+    return newArrays;
+  }
+
   // TODO: make wrapper of this that's convenient to pass a filename / Image to
   fillData() {
     if (this.palette == null) {

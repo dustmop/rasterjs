@@ -4,6 +4,7 @@ class NativeDisplay extends baseDisplay.BaseDisplay {
   constructor(backend) {
     super();
     this._b = backend;
+    this._handlers = null;
   }
 
   initialize() {
@@ -53,8 +54,14 @@ class NativeDisplay extends baseDisplay.BaseDisplay {
     return this._b.runAppLoop(loopID, execNextFrame);
   }
 
-  registerEventHandler(eventName, region, callback) {
-    return this._b.handleEvent(eventName, region, callback);
+  forwardNativeEvents(eventManager) {
+    this._eventManager = eventManager;
+    this._b.eventReceiver((name, nativeEvent) => {
+      let e = {
+        code: nativeEvent.code, // number
+      };
+      this._eventManager.getNativeKey(name, e);
+    });
   }
 
   insteadWriteBuffer(buffer) {

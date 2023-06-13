@@ -8,10 +8,8 @@ class WebGLDisplay extends baseDisplay.BaseDisplay {
     super();
     this.elemID = null;
     this.canvas = null;
-    this.eventKeypressHandler = null;
-    this.eventClickHandlers = null;
     this.initialize();
-    this.onReadyHandler = null;
+    this._eventManager = null;
     this._createEventHandlers();
   }
 
@@ -249,21 +247,39 @@ void main() {
     });
   }
 
+  forwardNativeEvents(eventManager) {
+    this._eventManager = eventManager;
+  }
+
   _createEventHandlers() {
     if (typeof document == 'undefined') { return; }
+    document.addEventListener('keyup', (e) => {
+      if (this._eventManager) { this._handleWebEvent('keyup', e); }
+    });
+    document.addEventListener('keydown', (e) => {
+      if (this._eventManager) { this._handleWebEvent('keydown', e); }
+    });
     document.addEventListener('keypress', (e) => {
-      if (this.eventKeypressHandler) {
-        this.eventKeypressHandler({
-          key: e.key
-        });
-      }
-    })
+      if (this._eventManager) { this._handleWebEvent('keypress', e); }
+    });
     document.addEventListener('click', (e) => {
-      this._processClick(e);
+      if (this._eventManager) { this._handleWebEvent('click', e); }
     });
   }
 
-  _processClick(e) {
+  _handleWebEvent(name, webEvent) {
+    if (name == 'click') {
+      return this._processClickEvent(webEvent);
+    }
+    let e = {code: webEvent.keyCode};
+    let keycode = this._eventManager.lookupCodeFromWebKey(webEvent.key);
+    if (keycode) {
+      e.code = keycode;
+    }
+    this._eventManager.getNativeKey(name, e);
+  }
+
+  _processClickEvent(e) {
     let displayID = 'main-display';
     if (this.elemID) {
       displayID = this.elemID;
@@ -271,32 +287,15 @@ void main() {
     if (e.target && e.target.id != displayID) {
       return;
     }
-
     let basex = Math.floor(e.offsetX / this._zoomLevel);
     let basey = Math.floor(e.offsetY / this._zoomLevel);
-
-    if (this.eventClickHandlers) {
-      for (let [region, handler] of this.eventClickHandlers) {
-        let posx = basex;
-        let posy = basey;
-        let width = this._width;
-        let height = this._height;
-        let name = '';
-
-        if (region) {
-          posx -= region.x;
-          posy -= region.y;
-          width = region.w;
-          height = region.h;
-          name = region.name;
-        }
-        if (posx < 0 || posy < 0 || posx >= width || posy >= height) {
-          continue;
-        }
-        handler({x: posx, y: posy});
-        return;
-      }
-    }
+    let event = {
+      basex: basex,
+      basey: basey,
+      width: this._width,
+      height: this._height,
+    };
+    this._eventManager.getNativeClick(event);
   }
 
   waitForContentLoad(cb) {
@@ -321,9 +320,7 @@ void main() {
     this.currentRunId = id;
     this.waitForContentLoad(() => {
       this._createWebglCanvas();
-      if (this.onReadyHandler) {
-        this.onReadyHandler();
-      }
+      this._eventManager.getEvent('ready');
       this._beginLoop(id, execNextFrame);
     });
   }
@@ -450,21 +447,6 @@ void main() {
 
     if (frontBuffer) {
       gl.drawArrays(gl.TRIANGLES, 0, 6);
-    }
-  }
-
-  registerEventHandler(eventName, region, callback) {
-    if (eventName == 'keypress') {
-      this.eventKeypressHandler = callback;
-    } else if (eventName == 'click') {
-      if (!this.eventClickHandlers) {
-        this.eventClickHandlers = [];
-      }
-      this.eventClickHandlers.push([region, callback]);
-    } else if (eventName == 'ready') {
-      this.onReadyHandler = callback;
-    } else {
-      throw new Error(`unknown event "${eventName}"`);
     }
   }
 

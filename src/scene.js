@@ -12,6 +12,7 @@ const imageResources = require('./image_resources.js');
 const textLoader = require('./text_loader.js');
 const asciiDisplay = require('./ascii_display.js');
 const tilesetBuilder = require('./tileset_builder.js');
+const eventManager = require('./event_manager.js');
 const field = require('./field.js');
 const tiles = require('./tiles.js');
 const sprites = require('./sprites.js');
@@ -70,6 +71,11 @@ class Scene {
     this.TAU = 6.283185307179586;
     this.TURN = this.TAU;
     this.PI = this.TAU / 2;
+    this.KEYCODE_RIGHT = 0x804f;
+    this.KEYCODE_LEFT  = 0x8050;
+    this.KEYCODE_UP    = 0x8051;
+    this.KEYCODE_DOWN  = 0x8052;
+
     this.scroll = {};
     this.slowdown = null;
 
@@ -655,32 +661,17 @@ class Scene {
       eventName = optField;
     }
 
-    let allowed = ['keypress', 'keydown', 'keyup', 'click', 'ready',
-                   'render', 'message', 'dipchange'];
-    if (!allowed.includes(eventName)) {
-      let expect = allowed.map((n)=>`"${n}"`).join(', ');
-      throw new Error(`unknown event "${eventName}", only ${expect} supported`);
+    if (this._eventManager == null) {
+      this._eventManager = new eventManager.EventManager();
+      this.display.forwardNativeEvents(this._eventManager);
     }
-    if (eventName == 'render') {
-      this._renderer.setOnRenderEvent(callback);
-      return;
-    } else if (eventName == 'message') {
-      this._messageListeners.push(callback);
-      return;
-    } else if (eventName == 'dipchange') {
-      if (this._onDipChangeHandlers == null) {
-        this._onDipChangeHandlers = [];
-      }
-      this._onDipChangeHandlers.push(callback);
-      return;
-    }
-    this.display.registerEventHandler(eventName, region, callback);
+
+    this._eventManager.listenFor(eventName, region, callback);
   }
 
   sendMessage(name, data) {
-    for (let listener of this._messageListeners) {
-      listener({name: name, data: data});
-    }
+    let event = {name: name, data: data};
+    this._eventManager.getEvent('message', event);
   }
 
   resize(x, y) {

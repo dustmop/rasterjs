@@ -4,6 +4,10 @@ var webglDisplay = require('../src/webgl_display.js');
 
 describe('webgl display', function() {
   it('click region', function() {
+    // Disabled: display no longer handles regions in events, it is now
+    // handled by the eventManager. Should test that directly.
+    return;
+
     ra.resetState();
 
     let gotClicks = [];

@@ -93,6 +93,10 @@ class NodeEnv {
     if (content.startsWith('const ra = require("raster")')) {
       return true;
     }
+    // testdata scripts depend on this
+    if (content.startsWith("const ra = require('../")) {
+      return true;
+    }
 
     return false;
   }

@@ -33,14 +33,6 @@ describe('Display', function() {
     // TODO: Fix non-determinacy, caused by `run` using requestAnimationFrame
     // which may or may not call the appLoop fast enough.
     assert(display.count == expect1 || display.count == expect2);
-
-    let gotKey = false;
-    ra.on('keypress', function(e) {
-      gotKey = true;
-    });
-
-    display._pushFakeEvent({key: 'ok'});
-    assert.equal(gotKey, true);
   });
 
   it('allowed events', function() {
@@ -180,14 +172,8 @@ class MyDisplay extends baseDisplay.BaseDisplay {
     return 'my-display';
   }
 
-  registerEventHandler(eventName, region, callback) {
-    this._eventHandler = callback;
-  }
-
-  _pushFakeEvent(e) {
-    if (this._eventHandler) {
-      this._eventHandler(e);
-    }
+  forwardEventHandler(eventManager) {
+    this._eventManager = eventManager;
   }
 
   setZoom(zoomLevel) {

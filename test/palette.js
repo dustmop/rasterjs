@@ -505,4 +505,22 @@ describe('Palette', function() {
     util.renderCompareTo(ra, 'test/testdata/weird_c64.png');
   });
 
+  it('find by value', () => {
+    ra.usePalette('nes');
+    ra.palette.setEntries([0x0f,0x00,0x16,0x30]);
+    assert.equal(ra.palette.find(0x30), 3);
+  });
+
+  it('find by name', () => {
+    ra.usePalette('nes');
+    assert.equal(ra.palette.find('white'), 0x30);
+    assert.equal(ra.palette.find('grey'),  0x00);
+    assert.equal(ra.palette.find('black'), 0x0f);
+
+    ra.usePalette('pico8');
+    assert.equal(ra.palette.find('white'), 0x07);
+    assert.equal(ra.palette.find('grey'),  0x0d);
+    assert.equal(ra.palette.find('black'), 0x00);
+  });
+
 });

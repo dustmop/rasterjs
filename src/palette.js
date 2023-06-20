@@ -55,7 +55,15 @@ class Palette extends component.Component {
     this._rgbmap = toIntList(values);
   }
 
+  /**
+   * append a value to the rgbmap, if not already present
+   * @param {Array} values - values to assign to the rgbmap
+   */
   addRGBMap(rgbval) {
+    // TODO: allow list of values?
+    if (!this.expandable) {
+      throw new Error(`rgbmap is not expandable`);
+    }
     rgbval = toNum(rgbval);
     if (this._rgbmap == null) {
       this._rgbmap = [];
@@ -78,6 +86,10 @@ class Palette extends component.Component {
     return this.expandable;
   }
 
+  /**
+   * assign values to the palette entries
+   * @param {Number | Array} vals - either number of entries or the entry values
+   */
   setEntries(vals) {
     if (types.isNumber(vals)) {
       this._entries = [...Array(Math.floor(vals)).keys()].slice();
@@ -107,6 +119,13 @@ class Palette extends component.Component {
     return this._rgbmap.length;
   }
 
+  get(n) {
+    if (this._entries == null) {
+      return this._rgbmap[n];
+    }
+    return this._rgbmap[this.entries[i]];
+  }
+
   fill(v) {
     this.ensureEntries();
     for (let i = 0; i < this._entries.length; i++) {
@@ -114,14 +133,42 @@ class Palette extends component.Component {
     }
   }
 
-  find(byte) {
+  find(subject) {
     this.ensureEntries();
-    for (let i = 0; i < this._entries.length; i++) {
-      if (byte === this._entries[i]) {
-        return i;
+    if (types.isNumber(subject)) {
+      for (let i = 0; i < this._entries.length; i++) {
+        if (subject === this._entries[i]) {
+          return i;
+        }
       }
+    } else if (types.isString(subject)) {
+      let idealrgb = new rgbColor.RGBColor(this._idealColor(subject));
+      let closest = null;
+      let winner = -1;
+      for (let i = 0; i < this.length; i++) {
+        let delta = idealrgb.diff(new rgbColor.RGBColor(this.getRGB(i)));
+        if (winner == -1 || delta < closest) {
+          closest = delta;
+          winner = i;
+        }
+      }
+      return winner;
+    } else {
+      throw new Error(`invalid value to find: "${JSON.stringify(subject)}"`);
     }
-    return null;
+    return -1;
+  }
+
+  _idealColor(name) {
+    if (name == 'white') {
+      return 0xffffff;
+    } else if (name == 'grey') {
+      return 0x888888;
+    } else if (name == 'black') {
+      return 0x000000;
+    }
+    // TODO: support more html color names
+    throw new Error(`unknown color name: "${name}"`);
   }
 
   locateRGB(rgbval) {
@@ -172,6 +219,9 @@ class Palette extends component.Component {
   put(n, v) {
     this.ensureRGBMap();
     this.ensureEntries();
+    if (!types.isNumber(v)) {
+      throw new Error(`TODO`);
+    }
     this._entries[n] = v;
   }
 
@@ -217,6 +267,7 @@ class Palette extends component.Component {
   getRGB(n) {
     this.ensureRGBMap();
     if (this._entries) {
+      // TODO: mod entries?
       n = this._entries[n];
     }
     return this._rgbmap[Math.floor(n) % this._rgbmap.length]
@@ -521,6 +572,9 @@ class PaletteEntry {
   }
 
   setColor(n) {
+    if (types.isPaletteEntry(n)) {
+      n = n.cval;
+    }
     if (!types.isNumber(n)) {
       throw new Error(`setColor: n must be a number, got ${JSON.stringify(n)}`);
     }

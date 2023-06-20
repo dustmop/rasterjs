@@ -55,12 +55,50 @@ describe('Cycle palette', function() {
 
     ra.paste(fruit);
 
+    // field data matches the image by order in which colors appear
+    let expect = [
+     [ 0, 0, 0, 0, 1, 0, 0, 0],
+     [ 0, 0, 0, 0, 0, 1, 0, 0],
+     [ 0, 2, 3, 3, 3, 1, 2, 0],
+     [ 2, 3, 4, 3, 1, 3, 3, 2],
+     [ 3, 4, 4, 3, 3, 3, 3, 3],
+     [ 3, 3, 3, 3, 3, 3, 3, 3],
+     [ 0, 3, 3, 3, 3, 3, 3, 0],
+     [ 0, 0, 3, 3, 3, 3, 0, 0]
+    ];
+    assert.deepEqual(expect, ra.field.toArrays());
+
+    // field is reordered so that black, brown are first, then the cover
     let palette = ra.usePalette(fruit.look, {upon: cover.look});
+
+    // palette has been reordered
+    expect = [0, 1, 4, 3, 2];
+    assert.deepEqual(expect, palette.entriesToInts());
+
+    expect = [
+      [ 0, 0, 0, 0, 1, 0, 0, 0],
+      [ 0, 0, 0, 0, 0, 1, 0, 0],
+      [ 0, 4, 3, 3, 3, 1, 4, 0],
+      [ 4, 3, 2, 3, 1, 3, 3, 4],
+      [ 3, 2, 2, 3, 3, 3, 3, 3],
+      [ 3, 3, 3, 3, 3, 3, 3, 3],
+      [ 0, 3, 3, 3, 3, 3, 3, 0],
+      [ 0, 0, 3, 3, 3, 3, 0, 0],
+    ];
+    assert.deepEqual(expect, ra.field.toArrays());
+
+    // palette has been reordered
+    expect = [0, 1, 4, 3, 2];
+    assert.deepEqual(expect, palette.entriesToInts());
+
+    // rendered result looks the same as the loaded image
     util.renderCompareTo(ra, 'test/testdata/small-fruit.png');
 
+    // cycle to use the first row of colors
     palette.cycle(input.look);
     util.renderCompareTo(ra, 'test/testdata/green-fruit.png');
 
+    // cycle to use the second row of colors
     palette.cycle(input.look, {tick: 1});
     util.renderCompareTo(ra, 'test/testdata/golden-fruit.png');
   });

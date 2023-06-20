@@ -201,7 +201,9 @@ class Field extends component.Component {
   }
 
   xform(kind) {
-    if (kind == 'hflip') {
+    if (!kind) {
+      return this;
+    } else if (kind == 'hflip') {
       // TODO: get pitch from the env
       let newPitch = this.width;
       let numPixels = this.height * newPitch;

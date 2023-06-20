@@ -368,7 +368,9 @@ class Tile {
   }
 
   xform(kind) {
-    if (kind == 'vhflip') {
+    if (!kind) {
+      return this;
+    } else if (kind == 'vhflip') {
       let make = this.xform('vflip');
       return make.xform('hflip');
     } else if (kind == 'hflip') {

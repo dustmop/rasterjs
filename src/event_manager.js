@@ -82,9 +82,9 @@ class EventManager {
     } else if (code == 0x8050) {
       return 'ArrowLeft';
     } else if (code == 0x8051) {
-      return 'ArrowUp';
-    } else if (code == 0x8052) {
       return 'ArrowDown';
+    } else if (code == 0x8052) {
+      return 'ArrowUp';
     }
   }
 
@@ -93,9 +93,9 @@ class EventManager {
       return 0x804f;
     } else if (key == 'ArrowLeft') {
       return 0x8050;
-    } else if (key == 'ArrowUp') {
-      return 0x8051;
     } else if (key == 'ArrowDown') {
+      return 0x8051;
+    } else if (key == 'ArrowUp') {
       return 0x8052;
     }
     return null;

@@ -73,8 +73,8 @@ class Scene {
     this.PI = this.TAU / 2;
     this.KEYCODE_RIGHT = 0x804f;
     this.KEYCODE_LEFT  = 0x8050;
-    this.KEYCODE_UP    = 0x8051;
-    this.KEYCODE_DOWN  = 0x8052;
+    this.KEYCODE_DOWN  = 0x8051;
+    this.KEYCODE_UP    = 0x8052;
 
     this.scroll = {};
     this.slowdown = null;

@@ -1,5 +1,6 @@
 const rgbColor = require('./rgb_color.js');
 const field = require('./field.js');
+const drawable = require('./drawable.js');
 const tiles = require('./tiles.js');
 const types = require('./types.js');
 
@@ -47,6 +48,8 @@ class Spritelist {
     let chardat = [];
     for (let i = 0; i < num; i++) {
       let f = new field.Field();
+      let draw = new drawable.Drawable();
+      draw.upon(f);
       f.setSize(x, y);
       createFunc(f, i);
       chardat.push(f);

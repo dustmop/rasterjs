@@ -6,7 +6,7 @@ describe('Fill', function() {
   it('basic', function() {
     ra.resetState();
     ra.setSize({w: 8, h: 8});
-    ra.fillFrame(function(x, y) {
+    ra.fillFrame((x, y) => {
       return x + y;
     });
     util.renderCompareTo(ra, 'test/testdata/fill_basic.png');
@@ -15,7 +15,7 @@ describe('Fill', function() {
   it('using oscil', function() {
     ra.resetState();
     ra.setSize({w: 8, h: 8});
-    ra.fillFrame(function(x, y) {
+    ra.fillFrame((x, y) => {
       let i = y*ra.width + x;
       if (ra.oscil({period:54, tick:i*76}) > 0.5) {
         return 0x22;
@@ -27,7 +27,7 @@ describe('Fill', function() {
   it('callback uses 2 parameters', function() {
     ra.resetState();
     ra.setSize({w: 8, h: 8});
-    ra.fillFrame(function(x, y) {
+    ra.fillFrame((x, y) => {
       let i = y*ra.width + x;
       if (ra.oscil({period:54, tick:i*76}) > 0.5) {
         return 0x22;
@@ -40,13 +40,13 @@ describe('Fill', function() {
     ra.resetState();
     ra.setSize({w: 8, h: 8});
     // Draw upper left
-    ra.fillFrame(function(x, y) {
+    ra.fillFrame((x, y) => {
       if (x + y < 6) {
         return 0x21;
       }
     });
     // A second call to draw lower right
-    ra.fillFrame(function(x, y) {
+    ra.fillFrame((x, y) => {
       if (x + y > 11) {
         return 0x22;
       }
@@ -58,7 +58,7 @@ describe('Fill', function() {
     ra.resetState();
     ra.setSize({w: 8, h: 8});
     // Draw upper left
-    ra.fillFrame(function(x, y) {
+    ra.fillFrame((x, y) => {
       if (x + y < 6) {
         return 0x21;
       }
@@ -66,7 +66,7 @@ describe('Fill', function() {
     // Fill the background
     ra.fillColor(4);
     // A second call to draw lower right
-    ra.fillFrame(function(x, y) {
+    ra.fillFrame((x, y) => {
       if (x + y > 11) {
         return 0x22;
       }
@@ -81,7 +81,7 @@ describe('Fill', function() {
     ra.drawDot(0, 7);
     ra.setColor(20);
     ra.drawDot(1, 7);
-    ra.fillFrame(function(x, y) {
+    ra.fillFrame((x, y) => {
       return 1 + ra.get(x, (y + 7) % 8);
     });
     util.renderCompareTo(ra, 'test/testdata/fill_draw_dot.png');
@@ -92,7 +92,7 @@ describe('Fill', function() {
     ra.setSize({w: 8, h: 8});
     ra.setColor(0x20);
     ra.drawLine(0, 7, 4, 7);
-    ra.fillFrame(function(x, y) {
+    ra.fillFrame((x, y) => {
       return 1 + ra.get(x, (y + 7) % 8);
     });
     util.renderCompareTo(ra, 'test/testdata/fill_draw_line.png');
@@ -146,7 +146,7 @@ describe('Fill', function() {
     ra.drawLine({x0: 8, y0: 3, x1:  8, y1: 9});
     ra.drawLine({x0: 8, y0: 5, x1: 10, y1: 5});
 
-    ra.fillFrame({buffer: true}, function(x, y) {
+    ra.fillFrame({buffer: true}, (x, y) => {
       if (ra.get(x, y)) { return null; }
       for (let i = -1; i <= 1; i++) {
         for (let j = -1; j <= 1; j++) {

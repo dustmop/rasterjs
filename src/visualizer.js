@@ -1,3 +1,4 @@
+const drawable = require('./drawable.js');
 const field = require('./field.js');
 const palette = require('./palette.js');
 const rgbColor = require('./rgb_color.js');
@@ -21,7 +22,7 @@ class Visualizer {
   rgbListToSurface(colorList, entries, opt) {
     opt = opt || {};
 
-    let target = new field.Field();
+    let target = drawable.newDrawableField();
     let numX = opt.row_size || 8;
     let numY = Math.ceil(colorList.length / numX);
 
@@ -134,7 +135,7 @@ class Visualizer {
     pal._rgbmap.push(0x444444);
     let bgColor = pal._rgbmap.length - 1;
 
-    let target = new field.Field();
+    let target = drawable.newDrawableField();
     target.setSize(targetWidth, targetHeight);
     target.fillColor(bgColor);
 
@@ -167,7 +168,7 @@ class Visualizer {
     let height = cspace.height * sz;
     let unit = sz;
 
-    let target = new field.Field();
+    let target = drawable.newDrawableField();
     target.setSize(width, height);
     target.fillColor(0);
 
@@ -196,7 +197,7 @@ class Visualizer {
   interruptsToSurface(arr, xposTrack, width, height) {
     xposTrack = xposTrack || {};
 
-    let target = new field.Field();
+    let target = drawable.newDrawableField();
     target.setSize(Math.floor(width / 2), Math.floor(height / 2));
     target.fillColor(0);
     target.setColor(7);

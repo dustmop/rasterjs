@@ -10,6 +10,9 @@ describe('Use field', function() {
     field.setSize(16, 16);
     ra.useField(field);
 
+    let draw = new ra.Drawable();
+    draw.upon(field);
+
     field.setColor(28);
     field.fillSquare(3, 5, 7);
 
@@ -22,6 +25,9 @@ describe('Use field', function() {
     let field = new ra.Field();
     field.setSize(16, 16);
     ra.useField(field);
+
+    let draw = new ra.Drawable();
+    draw.upon(field);
 
     field.setColor(28);
     field.fillSquare(3, 5, 7);
@@ -52,6 +58,9 @@ describe('Use field', function() {
     let field = new ra.Field();
     field.setSize(16, 16);
     ra.useField(field);
+
+    let draw = new ra.Drawable();
+    draw.upon(field);
 
     field.setColor(28);
     field.fillSquare({x: 3, y: 5, size: 7});

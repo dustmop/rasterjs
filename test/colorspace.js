@@ -135,11 +135,10 @@ describe('Colorspace', function() {
     // Build colorspace
     let colors = new ra.Field();
     colors.setSize(4);
-    colors.fillPattern([[0,1,1,1],
-                        [1,3,3,3],
-                        [2,2,1,0],
-                        [1,3,0,0],
-                       ]);
+    colors.fill([0,1,1,1,
+                 1,3,3,3,
+                 2,2,1,0,
+                 1,3,0,0]);
     ra.useColorspace(colors, {cell_width: 4, cell_height: 4, piece_size: 6});
 
     // Tileset / CHR
@@ -150,10 +149,10 @@ describe('Colorspace', function() {
     let field = new ra.Field();
     field.setSize(4);
     ra.useField(field);
-    field.fillPattern([[2, 6, 1, 3],
-                       [6, 7, 7, 7],
-                       [5, 5, 1, 0],
-                       [6, 4, 2, 2]]);
+    field.fill([2, 6, 1, 3,
+                6, 7, 7, 7,
+                5, 5, 1, 0,
+                6, 4, 2, 2]);
 
     util.renderCompareTo(ra, 'test/testdata/map_of_tiles.png');
   });
@@ -265,10 +264,10 @@ describe('Colorspace', function() {
     let field = new ra.Field();
     field.setSize(4);
     ra.useField(field);
-    field.fillPattern([[2, 6, 1, 3],
-                       [6, 7, 7, 7],
-                       [5, 5, 1, 0],
-                       [6, 4, 2, 2]]);
+    field.fill([2, 6, 1, 3,
+                6, 7, 7, 7,
+                5, 5, 1, 0,
+                6, 4, 2, 2]);
 
     ra.colorspace.put(1, 0, 3);
     ra.colorspace.put(3, 0, 0);
@@ -315,11 +314,10 @@ describe('Colorspace', function() {
     // Build colorspace
     let colors = new ra.Field();
     colors.setSize(4);
-    colors.fillPattern([[0,1,1,1],
-                        [1,3,3,3],
-                        [2,2,1,0],
-                        [1,3,0,0],
-                      ]);
+    colors.fill([0,1,1,1,
+                 1,3,3,3,
+                 2,2,1,0,
+                 1,3,0,0]);
     ra.useColorspace(colors, {cell_width: 4, cell_height: 4, piece_size: 6});
 
     let actualCell = ra.colorspace.getCellAtPixel(3, 5);
@@ -346,11 +344,10 @@ describe('Colorspace', function() {
     // Build colorspace
     let dat = new ra.Field();
     dat.setSize(4);
-    dat.fillPattern([[0,1,1,1],
-                     [1,3,3,3],
-                     [2,2,1,0],
-                     [1,3,0,0],
-                    ]);
+    dat.fill([0,1,1,1,
+              1,3,3,3,
+              2,2,1,0,
+              1,3,0,0]);
     let colors = ra.useColorspace(dat, {cell_width: 4, cell_height: 4,
                                        piece_size: 6});
 

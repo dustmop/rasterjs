@@ -5,11 +5,8 @@ const destructure = require('./destructure.js');
 const types = require('./types.js');
 
 class Field extends component.Component {
-  constructor(opt) {
+  constructor() {
     super();
-    if (opt && opt.drawableDisableDestructure) {
-      this._disableDestructure = true;
-    }
     this.clear();
     return this;
   }
@@ -23,11 +20,8 @@ class Field extends component.Component {
     this.height = 0;
     this.pitch = 0;
     this.data = null;
-    this.mem = null;
     this.bgColor = 0;
     this.frontColor = 7;
-    this.font = null;
-    this._addMethods(!this._disableDestructure);
   }
 
   clone() {
@@ -37,10 +31,11 @@ class Field extends component.Component {
     make.height = this.height;
     make.pitch = this.pitch;
     make.data = this.data;
-    make.mem = this.mem;
     make.bgColor = this.bgColor;
     make.frontColor = this.frontColor;
-    make.font = this.font;
+    if (this.cloneHook) {
+      this.cloneHook(make);
+    }
     return make;
   }
 
@@ -74,27 +69,6 @@ class Field extends component.Component {
 
   fullyResolve() {
     this._prepare();
-  }
-
-  _addMethods(shouldDestruct) {
-    let self = this;
-    let d = new drawable.Drawable();
-    let methods = d.getMethods();
-    for (let i = 0; i < methods.length; i++) {
-      let [fname, paramSpec, converter, impl] = methods[i];
-      // Use a scoped function in order to acquire the method's `arguments`
-      this[fname] = function() {
-        let args = Array.from(arguments);
-        if (paramSpec === undefined) {
-          throw new Error(`function ${fname} does not have parameter spec`);
-        }
-        let realArgs = args;
-        if (shouldDestruct) {
-          realArgs = destructure.from(fname, paramSpec, args, converter);
-        }
-        impl.bind(self).apply(self.field, realArgs);
-      }
-    }
   }
 
   setSize(w, h) {
@@ -203,6 +177,9 @@ class Field extends component.Component {
   xform(kind) {
     if (!kind) {
       return this;
+    } else if (kind == 'vhflip') {
+      let make = this.xform('vflip');
+      return make.xform('hflip');
     } else if (kind == 'hflip') {
       // TODO: get pitch from the env
       let newPitch = this.width;
@@ -361,8 +338,6 @@ class Field extends component.Component {
     make.height = h;
     make.isSelection = true;
     make.name = name || null;
-    make._addMethods(true);
-
     return make;
   }
 

@@ -28,10 +28,10 @@ describe('Tileset', function() {
     ra.useTileset(tiles, {tile_width: 4, tile_height: 4});
     ra.useField(field);
 
-    field.fillPattern([[2, 6, 1, 3],
-                       [6, 7, 7, 7],
-                       [5, 5, 1, 0],
-                       [6, 4, 2, 2]]);
+    field.fill([2, 6, 1, 3,
+                6, 7, 7, 7,
+                5, 5, 1, 0,
+                6, 4, 2, 2]);
 
     util.renderCompareTo(ra, 'test/testdata/map_of_tiles.png');
   });
@@ -64,11 +64,10 @@ describe('Tileset', function() {
     modTile.put(4, 4, 34);
     modTile.put(5, 5, 34);
 
-    field.fillPattern([[ 0, 0, 1, 0],
-                       [ 0, 1, 0, 0],
-                       [ 0, 0, 1, 2],
-                       [ 0, 0, 0, 0],
-                      ]);
+    field.fill([ 0, 0, 1, 0,
+                 0, 1, 0, 0,
+                 0, 0, 1, 2,
+                 0, 0, 0, 0]);
 
     util.renderCompareTo(ra, 'test/testdata/drawn_tiles.png');
 
@@ -106,11 +105,10 @@ describe('Tileset', function() {
     ra.useTileset(tileset);
     ra.useField(field);
 
-    field.fillPattern([[ 0, 0, 1, 0],
-                       [ 0, 1, 0, 0],
-                       [ 0, 0, 1, 2],
-                       [ 0, 0, 0, 0],
-                      ]);
+    field.fill([ 0, 0, 1, 0,
+                 0, 1, 0, 0,
+                 0, 0, 1, 2,
+                 0, 0, 0, 0]);
 
     util.renderCompareTo(ra, 'test/testdata/drawn_tiles.png');
 
@@ -132,18 +130,14 @@ describe('Tileset', function() {
     tiles.setSize(16);
 
     // tile 0
-    tiles.setColor(1);
-    tiles.drawDot(0, 0);
-    tiles.drawDot(4, 4);
+    tiles.put(0, 0, 1);
+    tiles.put(4, 4, 1);
     // tile 1
-    tiles.setColor(2);
-    tiles.drawDot(10, 2);
-    tiles.drawDot(10, 3);
+    tiles.put(10, 2, 2);
+    tiles.put(10, 3, 2);
     // tile 2
-    tiles.setColor(3);
-    tiles.drawDot(4, 12);
-    tiles.setColor(4);
-    tiles.drawDot(5, 13);
+    tiles.put(4, 12, 3);
+    tiles.put(5, 13, 4);
 
     //                       0   1   2   3   4
     ra.usePalette({entries:[ 4, 31, 37, 34, 31]});
@@ -151,11 +145,10 @@ describe('Tileset', function() {
     ra.useTileset(tiles, {tile_width: 8, tile_height: 8});
     ra.useField(field);
 
-    field.fillPattern([[ 0, 1, 2, 0],
-                       [ 0, 1, 0, 2],
-                       [ 1, 3, 1, 2],
-                       [ 2, 2, 0, 0],
-                      ]);
+    field.fill([ 0, 1, 2, 0,
+                 0, 1, 0, 2,
+                 1, 3, 1, 2,
+                 2, 2, 0, 0]);
 
     util.renderCompareTo(ra, 'test/testdata/palette_tiles.png');
   });
@@ -194,10 +187,10 @@ describe('Tileset', function() {
     ra.useTileset(tiles, {tile_width: 4, tile_height: 4});
     ra.useField(field);
 
-    field.fillPattern([[2, 6, 1, 3],
-                       [6, 7,15, 7],
-                       [5, 5, 1, 0],
-                       [6, 4, 2, 2]]);
+    field.fill([2, 6, 1, 3,
+                6, 7,15, 7,
+                5, 5, 1, 0,
+                6, 4, 2, 2]);
 
     util.renderCompareTo(ra, 'test/testdata/tile_overflow.png');
   });
@@ -223,11 +216,10 @@ describe('Tileset', function() {
     // Build colorspace
     let colors = new ra.Field();
     colors.setSize(4);
-    colors.fillPattern([[0,1,1,1],
-                        [1,3,3,3],
-                        [2,2,1,0],
-                        [1,3,0,0],
-                       ]);
+    colors.fill([0,1,1,1,
+                 1,3,3,3,
+                 2,2,1,0,
+                 1,3,0,0]);
     ra.useColorspace(colors, {cell_width: 4, cell_height: 4, piece_size: 6});
 
     // Tileset / CHR
@@ -238,10 +230,10 @@ describe('Tileset', function() {
     let field = new ra.Field();
     field.setSize(4);
     ra.useField(field);
-    field.fillPattern([[2, 6, 1, 3],
-                       [6, 7, 7, 7],
-                       [5, 5, 1, 0],
-                       [6, 4, 2, 2]]);
+    field.fill([2, 6, 1, 3,
+                6, 7, 7, 7,
+                5, 5, 1, 0,
+                6, 4, 2, 2]);
 
     util.renderCompareTo(ra, 'test/testdata/map_of_tiles.png');
   });
@@ -268,11 +260,10 @@ describe('Tileset', function() {
     // Build colorspace
     let colors = new ra.Field();
     colors.setSize(4);
-    colors.fillPattern([[0,1,1,1],
-                        [1,3,3,3],
-                        [2,2,1,0],
-                        [1,3,0,0],
-                       ]);
+    colors.fill([0,1,1,1,
+                 1,3,3,3,
+                 2,2,1,0,
+                 1,3,0,0]);
     ra.useColorspace(colors, {cell_width: 4, cell_height: 4, piece_size: 6});
 
     // Tileset / CHR
@@ -283,10 +274,10 @@ describe('Tileset', function() {
     let field = new ra.Field();
     field.setSize(4);
     ra.useField(field);
-    field.fillPattern([[2, 6, 1, 3],
-                       [6, 7, 7, 7],
-                       [5, 5, 1, 0],
-                       [6, 4, 2, 2]]);
+    field.fill([2, 6, 1, 3,
+                6, 7, 7, 7,
+                5, 5, 1, 0,
+                6, 4, 2, 2]);
 
     ra.colorspace.put(1, 0, 3);
     ra.colorspace.put(3, 0, 0);
@@ -314,11 +305,10 @@ describe('Tileset', function() {
     // Build attributes
     let dat = new ra.Field();
     dat.setSize(4);
-    dat.fillPattern([[0,1,1,1],
-                     [1,3,3,3],
-                     [2,2,1,0],
-                     [1,3,0,0],
-                    ]);
+    dat.fill([0,1,1,1,
+              1,3,3,3,
+              2,2,1,0,
+              1,3,0,0]);
     let colors = ra.useColorspace(dat, {cell_width: 4, cell_height: 4,
                                         piece_size: 6});
 

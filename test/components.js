@@ -41,7 +41,7 @@ describe('Components', function() {
       tiles = ra.useTileset(pl, detail);
     }, /Tileset's tile_height is larger than source data/);
     // field
-    let pl = new ra.Field();
+    let pl = new ra.DrawableField();
     pl.setSize(16, 16);
     pl.drawCircle(3, 5, 7);
     tiles = ra.useTileset(pl, detail);
@@ -69,7 +69,7 @@ describe('Components', function() {
     // field
     let pl = new ra.Field();
     pl.setSize(2);
-    pl.fillPattern([[0,1], [2,1]])
+    pl.fill([0,1,2,1])
     let colors = ra.useColorspace(pl, detail);
     assert.equal(colors.constructor.name, 'Colorspace');
     assert.equal(colors.kind(), 'colorspace');

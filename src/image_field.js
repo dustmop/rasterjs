@@ -1,4 +1,5 @@
 const algorithm = require('./algorithm.js');
+const field = require('./field.js');
 const rgbColor = require('./rgb_color.js');
 const quantizer = require('./quantizer.js');
 const verboseLogger = require('./verbose_logger.js');
@@ -13,8 +14,9 @@ const LOAD_STATE_FILLED = 3;
 const LOAD_STATE_ERROR = -1;
 
 
-class ImageField {
+class ImageField extends field.Field {
   constructor() {
+    super();
     this.refLoader = null;
     this.filename = null;
     this.id = null;

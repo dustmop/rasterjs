@@ -2,10 +2,10 @@ const ra = require('../../../src/lib.js');
 
 ra.setZoom(2);
 
-let upper = new ra.Field();
+let upper = new ra.DrawableField();
 upper.setSize(16, 16);
 
-let lower = new ra.Field();
+let lower = new ra.DrawableField();
 lower.setSize(16, 16);
 
 ra.setSize(16, 16);

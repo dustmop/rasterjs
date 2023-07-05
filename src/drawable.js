@@ -1,8 +1,38 @@
 const algorithm = require('./algorithm.js');
+const destructure = require('./destructure.js');
+const field = require('./field.js');
 const geometry = require('./geometry.js');
 const types = require('./types.js');
 
 class Drawable {
+
+  upon(target, opt) {
+    let shouldDestruct = !(opt || {}).skipParamDestructure;
+    let methods = this.getMethods();
+    for (let i = 0; i < methods.length; i++) {
+      let [fname, paramSpec, converter, impl] = methods[i];
+      // Use a scoped function in order to acquire the method's `arguments`
+      target[fname] = function() {
+        let args = Array.from(arguments);
+        if (paramSpec === undefined) {
+          throw new Error(`function ${fname} does not have parameter spec`);
+        }
+        let realArgs = args;
+        if (shouldDestruct) {
+          realArgs = destructure.from(fname, paramSpec, args, converter);
+        }
+        impl.bind(target).apply(target.field, realArgs);
+      }
+    }
+    target.cloneHook = (make) => {
+      // No options for a cloned target. In particular, this means
+      // the new object will always destructure its parameters. This
+      // is intended functionality for methods like `select` which
+      // should be creating fields that can use draw methods directly.
+      let noOptions = {};
+      this.upon(make, noOptions);
+    };
+  }
 
   getMethods() {
     let result = [];
@@ -306,4 +336,12 @@ function _renderRect(self, x, y, w, h, fill) {
   self.putSequence(put);
 }
 
+function newDrawableField(opt) {
+  let f = new field.Field();
+  let draw = new Drawable();
+  draw.upon(f, opt || {});
+  return f;
+}
+
 module.exports.Drawable = Drawable;
+module.exports.newDrawableField = newDrawableField;

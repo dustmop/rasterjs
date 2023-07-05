@@ -42,10 +42,10 @@ describe('Render components', function() {
     ra.useTileset(tiles, {tile_width: 4, tile_height: 4});
     ra.useField(field);
 
-    field.fillPattern([[2, 6, 1, 3],
-                       [6, 7, 7, 7],
-                       [5, 5, 1, 0],
-                       [6, 4, 2, 2]]);
+    field.fill([2, 6, 1, 3,
+                6, 7, 7, 7,
+                5, 5, 1, 0,
+                6, 4, 2, 2]);
 
     let renderer = ra._renderer;
     renderer.connect(ra.provide());

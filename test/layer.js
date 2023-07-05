@@ -6,10 +6,10 @@ describe('Layers', function() {
     ra.resetState();
     ra.setZoom(2);
 
-    let upper = new ra.Field();
+    let upper = new ra.DrawableField();
     upper.setSize(16, 16);
 
-    let lower = new ra.Field();
+    let lower = new ra.DrawableField();
     lower.setSize(16, 16);
 
     ra.setSize(16, 16);
@@ -41,10 +41,10 @@ describe('Layers', function() {
     ra.resetState();
     ra.setZoom(2);
 
-    let upper = new ra.Field();
+    let upper = new ra.DrawableField();
     upper.setSize(16, 16);
 
-    let lower = new ra.Field();
+    let lower = new ra.DrawableField();
     lower.setSize(16, 16);
 
     ra.setSize(16, 16);
@@ -79,10 +79,10 @@ describe('Layers', function() {
     ra.resetState();
     ra.setZoom(2);
 
-    let upper = new ra.Field();
+    let upper = new ra.DrawableField();
     upper.setSize(16, 16);
 
-    let lower = new ra.Field();
+    let lower = new ra.DrawableField();
     lower.setSize(16, 16);
 
     ra.setSize(16, 16);
@@ -117,10 +117,10 @@ describe('Layers', function() {
     ra.resetState();
     ra.setZoom(2);
 
-    let upper = new ra.Field();
+    let upper = new ra.DrawableField();
     upper.setSize(16, 4);
 
-    let lower = new ra.Field();
+    let lower = new ra.DrawableField();
     lower.setSize(16, 16);
 
     ra.setSize(16, 16);
@@ -155,10 +155,10 @@ describe('Layers', function() {
     ra.resetState();
     ra.setZoom(2);
 
-    let upper = new ra.Field();
+    let upper = new ra.DrawableField();
     upper.setSize(16, 4);
 
-    let lower = new ra.Field();
+    let lower = new ra.DrawableField();
     lower.setSize(16, 16);
 
     ra.setSize(16, 16);
@@ -194,10 +194,10 @@ describe('Layers', function() {
     ra.resetState();
     ra.setZoom(2);
 
-    let upper = new ra.Field();
+    let upper = new ra.DrawableField();
     upper.setSize(12, 4);
 
-    let lower = new ra.Field();
+    let lower = new ra.DrawableField();
     lower.setSize(16, 16);
 
     ra.setSize(16, 16);
@@ -233,10 +233,10 @@ describe('Layers', function() {
     ra.resetState();
     ra.setZoom(2);
 
-    let upper = new ra.Field();
+    let upper = new ra.DrawableField();
     upper.setSize(12, 4);
 
-    let lower = new ra.Field();
+    let lower = new ra.DrawableField();
     lower.setSize(16, 16);
 
     ra.setSize(16, 16);
@@ -297,10 +297,10 @@ describe('Layers', function() {
     let tileset = new ra.Tileset({tile_width: 4, tile_height: 4});
     tileset.addFrom(img);
 
-    let upper = new ra.Field();
+    let upper = new ra.DrawableField();
     upper.setSize(4, 1);
 
-    let lower = new ra.Field();
+    let lower = new ra.DrawableField();
     lower.setSize(16, 16);
 
     ra.setSize(16, 16);
@@ -341,10 +341,10 @@ describe('Layers', function() {
     let tileset = new ra.Tileset({tile_width: 4, tile_height: 4});
     tileset.addFrom(img);
 
-    let upper = new ra.Field();
+    let upper = new ra.DrawableField();
     upper.setSize(4, 1);
 
-    let lower = new ra.Field();
+    let lower = new ra.DrawableField();
     lower.setSize(16, 16);
 
     ra.setSize(16, 16);

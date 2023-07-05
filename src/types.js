@@ -1,5 +1,6 @@
 const rgbColor = require('./rgb_color.js');
 const field = require('./field.js');
+const drawable = require('./drawable.js');
 const baseDisplay = require('./base_display.js');
 const imageField = require('./image_field.js');
 const tiles = require('./tiles.js');
@@ -67,58 +68,57 @@ function is2dNumArray(obj) {
 
 function isRGBColor(obj) {
   if (!obj) { return false; }
-  return obj.constructor == rgbColor.RGBColor;
+  return obj instanceof rgbColor.RGBColor;
 }
 
 function isInterrupts(obj) {
   if (!obj) { return false; }
-  return obj.constructor == interrupts.Interrupts;
+  return obj instanceof interrupts.Interrupts;
 }
 
 function isTileset(obj) {
   if (!obj) { return false; }
-  return obj.constructor == tiles.Tileset;
+  return obj instanceof tiles.Tileset;
 }
 
 function isTile(obj) {
   if (!obj) { return false; }
-  return obj.constructor == tiles.Tile;
+  return obj instanceof tiles.Tile;
 }
 
 function isColorspace(obj) {
   if (!obj) { return false; }
-  return obj.constructor == colorspace.Colorspace;
+  return obj instanceof colorspace.Colorspace;
 }
 
 function isPalette(obj) {
   if (!obj) { return false; }
-  return obj.constructor == palette.Palette;
+  return obj instanceof palette.Palette;
 }
 
 function isSpriteSheet(obj) {
   if (!obj) { return false; }
-  return obj.constructor == sprites.SpriteSheet;
+  return obj instanceof sprites.SpriteSheet;
 }
 
 function isSpritelist(obj) {
   if (!obj) { return false; }
-  return obj.constructor == sprites.Spritelist;
+  return obj instanceof sprites.Spritelist;
 }
 
 function isField(obj) {
   if (!obj) { return false; }
-  return (obj.constructor == field.Field ||
-          obj.constructor == imageField.ImageField);
+  return obj instanceof field.Field;
 }
 
 function isLookOfImage(obj) {
   if (!obj) { return false; }
-  return obj.constructor == imageField.LookOfImage;
+  return obj instanceof imageField.LookOfImage;
 }
 
 function isPaletteEntry(obj) {
   if (!obj) { return false; }
-  return obj.constructor == palette.PaletteEntry;
+  return obj instanceof palette.PaletteEntry;
 }
 
 function isSurface(obj) {
@@ -127,7 +127,7 @@ function isSurface(obj) {
 
 function isWeakRef(obj) {
   if (!obj) { return false; }
-  return obj.constructor == weak.Ref;
+  return obj instanceof weak.Ref;
 }
 
 function isDisplayObject(obj) {

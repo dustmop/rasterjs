@@ -37,11 +37,12 @@ class Scene {
     this._fsacc = env.makeFilesysAccess();
 
     this._renderer = new renderer.Renderer();
-    this._owned = new field.Field({drawableDisableDestructure: true});
+
+    this.field = drawable.newDrawableField({skipParamDestructure: true});
+    this._owned = this.field;
 
     this.display = null;
     this.palette = null;
-    this.field = this._owned;
     this.scroll = {};
     this.tileset = null;
     this.colorspace = null;
@@ -285,8 +286,10 @@ class Scene {
   resetState() {
     this.width = null;
     this.height = null;
-    this._owned = new field.Field({drawableDisableDestructure: true});
-    this.field = this._owned;
+
+    this.field = drawable.newDrawableField({skipParamDestructure: true});
+    this._owned = this.field;
+
     this._banks = null;
     this._layering = null;
     this._renderer.clear();
@@ -1200,9 +1203,21 @@ Scene.prototype.Field = function() {
   if (new.target === undefined) {
     throw new Error('Field constructor must be called with `new`');
   }
-  let p = new field.Field();
-  p._addMethods(true);
-  return p;
+  return new field.Field();
+}
+
+Scene.prototype.DrawableField = function() {
+  if (new.target === undefined) {
+    throw new Error('DrawableField constructor must be called with `new`');
+  }
+  return drawable.newDrawableField();
+}
+
+Scene.prototype.Drawable = function() {
+  if (new.target === undefined) {
+    throw new Error('Drawable constructor must be called with `new`');
+  }
+  return new drawable.Drawable();
 }
 
 Scene.prototype.Polygon = function(pointsOrPolygon, center) {

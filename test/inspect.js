@@ -17,11 +17,11 @@ describe('Inspect', function() {
     // Pattern table / Nametable
     let field = new ra.Field();
     field.setSize(4);
+    field.fill([2, 6, 1, 3,
+                6, 7, 7, 7,
+                5, 5, 1, 0,
+                6, 4, 2, 2]);
     ra.useField(field);
-    field.fillPattern([[2, 6, 1, 3],
-                       [6, 7, 7, 7],
-                       [5, 5, 1, 0],
-                       [6, 4, 2, 2]]);
 
     let inspect = ra.pixelInspector();
 

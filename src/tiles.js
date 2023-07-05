@@ -330,8 +330,9 @@ class Tileset extends component.Component {
 }
 
 
-class Tile {
+class Tile extends field.Field {
   constructor(width, height) {
+    super();
     let pitch = Math.floor(width);
     let data;
     if (pitch > 0 && height > 0) {
@@ -344,20 +345,6 @@ class Tile {
     return this;
   }
 
-  get(x, y) {
-    if (x == null) { throw new Error(`get: x is null`); }
-    if (y == null) { throw new Error(`get: y is null`); }
-    let k = y * this.pitch + x;
-    return this.data[k];
-  }
-
-  put(x, y, v) {
-    if (x == null) { throw new Error(`put: x is null`); }
-    if (y == null) { throw new Error(`put: y is null`); }
-    let k = y * this.pitch + x;
-    this.data[k] = v;
-  }
-
   clone() {
     let make = new Tile();
     make.width = this.width;
@@ -365,50 +352,6 @@ class Tile {
     make.pitch = this.pitch;
     make.data = this.data;
     return make;
-  }
-
-  xform(kind) {
-    if (!kind) {
-      return this;
-    } else if (kind == 'vhflip') {
-      let make = this.xform('vflip');
-      return make.xform('hflip');
-    } else if (kind == 'hflip') {
-      // TODO: get pitch from the env
-      let newPitch = this.width;
-      let numPixels = this.height * newPitch;
-      let buff = new Uint8Array(numPixels);
-      for (let y = 0; y < this.height; y++) {
-        for (let x = 0; x < this.width; x++) {
-          let j = y * newPitch + x;
-          buff[j] = this.get(this.width - x - 1, y);
-        }
-      }
-      let make = new field.Field();
-      make.data = buff;
-      make.pitch = newPitch;
-      make.width = this.width;
-      make.height = this.height;
-      return make;
-    } else if (kind == 'vflip') {
-      // TODO: get pitch from the env
-      let newPitch = this.width;
-      let numPixels = this.height * newPitch;
-      let buff = new Uint8Array(numPixels);
-      for (let y = 0; y < this.height; y++) {
-        for (let x = 0; x < this.width; x++) {
-          let j = y * newPitch + x;
-          buff[j] = this.get(x, this.height - y - 1);
-        }
-      }
-      let make = new field.Field();
-      make.data = buff;
-      make.pitch = newPitch;
-      make.width = this.width;
-      make.height = this.height;
-      return make;
-    }
-    throw new Error(`unknown xform: "${kind}"`);
   }
 
   serialize() {

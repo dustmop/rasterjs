@@ -4,7 +4,7 @@ var ra = require('../src/lib.js');
 
 describe('Field', function() {
   it('fill circle with destructure', function() {
-    let pl = new ra.Field();
+    let pl = new ra.DrawableField();
     pl.setSize(4, 4);
     pl.setColor(2);
     pl.fillCircle({centerX: 1, centerY: 2, r: 1.5});
@@ -20,7 +20,7 @@ describe('Field', function() {
   });
 
   it('fillPattern works', function() {
-    let pl = new ra.Field();
+    let pl = new ra.DrawableField();
     pl.setSize(4, 4);
     pl.fillPattern([[0,7,7,0],
                     [7,7,0,7],
@@ -39,7 +39,7 @@ describe('Field', function() {
   });
 
   it('fillPattern error', function() {
-    let pl = new ra.Field();
+    let pl = new ra.DrawableField();
     pl.setSize(4, 4);
     assert.throws(() => {
       pl.fillPattern([0,7,7,0,

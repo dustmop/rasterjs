@@ -663,17 +663,20 @@ class Scene {
       callback = eventName;
       eventName = optField;
     }
+    this._ensureEvents();
+    this._eventManager.listenFor(eventName, region, callback);
+  }
 
+  _ensureEvents() {
     if (this._eventManager == null) {
       this._eventManager = new eventManager.EventManager();
       this.display.forwardNativeEvents(this._eventManager);
     }
-
-    this._eventManager.listenFor(eventName, region, callback);
   }
 
   sendMessage(name, data) {
     let event = {name: name, data: data};
+    this._ensureEvents();
     this._eventManager.getEvent('message', event);
   }
 

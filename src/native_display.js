@@ -57,15 +57,23 @@ class NativeDisplay extends baseDisplay.BaseDisplay {
   forwardNativeEvents(eventManager) {
     this._eventManager = eventManager;
     this._b.eventReceiver((name, nativeEvent) => {
-      let e = {
-        code: nativeEvent.code, // number
-      };
-      this._eventManager.getNativeKey(name, e);
+      if (name == 'keypress' || name == 'keydown' || name == 'keyup') {
+        this._eventManager.getNativeKey(name, nativeEvent);
+      } else if (name == 'click') {
+        this._eventManager.getNativeClick(name, nativeEvent);
+      } else {
+        throw new Error(`unknown event name "${name}"`);
+      }
     });
   }
 
   insteadWriteBuffer(buffer) {
     return this._b.insteadWriteBuffer(buffer);
+  }
+
+  _testOnlySendClick(e) {
+    // TODO: assert e is {x:x,y:y}
+    return this._b.testOnlyHook(e);
   }
 }
 

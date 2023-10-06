@@ -34,7 +34,7 @@ class EventManager {
     this._dispatch(name, e);
   }
 
-  getNativeClick(event) {
+  getNativeClick(name, event) {
     let handlerList = this._handlers['click'];
     if (!handlerList) { return; }
     for (let handler of handlerList) {

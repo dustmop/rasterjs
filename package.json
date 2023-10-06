@@ -16,6 +16,7 @@
     "example-test": "mocha test/example/",
     "web-test": "karma start --single-run --browsers FirefoxHeadless karma.conf.js --",
     "build": "webpack",
+    "addon": "node-gyp rebuild",
     "dev": "webpack --config webpack.dev.js",
     "postinstall": "node tools/windows_copy_dll.js"
   },

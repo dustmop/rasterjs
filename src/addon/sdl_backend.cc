@@ -26,6 +26,7 @@ void SDLBackend::InitClass(Napi::Env env, Napi::Object exports) {
        InstanceMethod("eventReceiver", &SDLBackend::EventReceiver),
        InstanceMethod("runAppLoop", &SDLBackend::RunAppLoop),
        InstanceMethod("insteadWriteBuffer", &SDLBackend::InsteadWriteBuffer),
+       InstanceMethod("testOnlyHook", &SDLBackend::TestOnlyHook),
   });
   g_sdlDisplayConstructor = Napi::Persistent(func);
   g_sdlDisplayConstructor.SuppressDestruct();
@@ -161,6 +162,15 @@ Napi::Value SDLBackend::InsteadWriteBuffer(const Napi::CallbackInfo& info) {
   this->writeBuffer = Napi::Persistent(info[0]);
   this->hasWriteBuffer = 1;
   return Napi::Number::New(env, 0);
+}
+
+Napi::Value SDLBackend::TestOnlyHook(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  Napi::Object param = info[0].As<Napi::Object>();
+  Napi::Number x = param.Get("x").As<Napi::Number>();
+  Napi::Number y = param.Get("y").As<Napi::Number>();
+  this->sendMouseEvent(env, "click", x.Int32Value(), y.Int32Value());
+  return env.Null();
 }
 
 unsigned char* surfaceToRawBuffer(Napi::Value surfaceVal) {
@@ -395,6 +405,13 @@ void SDLBackend::execOneFrame(const CallbackInfo& info) {
       this->isRunning = false;
       break;
 
+    case SDL_MOUSEBUTTONDOWN: {
+      int x = event.button.x / this->zoomLevel;
+      int y = event.button.y / this->zoomLevel;
+      this->sendMouseEvent(env, "click", x, y);
+      break;
+    }
+
     case SDL_KEYDOWN:
       if (event.key.keysym.sym == SDLK_ESCAPE) {
         this->isRunning = false;
@@ -571,6 +588,22 @@ void SDLBackend::sendKeyEvent(Napi::Env env, const std::string& msg, int code) {
   Napi::Object obj = Napi::Object::New(env);
   Napi::Number codeNum = Napi::Number::New(env, code);
   obj["code"] = codeNum;
+  napi_value val = obj;
+  Napi::String eventName = Napi::String::New(env, msg);
+  this->eventReceiverFunc.Call({eventName, val});
+}
+
+
+void SDLBackend::sendMouseEvent(Napi::Env env, const std::string& msg,
+                                int x, int y) {
+  if (this->eventReceiverFunc.IsEmpty()) {
+    return;
+  }
+  Napi::Object obj = Napi::Object::New(env);
+  Napi::Number xNum = Napi::Number::New(env, x);
+  Napi::Number yNum = Napi::Number::New(env, y);
+  obj["basex"] = xNum;
+  obj["basey"] = yNum;
   napi_value val = obj;
   Napi::String eventName = Napi::String::New(env, msg);
   this->eventReceiverFunc.Call({eventName, val});

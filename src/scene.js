@@ -1060,35 +1060,68 @@ class Scene {
     this.scroll.y = preserve.y;
   }
 
-  useTileset(something, sizeInfo) {
-    if (!something) {
+  useTileset(firstParam, detail) {
+    if (!firstParam) {
       throw new Error(`useTileset expects an argument`);
     }
-    if (types.isArray(something)) {
-      if (something.length < 1) {
-        throw new Error(`useTileset expects at least 1 tileset`);
-      }
-      let outExtra = {};
-      let collect = [];
-      for (let param of something) {
-        collect.push(tiles.createFrom(param, sizeInfo, this.field, outExtra));
-      }
-      this.tileset = collect[0];
-      this._addComponentBanks('tileset', collect);
-    } else {
-      let outExtra = {};
-      let t = tiles.createFrom(something, sizeInfo, this.field, outExtra);
-      this.tileset = t;
-      if (outExtra.pattern && outExtra.fromCurrentField) {
-        // When buliding a tileset from the current field, replace that
+    if (types.isArray(firstParam)) {
+      // Array of tileset-like objects
+      let result = this._constructTilesetFromArray(firstParam, detail);
+      this.tileset = result.tileset;
+      this._addComponentBanks('tileset', result.banks || [result.tileset]);
+    } else if (types.isObject(firstParam) && detail == null) {
+      // only options, build from the scene's field
+      let result = this._constructTilesetSingle(this.field, firstParam);
+      this.tileset = result.tileset;
+      if (result.pattern) {
+        // When buliding tileset from the current field, replace that
         // field with the generated pattern table.
-        this.field = outExtra.pattern;
+        this.field = result.pattern;
       }
+    } else {
+      // Some other tileset-like thing: Tileset | Field | Number
+      let result = this._constructTilesetSingle(firstParam, detail);
+      this.tileset = result.tileset;
     }
     if (this.colorspace) {
       this.colorspace.ensureConsistentTileset(this.tileset, this.palette);
     }
     return this.tileset;
+  }
+
+  _constructTilesetFromArray(elems, detail) {
+    if (elems.length < 1) {
+      throw new Error(`useTileset expects at least 1 tileset`);
+    }
+    let collect = [];
+    for (let param of elems) {
+      let inner = this._constructTilesetSingle(param, detail)
+      collect.push(inner.tileset);
+    }
+    return {
+      tileset: collect[0],
+      banks: collect,
+    };
+  }
+
+  _constructTilesetSingle(param, detail) {
+    if (types.isTileset(param)) {
+      // Tileset
+      return {tileset: param};
+    } else if (types.isField(param)) {
+      // Field
+      let build = new tiles.Tileset(detail);
+      let pattern = build.add(param, {dups: !!detail.dups}).toField();
+      return {tileset: build, pattern: pattern};
+    } else if (types.isNumber(param)) {
+      // Number
+      let addon = {num: param};
+      Object.assign(addon, detail);
+      let build = new tiles.Tileset(addon);
+      return {tileset: build};
+    } else {
+      throw new Error(`cannot construct tileset from ${param}`);
+    }
   }
 
   useColorspace(pl, sizeInfo) {
@@ -1235,7 +1268,7 @@ Scene.prototype.Tileset = function() {
     throw new Error('Tileset constructor must be called with `new`');
   }
   let args = arguments;
-  return new tiles.Tileset(args[0]);
+  return new tiles.Tileset(args[0], args[1]);
 }
 
 Scene.prototype.Tile = function() {

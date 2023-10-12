@@ -45,7 +45,7 @@ describe('Tileset', function() {
     let tileField = new ra.Field();
     tileField.setSize(16, 16);
 
-    let tiles = ra.useTileset(tileField, {tile_width: 8, tile_height: 8});
+    let tiles = ra.useTileset(tileField, {tile_width: 8, tile_height: 8, dups: true});
     ra.useField(field);
 
     let modTile = tiles.get(0);
@@ -153,7 +153,80 @@ describe('Tileset', function() {
     util.renderCompareTo(ra, 'test/testdata/palette_tiles.png');
   });
 
-  it('missing dimension', function() {
+  it('weird save viz', function() {
+    ra.resetState();
+
+    // palette has 22 values
+    ra.usePalette({rgbmap:[
+      0x000000, 0x565656, 0x664019, 0x858585, 0xa5a5a5, 0xc0c0c0,
+      0xffffff, 0xffb973, 0xff7373, 0xff3333, 0xff9933, 0xf1ff73,
+      0x2b6619, 0x4abf26, 0xbbffa6, 0x63ff33, 0xd9ffed, 0x2687bf,
+      0x7033ff, 0x66194f, 0xffa6e4, 0xff33c2
+    ]});
+
+    // Create palette, 4 options, each of size 6
+    let ents = [17,16,14,15,13,12,
+                 0,11, 7,10, 9, 2,
+                 6, 5, 4, 3, 1, 0,
+                18,20, 8, 5,21,19,
+               ];
+    ra.palette.setEntries(ents);
+
+    // Build colorspace
+    let colors = new ra.Field();
+    colors.setSize(4);
+    colors.fill([0,1,1,1,
+                 1,3,3,3,
+                 2,2,1,0,
+                 1,3,0,0]);
+    ra.useColorspace(colors, {cell_width: 4, cell_height: 4, piece_size: 6});
+
+    // Tileset / CHR
+    let tiles = ra.loadImage('test/testdata/tiles.png');
+    ra.useTileset(tiles, {tile_width: 4, tile_height: 4});
+
+    let tmpdir = util.mkTmpDir();
+    let tmpPalette = tmpdir + '/actual-pal.png';
+    let tmpTileset = tmpdir + '/actual-tiles.png';
+    ra.save(ra.palette, tmpPalette);
+    ra.save(ra.tileset, tmpTileset);
+    util.ensureFilesMatch('test/testdata/map_tiles_pal.png', tmpPalette);
+    util.ensureFilesMatch('test/testdata/grey_tileset.png', tmpTileset);
+  });
+
+  it('weird colorspace viz', function() {
+    ra.resetState();
+
+    // palette has 22 values
+    ra.usePalette({rgbmap:[
+      0x000000, 0x565656, 0x664019, 0x858585, 0xa5a5a5, 0xc0c0c0,
+      0xffffff, 0xffb973, 0xff7373, 0xff3333, 0xff9933, 0xf1ff73,
+      0x2b6619, 0x4abf26, 0xbbffa6, 0x63ff33, 0xd9ffed, 0x2687bf,
+      0x7033ff, 0x66194f, 0xffa6e4, 0xff33c2
+    ]});
+
+    // Create palette, 4 options, each of size 6
+    let ents = [17,16,14,15,13,12,
+                 0,11, 7,10, 9, 2,
+                 6, 5, 4, 3, 1, 0,
+                18,20, 8, 5,21,19,
+               ];
+    ra.palette.setEntries(ents);
+
+    // Tileset / CHR
+    let tiles = ra.loadImage('test/testdata/tiles.png');
+    ra.useTileset(tiles, {tile_width: 4, tile_height: 4});
+
+    let tmpdir = util.mkTmpDir();
+    let tmpPalette = tmpdir + '/actual-pal.png';
+    let tmpTileset = tmpdir + '/actual-tiles.png';
+    ra.save(ra.palette, tmpPalette);
+    ra.save(ra.tileset, tmpTileset);
+    util.ensureFilesMatch('test/testdata/map_tiles_pal.png', tmpPalette);
+    util.ensureFilesMatch('test/testdata/weird_tileset.png', tmpTileset);
+  });
+
+  it('non-integer dimension', function() {
     ra.resetState();
 
     let field = new ra.Field();
@@ -161,8 +234,8 @@ describe('Tileset', function() {
 
     let tiles = ra.loadImage('test/testdata/tiles.png');
     assert.throws(function() {
-      ra.useTileset(tiles, {tile_height: 8});
-    }, /Error: invalid Tileset detail: missing tile_width/);
+      ra.useTileset(tiles, {tile_height: 8, tile_width: 4.5});
+    }, /Error: Tileset's tile_width must be integer/);
   });
 
   it('invalid dimension', function() {
@@ -344,7 +417,6 @@ describe('Tileset', function() {
 
     let tiles = ra.useTileset({tile_width: 4, tile_height: 4});
     assert.equal(tiles.length, 8);
-    assert.equal(tiles.numTiles, 8);
 
     let pattern = ra.field.toArrays();
     let expect = [
@@ -364,7 +436,7 @@ describe('Tileset', function() {
     }, /cannot construct tileset from abc/);
   });
 
-  it('tiles addFrom', function() {
+  it('tiles add from images', function() {
     ra.resetState();
     ra.setSize(3, 3, {fieldOnly: true});
 
@@ -372,8 +444,8 @@ describe('Tileset', function() {
     let secondSet = ra.loadImage('test/testdata/dark_sphere_with_bg.png');
 
     let tiles = new ra.Tileset({tile_width: 8, tile_height: 8});
-    tiles.addFrom(firstSet);
-    tiles.addFrom(secondSet);
+    tiles.add(firstSet);
+    tiles.add(secondSet);
     ra.useTileset(tiles);
 
     ra.fillPattern([[1, 1, 2],
@@ -405,7 +477,7 @@ describe('Tileset', function() {
     assert.equal(tiles.length, 2);
 
     // so will add with allowDups==true
-    tiles.add(tiles.newTile(), true);
+    tiles.add(tiles.newTile(), {dups:true});
     assert.equal(tiles.length, 3);
 
     tiles.clear();
@@ -420,15 +492,15 @@ describe('Tileset', function() {
 
     let image = ra.loadImage('test/testdata/tiles.png');
     let more = new ra.Tileset({tile_width: 4, tile_height: 4});
-    let pattern = more.addFrom(image);
+    let pattern = more.add(image);
 
     // serialize the pattern table
     let obj = pattern.serialize();
     let expectSer = '{"width":4,"height":2,"data":[0,1,2,3,4,5,6,7]}';
     assert.deepEqual(obj, expectSer);
 
-    // insert from method, only take 4
-    tiles.insertFrom(more, {num: 4});
+    // only take 4
+    tiles.add(more, {num: 4});
     assert(tiles.length, 4);
   });
 
@@ -505,7 +577,22 @@ describe('Tileset', function() {
              0,6,4,0],
     };
     assert.deepEqual(actual, JSON.stringify(expect));
+  });
 
+  it('tiles extendWith', function() {
+    let tmpdir = util.mkTmpDir();
+    let tmpout = tmpdir + '/actual.png';
+    ra.resetState();
+
+    let img = ra.loadImage('test/testdata/tiles.png');
+    let leftTileset = new ra.Tileset(img, {tile_width: 4, tile_height: 4});
+    img = ra.loadImage('test/testdata/small-fruit.png');
+    let riteTileset = new ra.Tileset(img, {tile_width: 4, tile_height: 4});
+    leftTileset.add(riteTileset);
+
+    let surfaces = leftTileset.visualize({palette: ra.palette});
+    ra._saveSurfacesTo(surfaces, tmpout);
+    util.ensureFilesMatch('test/testdata/tiles_extended.png', tmpout);
   });
 
 });

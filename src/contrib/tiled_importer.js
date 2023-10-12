@@ -40,7 +40,7 @@ class TiledImporter {
       tile_height: structure.tileheight,
     }
     let ts = new tileset.Tileset(detail);
-    ts.addFrom(image, true);
+    ts.add(image,{dups:true});
 
     return {
       field: pl,
@@ -74,7 +74,7 @@ class TiledImporter {
       tile_height: tileheight,
     }
     let ts = new tileset.Tileset(detail);
-    ts.addFrom(image, true);
+    ts.add(image, {dups:true});
 
     return {
       field: pl,

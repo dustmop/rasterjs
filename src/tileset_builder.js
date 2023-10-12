@@ -26,7 +26,7 @@ class TilesetBuilderDisplay extends baseDisplay.BaseDisplay {
         break;
       }
       let field = this._renderer.getFirstField();
-      let pattern = this._tileset.addFrom(field);
+      let pattern = this._tileset.add(field);
       this._frames.push(pattern);
     }
   }

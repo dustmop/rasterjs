@@ -294,8 +294,7 @@ describe('Layers', function() {
     ra.usePalette('quick');
 
     let img = ra.loadImage('test/testdata/tiles.png');
-    let tileset = new ra.Tileset({tile_width: 4, tile_height: 4});
-    tileset.addFrom(img);
+    let tileset = new ra.Tileset(img, {tile_width: 4, tile_height: 4});
 
     let upper = new ra.DrawableField();
     upper.setSize(4, 1);
@@ -338,8 +337,7 @@ describe('Layers', function() {
     ra.usePalette('quick');
 
     let img = ra.loadImage('test/testdata/tiles.png');
-    let tileset = new ra.Tileset({tile_width: 4, tile_height: 4});
-    tileset.addFrom(img);
+    let tileset = new ra.Tileset(img, {tile_width: 4, tile_height: 4});
 
     let upper = new ra.DrawableField();
     upper.setSize(4, 1);

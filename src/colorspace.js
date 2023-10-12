@@ -114,7 +114,7 @@ class Colorspace extends component.Component {
   ensureConsistentTileset(tiles, palette) {
     let pieceSize = this._getPieceSize();
 
-    for (let j = 0; j < tiles.numTiles; j++) {
+    for (let j = 0; j < tiles.length; j++) {
       let tile = tiles.get(j);
 
       // Get tile's color needs, pick a palette piece, then recolor

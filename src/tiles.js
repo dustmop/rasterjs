@@ -1,4 +1,5 @@
 const component = require('./component.js');
+const destructure = require('./destructure.js');
 const types = require('./types.js');
 const field = require('./field.js');
 const palette = require('./palette.js');
@@ -6,32 +7,43 @@ const rgbmap = require('./rgb_map.js');
 const visualizer = require('./visualizer.js');
 
 class Tileset extends component.Component {
-  constructor(sizeInfo) {
+  // call with Tileset({tile_width: 8, tile_height: 8})
+  //        or Tileset(tile, {tile_width: 8, tile_height: 8})
+  constructor(first, opt_second) {
     super();
-    sizeInfo = sizeInfo || {};
 
+    let tilesSource;
+    let sizeInfo;
     let deserializeData = null;
+
+    if (types.isTile(first) || types.isTileset(first) || types.isField(first)) {
+      tilesSource = first;
+      sizeInfo = opt_second || {};
+    } else {
+      sizeInfo = first || {};
+    }
+
+    // TODO: validate the keys, type check them
+    sizeInfo.tile_width = sizeInfo.tile_width || 8;
+    sizeInfo.tile_height = sizeInfo.tile_height || 8;
     if (sizeInfo.deserialize) {
-      let text = sizeInfo.deserialize;
-      deserializeData = JSON.parse(text);
+      deserializeData = JSON.parse(sizeInfo.deserialize);
       sizeInfo = {
         tile_width: deserializeData.tileWidth,
         tile_height: deserializeData.tileHeight,
       }
     }
-    if (!sizeInfo) {
-      throw new Error(`Tileset requires a detail object parameter`);
-    }
+
     if (!sizeInfo.tile_width) {
       throw new Error(`invalid Tileset detail: missing tile_width`);
     }
     if (!sizeInfo.tile_height) {
       throw new Error(`invalid Tileset detail: missing tile_height`);
     }
-    if (!Math.trunc(sizeInfo.tile_width) != 0) {
+    if (sizeInfo.tile_width != Math.floor(sizeInfo.tile_width)) {
       throw new Error(`Tileset's tile_width must be integer`);
     }
-    if (!Math.trunc(sizeInfo.tile_height) != 0) {
+    if (sizeInfo.tile_height != Math.floor(sizeInfo.tile_height)) {
       throw new Error(`Tileset's tile_height must be integer`);
     }
     if (sizeInfo.tile_width <= 0) {
@@ -66,6 +78,10 @@ class Tileset extends component.Component {
         this.data.push(this._createTileObject(data, pitch));
       }
       this._fillContents();
+    }
+
+    if (tilesSource) {
+      this.add(tilesSource);
     }
 
     return this;
@@ -104,7 +120,6 @@ class Tileset extends component.Component {
 
 
   _fillContents() {
-    this.numTiles = this.data.length;
     // TODO: _lookupContents
   }
 
@@ -123,11 +138,38 @@ class Tileset extends component.Component {
     return this.data.length;
   }
 
-  push(tile) {
-    return this.add(tile, true);
+  _addTileset(otherTileset, opt) {
+    let num = opt.num || otherTileset.length;
+
+    for (let i = 0; i < num; i++) {
+      let t = otherTileset.get(i);
+      if (!t) {
+        t = this.newTile();
+      }
+      this._addSingleTile(t, opt);
+    }
   }
 
-  add(tile, allowDups) {
+  add(param, opt) {
+    opt = opt || {};
+    if (types.isTile(param)) {
+      return this._addSingleTile(param, opt);
+    } else if (types.isArray(param)) {
+      throw new Error(`not implemented: add [Tile]`);
+    } else if (types.isTileset(param)) {
+      return this._addTileset(param, opt);
+    } else if (types.isField(param)) {
+      return this._addField(param, opt);
+    } else {
+      throw new Error(`unknown param type for 'add'`);
+    }
+  }
+
+  push(param) {
+    this.add(param, {dups:true});
+  }
+
+  _addSingleTile(tile, opt) {
     if (!types.isTile(tile)) {
       throw new Error(`required: Tile, got ${JSON.stringify(tile)}`);
     }
@@ -137,7 +179,7 @@ class Tileset extends component.Component {
     if (tile.height != this.tileHeight) {
       throw new Error(`expected: tileHeight ${this.tileHeight} got ${tile.height}`);
     }
-    allowDups = allowDups || false;
+    let allowDups = opt.dups || false;
 
     let pitch = tile.pitch;
     let key = this._makeKey(tile.data, pitch);
@@ -153,42 +195,41 @@ class Tileset extends component.Component {
     tileID = this.data.length;
     this.data.push(tile.clone());
     this._lookupContents[key] = tileID;
-    this.numTiles = this.data.length;
     return tileID;
   }
 
   /**
    * carve up the field into tiles, add them to this tileset
-   * @param {Field} pl - the field to create tiles from
-   * @param {bool} allowDups - whether to allow duplicates (or combine them)
+   * @param {Field} f - the field to create tiles from
+   * @param {object} opt - {dups,retain}
    * @return {PatternTable} the pattern table for the added tiles
    */
-  addFrom(pl, allowDups) {
-    if (!types.isField(pl)) {
+  _addField(f, opt) {
+    if (!types.isField(f)) {
       throw new Error(`addFrom requires a Field`);
     }
-    if (this.tileHeight > pl.height) {
+    if (this.tileHeight > f.height) {
       throw new Error(`Tileset's tile_height is larger than source data`);
     }
-    if (this.tileWidth > pl.width) {
+    if (this.tileWidth > f.width) {
       throw new Error(`Tileset's tile_width is larger than source data`);
     }
-    allowDups = allowDups || false;
+    let allowDups = opt.dups || false;
 
-    pl.fullyResolve();
-    let pitch = pl.pitch;
-    let source = pl.data.slice();
+    f.fullyResolve();
+    let pitch = f.pitch;
+    let source = f.data.slice();
 
     // TODO: add a test for when rounding happens
-    let numTilesX = Math.floor(pl.width / this.tileWidth);
-    let numTilesY = Math.floor(pl.height / this.tileHeight);
+    let numTilesX = Math.floor(f.width / this.tileWidth);
+    let numTilesY = Math.floor(f.height / this.tileHeight);
 
     let patternData = new Array(numTilesX * numTilesY);
     let patternPitch = numTilesX;
 
     for (let tileY = 0; tileY < numTilesY; tileY++) {
       for (let tileX = 0; tileX < numTilesX; tileX++) {
-        let tileData = this._sliceTileData(tileX, tileY, source, pl.pitch);
+        let tileData = this._sliceTileData(tileX, tileY, source, f.pitch);
         let tileID;
         if (allowDups) {
           tileID = this.data.length;
@@ -208,30 +249,8 @@ class Tileset extends component.Component {
       }
     }
 
-    this.numTiles = this.data.length;
     return new PatternTable(patternData, patternPitch, numTilesX, numTilesY);
   }
-
-  insertFrom(other, opt) {
-    if (!types.isTileset(other)) {
-      throw new Error(`required: Tileset, got ${JSON.stringify(other)}`);
-    }
-
-    let num = (opt || {}).num;
-    if (!num) {
-      num = other.length;
-    }
-
-    for (let i = 0; i < num; i++) {
-      let t = other.get(i);
-      if (!t) {
-        t = this.newTile();
-      }
-      // allow duplicates
-      this.push(t);
-    }
-  }
-
 
   all() {
     return this.data;
@@ -263,7 +282,6 @@ class Tileset extends component.Component {
 
   _constructNumTiles(num) {
     let pitch = this.tileWidth;
-    this.numTiles = num;
     this.data = new Array(num);
     for (let i = 0; i < this.data.length; i++) {
       let t = new Tile();
@@ -448,41 +466,5 @@ class PatternTable {
 
 }
 
-
-function createFrom(param, sizeInfo, sourceField, outExtra) {
-  let outTileset = null;
-  let outPattern = null;
-  if (types.isObject(param) && sizeInfo == null) {
-    // construct a tileset from the current field, still need {sizeInfo}
-    sizeInfo = param;
-    outTileset = new Tileset(sizeInfo);
-    outPattern = outTileset.addFrom(sourceField, false).toField();
-    outExtra.fromCurrentField = true;
-
-  } else if (types.isTileset(param)) {
-    outTileset = param;
-
-  } else if (types.isField(param)) {
-    let inField = param;
-    outTileset = new Tileset(sizeInfo);
-    outPattern = outTileset.addFrom(inField, true).toField();
-
-  } else if (types.isNumber(param)) {
-    let numTiles = param;
-    let detail = {num: numTiles};
-    Object.assign(detail, sizeInfo);
-    outTileset = new Tileset(detail);
-
-  } else {
-    throw new Error(`cannot construct tileset from ${param}`);
-  }
-
-  if (outPattern) {
-    outExtra.pattern = outPattern;
-  }
-  return outTileset;;
-}
-
 module.exports.Tile = Tile;
 module.exports.Tileset = Tileset;
-module.exports.createFrom = createFrom;

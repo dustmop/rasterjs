@@ -53,9 +53,9 @@ on
 
 ### loadImage(filename)
 
-Loads an image, by opening it and reading its contents. Can be passed to `drawImage` once reading has completed.
+Loads an image, by opening it and reading its contents. Can be passed to `paste` once reading has completed. If necessary, the image pixel data has its colors downsampled it to match the palette.
 
-In some environments, such as node.js, `loadImage` is synchronous, so images are opened and read all at once. However, in order to keep scripts portable, it is recommended to also handle async environments, such as web browsers. To do this, call `loadImage` at the top-level of your script, and then only use `drawImage` inside of a call to `then` or a draw function that is passed to `run`. Raster.js guarantees that all images opened will be fully loaded once the draw function is invoked, assuming they exist.
+In some environments, such as node.js, `loadImage` is synchronous, so images are opened and read all at once. However, in order to keep scripts portable, it is recommended to also handle async environments, such as web browsers. To do this, call `loadImage` at the top-level of your script, and then only use `paste` inside of a call to `then` or a draw function that is passed to `run`. Raster.js guarantees that all images opened will be fully loaded once the draw function is invoked, assuming they exist.
 
 `filename`: the name of the image to load. Either a local filesystem path or a web accessible URL.
 
@@ -147,7 +147,6 @@ drawSquare   fillSquare
 drawRect     fillRect
 drawCircle   fillCircle
 drawPolygon  fillPolygon
-drawImage    -
 -            fillPattern
 -            fillFrame
 -            fillFlood
@@ -210,13 +209,13 @@ Draws the outline of a polygon, offset by the optional x,y position.
 
 Fills a polygon, offset by the optional x,y position. Same as `drawPolygon`, except the shape's interior is filled.
 
-### drawImage(img, x?, y?)
+### paste(source, x?, y?)
 
-Draw an image to the plane, downsampling it to match the allowed colors.
+Draws the source onto the plane.
 
-`img`: An image that was created by `loadImage`. NOTE: If raster.js is running in an async environment, such as in a web browser, calls to `drawImage` must be made inside of a draw function such as those passed to `then` or `run`, while `loadImage` must be called earlier, such as at the script's top-level.
+`source`: A source plane, such as an image that was created by `loadImage`.
 
-`x`: X dimension (left ) of the upper-left point where drawing starts.
+`x`: X dimension (left) of the upper-left point where drawing starts.
 
 `y`: Y dimension (top) of the upper-left point where drawing starts.
 

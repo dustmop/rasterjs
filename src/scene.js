@@ -517,6 +517,7 @@ class Scene {
     this.display.setRenderer(this._renderer);
     this.display.setZoom(this.config.zoomScale);
 
+    this._ensureEvents();
     this._ensureExecutor();
     this._executor.setLifetime(this._numFrames, postRunFunc);
 

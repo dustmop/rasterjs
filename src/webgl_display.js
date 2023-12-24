@@ -320,7 +320,7 @@ void main() {
     this.currentRunId = id;
     this.waitForContentLoad(() => {
       this._createWebglCanvas();
-      this._eventManager.getEvent('ready');
+      if (this._eventManager) { this._eventManager.getEvent('ready'); }
       this._beginLoop(id, execNextFrame);
     });
   }

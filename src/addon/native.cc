@@ -40,7 +40,7 @@ Napi::Object MakeBackend(const Napi::CallbackInfo& info) {
 Napi::Object Supports(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   Napi::Array list = Napi::Array::New(env);
-  int i = 0;
+  uint32_t i = 0;
 
   #ifdef SDL_ENABLED
   list[i] = "sdl";

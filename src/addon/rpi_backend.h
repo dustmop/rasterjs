@@ -1,5 +1,4 @@
-#ifndef RASPBERRYPI
-#define RASPBERRYPI
+#ifdef RASPBERRYPI
 
 #include <napi.h>
 

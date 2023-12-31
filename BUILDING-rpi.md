@@ -2,8 +2,17 @@
 
 ## Supported Hardware
 
-RaspberryPI 1 B+ (revision 1000010 / hardware BCM2835)
-> other models may work, but have not yet been tested
+Any Raspberry Pi versions 1, 2, or 3 should work. The following have been tested and verified to work:
+
+```
+|==================|========|
+| model            | rev    |
+| rpi 1 b+ rev 1.2 | 0010   |
+| rpi 2 b rev 1.1  | a21041 |
+| rpi 3 b rev 1.2  | a02082 |
+| rpi 3 b+ rev 1.3 | a020d3 |
+|==================|========|
+```
 
 ## Supported Operating System
 

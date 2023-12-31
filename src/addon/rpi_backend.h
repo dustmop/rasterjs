@@ -2,6 +2,8 @@
 
 #include <napi.h>
 
+struct RPIGraphicsData;
+
 class RPIBackend : public Napi::ObjectWrap<RPIBackend> {
  public:
   static void InitClass(Napi::Env env, Napi::Object exports);
@@ -16,6 +18,17 @@ class RPIBackend : public Napi::ObjectWrap<RPIBackend> {
   Napi::Value EventReceiver(const Napi::CallbackInfo& info);
   Napi::Value RunAppLoop(const Napi::CallbackInfo& info);
   Napi::Value InsteadWriteBuffer(const Napi::CallbackInfo& info);
+
+  RPIGraphicsData* gfx;
+
+  int viewWidth;
+  int viewHeight;
+  int datasourcePitch;
+  napi_ref rendererRef;
+  Napi::FunctionReference renderFunc;
+  Napi::FunctionReference execNextFrame;
+  bool isRunning;
+
 };
 
 #endif

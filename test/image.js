@@ -311,5 +311,41 @@ describe('Image', function() {
     util.renderCompareTo(ra, 'test/testdata/fill_oscil.png');
   });
 
+  it('load mismatch palette', function() {
+    ra.resetState();
+
+    ra.usePalette('dos');
+    ra.setSize(8, 8);
+
+    let img = ra.loadImage('test/testdata/small-fruit.png');
+    ra.paste(img, 0, 0);
+
+    util.renderCompareTo(ra, 'test/testdata/fruit-wrong-palette.png');
+  });
+
+  it('load with palette', function() {
+    ra.resetState();
+
+    ra.usePalette('dos');
+    ra.setSize(8, 8);
+
+    let img = ra.loadImage('test/testdata/small-fruit.png', {palette: 'pico8'});
+    ra.paste(img, 0, 0);
+
+    // 8-bit data array is using pico8 values
+    let expect = [
+      [0, 0, 0, 0, 4, 0, 0, 0],
+      [0, 0, 0, 0, 0, 4, 0, 0],
+      [0, 2, 8, 8, 8, 4, 2, 0],
+      [2, 8,14, 8, 4, 8, 8, 2],
+      [8,14,14, 8, 8, 8, 8, 8],
+      [8, 8, 8, 8, 8, 8, 8, 8],
+      [0, 8, 8, 8, 8, 8, 8, 0],
+      [0, 0, 8, 8, 8, 8, 0, 0],
+    ];
+    assert.deepEqual(expect, img.toArrays());
+
+    util.renderCompareTo(ra, 'test/testdata/fruit-dos-palette.png');
+  });
 
 });

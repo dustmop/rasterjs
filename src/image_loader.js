@@ -32,8 +32,14 @@ class Loader {
     }
 
     let useAsync = !!opt['async'];
-    let palette = this.refScene.deref().palette;
-    palette.ensureExpandingIfCurrentlyPending();
+    let pal = null;
+    let rgbValues = palette.constructRGBMapFrom(opt.palette);
+    if (rgbValues == null) {
+      pal = this.refScene.deref().palette;
+    } else {
+      pal = new palette.Palette({rgbmap: rgbValues});
+    }
+    pal.ensureExpandingIfCurrentlyPending();
 
     if (this._resources) {
       let img = this._resources.lookup(filename);
@@ -51,7 +57,7 @@ class Loader {
     img.refLoader = new weak.Ref(this);
     img.filename = filename;
     img.id = this.list.length;
-    img.palette = palette;
+    img.palette = pal;
     img.sortUsingHSV = sortUsingHSV;
     img.offsetLeft = 0;
     img.offsetTop = 0;
@@ -75,6 +81,17 @@ class Loader {
     img.fillData();
     return img;
   }
+
+/*
+  _lookupPalette(param) {
+    if (param == null) {
+      return null;
+    }
+    if (types.isString(param)) {
+constructRGBMapFrom();
+    }
+  }
+*/
 
   useResources(resources) {
     if (resources.refScene == null) {

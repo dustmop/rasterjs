@@ -912,7 +912,7 @@ class Scene {
 
     } else if (types.isString(param)) {
       // name of palette rgbmap
-      this.palette.setRGBMap(palette.constructRGBMapFrom(param));
+      this.palette.setRGBMap(palette.constructRGBMapFrom(param) || []);
       this.palette.expandable = false;
       return this.palette;
 

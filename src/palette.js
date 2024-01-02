@@ -635,6 +635,9 @@ function toIntList(vals) {
 }
 
 function constructRGBMapFrom(rep) {
+  if (rep == null) {
+    return null;
+  }
   let make = [];
   if (types.isString(rep)) {
     let text = rep;
@@ -661,8 +664,6 @@ function constructRGBMapFrom(rep) {
   } else if (types.isArray(rep)) {
     let list = rep;
     make = list.slice();
-  } else if (!rep) {
-    make = [];
   } else {
     throw new Error('rgbmap got unknown param ${rep}');
   }

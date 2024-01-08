@@ -63,8 +63,6 @@ class SaveImageDisplay extends baseDisplay.BaseDisplay {
       }
     }
 
-    let comp = new compositor.Compositor();
-
     // Render each frame, and write to a file in a tmp directory.
     let bufferList = [];
     let doneCount = 0;
@@ -78,6 +76,7 @@ class SaveImageDisplay extends baseDisplay.BaseDisplay {
       let outFile = `${this._tmpdir}/${frameNum}.png`;
       let surfaces = this._renderer.render();
 
+      let comp = new compositor.Compositor();
       let combined = comp.combine(surfaces, this._width, this._height,
                                   this._zoomLevel);
       this._fsacc.saveTo(outFile, combined);

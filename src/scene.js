@@ -571,6 +571,7 @@ class Scene {
   }
 
   renderPrimaryField() {
+    this.palette.ensureRGBMap();
     this._prepareRendering();
     this._renderer.connect(this.provide());
     let surfs = this._renderer.render();

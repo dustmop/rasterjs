@@ -26,6 +26,7 @@ void SDLBackend::InitClass(Napi::Env env, Napi::Object exports) {
        InstanceMethod("eventReceiver", &SDLBackend::EventReceiver),
        InstanceMethod("runAppLoop", &SDLBackend::RunAppLoop),
        InstanceMethod("insteadWriteBuffer", &SDLBackend::InsteadWriteBuffer),
+       InstanceMethod("getFeatureList", &SDLBackend::GetFeatureList),
        InstanceMethod("testOnlyHook", &SDLBackend::TestOnlyHook),
   });
   g_sdlDisplayConstructor = Napi::Persistent(func);
@@ -162,6 +163,12 @@ Napi::Value SDLBackend::InsteadWriteBuffer(const Napi::CallbackInfo& info) {
   this->writeBuffer = Napi::Persistent(info[0]);
   this->hasWriteBuffer = 1;
   return Napi::Number::New(env, 0);
+}
+
+Napi::Value SDLBackend::GetFeatureList(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  Napi::Array features;
+  return env.Null();
 }
 
 Napi::Value SDLBackend::TestOnlyHook(const Napi::CallbackInfo& info) {

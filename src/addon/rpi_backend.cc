@@ -457,4 +457,10 @@ Napi::Value RPIBackend::InsteadWriteBuffer(const Napi::CallbackInfo& info) {
   return info.Env().Null();
 }
 
+Napi::Value RPIBackend::GetFeatureList(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  Napi::Array features;
+  return env.Null();
+}
+
 #endif

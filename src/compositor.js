@@ -2,12 +2,16 @@ const algorithm = require('./algorithm');
 
 
 class Compositor {
-  constructor() {}
+  constructor() {
+    this._create = null;
+  }
 
   combine(surfaceList, width, height, zoomLevel) {
     let totalWidth = width * zoomLevel;
     let totalHeight = height * zoomLevel;
-    let create = algorithm.makeSurface(totalWidth, totalHeight);
+    if (this._create == null) {
+      this._create = algorithm.makeSurface(totalWidth, totalHeight);
+    }
 
     for (let i = 0; i < surfaceList.length; i++) {
       let surface = surfaceList[i];
@@ -16,14 +20,14 @@ class Compositor {
       } else if (zoomLevel > 1) {
         surface = algorithm.nearestNeighborSurface(surface, zoomLevel);
       }
-      algorithm.mergeIntoSurface(create, surface);
+      algorithm.mergeIntoSurface(this._create, surface);
     }
     let surface = surfaceList.grid;
     if (surface) {
-      algorithm.mergeIntoSurface(create, surface);
+      algorithm.mergeIntoSurface(this._create, surface);
     }
 
-    return [create];
+    return [this._create];
   }
 }
 

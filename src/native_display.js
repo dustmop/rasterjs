@@ -26,6 +26,10 @@ class NativeDisplay extends baseDisplay.BaseDisplay {
 
   setRenderer(renderer) {
     this._renderer = renderer;
+    let features = this.getBackendFeatures();
+    if (features.forceSoftwareCompositor) {
+      this._renderer.requirements.forceSoftwareCompositor = true;
+    }
   }
 
   setZoom(zoomLevel) {
@@ -69,6 +73,15 @@ class NativeDisplay extends baseDisplay.BaseDisplay {
 
   insteadWriteBuffer(buffer) {
     return this._b.insteadWriteBuffer(buffer);
+  }
+
+  getBackendFeatures() {
+    let features = {};
+    let featureList = this._b.getFeatureList();
+    for (let f of features) {
+      features[f] = true;
+    }
+    return features;
   }
 
   _testOnlySendClick(e) {

@@ -1,5 +1,6 @@
 const algorithm = require('./algorithm.js');
 const component = require('./component.js');
+const compositor = require('./compositor.js');
 const rgbColor = require('./rgb_color.js');
 const field = require('./field.js');
 const tiles = require('./tiles.js');
@@ -41,6 +42,9 @@ class Renderer {
     this._renderEventCallback = null;
     this._renderWidth = null;
     this._renderHeight = null;
+    this._create = null;
+    this._comp = null;
+    this.requirements = {};
   }
 
   connect(inputList) {
@@ -165,6 +169,21 @@ class Renderer {
     this._maybeGridToSurface(world.grid);
     if (this._renderEventCallback) {
       this._renderEventCallback();
+    }
+
+    // the renderer will return multiple RGB surfaces
+    // by default, it allows the display to perform hardware compositing
+    // by setting this option, the renderer will do software compositing
+    if (this.requirements.forceSoftwareCompositor) {
+      if (this._comp == null) {
+        this._comp = new compositor.Compositor();
+      }
+      let combined = this._comp.combine(this._surfs,
+                                        this._renderWidth,
+                                        this._renderHeight,
+                                        1);
+      combined.grid = null;
+      return combined;
     }
 
     return this._surfs;

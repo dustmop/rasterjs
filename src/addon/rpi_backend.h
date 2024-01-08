@@ -17,6 +17,7 @@ class RPIBackend : public Napi::ObjectWrap<RPIBackend> {
   Napi::Value Config(const Napi::CallbackInfo& info);
   Napi::Value EventReceiver(const Napi::CallbackInfo& info);
   Napi::Value RunAppLoop(const Napi::CallbackInfo& info);
+  Napi::Value GetFeatureList(const Napi::CallbackInfo& info);
   Napi::Value InsteadWriteBuffer(const Napi::CallbackInfo& info);
 
   RPIGraphicsData* gfx;

@@ -31,6 +31,7 @@ class SDLBackend : public Napi::ObjectWrap<SDLBackend> {
   Napi::Value EventReceiver(const Napi::CallbackInfo& info);
   Napi::Value RunAppLoop(const Napi::CallbackInfo& info);
   Napi::Value InsteadWriteBuffer(const Napi::CallbackInfo& info);
+  Napi::Value GetFeatureList(const Napi::CallbackInfo& info);
   Napi::Value TestOnlyHook(const Napi::CallbackInfo& info);
 
   void sendKeyEvent(Napi::Env env, const std::string& msg, int code);

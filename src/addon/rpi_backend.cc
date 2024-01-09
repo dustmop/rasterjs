@@ -4,6 +4,7 @@
 #include "rpi_backend.h"
 #include "type.h"
 #include "bcm_host.h"
+#include "wait_frame_unix.h"
 
 
 #define ALIGN64(n) ((n+63)&(~63))
@@ -314,6 +315,7 @@ void RPIBackend::InitClass(Napi::Env env, Napi::Object exports) {
 RPIBackend::RPIBackend(const Napi::CallbackInfo& info)
     : Napi::ObjectWrap<RPIBackend>(info) {
   this->gfx = new RPIGraphicsData;
+  this->dataSource = NULL;
 };
 
 Napi::Object RPIBackend::NewInstance(Napi::Env env, Napi::Value arg) {
@@ -354,8 +356,6 @@ Napi::Value RPIBackend::EventReceiver(const Napi::CallbackInfo& info) {
 Napi::Value RPIBackend::RunAppLoop(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
 
-  UpdateSync upsync;
-
   gfx->primaryPixbuff.width = this->viewWidth;
   gfx->primaryPixbuff.height = this->viewHeight;
   gfx->primaryPixbuff.pitch = ALIGN64(this->viewWidth * RGB_PIXEL_SIZE);
@@ -364,93 +364,107 @@ Napi::Value RPIBackend::RunAppLoop(const Napi::CallbackInfo& info) {
   use_buffer(&gfx->primaryPixbuff);
   alloc_backbuffer(&gfx->back, &gfx->primaryPixbuff);
 
-  unsigned char* dataSource = NULL;
-
   Napi::Value runIDVal = info[0];
   this->execNextFrame = Napi::Persistent(info[1].As<Napi::Function>());
+  this->execOneFrame(info);
+  return env.Null();
+}
 
-  for (;;) {
 
-    // create an empty object for js function calls
-    napi_value self;
-    napi_status status;
-    status = napi_create_object(env, &self);
-    if (status != napi_ok) {
-      printf("napi_create_object(self) failed to create\n");
-      return env.Null();
-    }
+void RPIBackend::execOneFrame(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
 
-    // call the executor
-    napi_value needRenderVal;
-    needRenderVal = this->execNextFrame.Call(self, 0, NULL);
-    if (env.IsExceptionPending()) {
-      printf("exception!!\n");
-      return env.Null();
-    }
+  // TODO: poll for events
+  // TODO: isRunning
 
-    // Call the render function.
-    napi_value resVal;
-    napi_get_reference_value(env, this->rendererRef, &resVal);
-    Napi::Object rendererObj = Napi::Object(env, resVal);
-    Napi::Value renderFuncVal = rendererObj.Get("render");
-    if (!renderFuncVal.IsFunction()) {
-      printf("renderer.render() not found\n");
-      exit(1);
-    }
-    this->renderFunc = Napi::Persistent(renderFuncVal.As<Napi::Function>());
-    resVal = this->renderFunc.Call(rendererObj, 0, NULL);
-    if (env.IsExceptionPending()) {
-      return env.Null();
-    }
-
-    // Get the pitch of the first layer, assume it is constant.
-    // TODO: Fix this assumption
-    Napi::Object resObj = Napi::Object(env, resVal);
-    Napi::Value surfaceVal = resObj.As<Napi::Array>()[uint32_t(0)];
-    Napi::Object surfaceObj = surfaceVal.As<Napi::Object>();
-    Napi::Value realPitchNum = surfaceObj.Get("pitch");
-
-    this->datasourcePitch = this->viewWidth * RGB_PIXEL_SIZE;
-    if (realPitchNum.IsNumber()) {
-      this->datasourcePitch = realPitchNum.As<Napi::Number>().Int32Value();
-    }
-
-    // point to the raw buffer
-    if (dataSource == NULL) {
-      dataSource = surfaceToRawBuffer(surfaceVal);
-      if (gfx->primaryPixbuff.data == NULL &&
-          this->datasourcePitch == gfx->primaryPixbuff.pitch) {
-        // Performance improvement!
-        gfx->primaryPixbuff.data = dataSource;
-      }
-    }
-    if (gfx->primaryPixbuff.data == NULL) {
-      int buffsize = gfx->primaryPixbuff.height * gfx->primaryPixbuff.pitch;
-      gfx->primaryPixbuff.data = (unsigned char*)malloc(buffsize);
-    }
-
-    if (gfx->primaryPixbuff.data != dataSource) {
-      // copy from buffer to mainPlane.data
-      for (int y = 0; y < gfx->primaryPixbuff.height; y++) {
-        for (int x = 0; x < gfx->primaryPixbuff.width; x++) {
-          int k = y * gfx->primaryPixbuff.pitch + x * RGB_PIXEL_SIZE;
-          int j = y * this->datasourcePitch + x * RGB_PIXEL_SIZE;
-          gfx->primaryPixbuff.data[k+0] = dataSource[j+0];
-          gfx->primaryPixbuff.data[k+1] = dataSource[j+1];
-          gfx->primaryPixbuff.data[k+2] = dataSource[j+2];
-          gfx->primaryPixbuff.data[k+3] = dataSource[j+3];
-        }
-      }
-    }
-
-    display_frame_swap(this->gfx, &upsync);
-
-    // sleep
-
-    usleep(16 * 1000);
+  // create an empty object for js function calls
+  napi_value self;
+  napi_status status;
+  status = napi_create_object(env, &self);
+  if (status != napi_ok) {
+    printf("napi_create_object(self) failed to create\n");
+    return;
   }
 
-  return env.Null();
+  // call the executor
+  napi_value needRenderVal;
+  needRenderVal = this->execNextFrame.Call(self, 0, NULL);
+  if (env.IsExceptionPending()) {
+    printf("exception!!\n");
+    return;
+  }
+
+  // Call the render function.
+  napi_value resVal;
+  napi_get_reference_value(env, this->rendererRef, &resVal);
+  Napi::Object rendererObj = Napi::Object(env, resVal);
+  Napi::Value renderFuncVal = rendererObj.Get("render");
+  if (!renderFuncVal.IsFunction()) {
+    printf("renderer.render() not found\n");
+    exit(1);
+  }
+  this->renderFunc = Napi::Persistent(renderFuncVal.As<Napi::Function>());
+  resVal = this->renderFunc.Call(rendererObj, 0, NULL);
+  if (env.IsExceptionPending()) {
+    return;
+  }
+
+  // Get the pitch of the first layer, assume it is constant.
+  // TODO: Fix this assumption
+  Napi::Object resObj = Napi::Object(env, resVal);
+  Napi::Value surfaceVal = resObj.As<Napi::Array>()[uint32_t(0)];
+  Napi::Object surfaceObj = surfaceVal.As<Napi::Object>();
+  Napi::Value realPitchNum = surfaceObj.Get("pitch");
+
+  this->datasourcePitch = this->viewWidth * RGB_PIXEL_SIZE;
+  if (realPitchNum.IsNumber()) {
+    this->datasourcePitch = realPitchNum.As<Napi::Number>().Int32Value();
+  }
+
+  // point to the raw buffer
+  if (this->dataSource == NULL) {
+    this->dataSource = surfaceToRawBuffer(surfaceVal);
+    if (gfx->primaryPixbuff.data == NULL &&
+        this->datasourcePitch == gfx->primaryPixbuff.pitch) {
+      // Performance improvement!
+      gfx->primaryPixbuff.data = this->dataSource;
+    }
+  }
+  if (gfx->primaryPixbuff.data == NULL) {
+    int buffsize = gfx->primaryPixbuff.height * gfx->primaryPixbuff.pitch;
+    gfx->primaryPixbuff.data = (unsigned char*)malloc(buffsize);
+  }
+
+  if (gfx->primaryPixbuff.data != this->dataSource) {
+    // copy from buffer to mainPlane.data
+    for (int y = 0; y < gfx->primaryPixbuff.height; y++) {
+      for (int x = 0; x < gfx->primaryPixbuff.width; x++) {
+        int k = y * gfx->primaryPixbuff.pitch + x * RGB_PIXEL_SIZE;
+        int j = y * this->datasourcePitch + x * RGB_PIXEL_SIZE;
+        gfx->primaryPixbuff.data[k+0] = this->dataSource[j+0];
+        gfx->primaryPixbuff.data[k+1] = this->dataSource[j+1];
+        gfx->primaryPixbuff.data[k+2] = this->dataSource[j+2];
+        gfx->primaryPixbuff.data[k+3] = this->dataSource[j+3];
+      }
+    }
+  }
+
+  UpdateSync upsync;
+  display_frame_swap(this->gfx, &upsync);
+  this->next(env);
+}
+
+static void BeginNextFrame(const Napi::CallbackInfo& info) {
+  void* data = info.Data();
+  RPIBackend* self = (RPIBackend*)data;
+  self->execOneFrame(info);
+}
+
+void RPIBackend::next(Napi::Env env) {
+  Napi::Function cont = Napi::Function::New(env, BeginNextFrame,
+                                            "<unknown>", this);
+  WaitFrame* w = new WaitFrame(cont, 16);
+  w->Queue();
 }
 
 Napi::Value RPIBackend::InsteadWriteBuffer(const Napi::CallbackInfo& info) {

@@ -5,6 +5,7 @@
 #include "present_frame.h"
 #include "wait_frame.h"
 #include <SDL.h>
+#include "common.h"
 
 using namespace Napi;
 
@@ -178,30 +179,6 @@ Napi::Value SDLBackend::TestOnlyHook(const Napi::CallbackInfo& info) {
   Napi::Number y = param.Get("y").As<Napi::Number>();
   this->sendMouseEvent(env, "click", x.Int32Value(), y.Int32Value());
   return env.Null();
-}
-
-unsigned char* surfaceToRawBuffer(Napi::Value surfaceVal) {
-  if (surfaceVal.IsNull()) {
-    return NULL;
-  }
-  Napi::Object surfaceObj = surfaceVal.As<Napi::Object>();
-
-  int realPitch = 0;
-
-  Napi::Value realPitchNum = surfaceObj.Get("pitch");
-  if (realPitchNum.IsNumber()) {
-    realPitch = realPitchNum.As<Napi::Number>().Int32Value();
-  }
-
-  Napi::Value bufferVal = surfaceObj.Get("buff");
-  if (!bufferVal.IsTypedArray()) {
-    printf("bufferVal expected a TypedArray, did not get one!\n");
-    return NULL;
-  }
-  Napi::TypedArray typeArr = bufferVal.As<Napi::TypedArray>();
-  Napi::ArrayBuffer arrBuff = typeArr.ArrayBuffer();
-
-  return (unsigned char*)arrBuff.Data();
 }
 
 Napi::Value SDLBackend::RunAppLoop(const Napi::CallbackInfo& info) {

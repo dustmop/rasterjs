@@ -16,6 +16,7 @@
         "src/addon/native.cc",
         "src/addon/sdl_backend.cc",
         "src/addon/rpi_backend.cc",
+        "src/addon/adafruithat_backend.cc",
       ],
       "include_dirs": [
         "<!@(node -p \"require('node-addon-api').include\")",

@@ -78,10 +78,31 @@ function locateSDLWindows(mode) {
 }
 
 function locateSDLLinux(mode) {
+  if (fs.existsSync('/home/pi/rpi-rgb-led-matrix/include/led-matrix.h')) {
+    return locateAdafruitHat(mode);
+  }
   if (fs.existsSync('/opt/vc/include/bcm_host.h')) {
     return locateRaspberryPI(mode);
   }
   throw new Error(`TODO: linux (non-rpi) support`);
+}
+
+function locateAdafruitHat(mode) {
+  if (mode == 'include') {
+    return [
+      '/home/pi/rpi-rgb-led-matrix/include/',
+    ].join('\n');
+  } else if (mode == 'lib') {
+    return [
+      '/usr/lib/arm-linux-gnueabihf/libpng.a',
+      '/usr/lib/arm-linux-gnueabihf/libm.a',
+      '/home/pi/rpi-rgb-led-matrix/lib/librgbmatrix.a',
+    ].join('\n');
+  } else if (mode == 'dll') {
+    return '';
+  } else if (mode == 'symbol') {
+    return 'ENABLE_ADAFRUIT_HAT';
+  }
 }
 
 function locateRaspberryPI(mode) {

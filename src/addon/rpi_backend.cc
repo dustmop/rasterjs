@@ -276,22 +276,6 @@ void display_frame_swap(RPIGraphicsData* gfx, UpdateSync* upsync) {
 }
 
 
-unsigned char* surfaceToRawBuffer(Napi::Value surfaceVal) {
-  if (surfaceVal.IsNull()) {
-    return NULL;
-  }
-  Napi::Object surfaceObj = surfaceVal.As<Napi::Object>();
-  Napi::Value bufferVal = surfaceObj.Get("buff");
-  if (!bufferVal.IsTypedArray()) {
-    printf("bufferVal expected a TypedArray, did not get one!\n");
-    return NULL;
-  }
-  Napi::TypedArray typeArr = bufferVal.As<Napi::TypedArray>();
-  Napi::ArrayBuffer arrBuff = typeArr.ArrayBuffer();
-
-  return (unsigned char*)arrBuff.Data();
-}
-
 // ---------------------------------------------------------------------- //
 
 Napi::FunctionReference g_rpiDisplayConstructor;

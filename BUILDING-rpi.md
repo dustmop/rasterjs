@@ -57,3 +57,12 @@ Finally, build the native addon that will use the dispmanx backend:
 cd rasterjs
 npm install
 ```
+
+# RGB Matrix with the Adafruit Hat
+
+To compile support for the RGB Matrix with the Adafruit Hat, just clone this library to your RPI's home directory:
+
+```
+cd /home/pi
+git clone https://github.com/hzeller/rpi-rgb-led-matrix
+```

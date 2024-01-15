@@ -20,17 +20,18 @@ class Polygon {
 
   rotate(angle) {
     let result = [];
+    // TODO: use Point
     for (let p of this._points) {
-      var x = p[0];
-      var y = p[1];
+      let u = p[0];
+      let v = p[1];
       // Translate to the origin.
-      x = x - this._centerX;
-      y = y - this._centerY;
+      u = u - this._centerX;
+      v = v - this._centerY;
       // Rotate the points around the origin.
-      var rot_x = x * Math.cos(angle) - y * Math.sin(angle);
-      var rot_y = x * Math.sin(angle) + y * Math.cos(angle);
+      var rot_u = u * Math.cos(angle) - v * Math.sin(angle);
+      var rot_v = u * Math.sin(angle) + v * Math.cos(angle);
       // Translate back to the original grid system, and add.
-      result.push([rot_x + this._centerX, rot_y + this._centerY]);
+      result.push([rot_u + this._centerX, rot_v + this._centerY]);
     }
     this._points = result;
     return this;

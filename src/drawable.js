@@ -246,6 +246,7 @@ class Drawable {
 
   paste_params() { return ['source:a', 'x?i', 'y?i'] }
   paste(source, x, y) {
+    // TODO: should type check first that `source` is a Field
     if (!source.data) {
       let msg = 'paste: source has not been read, use ra.then to wait for it.';
       if (source.filename) {

@@ -429,6 +429,40 @@ class Scene {
     return geometry.convertToPolygon(pointsOrPolygon, center);
   }
 
+  rotate(source, angle) {
+    // TODO: dispatch off of type of source: Polygon of Field
+    let srcCenter = {x: source.width / 2, y: source.height / 2};
+    let newDim = Math.max(source.width, source.height);
+    let offsetX = (newDim - source.width) / 2;
+    let offsetY = (newDim - source.height) / 2;
+    let dstCenter = {x: newDim/2, y: newDim/2};
+
+    let dstField = new field.Field();
+    dstField.setSize(newDim, newDim);
+
+    angle = -angle;
+
+    for (let y = 0; y < dstField.height; y++) {
+      for (let x = 0; x < dstField.width; x++) {
+        // u,v are -(y/2)..0..(y/2) and -(x/2)..0..(x/2)
+        // representing distance from the destination.center
+        let u = x - dstCenter.x;
+        let v = y - dstCenter.y;
+        let rot_u = u * Math.cos(angle) - v * Math.sin(angle);
+        let rot_v = u * Math.sin(angle) + v * Math.cos(angle);
+        let n = source.get(rot_u + srcCenter.x, rot_v + srcCenter.y);
+        dstField.put(x, y, n);
+      }
+    }
+
+    dstField.offsetTop = offsetY;
+    dstField.offsetLeft = offsetX;
+    dstField.width = source.width;
+    dstField.height = source.height;
+
+    return dstField;
+  }
+
   rotatePolygon(pointsOrPolygon, angle) {
     if (angle === null || angle === undefined) {
       angle = this.time;

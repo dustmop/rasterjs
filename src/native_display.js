@@ -77,8 +77,8 @@ class NativeDisplay extends baseDisplay.BaseDisplay {
 
   getBackendFeatures() {
     let features = {};
-    let featureList = this._b.getFeatureList();
-    for (let f of features) {
+    let featureList = this._b.getFeatureList() || [];
+    for (let f of featureList) {
       features[f] = true;
     }
     return features;

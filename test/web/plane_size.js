@@ -4,7 +4,7 @@ describe('field size', function () {
     let ra = require('raster');
     ra.resetState();
 
-    let field = new ra.Field();
+    let field = new ra.DrawableField();
     field.setSize(16, 16);
     ra.useField(field);
 

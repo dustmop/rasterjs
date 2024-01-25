@@ -298,6 +298,7 @@ class Scene {
     if (this._executor) {
       this._executor = null;
     }
+    this._eventManager = null;
     this.time = 0.0;
     this.tick = 0;
     this.scroll = {};

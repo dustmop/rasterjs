@@ -2,6 +2,7 @@
 
 #include "assert.h"
 #include "rpi_backend.h"
+#include "common.h"
 #include "type.h"
 #include "bcm_host.h"
 #include "wait_frame_unix.h"

@@ -1,6 +1,8 @@
 #ifdef ENABLE_ADAFRUIT_HAT
 
-#include "assert.h"
+#include <assert.h>
+#include <signal.h>
+
 #include "adafruithat_backend.h"
 #include "type.h"
 #include "wait_frame_unix.h"
@@ -16,6 +18,10 @@
 using namespace rgb_matrix;
 RGBMatrix *matrix = NULL;
 
+volatile bool interrupt_received = false;
+static void InterruptHandler(int signo) {
+  interrupt_received = true;
+}
 
 // ---------------------------------------------------------------------- //
 
@@ -89,6 +95,12 @@ Napi::Value AdafruitHatBackend::RunAppLoop(const Napi::CallbackInfo& info) {
 
 void AdafruitHatBackend::execOneFrame(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
+
+  if (interrupt_received) {
+    delete matrix;
+    matrix = NULL;
+    return;
+  }
 
   // TODO: poll for events
   // TODO: isRunning
@@ -168,7 +180,7 @@ Napi::Value AdafruitHatBackend::GetFeatureList(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   Napi::Array features = Napi::Array::New(env);
   features[uint32_t(0)] = "forceSoftwareCompositor";
-  return env.Null();
+  return features;
 }
 
 void AdafruitHatBackend::displayFrameOnHardware() {
@@ -188,6 +200,8 @@ void AdafruitHatBackend::displayFrameOnHardware() {
 
   if (matrix == NULL) {
     matrix = RGBMatrix::CreateFromOptions(matrix_options, runtime_opt);
+    signal(SIGTERM, InterruptHandler);
+    signal(SIGINT, InterruptHandler);
   }
 
   for (int y = 0; y < height; y++) {

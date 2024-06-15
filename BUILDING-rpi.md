@@ -27,10 +27,10 @@ Run on your Raspberry PI:
 
 ```
 mkdir -p app && cd app
-curl -O https://unofficial-builds.nodejs.org/download/release/node-v18.9.1-linux-armv6l.tar.gz
+curl -O https://unofficial-builds.nodejs.org/download/release/v18.9.1/node-v18.9.1-linux-armv6l.tar.gz
 tar xzvf node-v18.9.1-linux-armv6l.tar.gz
 cd ..
-echo "PATH=~/app/node-v18.9.1-linux-armv6l:$PATH" >> ~/.bashrc
+echo "PATH=~/app/node-v18.9.1-linux-armv6l/bin:$PATH" >> ~/.bashrc
 source ~/.bashrc
 git clone https://github.com/dustmop/rasterjs
 ```
